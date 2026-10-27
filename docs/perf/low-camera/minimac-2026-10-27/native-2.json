@@ -1,0 +1,1710 @@
+{
+  "date": "2026-10-27T09:30:27.996Z",
+  "host": "MiniMac.attlocal.net",
+  "cpu": "Apple M4",
+  "repo": "/Users/probello/perf/hex-world-lowcam",
+  "bin": "/Users/probello/perf/hex-world-lowcam/target/release/hex-world",
+  "continuous": false,
+  "size": "2560x1440",
+  "base": {
+    "scenario": "play",
+    "tier": "high",
+    "grass": "1",
+    "tilt": "off",
+    "seed": "1",
+    "fps": "off",
+    "present": "immediate",
+    "diag": "1"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(10)",
+    "tiles": 317
+  },
+  "wait_frames": 700,
+  "load_limit": 15,
+  "rounds": 1,
+  "rows": [
+    {
+      "round": 0,
+      "arm": "base",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-base.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on"
+      ],
+      "exit_code": 0,
+      "p50": 16.66,
+      "p95": 17.36,
+      "p99": 18.03,
+      "mean": 16.67,
+      "max": 18.58,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": true,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 932,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1213,
+        "passes": {
+          "opaque": {
+            "max": 0.08,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.05
+          },
+          "post": {
+            "max": 0.03,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 11.71,
+            "mean": 2.63,
+            "p50": 2.08,
+            "p95": 6.6
+          },
+          "preprocess": {
+            "max": 2.37,
+            "mean": 0.81,
+            "p50": 0.47,
+            "p95": 1.56
+          },
+          "shadow": {
+            "max": 13.32,
+            "mean": 4.58,
+            "p50": 3.65,
+            "p95": 12.24
+          },
+          "ssao": {
+            "max": 4.49,
+            "mean": 3.61,
+            "p50": 3.61,
+            "p95": 4.36
+          },
+          "taa": {
+            "max": 0.02,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          },
+          "tilt_shift": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "transmission": {
+            "max": 0.11,
+            "mean": 0.06,
+            "p50": 0.07,
+            "p95": 0.08
+          },
+          "transparent": {
+            "max": 0.03,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 20.85,
+          "mean": 11.73,
+          "p50": 9.35,
+          "p95": 17.44
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.3427734375,
+      "load_after": 2.42529296875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "shadows_off",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-shadows_off.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on",
+        "--shadows",
+        "off"
+      ],
+      "exit_code": 0,
+      "p50": 16.66,
+      "p95": 16.87,
+      "p99": 17,
+      "mean": 16.67,
+      "max": 17.48,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": false,
+      "cascades": 4,
+      "ssao": true,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 416,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 382
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1670,
+        "passes": {
+          "opaque": {
+            "max": 0,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "post": {
+            "max": 0.02,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 10.29,
+            "mean": 9.73,
+            "p50": 9.44,
+            "p95": 10.19
+          },
+          "preprocess": {
+            "max": 0.6,
+            "mean": 0.4,
+            "p50": 0.41,
+            "p95": 0.43
+          },
+          "shadow": {
+            "max": 0.18,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.01
+          },
+          "ssao": {
+            "max": 4.16,
+            "mean": 3.6,
+            "p50": 3.61,
+            "p95": 3.64
+          },
+          "taa": {
+            "max": 0.01,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "tilt_shift": {
+            "max": 0.01,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "transmission": {
+            "max": 0.08,
+            "mean": 0.07,
+            "p50": 0.07,
+            "p95": 0.08
+          },
+          "transparent": {
+            "max": 0.01,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 14.4,
+          "mean": 13.84,
+          "p50": 13.54,
+          "p95": 14.29
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.42529296875,
+      "load_after": 2.25634765625,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "cascades_2",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-cascades_2.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on",
+        "--cascades",
+        "2"
+      ],
+      "exit_code": 0,
+      "p50": 16.67,
+      "p95": 17.01,
+      "p99": 17.23,
+      "mean": 16.67,
+      "max": 18.59,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 2,
+      "ssao": true,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 762,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 267
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 702
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1637,
+        "passes": {
+          "opaque": {
+            "max": 0.07,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.06
+          },
+          "post": {
+            "max": 0.03,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 9.85,
+            "mean": 8.55,
+            "p50": 8.82,
+            "p95": 9.68
+          },
+          "preprocess": {
+            "max": 0.6,
+            "mean": 0.23,
+            "p50": 0.24,
+            "p95": 0.37
+          },
+          "shadow": {
+            "max": 12.29,
+            "mean": 3.45,
+            "p50": 2.83,
+            "p95": 5.4
+          },
+          "ssao": {
+            "max": 4.41,
+            "mean": 3.62,
+            "p50": 3.63,
+            "p95": 3.65
+          },
+          "taa": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "tilt_shift": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "transmission": {
+            "max": 0.08,
+            "mean": 0.06,
+            "p50": 0.06,
+            "p95": 0.07
+          },
+          "transparent": {
+            "max": 0.03,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 16.96,
+          "mean": 15.95,
+          "p50": 16.03,
+          "p95": 16.47
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.25634765625,
+      "load_after": 2.5791015625,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "post_none",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-post_none.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on",
+        "--post",
+        "none"
+      ],
+      "exit_code": 0,
+      "p50": 16.65,
+      "p95": 18.48,
+      "p99": 19.92,
+      "mean": 16.67,
+      "max": 23.4,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": false,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 932,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1675,
+        "passes": {
+          "opaque": {
+            "max": 0.07,
+            "mean": 0.03,
+            "p50": 0.03,
+            "p95": 0.05
+          },
+          "post": {
+            "max": 0.39,
+            "mean": 0.04,
+            "p50": 0.01,
+            "p95": 0.25
+          },
+          "prepass": {
+            "max": 1.49,
+            "mean": 0.13,
+            "p50": 0.09,
+            "p95": 0.61
+          },
+          "preprocess": {
+            "max": 0.66,
+            "mean": 0.39,
+            "p50": 0.4,
+            "p95": 0.46
+          },
+          "shadow": {
+            "max": 8.77,
+            "mean": 7.74,
+            "p50": 7.51,
+            "p95": 8.27
+          },
+          "ssao": {
+            "max": 0.05,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "taa": {
+            "max": 0.74,
+            "mean": 0.17,
+            "p50": 0.16,
+            "p95": 0.35
+          },
+          "tilt_shift": {
+            "max": 0.49,
+            "mean": 0.12,
+            "p50": 0.13,
+            "p95": 0.23
+          },
+          "transmission": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "transparent": {
+            "max": 0.39,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.01
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 9.77,
+          "mean": 8.64,
+          "p50": 8.5,
+          "p95": 9.16
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.5791015625,
+      "load_after": 2.6484375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "grass_off",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-grass_off.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "off",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on"
+      ],
+      "exit_code": 0,
+      "p50": 16.65,
+      "p95": 17.16,
+      "p99": 19.07,
+      "mean": 16.67,
+      "max": 20.1,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": true,
+      "grass_blades": 0,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 914,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 156
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 152
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1669,
+        "passes": {
+          "opaque": {
+            "max": 0.06,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "post": {
+            "max": 0.02,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 7.57,
+            "mean": 4.77,
+            "p50": 5.69,
+            "p95": 6.53
+          },
+          "preprocess": {
+            "max": 0.55,
+            "mean": 0.33,
+            "p50": 0.34,
+            "p95": 0.42
+          },
+          "shadow": {
+            "max": 11.06,
+            "mean": 5.56,
+            "p50": 4.25,
+            "p95": 10.67
+          },
+          "ssao": {
+            "max": 3.75,
+            "mean": 3.6,
+            "p50": 3.63,
+            "p95": 3.65
+          },
+          "taa": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "tilt_shift": {
+            "max": 0.01,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "transmission": {
+            "max": 0.08,
+            "mean": 0.06,
+            "p50": 0.06,
+            "p95": 0.07
+          },
+          "transparent": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 15.64,
+          "mean": 14.35,
+          "p50": 14.64,
+          "p95": 14.83
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.6484375,
+      "load_after": 2.7373046875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "medium",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-medium.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "medium",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on"
+      ],
+      "exit_code": 0,
+      "p50": 16.6,
+      "p95": 19.22,
+      "p99": 19.58,
+      "mean": 16.66,
+      "max": 19.86,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "medium",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": false,
+      "grass_blades": 0,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 500,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 914,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 156
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 152
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1674,
+        "passes": {
+          "opaque": {
+            "max": 0.08,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.05
+          },
+          "post": {
+            "max": 0.77,
+            "mean": 0.27,
+            "p50": 0.28,
+            "p95": 0.33
+          },
+          "prepass": {
+            "max": 4.46,
+            "mean": 3.68,
+            "p50": 3.56,
+            "p95": 4.37
+          },
+          "preprocess": {
+            "max": 0.66,
+            "mean": 0.39,
+            "p50": 0.38,
+            "p95": 0.46
+          },
+          "shadow": {
+            "max": 8.88,
+            "mean": 4.51,
+            "p50": 4.33,
+            "p95": 4.52
+          },
+          "ssao": {
+            "max": 0.01,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "taa": {
+            "max": 0.31,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "tilt_shift": {
+            "max": 0.02,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "transmission": {
+            "max": 0.02,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          },
+          "transparent": {
+            "max": 0.34,
+            "mean": 0.02,
+            "p50": 0.01,
+            "p95": 0.02
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 9.72,
+          "mean": 8.91,
+          "p50": 8.64,
+          "p95": 9.45
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.7373046875,
+      "load_after": 2.982421875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "low",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-low.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "low",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on"
+      ],
+      "exit_code": 0,
+      "p50": 16.64,
+      "p95": 19.83,
+      "p99": 20.23,
+      "mean": 16.67,
+      "max": 20.38,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "low",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": false,
+      "grass_blades": 0,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 250,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 914,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 156
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 152
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1674,
+        "passes": {
+          "opaque": {
+            "max": 0.06,
+            "mean": 0.02,
+            "p50": 0.02,
+            "p95": 0.04
+          },
+          "post": {
+            "max": 0.61,
+            "mean": 0.27,
+            "p50": 0.29,
+            "p95": 0.3
+          },
+          "prepass": {
+            "max": 4.49,
+            "mean": 3.72,
+            "p50": 3.6,
+            "p95": 4.39
+          },
+          "preprocess": {
+            "max": 0.62,
+            "mean": 0.41,
+            "p50": 0.42,
+            "p95": 0.45
+          },
+          "shadow": {
+            "max": 8.9,
+            "mean": 4.53,
+            "p50": 4.32,
+            "p95": 5.17
+          },
+          "ssao": {
+            "max": 0.03,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "taa": {
+            "max": 0.37,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          },
+          "tilt_shift": {
+            "max": 0.22,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "transmission": {
+            "max": 0.03,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          },
+          "transparent": {
+            "max": 0.16,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.02
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 9.86,
+          "mean": 9,
+          "p50": 9.04,
+          "p95": 9.55
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.982421875,
+      "load_after": 2.93701171875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "s1080",
+      "args": [
+        "--size",
+        "1920x1080",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-s1080.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1",
+        "--gpu_timing",
+        "on"
+      ],
+      "exit_code": 0,
+      "p50": 15.26,
+      "p95": 21.08,
+      "p99": 21.24,
+      "mean": 16.67,
+      "max": 21.39,
+      "vsync_like": false,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": true,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 932,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": true,
+        "frames": 600,
+        "frames_total": 1671,
+        "passes": {
+          "opaque": {
+            "max": 0.07,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.05
+          },
+          "post": {
+            "max": 0.03,
+            "mean": 0.01,
+            "p50": 0.01,
+            "p95": 0.02
+          },
+          "prepass": {
+            "max": 8.35,
+            "mean": 4.31,
+            "p50": 4.9,
+            "p95": 8.23
+          },
+          "preprocess": {
+            "max": 1.07,
+            "mean": 0.27,
+            "p50": 0.31,
+            "p95": 0.5
+          },
+          "shadow": {
+            "max": 12.98,
+            "mean": 7.41,
+            "p50": 6.48,
+            "p95": 12.26
+          },
+          "ssao": {
+            "max": 2.11,
+            "mean": 2.04,
+            "p50": 2.04,
+            "p95": 2.07
+          },
+          "taa": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "tilt_shift": {
+            "max": 0.02,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0.01
+          },
+          "transmission": {
+            "max": 0.09,
+            "mean": 0.05,
+            "p50": 0.06,
+            "p95": 0.07
+          },
+          "transparent": {
+            "max": 0.02,
+            "mean": 0.01,
+            "p50": 0,
+            "p95": 0.01
+          }
+        },
+        "reason": "pass-boundary timestamps",
+        "rejected_non_monotonic": 0,
+        "spans": {
+          "opaque": "main opaque pass (opaque, alpha mask, skybox)",
+          "post": "bloom, depth of field and tonemapping (ends after tonemapping)",
+          "prepass": "depth/normal/motion prepass, depth downsample, late (occlusion) passes",
+          "preprocess": "GPU mesh preprocessing: uniform allocation, culling, indirect args",
+          "shadow": "early directional and point shadow passes",
+          "ssao": "after the Prepass set until MainPass: SSAO, main indirect args",
+          "taa": "EarlyPostProcess: TAA",
+          "tilt_shift": "tilt-shift pass",
+          "transmission": "main transmissive pass: screen copy plus refracting water (Medium and up)",
+          "transparent": "main transparent pass (alpha-blended water on Low) and other MainPass work"
+        },
+        "supported": true,
+        "tail_over_25ms": 0,
+        "timestamp_period_ns": 1,
+        "total": {
+          "max": 15.69,
+          "mean": 14.11,
+          "p50": 13.9,
+          "p95": 14.7
+        }
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.93701171875,
+      "load_after": 2.75830078125,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "arm": "base_off",
+      "args": [
+        "--size",
+        "2560x1440",
+        "--dump-state",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-base_off.json",
+        "--script",
+        "/Users/probello/perf/hex-world-lowcam/target/shots/lc-native-script.json",
+        "--scenario",
+        "play",
+        "--tier",
+        "high",
+        "--grass",
+        "1",
+        "--tilt",
+        "off",
+        "--seed",
+        "1",
+        "--fps",
+        "off",
+        "--present",
+        "immediate",
+        "--diag",
+        "1"
+      ],
+      "exit_code": 0,
+      "p50": 16.67,
+      "p95": 16.99,
+      "p99": 17.85,
+      "mean": 16.67,
+      "max": 18.43,
+      "vsync_like": true,
+      "samples": 600,
+      "tier": "high",
+      "shadows": true,
+      "cascades": 4,
+      "ssao": true,
+      "grass_blades": 179580,
+      "shadow_dist": 2000,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "cars": 20,
+      "boids": 1000,
+      "adapter": "Apple M4 | Metal | IntegratedGpu | ",
+      "visible_tris": 0,
+      "draws_total": 932,
+      "passes": [
+        {
+          "view": "main",
+          "phase": "alpha_mask",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "alpha_mask_prepass",
+          "draws": 45
+        },
+        {
+          "view": "main",
+          "phase": "opaque",
+          "draws": 165
+        },
+        {
+          "view": "main",
+          "phase": "prepass",
+          "draws": 161
+        },
+        {
+          "view": "cascade0",
+          "phase": "shadow",
+          "draws": 79
+        },
+        {
+          "view": "cascade1",
+          "phase": "shadow",
+          "draws": 165
+        },
+        {
+          "view": "cascade2",
+          "phase": "shadow",
+          "draws": 213
+        },
+        {
+          "view": "cascade3",
+          "phase": "shadow",
+          "draws": 59
+        }
+      ],
+      "kit_draws": {
+        "slots": 132,
+        "total": 849
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "supported": null,
+        "tail_over_25ms": 0,
+        "total": null
+      },
+      "camera_pos": [
+        10,
+        12,
+        40
+      ],
+      "load_before": 2.75830078125,
+      "load_after": 2.5869140625,
+      "load_discarded": 0
+    }
+  ]
+}

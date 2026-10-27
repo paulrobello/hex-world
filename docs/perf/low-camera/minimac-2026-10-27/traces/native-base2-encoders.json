@@ -1,0 +1,223 @@
+{
+  "source": "/tmp/lc-native-base2-intervals.xml",
+  "process": "hex-world",
+  "window_s": 8.0,
+  "skip_end_s": 0.5,
+  "frame_ms_given": 16.667,
+  "frames": 480.0,
+  "frame_interval_ms": 16.676,
+  "gpu_busy_ms_per_frame": 16.553,
+  "sum_of_encoders_ms_per_frame": 25.301,
+  "by_label": {
+    "early prepass:early prepass": 9.305,
+    "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2": 4.877,
+    "ssao:ssao": 3.147,
+    "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1": 2.937,
+    "clustering count pass:clustering count pass": 1.962,
+    "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0": 0.699,
+    "clustering populate pass:clustering populate pass": 0.579,
+    "ssao_spatial_denoise:ssao_spatial_denoise": 0.375,
+    "ssao_preprocess_depth:ssao_preprocess_depth": 0.197,
+    "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3": 0.185,
+    "<Enable the debug feature to see the name>:Blit Command 0": 0.176,
+    "uniform allocation:uniform allocation": 0.128,
+    "boids:boids": 0.105,
+    "bin unpacking:bin unpacking": 0.083,
+    "early_prepass_indirect_parameters_building:early_prepass_indirect_parameters_building": 0.07,
+    "(wgpu internal) Pre Pass:Blit Command 0": 0.064,
+    "early_view_shadow_indirect_parameters_building:early_view_shadow_indirect_parameters_building": 0.061,
+    "(wgpu internal) Pre Pass:(wgpu internal) Indirect draw validation pass": 0.053,
+    "(wgpu internal) Signal:main_indirect_parameters_building": 0.052,
+    "late_view_shadow_indirect_parameters_building:late_view_shadow_indirect_parameters_building": 0.049,
+    "main_indirect_parameters_building:main_indirect_parameters_building": 0.046,
+    "(wgpu internal) PendingWrites:Blit Command 0": 0.042,
+    "clustering Z slicing pass:clustering Z slicing pass": 0.033,
+    "early_mesh_preprocessing:early_mesh_preprocessing": 0.031,
+    "(wgpu internal) Transit:Blit Command 0": 0.018,
+    "clustering allocation global pass:clustering allocation global pass": 0.011,
+    "clustering allocation local pass:clustering allocation local pass": 0.01,
+    "sparse buffer updates:sparse buffer updates": 0.004
+  },
+  "by_label_channel": [
+    {
+      "label": "early prepass:early prepass",
+      "channel": "Vertex",
+      "ms_per_frame": 6.772
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2",
+      "channel": "Fragment",
+      "ms_per_frame": 3.21
+    },
+    {
+      "label": "ssao:ssao",
+      "channel": "Compute",
+      "ms_per_frame": 3.147
+    },
+    {
+      "label": "early prepass:early prepass",
+      "channel": "Fragment",
+      "ms_per_frame": 2.533
+    },
+    {
+      "label": "clustering count pass:clustering count pass",
+      "channel": "Fragment",
+      "ms_per_frame": 1.949
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1",
+      "channel": "Fragment",
+      "ms_per_frame": 1.916
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_2:shadow_directional_light_0_cascade_2",
+      "channel": "Vertex",
+      "ms_per_frame": 1.667
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_1:shadow_directional_light_0_cascade_1",
+      "channel": "Vertex",
+      "ms_per_frame": 1.021
+    },
+    {
+      "label": "clustering populate pass:clustering populate pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.566
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0",
+      "channel": "Fragment",
+      "ms_per_frame": 0.53
+    },
+    {
+      "label": "ssao_spatial_denoise:ssao_spatial_denoise",
+      "channel": "Compute",
+      "ms_per_frame": 0.375
+    },
+    {
+      "label": "ssao_preprocess_depth:ssao_preprocess_depth",
+      "channel": "Compute",
+      "ms_per_frame": 0.197
+    },
+    {
+      "label": "<Enable the debug feature to see the name>:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.176
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_0:shadow_directional_light_0_cascade_0",
+      "channel": "Vertex",
+      "ms_per_frame": 0.169
+    },
+    {
+      "label": "uniform allocation:uniform allocation",
+      "channel": "Compute",
+      "ms_per_frame": 0.128
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3",
+      "channel": "Vertex",
+      "ms_per_frame": 0.116
+    },
+    {
+      "label": "boids:boids",
+      "channel": "Compute",
+      "ms_per_frame": 0.105
+    },
+    {
+      "label": "bin unpacking:bin unpacking",
+      "channel": "Compute",
+      "ms_per_frame": 0.083
+    },
+    {
+      "label": "early_prepass_indirect_parameters_building:early_prepass_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.07
+    },
+    {
+      "label": "shadow_directional_light_0_cascade_3:shadow_directional_light_0_cascade_3",
+      "channel": "Fragment",
+      "ms_per_frame": 0.069
+    },
+    {
+      "label": "(wgpu internal) Pre Pass:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.064
+    },
+    {
+      "label": "early_view_shadow_indirect_parameters_building:early_view_shadow_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.061
+    },
+    {
+      "label": "(wgpu internal) Pre Pass:(wgpu internal) Indirect draw validation pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.053
+    },
+    {
+      "label": "(wgpu internal) Signal:main_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.052
+    },
+    {
+      "label": "late_view_shadow_indirect_parameters_building:late_view_shadow_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.049
+    },
+    {
+      "label": "main_indirect_parameters_building:main_indirect_parameters_building",
+      "channel": "Compute",
+      "ms_per_frame": 0.046
+    },
+    {
+      "label": "(wgpu internal) PendingWrites:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.042
+    },
+    {
+      "label": "clustering Z slicing pass:clustering Z slicing pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.033
+    },
+    {
+      "label": "early_mesh_preprocessing:early_mesh_preprocessing",
+      "channel": "Compute",
+      "ms_per_frame": 0.031
+    },
+    {
+      "label": "(wgpu internal) Transit:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.018
+    },
+    {
+      "label": "clustering populate pass:clustering populate pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.013
+    },
+    {
+      "label": "clustering count pass:clustering count pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.013
+    },
+    {
+      "label": "clustering allocation global pass:clustering allocation global pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.011
+    },
+    {
+      "label": "clustering allocation local pass:clustering allocation local pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.01
+    },
+    {
+      "label": "sparse buffer updates:sparse buffer updates",
+      "channel": "Compute",
+      "ms_per_frame": 0.004
+    },
+    {
+      "label": "clustering Z slicing pass:clustering Z slicing pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.0
+    }
+  ]
+}

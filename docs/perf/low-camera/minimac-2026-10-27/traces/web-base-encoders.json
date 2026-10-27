@@ -1,0 +1,391 @@
+{
+  "source": "traces/web-base-intervals.xml",
+  "process": "for Testing Helpe",
+  "window_s": 10.0,
+  "skip_end_s": 0.0,
+  "frame_ms_given": 31.23,
+  "frames": 320.2,
+  "frame_interval_ms": 31.219,
+  "gpu_busy_ms_per_frame": 30.318,
+  "sum_of_encoders_ms_per_frame": 46.662,
+  "by_label": {
+    "Command Buffer 0:Dawn_RenderPassEncoder_early prepass": 14.116,
+    "Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d": 10.551,
+    "Command Buffer 0:Dawn_ComputePassEncoder_ssao_preprocess_depth & Dawn_ComputePassEncoder_ssao & Dawn_ComputePassEncoder_ssao_spatial_denoise": 5.684,
+    "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_2": 3.266,
+    "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_1": 2.435,
+    "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_0": 1.842,
+    "Command Buffer 0:Render Command 0": 1.746,
+    "Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d": 1.731,
+    "Command Buffer 0:Dawn_RenderPassEncoder_taa": 0.929,
+    "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_final_pass": 0.411,
+    "Command Buffer 0:Dawn_RenderPassEncoder_tonemapping": 0.349,
+    "Command Buffer 0:Blit Command 0": 0.309,
+    "Command Buffer 0:Dawn_RenderPassEncoder_upscaling": 0.304,
+    "Command Buffer 0:Blit Command 22": 0.29,
+    "Command Buffer 0:Dawn_RenderPassEncoder": 0.287,
+    "Command Buffer 0:Render Command 4": 0.278,
+    "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_3": 0.277,
+    "Command Buffer 0:Blit Command 15": 0.244,
+    "Command Buffer 0:Render Command 6": 0.235,
+    "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_first_pass": 0.2,
+    "Command Buffer 0:Blit Command 4": 0.181,
+    "Command Buffer 0:Render Command 5": 0.174,
+    "Command Buffer 0:Render Command 2": 0.142,
+    "Command Buffer 0:Dawn_ComputePassEncoder_boids & Dawn_ComputePassEncoder_sparse buffer updates": 0.131,
+    "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_pass": 0.106,
+    "Command Buffer 0:Render Command 3": 0.103,
+    "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_pass": 0.08,
+    "Command Buffer 0:Dawn_RenderPassEncoder_main_transparent_pass_3d": 0.08,
+    "Command Buffer 0:Dawn_ComputePassEncoder": 0.063,
+    "Command Buffer 0:Render Command 1": 0.04,
+    "Command Buffer 0:Dawn_ComputePassEncoder_bin unpacking & Dawn_ComputePassEncoder_early_mesh_preprocessing": 0.018,
+    "Command Buffer 0:Dawn_ComputePassEncoder_clustering allocation local pass & Dawn_ComputePassEncoder_clustering allocation global pass": 0.015,
+    "Command Buffer 0:Dawn_RenderPassEncoder_clustering count pass": 0.012,
+    "Command Buffer 0:Dawn_RenderPassEncoder_clustering populate pass": 0.01,
+    "Command Buffer 0:Blit Command 7": 0.007,
+    "Command Buffer 0:Dawn_ComputePassEncoder_clustering Z slicing pass": 0.005,
+    "Command Buffer 0:Blit Command 2": 0.002,
+    "Command Buffer 0:Blit Command 9": 0.002,
+    "Command Buffer 0:Blit Command 12": 0.002,
+    "Command Buffer 0:Blit Command 6": 0.002,
+    "Command Buffer 0:Render Command 7": 0.002
+  },
+  "by_label_channel": [
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_early prepass",
+      "channel": "Fragment",
+      "ms_per_frame": 7.104
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_early prepass",
+      "channel": "Vertex",
+      "ms_per_frame": 7.012
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder_ssao_preprocess_depth & Dawn_ComputePassEncoder_ssao & Dawn_ComputePassEncoder_ssao_spatial_denoise",
+      "channel": "Compute",
+      "ms_per_frame": 5.684
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 5.514
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 5.037
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_2",
+      "channel": "Vertex",
+      "ms_per_frame": 1.703
+    },
+    {
+      "label": "Command Buffer 0:Render Command 0",
+      "channel": "Fragment",
+      "ms_per_frame": 1.629
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_0",
+      "channel": "Fragment",
+      "ms_per_frame": 1.577
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_2",
+      "channel": "Fragment",
+      "ms_per_frame": 1.563
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 1.5
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_1",
+      "channel": "Fragment",
+      "ms_per_frame": 1.402
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_1",
+      "channel": "Vertex",
+      "ms_per_frame": 1.033
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_taa",
+      "channel": "Fragment",
+      "ms_per_frame": 0.924
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_final_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.406
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_tonemapping",
+      "channel": "Fragment",
+      "ms_per_frame": 0.344
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 0",
+      "channel": "Compute",
+      "ms_per_frame": 0.309
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_upscaling",
+      "channel": "Fragment",
+      "ms_per_frame": 0.299
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 22",
+      "channel": "Compute",
+      "ms_per_frame": 0.29
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder",
+      "channel": "Fragment",
+      "ms_per_frame": 0.281
+    },
+    {
+      "label": "Command Buffer 0:Render Command 4",
+      "channel": "Fragment",
+      "ms_per_frame": 0.269
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_0",
+      "channel": "Vertex",
+      "ms_per_frame": 0.265
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 15",
+      "channel": "Compute",
+      "ms_per_frame": 0.244
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 0.231
+    },
+    {
+      "label": "Command Buffer 0:Render Command 6",
+      "channel": "Fragment",
+      "ms_per_frame": 0.228
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_first_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.195
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 4",
+      "channel": "Compute",
+      "ms_per_frame": 0.181
+    },
+    {
+      "label": "Command Buffer 0:Render Command 5",
+      "channel": "Fragment",
+      "ms_per_frame": 0.162
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_3",
+      "channel": "Fragment",
+      "ms_per_frame": 0.158
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder_boids & Dawn_ComputePassEncoder_sparse buffer updates",
+      "channel": "Compute",
+      "ms_per_frame": 0.131
+    },
+    {
+      "label": "Command Buffer 0:Render Command 2",
+      "channel": "Fragment",
+      "ms_per_frame": 0.122
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_3",
+      "channel": "Vertex",
+      "ms_per_frame": 0.119
+    },
+    {
+      "label": "Command Buffer 0:Render Command 0",
+      "channel": "Vertex",
+      "ms_per_frame": 0.117
+    },
+    {
+      "label": "Command Buffer 0:Render Command 3",
+      "channel": "Fragment",
+      "ms_per_frame": 0.087
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.085
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder",
+      "channel": "Compute",
+      "ms_per_frame": 0.063
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.055
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_transparent_pass_3d",
+      "channel": "Vertex",
+      "ms_per_frame": 0.043
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_main_transparent_pass_3d",
+      "channel": "Fragment",
+      "ms_per_frame": 0.037
+    },
+    {
+      "label": "Command Buffer 0:Render Command 1",
+      "channel": "Fragment",
+      "ms_per_frame": 0.026
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.025
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.021
+    },
+    {
+      "label": "Command Buffer 0:Render Command 2",
+      "channel": "Vertex",
+      "ms_per_frame": 0.02
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder_bin unpacking & Dawn_ComputePassEncoder_early_mesh_preprocessing",
+      "channel": "Compute",
+      "ms_per_frame": 0.018
+    },
+    {
+      "label": "Command Buffer 0:Render Command 3",
+      "channel": "Vertex",
+      "ms_per_frame": 0.016
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder_clustering allocation local pass & Dawn_ComputePassEncoder_clustering allocation global pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.015
+    },
+    {
+      "label": "Command Buffer 0:Render Command 1",
+      "channel": "Vertex",
+      "ms_per_frame": 0.014
+    },
+    {
+      "label": "Command Buffer 0:Render Command 5",
+      "channel": "Vertex",
+      "ms_per_frame": 0.012
+    },
+    {
+      "label": "Command Buffer 0:Render Command 4",
+      "channel": "Vertex",
+      "ms_per_frame": 0.009
+    },
+    {
+      "label": "Command Buffer 0:Render Command 6",
+      "channel": "Vertex",
+      "ms_per_frame": 0.007
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 7",
+      "channel": "Compute",
+      "ms_per_frame": 0.007
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_clustering count pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.007
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder",
+      "channel": "Vertex",
+      "ms_per_frame": 0.006
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_clustering populate pass",
+      "channel": "Fragment",
+      "ms_per_frame": 0.006
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_taa",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_first_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_final_pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_tonemapping",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_upscaling",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_ComputePassEncoder_clustering Z slicing pass",
+      "channel": "Compute",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_clustering count pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.005
+    },
+    {
+      "label": "Command Buffer 0:Dawn_RenderPassEncoder_clustering populate pass",
+      "channel": "Vertex",
+      "ms_per_frame": 0.004
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 2",
+      "channel": "Compute",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 9",
+      "channel": "Compute",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 12",
+      "channel": "Compute",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "Command Buffer 0:Blit Command 6",
+      "channel": "Compute",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "Command Buffer 0:Render Command 7",
+      "channel": "Fragment",
+      "ms_per_frame": 0.002
+    },
+    {
+      "label": "Command Buffer 0:Render Command 7",
+      "channel": "Vertex",
+      "ms_per_frame": 0.0
+    }
+  ]
+}

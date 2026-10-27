@@ -1,0 +1,3606 @@
+{
+  "generated": "2026-10-27T09:51:23.735Z",
+  "sources": [
+    "native-1.json",
+    "native-2.json",
+    "native-3.json",
+    "web-1.json",
+    "web-2.json",
+    "web-3.json"
+  ],
+  "load": {
+    "min": 2.26,
+    "max": 4.36
+  },
+  "web": {
+    "summary": {
+      "lc_base": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 30.22,
+          "min": 28.59,
+          "max": 30.23,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 30.4,
+          "min": 28.45,
+          "max": 30.45,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 31.05,
+          "min": 29.8,
+          "max": 31.05,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 10.53,
+          "min": 10.43,
+          "max": 10.57,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 10.95,
+          "min": 10.85,
+          "max": 11,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 167,
+          "min": 166.5,
+          "max": 175.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "draws": {
+          "median": 985,
+          "min": 985,
+          "max": 985,
+          "n": 3
+        }
+      },
+      "lc_timing": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 32.72,
+          "min": 31.21,
+          "max": 32.94,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": 2.62,
+          "min": 2.5,
+          "max": 2.71,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 32.7,
+          "min": 31.1,
+          "max": 32.8,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": 2.35,
+          "min": 2.3,
+          "max": 2.65,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 33.4,
+          "min": 31.65,
+          "max": 33.5,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": 2.35,
+          "min": 1.85,
+          "max": 2.45,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 8.85,
+          "min": 8.75,
+          "max": 8.89,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -1.68,
+          "min": -1.72,
+          "max": -1.64,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 9.3,
+          "min": 9.1,
+          "max": 9.5,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1.65,
+          "min": -1.75,
+          "max": -1.5,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 154,
+          "min": 153,
+          "max": 161,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": -13.5,
+          "min": -14.5,
+          "max": -13,
+          "n": 3
+        },
+        "gpu_total": {
+          "median": 20.01,
+          "min": 18.79,
+          "max": 20.04,
+          "n": 3
+        },
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 985,
+          "min": 985,
+          "max": 985,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        }
+      },
+      "lc_shadows_off": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 26.05,
+          "min": 24.88,
+          "max": 26.11,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -4.12,
+          "min": -4.17,
+          "max": -3.71,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 26,
+          "min": 24.85,
+          "max": 26.2,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -4.25,
+          "min": -4.4,
+          "max": -3.6,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 27.1,
+          "min": 25.95,
+          "max": 27.15,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -3.9,
+          "min": -3.95,
+          "max": -3.85,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 8.77,
+          "min": 8.74,
+          "max": 8.87,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -1.76,
+          "min": -1.83,
+          "max": -1.56,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 9.25,
+          "min": 9.2,
+          "max": 9.3,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1.75,
+          "min": -1.75,
+          "max": -1.55,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 193.5,
+          "min": 193,
+          "max": 202.5,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 26.5,
+          "min": 26.5,
+          "max": 27,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 432,
+          "min": 432,
+          "max": 432,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -553,
+          "min": -553,
+          "max": -553,
+          "n": 3
+        }
+      },
+      "lc_cascades_2": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 29.1,
+          "min": 28.58,
+          "max": 29.17,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -1.05,
+          "min": -1.13,
+          "max": -0.01,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 29.35,
+          "min": 28.35,
+          "max": 29.4,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -1.05,
+          "min": -1.05,
+          "max": -0.1,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 30.05,
+          "min": 30,
+          "max": 30.15,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -0.9,
+          "min": -1,
+          "max": 0.2,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 9.96,
+          "min": 9.84,
+          "max": 9.97,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -0.56,
+          "min": -0.73,
+          "max": -0.47,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 10.35,
+          "min": 10.25,
+          "max": 10.4,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -0.65,
+          "min": -0.7,
+          "max": -0.45,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 173,
+          "min": 172.5,
+          "max": 176,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 5.5,
+          "min": 0.5,
+          "max": 6.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 801,
+          "min": 801,
+          "max": 801,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -184,
+          "min": -184,
+          "max": -184,
+          "n": 3
+        }
+      },
+      "lc_post_none": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 18.62,
+          "min": 17.4,
+          "max": 18.62,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -11.6,
+          "min": -11.61,
+          "max": -11.19,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 18.8,
+          "min": 17.65,
+          "max": 18.8,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -11.6,
+          "min": -11.65,
+          "max": -10.8,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 19.65,
+          "min": 18.55,
+          "max": 19.7,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -11.35,
+          "min": -11.4,
+          "max": -11.25,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 8.95,
+          "min": 8.9,
+          "max": 9.09,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -1.48,
+          "min": -1.63,
+          "max": -1.48,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 9.4,
+          "min": 9.3,
+          "max": 9.55,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1.45,
+          "min": -1.7,
+          "max": -1.4,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 270.5,
+          "min": 270,
+          "max": 289,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 104,
+          "min": 103,
+          "max": 113.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 999,
+          "min": 999,
+          "max": 999,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 14,
+          "min": 14,
+          "max": 14,
+          "n": 3
+        }
+      },
+      "lc_grass_off": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 26.31,
+          "min": 26.01,
+          "max": 26.32,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -3.9,
+          "min": -3.92,
+          "max": -2.58,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 26,
+          "min": 25.9,
+          "max": 26.1,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -4.3,
+          "min": -4.45,
+          "max": -2.55,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 27.75,
+          "min": 27.6,
+          "max": 27.75,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -3.3,
+          "min": -3.45,
+          "max": -2.05,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 10.11,
+          "min": 10.07,
+          "max": 10.14,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -0.46,
+          "min": -0.46,
+          "max": -0.29,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 10.55,
+          "min": 10.4,
+          "max": 10.55,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -0.4,
+          "min": -0.6,
+          "max": -0.3,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 192,
+          "min": 192,
+          "max": 193.5,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 25,
+          "min": 18,
+          "max": 25.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 967,
+          "min": 967,
+          "max": 975,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -18,
+          "min": -18,
+          "max": -10,
+          "n": 3
+        }
+      },
+      "lc_medium": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 19.45,
+          "min": 18.45,
+          "max": 19.55,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -10.67,
+          "min": -10.78,
+          "max": -10.14,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 19.45,
+          "min": 18.25,
+          "max": 19.45,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -10.95,
+          "min": -11,
+          "max": -10.2,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 20.95,
+          "min": 19.85,
+          "max": 21.1,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -9.95,
+          "min": -10.1,
+          "max": -9.95,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 9.17,
+          "min": 9.15,
+          "max": 9.39,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -1.38,
+          "min": -1.4,
+          "max": -1.04,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 9.55,
+          "min": 9.5,
+          "max": 10,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1.45,
+          "min": -1.45,
+          "max": -0.85,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 259,
+          "min": 257.5,
+          "max": 273,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 92.5,
+          "min": 90.5,
+          "max": 97.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 981,
+          "min": 981,
+          "max": 981,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -4,
+          "min": -4,
+          "max": -4,
+          "n": 3
+        }
+      },
+      "lc_low": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 18.66,
+          "min": 17.49,
+          "max": 18.83,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -11.39,
+          "min": -11.57,
+          "max": -11.1,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 18.25,
+          "min": 17.8,
+          "max": 19,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -11.4,
+          "min": -12.2,
+          "max": -10.65,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 19.75,
+          "min": 18.5,
+          "max": 19.9,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -11.3,
+          "min": -11.3,
+          "max": -11.15,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 9.09,
+          "min": 9.04,
+          "max": 9.09,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -1.48,
+          "min": -1.49,
+          "max": -1.34,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 9.5,
+          "min": 9.3,
+          "max": 9.6,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1.45,
+          "min": -1.7,
+          "max": -1.25,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 269.5,
+          "min": 267,
+          "max": 287,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 103,
+          "min": 100,
+          "max": 111.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 981,
+          "min": 981,
+          "max": 981,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -4,
+          "min": -4,
+          "max": -4,
+          "n": 3
+        }
+      },
+      "lc_1080": {
+        "runs": 3,
+        "errors": 0,
+        "submit_mean": {
+          "median": 23.88,
+          "min": 23.73,
+          "max": 24.07,
+          "n": 3
+        },
+        "submit_mean_delta": {
+          "median": -6.15,
+          "min": -6.35,
+          "max": -4.86,
+          "n": 3
+        },
+        "submit_p50": {
+          "median": 24,
+          "min": 23.65,
+          "max": 24.05,
+          "n": 3
+        },
+        "submit_p50_delta": {
+          "median": -6.35,
+          "min": -6.45,
+          "max": -4.8,
+          "n": 3
+        },
+        "submit_p95": {
+          "median": 25.1,
+          "min": 24.65,
+          "max": 25.5,
+          "n": 3
+        },
+        "submit_p95_delta": {
+          "median": -5.55,
+          "min": -6.4,
+          "max": -4.7,
+          "n": 3
+        },
+        "cpu_mean": {
+          "median": 9.68,
+          "min": 9.61,
+          "max": 9.68,
+          "n": 3
+        },
+        "cpu_mean_delta": {
+          "median": -0.85,
+          "min": -0.96,
+          "max": -0.75,
+          "n": 3
+        },
+        "cpu_p95": {
+          "median": 10,
+          "min": 9.95,
+          "max": 10,
+          "n": 3
+        },
+        "cpu_p95_delta": {
+          "median": -1,
+          "min": -1,
+          "max": -0.85,
+          "n": 3
+        },
+        "engine_frames_5s": {
+          "median": 211,
+          "min": 209.5,
+          "max": 212.5,
+          "n": 3
+        },
+        "engine_frames_5s_delta": {
+          "median": 42.5,
+          "min": 37,
+          "max": 44.5,
+          "n": 3
+        },
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "draws": {
+          "median": 999,
+          "min": 999,
+          "max": 999,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 14,
+          "min": 14,
+          "max": 14,
+          "n": 3
+        }
+      }
+    },
+    "rows": [
+      {
+        "arm": "lc_base",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 28.59,
+        "submit_p50": 28.45,
+        "submit_p95": 29.8,
+        "cpu_mean": 10.57,
+        "cpu_p95": 10.95,
+        "engine_frames_5s": 175.5,
+        "latency_p50": 74.85,
+        "gpu_total": null,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 4.21,
+        "load_after": 3.62
+      },
+      {
+        "arm": "lc_timing",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 31.21,
+        "submit_p50": 31.1,
+        "submit_p95": 31.65,
+        "cpu_mean": 8.85,
+        "cpu_p95": 9.3,
+        "engine_frames_5s": 161,
+        "latency_p50": 84.3,
+        "gpu_total": 18.79,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 3.62,
+        "load_after": 3.49
+      },
+      {
+        "arm": "lc_shadows_off",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 24.88,
+        "submit_p50": 24.85,
+        "submit_p95": 25.95,
+        "cpu_mean": 8.74,
+        "cpu_p95": 9.2,
+        "engine_frames_5s": 202.5,
+        "latency_p50": 65.65,
+        "gpu_total": null,
+        "draws": 432,
+        "kit_draws": 382,
+        "grass_blades": 179580,
+        "load_before": 3.49,
+        "load_after": 2.85
+      },
+      {
+        "arm": "lc_cascades_2",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 28.58,
+        "submit_p50": 28.35,
+        "submit_p95": 30,
+        "cpu_mean": 9.84,
+        "cpu_p95": 10.25,
+        "engine_frames_5s": 176,
+        "latency_p50": 75.75,
+        "gpu_total": null,
+        "draws": 801,
+        "kit_draws": 702,
+        "grass_blades": 179580,
+        "load_before": 2.85,
+        "load_after": 3.26
+      },
+      {
+        "arm": "lc_post_none",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 17.4,
+        "submit_p50": 17.65,
+        "submit_p95": 18.55,
+        "cpu_mean": 9.09,
+        "cpu_p95": 9.55,
+        "engine_frames_5s": 289,
+        "latency_p50": 42.95,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 3.26,
+        "load_after": 2.64
+      },
+      {
+        "arm": "lc_grass_off",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 26.01,
+        "submit_p50": 25.9,
+        "submit_p95": 27.75,
+        "cpu_mean": 10.11,
+        "cpu_p95": 10.55,
+        "engine_frames_5s": 193.5,
+        "latency_p50": 67.65,
+        "gpu_total": null,
+        "draws": 975,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.64,
+        "load_after": 2.72
+      },
+      {
+        "arm": "lc_medium",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 18.45,
+        "submit_p50": 18.25,
+        "submit_p95": 19.85,
+        "cpu_mean": 9.17,
+        "cpu_p95": 9.5,
+        "engine_frames_5s": 273,
+        "latency_p50": 46.5,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.72,
+        "load_after": 3.39
+      },
+      {
+        "arm": "lc_low",
+        "round": 1,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 17.49,
+        "submit_p50": 17.8,
+        "submit_p95": 18.5,
+        "cpu_mean": 9.09,
+        "cpu_p95": 9.5,
+        "engine_frames_5s": 287,
+        "latency_p50": 43.55,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 3.39,
+        "load_after": 3.12
+      },
+      {
+        "arm": "lc_1080",
+        "round": 1,
+        "canvas": [
+          1920,
+          1080
+        ],
+        "submit_mean": 23.73,
+        "submit_p50": 23.65,
+        "submit_p95": 25.1,
+        "cpu_mean": 9.61,
+        "cpu_p95": 9.95,
+        "engine_frames_5s": 212.5,
+        "latency_p50": 61.3,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 3.12,
+        "load_after": 3.15
+      },
+      {
+        "arm": "lc_timing",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 32.94,
+        "submit_p50": 32.8,
+        "submit_p95": 33.5,
+        "cpu_mean": 8.89,
+        "cpu_p95": 9.5,
+        "engine_frames_5s": 153,
+        "latency_p50": 89.35,
+        "gpu_total": 20.01,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.87,
+        "load_after": 3.18
+      },
+      {
+        "arm": "lc_shadows_off",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 26.11,
+        "submit_p50": 26.2,
+        "submit_p95": 27.1,
+        "cpu_mean": 8.77,
+        "cpu_p95": 9.25,
+        "engine_frames_5s": 193,
+        "latency_p50": 69.15,
+        "gpu_total": null,
+        "draws": 432,
+        "kit_draws": 382,
+        "grass_blades": 179580,
+        "load_before": 3.18,
+        "load_after": 2.98
+      },
+      {
+        "arm": "lc_cascades_2",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 29.1,
+        "submit_p50": 29.4,
+        "submit_p95": 30.05,
+        "cpu_mean": 9.97,
+        "cpu_p95": 10.35,
+        "engine_frames_5s": 173,
+        "latency_p50": 77.55,
+        "gpu_total": null,
+        "draws": 801,
+        "kit_draws": 702,
+        "grass_blades": 179580,
+        "load_before": 2.98,
+        "load_after": 2.85
+      },
+      {
+        "arm": "lc_post_none",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 18.62,
+        "submit_p50": 18.8,
+        "submit_p95": 19.7,
+        "cpu_mean": 8.9,
+        "cpu_p95": 9.3,
+        "engine_frames_5s": 270.5,
+        "latency_p50": 46.85,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.85,
+        "load_after": 2.97
+      },
+      {
+        "arm": "lc_grass_off",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 26.31,
+        "submit_p50": 26,
+        "submit_p95": 27.6,
+        "cpu_mean": 10.07,
+        "cpu_p95": 10.4,
+        "engine_frames_5s": 192,
+        "latency_p50": 69,
+        "gpu_total": null,
+        "draws": 967,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.97,
+        "load_after": 3.23
+      },
+      {
+        "arm": "lc_medium",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 19.45,
+        "submit_p50": 19.45,
+        "submit_p95": 21.1,
+        "cpu_mean": 9.15,
+        "cpu_p95": 9.55,
+        "engine_frames_5s": 259,
+        "latency_p50": 49.25,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 3.23,
+        "load_after": 3.32
+      },
+      {
+        "arm": "lc_low",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 18.66,
+        "submit_p50": 18.25,
+        "submit_p95": 19.9,
+        "cpu_mean": 9.04,
+        "cpu_p95": 9.3,
+        "engine_frames_5s": 269.5,
+        "latency_p50": 46.65,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 3.32,
+        "load_after": 2.75
+      },
+      {
+        "arm": "lc_1080",
+        "round": 2,
+        "canvas": [
+          1920,
+          1080
+        ],
+        "submit_mean": 23.88,
+        "submit_p50": 24,
+        "submit_p95": 24.65,
+        "cpu_mean": 9.68,
+        "cpu_p95": 10,
+        "engine_frames_5s": 211,
+        "latency_p50": 61.45,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.75,
+        "load_after": 2.81
+      },
+      {
+        "arm": "lc_base",
+        "round": 2,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 30.23,
+        "submit_p50": 30.45,
+        "submit_p95": 31.05,
+        "cpu_mean": 10.53,
+        "cpu_p95": 11,
+        "engine_frames_5s": 166.5,
+        "latency_p50": 79.7,
+        "gpu_total": null,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.81,
+        "load_after": 2.34
+      },
+      {
+        "arm": "lc_shadows_off",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 26.05,
+        "submit_p50": 26,
+        "submit_p95": 27.15,
+        "cpu_mean": 8.87,
+        "cpu_p95": 9.3,
+        "engine_frames_5s": 193.5,
+        "latency_p50": 68.85,
+        "gpu_total": null,
+        "draws": 432,
+        "kit_draws": 382,
+        "grass_blades": 179580,
+        "load_before": 2.59,
+        "load_after": 2.29
+      },
+      {
+        "arm": "lc_cascades_2",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 29.17,
+        "submit_p50": 29.35,
+        "submit_p95": 30.15,
+        "cpu_mean": 9.96,
+        "cpu_p95": 10.4,
+        "engine_frames_5s": 172.5,
+        "latency_p50": 77.5,
+        "gpu_total": null,
+        "draws": 801,
+        "kit_draws": 702,
+        "grass_blades": 179580,
+        "load_before": 2.29,
+        "load_after": 2.47
+      },
+      {
+        "arm": "lc_post_none",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 18.62,
+        "submit_p50": 18.8,
+        "submit_p95": 19.65,
+        "cpu_mean": 8.95,
+        "cpu_p95": 9.4,
+        "engine_frames_5s": 270,
+        "latency_p50": 46.75,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.47,
+        "load_after": 2.81
+      },
+      {
+        "arm": "lc_grass_off",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 26.32,
+        "submit_p50": 26.1,
+        "submit_p95": 27.75,
+        "cpu_mean": 10.14,
+        "cpu_p95": 10.55,
+        "engine_frames_5s": 192,
+        "latency_p50": 68.95,
+        "gpu_total": null,
+        "draws": 967,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.81,
+        "load_after": 2.44
+      },
+      {
+        "arm": "lc_medium",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 19.55,
+        "submit_p50": 19.45,
+        "submit_p95": 20.95,
+        "cpu_mean": 9.39,
+        "cpu_p95": 10,
+        "engine_frames_5s": 257.5,
+        "latency_p50": 49.05,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.44,
+        "load_after": 2.93
+      },
+      {
+        "arm": "lc_low",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 18.83,
+        "submit_p50": 19,
+        "submit_p95": 19.75,
+        "cpu_mean": 9.09,
+        "cpu_p95": 9.6,
+        "engine_frames_5s": 267,
+        "latency_p50": 47.45,
+        "gpu_total": null,
+        "draws": 981,
+        "kit_draws": 849,
+        "grass_blades": 0,
+        "load_before": 2.93,
+        "load_after": 3.41
+      },
+      {
+        "arm": "lc_1080",
+        "round": 3,
+        "canvas": [
+          1920,
+          1080
+        ],
+        "submit_mean": 24.07,
+        "submit_p50": 24.05,
+        "submit_p95": 25.5,
+        "cpu_mean": 9.68,
+        "cpu_p95": 10,
+        "engine_frames_5s": 209.5,
+        "latency_p50": 62.55,
+        "gpu_total": null,
+        "draws": 999,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 3.41,
+        "load_after": 3.15
+      },
+      {
+        "arm": "lc_base",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 30.22,
+        "submit_p50": 30.4,
+        "submit_p95": 31.05,
+        "cpu_mean": 10.43,
+        "cpu_p95": 10.85,
+        "engine_frames_5s": 167,
+        "latency_p50": 79.75,
+        "gpu_total": null,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 3.15,
+        "load_after": 2.98
+      },
+      {
+        "arm": "lc_timing",
+        "round": 3,
+        "canvas": [
+          2560,
+          1440
+        ],
+        "submit_mean": 32.72,
+        "submit_p50": 32.7,
+        "submit_p95": 33.4,
+        "cpu_mean": 8.75,
+        "cpu_p95": 9.1,
+        "engine_frames_5s": 154,
+        "latency_p50": 89.4,
+        "gpu_total": 20.04,
+        "draws": 985,
+        "kit_draws": 849,
+        "grass_blades": 179580,
+        "load_before": 2.98,
+        "load_after": 2.91
+      }
+    ]
+  },
+  "native": {
+    "summary": {
+      "base_off": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": null,
+        "gpu_total_delta": null,
+        "gpu_total_p95": null,
+        "gpu_total_p95_delta": null,
+        "p50": {
+          "median": 16.66,
+          "min": 16.59,
+          "max": 16.67,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.2,
+          "min": 0.13,
+          "max": 0.21,
+          "n": 3
+        },
+        "p95": {
+          "median": 17.66,
+          "min": 16.99,
+          "max": 19.87,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -2.09,
+          "min": -2.76,
+          "max": 0.12,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": -0.01,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 932,
+          "min": 932,
+          "max": 932,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        }
+      },
+      "base": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 11.73,
+          "min": 11.57,
+          "max": 11.75,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 17.44,
+          "min": 17.42,
+          "max": 17.6,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.66,
+          "min": 16.46,
+          "max": 16.68,
+          "n": 3
+        },
+        "p95": {
+          "median": 18.71,
+          "min": 17.36,
+          "max": 19.75,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "draws": {
+          "median": 932,
+          "min": 932,
+          "max": 932,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "post": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "prepass": {
+            "median": 2.66,
+            "min": 2.63,
+            "max": 2.76,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.82,
+            "min": 0.81,
+            "max": 0.82,
+            "n": 3
+          },
+          "shadow": {
+            "median": 4.44,
+            "min": 4.3,
+            "max": 4.58,
+            "n": 3
+          },
+          "ssao": {
+            "median": 3.64,
+            "min": 3.61,
+            "max": 3.69,
+            "n": 3
+          },
+          "taa": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.06,
+            "min": 0.06,
+            "max": 0.06,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          }
+        }
+      },
+      "shadows_off": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 13.84,
+          "min": 13.6,
+          "max": 13.85,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": 2.09,
+          "min": 1.85,
+          "max": 2.1,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 14.28,
+          "min": 14.27,
+          "max": 14.29,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -3.14,
+          "min": -3.15,
+          "max": -3.13,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.66,
+          "min": 16.66,
+          "max": 16.66,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.2,
+          "min": 0.2,
+          "max": 0.2,
+          "n": 3
+        },
+        "p95": {
+          "median": 17,
+          "min": 16.87,
+          "max": 18.51,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -2.75,
+          "min": -2.88,
+          "max": -1.24,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.67,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 416,
+          "min": 416,
+          "max": 416,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -516,
+          "min": -516,
+          "max": -516,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "post": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.02,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "prepass": {
+            "median": 9.73,
+            "min": 9.46,
+            "max": 9.75,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 6.97,
+            "min": 6.7,
+            "max": 6.99,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.4,
+            "min": 0.4,
+            "max": 0.4,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.42,
+            "min": -0.42,
+            "max": -0.42,
+            "n": 3
+          },
+          "shadow": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": -4.43,
+            "min": -4.43,
+            "max": -4.42,
+            "n": 3
+          },
+          "ssao": {
+            "median": 3.6,
+            "min": 3.6,
+            "max": 3.62,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -0.04,
+            "min": -0.04,
+            "max": -0.02,
+            "n": 3
+          },
+          "taa": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.07,
+            "min": 0.06,
+            "max": 0.07,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": 0.01,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          }
+        }
+      },
+      "cascades_2": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 15.95,
+          "min": 15.95,
+          "max": 15.96,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": 4.2,
+          "min": 4.2,
+          "max": 4.21,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 16.47,
+          "min": 16.47,
+          "max": 16.47,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -0.95,
+          "min": -0.95,
+          "max": -0.95,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.66,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.2,
+          "min": 0.2,
+          "max": 0.21,
+          "n": 3
+        },
+        "p95": {
+          "median": 17.18,
+          "min": 17.01,
+          "max": 17.51,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -2.57,
+          "min": -2.74,
+          "max": -2.24,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.67,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 762,
+          "min": 762,
+          "max": 762,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -170,
+          "min": -170,
+          "max": -170,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "post": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.02,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "prepass": {
+            "median": 8.48,
+            "min": 8.27,
+            "max": 8.55,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 5.72,
+            "min": 5.51,
+            "max": 5.79,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.23,
+            "min": 0.22,
+            "max": 0.24,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.59,
+            "min": -0.6,
+            "max": -0.58,
+            "n": 3
+          },
+          "shadow": {
+            "median": 3.51,
+            "min": 3.45,
+            "max": 3.72,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": -0.93,
+            "min": -0.99,
+            "max": -0.72,
+            "n": 3
+          },
+          "ssao": {
+            "median": 3.64,
+            "min": 3.62,
+            "max": 3.64,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": 0,
+            "min": -0.02,
+            "max": 0,
+            "n": 3
+          },
+          "taa": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.06,
+            "min": 0.06,
+            "max": 0.06,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": 0,
+            "n": 3
+          }
+        }
+      },
+      "post_none": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 8.62,
+          "min": 8.21,
+          "max": 8.64,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": -3.13,
+          "min": -3.54,
+          "max": -3.11,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 9.16,
+          "min": 8.39,
+          "max": 9.22,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -8.26,
+          "min": -9.03,
+          "max": -8.2,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.65,
+          "min": 16.65,
+          "max": 16.67,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.19,
+          "min": 0.19,
+          "max": 0.21,
+          "n": 3
+        },
+        "p95": {
+          "median": 18.02,
+          "min": 17.05,
+          "max": 18.48,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -1.73,
+          "min": -2.7,
+          "max": -1.27,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.67,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 932,
+          "min": 932,
+          "max": 932,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "post": {
+            "median": 0.03,
+            "min": 0.02,
+            "max": 0.04,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "prepass": {
+            "median": 0.08,
+            "min": 0.03,
+            "max": 0.13,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": -2.68,
+            "min": -2.73,
+            "max": -2.63,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.38,
+            "min": 0.37,
+            "max": 0.39,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.44,
+            "min": -0.45,
+            "max": -0.43,
+            "n": 3
+          },
+          "shadow": {
+            "median": 7.74,
+            "min": 7.43,
+            "max": 7.77,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": 3.3,
+            "min": 2.99,
+            "max": 3.33,
+            "n": 3
+          },
+          "ssao": {
+            "median": 0.01,
+            "min": 0,
+            "max": 0.02,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -3.63,
+            "min": -3.64,
+            "max": -3.62,
+            "n": 3
+          },
+          "taa": {
+            "median": 0.17,
+            "min": 0.16,
+            "max": 0.21,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": 0.16,
+            "min": 0.15,
+            "max": 0.2,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0.1,
+            "min": 0.09,
+            "max": 0.12,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0.1,
+            "min": 0.09,
+            "max": 0.12,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": -0.06,
+            "min": -0.06,
+            "max": -0.05,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.06,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": 0.01,
+            "min": 0,
+            "max": 0.05,
+            "n": 3
+          }
+        }
+      },
+      "grass_off": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 14.34,
+          "min": 14.09,
+          "max": 14.35,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": 2.59,
+          "min": 2.34,
+          "max": 2.6,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 14.83,
+          "min": 14.78,
+          "max": 14.89,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -2.59,
+          "min": -2.64,
+          "max": -2.53,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.65,
+          "min": 16.51,
+          "max": 16.67,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.19,
+          "min": 0.05,
+          "max": 0.21,
+          "n": 3
+        },
+        "p95": {
+          "median": 17.16,
+          "min": 16.93,
+          "max": 20.06,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -2.59,
+          "min": -2.82,
+          "max": 0.31,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.67,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 914,
+          "min": 914,
+          "max": 914,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -18,
+          "min": -18,
+          "max": -18,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "post": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.01,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "prepass": {
+            "median": 5.03,
+            "min": 4.77,
+            "max": 5.09,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 2.27,
+            "min": 2.01,
+            "max": 2.33,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.33,
+            "min": 0.32,
+            "max": 0.36,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.49,
+            "min": -0.5,
+            "max": -0.46,
+            "n": 3
+          },
+          "shadow": {
+            "median": 5.23,
+            "min": 4.98,
+            "max": 5.56,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": 0.79,
+            "min": 0.54,
+            "max": 1.12,
+            "n": 3
+          },
+          "ssao": {
+            "median": 3.62,
+            "min": 3.6,
+            "max": 3.63,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -0.02,
+            "min": -0.04,
+            "max": -0.01,
+            "n": 3
+          },
+          "taa": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.06,
+            "min": 0.06,
+            "max": 0.06,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          }
+        }
+      },
+      "medium": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 8.57,
+          "min": 8.54,
+          "max": 8.91,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": -3.18,
+          "min": -3.21,
+          "max": -2.84,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 8.77,
+          "min": 8.75,
+          "max": 9.45,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -8.65,
+          "min": -8.67,
+          "max": -7.97,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.6,
+          "min": 16.25,
+          "max": 16.66,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.14,
+          "min": -0.21,
+          "max": 0.2,
+          "n": 3
+        },
+        "p95": {
+          "median": 19.22,
+          "min": 17.26,
+          "max": 20.13,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -0.53,
+          "min": -2.49,
+          "max": 0.38,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.66,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": -0.01,
+          "min": -0.01,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 914,
+          "min": 914,
+          "max": 914,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -18,
+          "min": -18,
+          "max": -18,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.02,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.02,
+            "n": 3
+          },
+          "post": {
+            "median": 0.26,
+            "min": 0.22,
+            "max": 0.27,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.25,
+            "min": 0.21,
+            "max": 0.26,
+            "n": 3
+          },
+          "prepass": {
+            "median": 3.2,
+            "min": 2.75,
+            "max": 3.68,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 0.44,
+            "min": -0.01,
+            "max": 0.92,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.36,
+            "min": 0.35,
+            "max": 0.39,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.46,
+            "min": -0.47,
+            "max": -0.43,
+            "n": 3
+          },
+          "shadow": {
+            "median": 4.69,
+            "min": 4.51,
+            "max": 5.1,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": 0.25,
+            "min": 0.07,
+            "max": 0.66,
+            "n": 3
+          },
+          "ssao": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -3.64,
+            "min": -3.64,
+            "max": -3.64,
+            "n": 3
+          },
+          "taa": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0.02,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": -0.05,
+            "min": -0.05,
+            "max": -0.05,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0.03,
+            "min": 0.02,
+            "max": 0.03,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          }
+        }
+      },
+      "low": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 9,
+          "min": 8.99,
+          "max": 9.04,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": -2.75,
+          "min": -2.76,
+          "max": -2.71,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 9.55,
+          "min": 9.49,
+          "max": 9.6,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -7.87,
+          "min": -7.93,
+          "max": -7.82,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.64,
+          "min": 16.27,
+          "max": 16.66,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.18,
+          "min": -0.19,
+          "max": 0.2,
+          "n": 3
+        },
+        "p95": {
+          "median": 19.67,
+          "min": 16.97,
+          "max": 19.83,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": -0.08,
+          "min": -2.78,
+          "max": 0.08,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": -0.01,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 914,
+          "min": 914,
+          "max": 914,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": -18,
+          "min": -18,
+          "max": -18,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.03,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0.02,
+            "min": 0.02,
+            "max": 0.03,
+            "n": 3
+          },
+          "post": {
+            "median": 0.25,
+            "min": 0.25,
+            "max": 0.27,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0.24,
+            "min": 0.24,
+            "max": 0.26,
+            "n": 3
+          },
+          "prepass": {
+            "median": 3.34,
+            "min": 2.75,
+            "max": 3.72,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 0.58,
+            "min": -0.01,
+            "max": 0.96,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.41,
+            "min": 0.4,
+            "max": 0.41,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.41,
+            "min": -0.42,
+            "max": -0.41,
+            "n": 3
+          },
+          "shadow": {
+            "median": 4.9,
+            "min": 4.53,
+            "max": 5.49,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": 0.46,
+            "min": 0.09,
+            "max": 1.05,
+            "n": 3
+          },
+          "ssao": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -3.64,
+            "min": -3.64,
+            "max": -3.64,
+            "n": 3
+          },
+          "taa": {
+            "median": 0.03,
+            "min": 0.01,
+            "max": 0.07,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": 0.02,
+            "min": 0,
+            "max": 0.06,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0.02,
+            "min": 0.01,
+            "max": 0.03,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": -0.05,
+            "min": -0.05,
+            "max": -0.05,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.01,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          }
+        }
+      },
+      "s1080": {
+        "runs": 3,
+        "errors": 0,
+        "gpu_total": {
+          "median": 14.11,
+          "min": 13.86,
+          "max": 14.22,
+          "n": 3
+        },
+        "gpu_total_delta": {
+          "median": 2.36,
+          "min": 2.11,
+          "max": 2.47,
+          "n": 3
+        },
+        "gpu_total_p95": {
+          "median": 14.7,
+          "min": 14.65,
+          "max": 14.8,
+          "n": 3
+        },
+        "gpu_total_p95_delta": {
+          "median": -2.72,
+          "min": -2.77,
+          "max": -2.62,
+          "n": 3
+        },
+        "p50": {
+          "median": 16.54,
+          "min": 15.26,
+          "max": 16.66,
+          "n": 3
+        },
+        "p50_delta": {
+          "median": 0.08,
+          "min": -1.2,
+          "max": 0.2,
+          "n": 3
+        },
+        "p95": {
+          "median": 20.56,
+          "min": 17.38,
+          "max": 21.08,
+          "n": 3
+        },
+        "p95_delta": {
+          "median": 0.81,
+          "min": -2.37,
+          "max": 1.33,
+          "n": 3
+        },
+        "mean": {
+          "median": 16.67,
+          "min": 16.66,
+          "max": 16.67,
+          "n": 3
+        },
+        "mean_delta": {
+          "median": 0,
+          "min": -0.01,
+          "max": 0,
+          "n": 3
+        },
+        "draws": {
+          "median": 932,
+          "min": 932,
+          "max": 932,
+          "n": 3
+        },
+        "draws_delta": {
+          "median": 0,
+          "min": 0,
+          "max": 0,
+          "n": 3
+        },
+        "passes": {
+          "opaque": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "opaque_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "post": {
+            "median": 0.01,
+            "min": 0.01,
+            "max": 0.02,
+            "n": 3
+          },
+          "post_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "prepass": {
+            "median": 4.13,
+            "min": 3.36,
+            "max": 4.31,
+            "n": 3
+          },
+          "prepass_delta": {
+            "median": 1.37,
+            "min": 0.6,
+            "max": 1.55,
+            "n": 3
+          },
+          "preprocess": {
+            "median": 0.3,
+            "min": 0.27,
+            "max": 0.33,
+            "n": 3
+          },
+          "preprocess_delta": {
+            "median": -0.52,
+            "min": -0.55,
+            "max": -0.49,
+            "n": 3
+          },
+          "shadow": {
+            "median": 7.41,
+            "min": 7.27,
+            "max": 8.45,
+            "n": 3
+          },
+          "shadow_delta": {
+            "median": 2.97,
+            "min": 2.83,
+            "max": 4.01,
+            "n": 3
+          },
+          "ssao": {
+            "median": 2.04,
+            "min": 2.02,
+            "max": 2.04,
+            "n": 3
+          },
+          "ssao_delta": {
+            "median": -1.6,
+            "min": -1.62,
+            "max": -1.6,
+            "n": 3
+          },
+          "taa": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "taa_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": -0.01,
+            "n": 3
+          },
+          "tilt_shift": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "tilt_shift_delta": {
+            "median": 0,
+            "min": 0,
+            "max": 0,
+            "n": 3
+          },
+          "transmission": {
+            "median": 0.06,
+            "min": 0.05,
+            "max": 0.06,
+            "n": 3
+          },
+          "transmission_delta": {
+            "median": 0,
+            "min": -0.01,
+            "max": 0,
+            "n": 3
+          },
+          "transparent": {
+            "median": 0,
+            "min": 0,
+            "max": 0.01,
+            "n": 3
+          },
+          "transparent_delta": {
+            "median": -0.01,
+            "min": -0.01,
+            "max": 0,
+            "n": 3
+          }
+        }
+      }
+    },
+    "rows": [
+      {
+        "arm": "base_off",
+        "round": 0,
+        "p50": 16.59,
+        "p95": 19.87,
+        "mean": 16.66,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": null,
+        "gpu_total_p95": null,
+        "passes": null,
+        "rejected": null,
+        "load_before": 3.15,
+        "load_after": 2.7
+      },
+      {
+        "arm": "base",
+        "round": 0,
+        "p50": 16.46,
+        "p95": 19.75,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 11.75,
+        "gpu_total_p95": 17.42,
+        "passes": {
+          "opaque": 0,
+          "post": 0.01,
+          "prepass": 2.76,
+          "preprocess": 0.82,
+          "shadow": 4.44,
+          "ssao": 3.64,
+          "taa": 0.01,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.7,
+        "load_after": 2.83
+      },
+      {
+        "arm": "shadows_off",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 416,
+        "kit_draws": 382,
+        "gpu_total": 13.85,
+        "gpu_total_p95": 14.28,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 9.75,
+          "preprocess": 0.4,
+          "shadow": 0.01,
+          "ssao": 3.6,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.07,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.83,
+        "load_after": 2.85
+      },
+      {
+        "arm": "cascades_2",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.18,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 762,
+        "kit_draws": 702,
+        "gpu_total": 15.96,
+        "gpu_total_p95": 16.47,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 8.48,
+          "preprocess": 0.24,
+          "shadow": 3.51,
+          "ssao": 3.64,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.85,
+        "load_after": 2.74
+      },
+      {
+        "arm": "post_none",
+        "round": 0,
+        "p50": 16.67,
+        "p95": 17.05,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 8.21,
+        "gpu_total_p95": 8.39,
+        "passes": {
+          "opaque": 0.01,
+          "post": 0.02,
+          "prepass": 0.03,
+          "preprocess": 0.38,
+          "shadow": 7.43,
+          "ssao": 0.02,
+          "taa": 0.16,
+          "tilt_shift": 0.09,
+          "transmission": 0.01,
+          "transparent": 0.06
+        },
+        "rejected": 0,
+        "load_before": 2.74,
+        "load_after": 2.44
+      },
+      {
+        "arm": "grass_off",
+        "round": 0,
+        "p50": 16.67,
+        "p95": 16.93,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 14.09,
+        "gpu_total_p95": 14.78,
+        "passes": {
+          "opaque": 0,
+          "post": 0.01,
+          "prepass": 5.03,
+          "preprocess": 0.36,
+          "shadow": 4.98,
+          "ssao": 3.63,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.44,
+        "load_after": 2.49
+      },
+      {
+        "arm": "medium",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.26,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 8.54,
+        "gpu_total_p95": 8.75,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.22,
+          "prepass": 2.75,
+          "preprocess": 0.36,
+          "shadow": 5.1,
+          "ssao": 0,
+          "taa": 0.03,
+          "tilt_shift": 0.02,
+          "transmission": 0.01,
+          "transparent": 0.03
+        },
+        "rejected": 0,
+        "load_before": 2.49,
+        "load_after": 2.91
+      },
+      {
+        "arm": "low",
+        "round": 0,
+        "p50": 16.27,
+        "p95": 19.67,
+        "mean": 16.66,
+        "vsync_like": false,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 8.99,
+        "gpu_total_p95": 9.49,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.25,
+          "prepass": 3.34,
+          "preprocess": 0.41,
+          "shadow": 4.9,
+          "ssao": 0,
+          "taa": 0.03,
+          "tilt_shift": 0.02,
+          "transmission": 0.01,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.91,
+        "load_after": 2.84
+      },
+      {
+        "arm": "s1080",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.38,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 13.86,
+        "gpu_total_p95": 14.65,
+        "passes": {
+          "opaque": 0,
+          "post": 0.01,
+          "prepass": 4.13,
+          "preprocess": 0.33,
+          "shadow": 7.27,
+          "ssao": 2.04,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.84,
+        "load_after": 2.87
+      },
+      {
+        "arm": "base",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.36,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 11.73,
+        "gpu_total_p95": 17.44,
+        "passes": {
+          "opaque": 0.01,
+          "post": 0.01,
+          "prepass": 2.63,
+          "preprocess": 0.81,
+          "shadow": 4.58,
+          "ssao": 3.61,
+          "taa": 0.01,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.34,
+        "load_after": 2.43
+      },
+      {
+        "arm": "shadows_off",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 16.87,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 416,
+        "kit_draws": 382,
+        "gpu_total": 13.84,
+        "gpu_total_p95": 14.29,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 9.73,
+          "preprocess": 0.4,
+          "shadow": 0.01,
+          "ssao": 3.6,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.07,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.43,
+        "load_after": 2.26
+      },
+      {
+        "arm": "cascades_2",
+        "round": 0,
+        "p50": 16.67,
+        "p95": 17.01,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 762,
+        "kit_draws": 702,
+        "gpu_total": 15.95,
+        "gpu_total_p95": 16.47,
+        "passes": {
+          "opaque": 0.01,
+          "post": 0.02,
+          "prepass": 8.55,
+          "preprocess": 0.23,
+          "shadow": 3.45,
+          "ssao": 3.62,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.26,
+        "load_after": 2.58
+      },
+      {
+        "arm": "post_none",
+        "round": 0,
+        "p50": 16.65,
+        "p95": 18.48,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 8.64,
+        "gpu_total_p95": 9.16,
+        "passes": {
+          "opaque": 0.03,
+          "post": 0.04,
+          "prepass": 0.13,
+          "preprocess": 0.39,
+          "shadow": 7.74,
+          "ssao": 0,
+          "taa": 0.17,
+          "tilt_shift": 0.12,
+          "transmission": 0,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.58,
+        "load_after": 2.65
+      },
+      {
+        "arm": "grass_off",
+        "round": 0,
+        "p50": 16.65,
+        "p95": 17.16,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 14.35,
+        "gpu_total_p95": 14.83,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 4.77,
+          "preprocess": 0.33,
+          "shadow": 5.56,
+          "ssao": 3.6,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.65,
+        "load_after": 2.74
+      },
+      {
+        "arm": "medium",
+        "round": 0,
+        "p50": 16.6,
+        "p95": 19.22,
+        "mean": 16.66,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 8.91,
+        "gpu_total_p95": 9.45,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.27,
+          "prepass": 3.68,
+          "preprocess": 0.39,
+          "shadow": 4.51,
+          "ssao": 0,
+          "taa": 0.01,
+          "tilt_shift": 0.01,
+          "transmission": 0.01,
+          "transparent": 0.02
+        },
+        "rejected": 0,
+        "load_before": 2.74,
+        "load_after": 2.98
+      },
+      {
+        "arm": "low",
+        "round": 0,
+        "p50": 16.64,
+        "p95": 19.83,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 9,
+        "gpu_total_p95": 9.55,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.27,
+          "prepass": 3.72,
+          "preprocess": 0.41,
+          "shadow": 4.53,
+          "ssao": 0,
+          "taa": 0.01,
+          "tilt_shift": 0.01,
+          "transmission": 0.01,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.98,
+        "load_after": 2.94
+      },
+      {
+        "arm": "s1080",
+        "round": 0,
+        "p50": 15.26,
+        "p95": 21.08,
+        "mean": 16.67,
+        "vsync_like": false,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 14.11,
+        "gpu_total_p95": 14.7,
+        "passes": {
+          "opaque": 0.01,
+          "post": 0.01,
+          "prepass": 4.31,
+          "preprocess": 0.27,
+          "shadow": 7.41,
+          "ssao": 2.04,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.05,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 2.94,
+        "load_after": 2.76
+      },
+      {
+        "arm": "base_off",
+        "round": 0,
+        "p50": 16.67,
+        "p95": 16.99,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": null,
+        "gpu_total_p95": null,
+        "passes": null,
+        "rejected": null,
+        "load_before": 2.76,
+        "load_after": 2.59
+      },
+      {
+        "arm": "shadows_off",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 18.51,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 416,
+        "kit_draws": 382,
+        "gpu_total": 13.6,
+        "gpu_total_p95": 14.27,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 9.46,
+          "preprocess": 0.4,
+          "shadow": 0.02,
+          "ssao": 3.62,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.91,
+        "load_after": 2.95
+      },
+      {
+        "arm": "cascades_2",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.51,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 762,
+        "kit_draws": 702,
+        "gpu_total": 15.95,
+        "gpu_total_p95": 16.47,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 8.27,
+          "preprocess": 0.22,
+          "shadow": 3.72,
+          "ssao": 3.64,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.95,
+        "load_after": 2.92
+      },
+      {
+        "arm": "post_none",
+        "round": 0,
+        "p50": 16.65,
+        "p95": 18.02,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 8.62,
+        "gpu_total_p95": 9.22,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.03,
+          "prepass": 0.08,
+          "preprocess": 0.37,
+          "shadow": 7.77,
+          "ssao": 0.01,
+          "taa": 0.21,
+          "tilt_shift": 0.1,
+          "transmission": 0,
+          "transparent": 0.02
+        },
+        "rejected": 0,
+        "load_before": 2.92,
+        "load_after": 2.69
+      },
+      {
+        "arm": "grass_off",
+        "round": 0,
+        "p50": 16.51,
+        "p95": 20.06,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 14.34,
+        "gpu_total_p95": 14.89,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 5.09,
+          "preprocess": 0.32,
+          "shadow": 5.23,
+          "ssao": 3.62,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 2.69,
+        "load_after": 2.47
+      },
+      {
+        "arm": "medium",
+        "round": 0,
+        "p50": 16.25,
+        "p95": 20.13,
+        "mean": 16.66,
+        "vsync_like": false,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 8.57,
+        "gpu_total_p95": 8.77,
+        "passes": {
+          "opaque": 0.02,
+          "post": 0.26,
+          "prepass": 3.2,
+          "preprocess": 0.35,
+          "shadow": 4.69,
+          "ssao": 0,
+          "taa": 0.01,
+          "tilt_shift": 0.01,
+          "transmission": 0.01,
+          "transparent": 0.03
+        },
+        "rejected": 0,
+        "load_before": 2.47,
+        "load_after": 4.04
+      },
+      {
+        "arm": "low",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 16.97,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 914,
+        "kit_draws": 849,
+        "gpu_total": 9.04,
+        "gpu_total_p95": 9.6,
+        "passes": {
+          "opaque": 0.03,
+          "post": 0.25,
+          "prepass": 2.75,
+          "preprocess": 0.4,
+          "shadow": 5.49,
+          "ssao": 0,
+          "taa": 0.07,
+          "tilt_shift": 0.03,
+          "transmission": 0.01,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 4.04,
+        "load_after": 3.76
+      },
+      {
+        "arm": "s1080",
+        "round": 0,
+        "p50": 16.54,
+        "p95": 20.56,
+        "mean": 16.66,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 14.22,
+        "gpu_total_p95": 14.8,
+        "passes": {
+          "opaque": 0,
+          "post": 0.02,
+          "prepass": 3.36,
+          "preprocess": 0.3,
+          "shadow": 8.45,
+          "ssao": 2.02,
+          "taa": 0,
+          "tilt_shift": 0,
+          "transmission": 0.06,
+          "transparent": 0
+        },
+        "rejected": 0,
+        "load_before": 3.76,
+        "load_after": 3.4
+      },
+      {
+        "arm": "base_off",
+        "round": 0,
+        "p50": 16.66,
+        "p95": 17.66,
+        "mean": 16.67,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": null,
+        "gpu_total_p95": null,
+        "passes": null,
+        "rejected": null,
+        "load_before": 3.4,
+        "load_after": 4.36
+      },
+      {
+        "arm": "base",
+        "round": 0,
+        "p50": 16.68,
+        "p95": 18.71,
+        "mean": 16.66,
+        "vsync_like": true,
+        "draws": 932,
+        "kit_draws": 849,
+        "gpu_total": 11.57,
+        "gpu_total_p95": 17.6,
+        "passes": {
+          "opaque": 0,
+          "post": 0.01,
+          "prepass": 2.66,
+          "preprocess": 0.82,
+          "shadow": 4.3,
+          "ssao": 3.69,
+          "taa": 0.01,
+          "tilt_shift": 0.01,
+          "transmission": 0.06,
+          "transparent": 0.01
+        },
+        "rejected": 0,
+        "load_before": 4.36,
+        "load_after": 3.94
+      }
+    ]
+  }
+}

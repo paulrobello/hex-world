@@ -10,6 +10,8 @@
 //   Chrome trace of the first closed and the open window per arm, read by e2e/frame-pacing-trace.mjs),
 //   PACING_GUARD=1 (host-load guard), PACING_PACED=1 (display pacing, not uncapped), PACING_SIZE, PACING_DPR, PACING_KEYS, PACING_RADIUS,
 //   PACING_FOCUS, PACING_TIMELINE, PACING_SHIM_A / PACING_SHIM_B (see where each is read).
+// The lc_* arms are the low-camera cost isolation of docs/perf/low-camera/: one toggle each, every
+// row carries `cpu` (engine callback ms) and a diag census, and rounds rotate the arm order.
 import { chromium } from "playwright";
 import { createServer } from "node:http";
 import { open, readFile, writeFile, mkdir } from "node:fs/promises";
@@ -37,13 +39,17 @@ const KEYS = { scenario: "play", tier: "high", fps: "off", seed: "1", tilt: "off
 // PACING_PACED=1 keeps Chrome's display pacing (drops the two uncapping flags), as players run.
 const PACED = process.env.PACING_PACED === "1";
 const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  ...(PACED ? [] : ["--disable-gpu-vsync", "--disable-frame-rate-limit"]), "--enable-webgpu-developer-features"];
+  ...(PACED ? [] : ["--disable-gpu-vsync", "--disable-frame-rate-limit"]), "--enable-webgpu-developer-features",
+  // PACING_CHROME_ARGS (space-separated) adds browser flags, e.g. Dawn's
+  // `--enable-dawn-features=use_user_defined_labels_in_backend` for a labelled Metal System Trace.
+  ...(process.env.PACING_CHROME_ARGS ?? "").split(" ").filter(Boolean)];
 const TRACE_CATS = ["devtools.timeline", "disabled-by-default-devtools.timeline", "disabled-by-default-devtools.timeline.frame",
   "v8.execute", "blink", "cc", "viz", "gpu", "gpu.dawn", "webgpu", "toplevel", "benchmark", "rail"];
 
 // Arms: extra keys for the page, and the HUD state sequence run inside it.
 const FULL = ["closed", "open", "closed", "unfocused", "closed", "tiles_closed", "closed", "hidden", "closed"];
 const SHORT = ["closed", "open", "closed", "unfocused", "closed"];
+const LC = ["closed", "closed"];
 const ARMS = {
   default: { keys: {}, phases: FULL },
   latency_off: { keys: { frame_latency: "off" }, phases: SHORT },
@@ -62,6 +68,20 @@ const ARMS = {
   cap_30: { keys: { frame_cap: "30" }, phases: ["closed", "open", "unfocused"] },
   cap_60: { keys: { frame_cap: "60" }, phases: ["closed", "open", "unfocused"] },
   cap_120: { keys: { frame_cap: "120" }, phases: ["closed", "open", "unfocused"] },
+  // Low-camera cost isolation (docs/perf/low-camera/): one toggle per arm, two closed windows each.
+  // `expect` is checked against the census, so a key that does not apply in play fails the row
+  // instead of reading as a zero saving. `size` overrides the viewport (no render-scale key exists,
+  // so a smaller viewport at the same aspect stands in for a lower resolution scale).
+  lc_base: { keys: {}, phases: LC, expect: { tier: "high", shadows: true, ssao: true } },
+  lc_timing: { keys: { gpu_timing: "on" }, phases: LC, expect: { tier: "high" } },
+  lc_shadows_off: { keys: { shadows: "off" }, phases: LC, expect: { shadows: false } },
+  lc_cascades_2: { keys: { cascades: "2" }, phases: LC, expect: { cascades: 2 } },
+  lc_post_none: { keys: { post: "none" }, phases: LC, expect: { ssao: false } },
+  lc_grass_off: { keys: { grass: "0" }, phases: LC, expect: { grass_blades: 0 } },
+  lc_medium: { keys: { tier: "medium" }, phases: LC, expect: { tier: "medium", ssao: false } },
+  lc_low: { keys: { tier: "low" }, phases: LC, expect: { tier: "low" } },
+  lc_1080: { keys: {}, size: [1920, 1080], phases: LC, expect: { canvas: [1920, 1080] } },
+  lc_720: { keys: {}, size: [1280, 720], phases: LC, expect: { canvas: [1280, 720] } },
 };
 const pick = (process.env.PACING_ARMS ?? Object.keys(ARMS).join(",")).split(",");
 
@@ -108,7 +128,7 @@ function stats(ms) {
 // its work is reported done (`done`). The probe's rAF goes through the frame-latency limiter like the
 // engine's, so its intervals show when the limiter releases callbacks; submit intervals are the frames.
 const SUBMIT_PROBE = () => {
-  const P = (window.__pacing = { on: false, submit: [], done: [], log: null });
+  const P = (window.__pacing = { on: false, submit: [], done: [], cb: [], log: null });
   if (!window.GPUQueue) return;
   const submit = GPUQueue.prototype.submit;
   let armed = false;
@@ -116,18 +136,31 @@ const SUBMIT_PROBE = () => {
   // request shows up when the limiter releases it), callback start and end, and submit, each with the
   // limiter's in-flight count and whether it ran inside a callback.
   let depth = 0;
+  // Set by a submit inside a callback: that callback is an engine frame, and its start-to-end time
+  // (pushed to `P.cb` while `P.on`) is the frame's main-thread CPU time.
+  let submitted = false;
   const raf = window.requestAnimationFrame.bind(window);
   const fl = () => window.__frameLatency?.inflight() ?? null;
   window.requestAnimationFrame = (cb) => {
     P.log?.push(["req", performance.now(), depth, fl()]);
     return raf((ts) => {
       depth++;
-      P.log?.push(["cb", performance.now(), depth, fl()]);
-      try { cb(ts); } finally { P.log?.push(["end", performance.now(), depth, fl()]); depth--; }
+      const t0 = performance.now();
+      const outer = submitted;
+      submitted = false;
+      P.log?.push(["cb", t0, depth, fl()]);
+      try { cb(ts); } finally {
+        const t1 = performance.now();
+        if (submitted && P.on) P.cb.push(t1 - t0);
+        submitted = outer || submitted;
+        P.log?.push(["end", t1, depth, fl()]);
+        depth--;
+      }
     });
   };
   GPUQueue.prototype.submit = function (b) {
     P.log?.push(["submit", performance.now(), depth, fl()]);
+    if (depth > 0) submitted = true;
     const r = submit.call(this, b);
     if (P.on && !armed) {
       armed = true;
@@ -145,13 +178,13 @@ const recordFrames = (page, ms) => page.evaluate((ms) => new Promise((resolve) =
   const d0 = fl ? fl.deferrals() : null;
   const f0 = window.hexWorld.state().frames;
   const P = window.__pacing;
-  if (P) { P.submit = []; P.done = []; P.on = true; }
+  if (P) { P.submit = []; P.done = []; P.cb = []; P.on = true; }
   const tick = (now) => {
     t.push(now);
     if (now < end) requestAnimationFrame(tick);
     else {
       if (P) P.on = false;
-      resolve({ t, submit: P?.submit ?? [], done: P?.done ?? [], deferrals: fl ? fl.deferrals() - d0 : null,
+      resolve({ t, submit: P?.submit ?? [], done: P?.done ?? [], cb: P?.cb ?? [], deferrals: fl ? fl.deferrals() - d0 : null,
         engine_frames: window.hexWorld.state().frames - f0 });
     }
   };
@@ -210,11 +243,28 @@ async function trace(page, path) {
   return { path, events: chunks.length, raf_t: rec.t };
 }
 
+// The diag and state fields the lc_* arms check and report: frame stats over the diag ring, the GPU
+// timing object (frame `total` on the web), the render settings in force, and draws per pass
+// (counted as e2e/perf-close-camera-native.mjs does).
+const censusOf = (page) => page.evaluate(() => {
+  const d = window.hexWorld.diag(), st = window.hexWorld.state();
+  const count = (p) => p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh;
+  const passes = (d.passes ?? []).map((p) => ({ view: p.view, phase: p.phase, draws: count(p) }));
+  return { tier: st.tier?.tier ?? null, shadows: d.shadows, cascades: d.cascades, shadow_dist: d.shadow_dist,
+    shadow_casters: d.shadow_casters, post: d.post, ssao: d.ssao, grass_blades: st.grass?.blades ?? null,
+    tilt: st.tilt?.enabled ?? null, tiles: st.play?.tiles?.length ?? null, cars: d.cars, boids: d.boids,
+    diag: { p50: d.p50, p95: d.p95, mean: d.mean, samples: d.samples },
+    draws_total: passes.reduce((n, p) => n + p.draws, 0), passes,
+    kit_draws: d.kit_draws ? { slots: d.kit_draws.slots, total: d.kit_draws.total } : null,
+    visible_tris: d.visible_tris, gpu: d.gpu ? { ...d.gpu, tail_over_25ms: d.gpu.tail_over_25ms?.length ?? null } : null };
+});
+
 async function run(name, arm) {
   const hud = arm.hud !== false;
   const browser = await chromium.launch({ channel: "chromium", headless: true, args: ARGS });
   try {
-    const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: DPR });
+    const [vw, vh] = arm.size ?? [W, H];
+    const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: DPR });
     if (!hud) await page.route((u) => u.pathname.endsWith("/web/ui/hud.js"), (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
     if (arm.shim) {
       const file = process.env[arm.shim];
@@ -247,7 +297,8 @@ async function run(name, arm) {
       const row = { phase, state, ...stats(iv), submit: rec.submit.length > 2 ? stats(gaps(rec.submit)) : null,
         done: rec.done.length > 2 ? stats(gaps(rec.done)) : null, deferrals: rec.deferrals, engine_frames: rec.engine_frames,
         // Submit to work-done per frame (the promises resolve in submit order).
-        latency: rec.done.length > 2 ? msStats(rec.done.map((d, i) => d - rec.submit[i])) : null };
+        latency: rec.done.length > 2 ? msStats(rec.done.map((d, i) => d - rec.submit[i])) : null,
+        cpu: rec.cb.length > 2 ? { frames: rec.cb.length, ...msStats(rec.cb), max: round2(Math.max(...rec.cb)) } : null };
       if (TRACE && (phase === "open" || (phase === "closed" && traced === 0)) && traced < 2) {
         await mkdir(TRACE, { recursive: true });
         const tr = await trace(page, join(TRACE, `${name}-${phase}.json`));
@@ -266,7 +317,7 @@ async function run(name, arm) {
       console.log(`${name} ${phase}: frames ${row.frames} mean ${row.mean} p50 ${row.p50} p95 ${row.p95} alternation ` +
         `${row.pairs?.alternation} (${row.pairs?.short_mean}/${row.pairs?.long_mean}) | submit n ${row.submit?.frames} mean ${row.submit?.mean} ` +
         `p95 ${row.submit?.p95} alt ${row.submit?.pairs?.alternation} (${row.submit?.pairs?.short_mean}/${row.submit?.pairs?.long_mean}) | ` +
-        `done alt ${row.done?.pairs?.alternation} (${row.done?.pairs?.short_mean}/${row.done?.pairs?.long_mean}) | latency p50 ${row.latency?.p50} | deferrals ${row.deferrals} engine ${row.engine_frames} ` +
+        `cpu mean ${row.cpu?.mean} p95 ${row.cpu?.p95} | done alt ${row.done?.pairs?.alternation} (${row.done?.pairs?.short_mean}/${row.done?.pairs?.long_mean}) | latency p50 ${row.latency?.p50} | deferrals ${row.deferrals} engine ${row.engine_frames} ` +
         `state ${JSON.stringify(state)}`);
     }
     const frame_latency = await page.evaluate(() => window.__frameLatency ? { limit: window.__frameLatency.limit, source: window.__frameLatency.source } : null);
@@ -274,7 +325,13 @@ async function run(name, arm) {
     const build_id = await page.evaluate(() => window.__HEX_BUILD ?? null);
     const canvas = await page.evaluate(() => { const c = document.querySelector("canvas#hex-world"); return c ? [c.width, c.height] : null; });
     const gpu = await page.evaluate(() => { const g = window.hexWorld.diag().gpu; return g?.total ?? g ?? null; });
-    return { build_id, adapter, frame_latency, frame_cap, canvas, gpu, phases };
+    const census = arm.expect ? await censusOf(page) : undefined;
+    if (census) {
+      const got = { ...census, canvas };
+      const bad = Object.entries(arm.expect).filter(([k, v]) => JSON.stringify(got[k]) !== JSON.stringify(v));
+      if (bad.length) throw new Error(`${name} toggle not applied: ${bad.map(([k, v]) => `${k} ${JSON.stringify(got[k])} != ${JSON.stringify(v)}`).join(", ")}`);
+    }
+    return { build_id, adapter, frame_latency, frame_cap, canvas, gpu, census, phases };
   } finally {
     await browser.close();
   }
@@ -284,7 +341,8 @@ const result = { date: new Date().toISOString(), viewport: `${W}x${H}`, device_s
   guard: GUARD, paced: PACED, web: { args: ARGS.join(" ") }, rows: [] };
 try {
   for (let r = 0; r < RUNS; r++)
-    for (const name of pick) {
+    // Each run rotates the arm order by one, so no arm always runs first or last.
+    for (const name of [...pick.slice(r % pick.length), ...pick.slice(0, r % pick.length)]) {
       const arm = ARMS[name];
       if (!arm) throw new Error(`unknown arm ${name}`);
       const measure = () => run(name, arm).catch((e) => ({ error: String(e.message ?? e) }));

@@ -1,0 +1,29 @@
+load before: { 8.39 4.91 3.82 }
+load after: { 8.52 5.40 4.11 }
+Finished export to the file: /Users/probello/perf/hex-world-lowcam/traces/web-post-none-intervals.xml
+{"frames": 513.1, "frame_interval_ms": 19.488, "gpu_busy_ms_per_frame": 18.972, "sum_of_encoders_ms_per_frame": 30.465}
+  10.277  Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d
+   6.447  Command Buffer 0:Dawn_RenderPassEncoder_early prepass
+   3.035  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_2
+   2.220  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_0
+   2.209  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_1
+   1.770  Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d
+   1.151  Command Buffer 0:Render Command 0
+   0.634  Command Buffer 0:Render Command 1
+   0.480  Command Buffer 0:Blit Command 15
+   0.290  Command Buffer 0:Dawn_RenderPassEncoder
+   0.238  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_3
+   0.235  Command Buffer 0:Dawn_RenderPassEncoder_upscaling
+   0.170  Command Buffer 0:Dawn_ComputePassEncoder_boids & Dawn_ComputePassEncoder_sparse buffer updates
+   0.165  Command Buffer 0:Blit Command 21
+   0.158  Command Buffer 0:Render Command 6
+   0.141  Command Buffer 0:Blit Command 2
+   0.139  Command Buffer 0:Render Command 2
+   0.128  Command Buffer 0:Render Command 4
+   0.117  Command Buffer 0:Render Command 3
+   0.091  Command Buffer 0:Render Command 5
+   0.091  GPU Execution
+   0.065  Command Buffer 0:Blit Command 7
+   0.058  Command Buffer 0:Dawn_RenderPassEncoder_main_transparent_pass_3d
+   0.038  Command Buffer 0:Dawn_ComputePassEncoder_bin unpacking & Dawn_ComputePassEncoder_early_mesh_preprocessing
+   0.026  Command Buffer 0:Blit Command 0
