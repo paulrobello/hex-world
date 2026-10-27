@@ -1,0 +1,104 @@
+{
+ "what": "native, 1280x800, scenario play, seed 1, water clock fixed, the 59-tile water world of e2e/water-world.mjs at radius 4, camera (-10,45,70) to (10,0,5); fresh = started at the tier; inplace = started at the other tier, set_tier after 300 frames, shot 60 frames later",
+ "pairs": [
+  {
+   "a": "fresh-high",
+   "b": "fresh-medium",
+   "mean_abs": 1.164,
+   "signed_mean_rgb": [
+    -0.66,
+    -0.827,
+    -0.674
+   ],
+   "share_over_32": 0.113
+  },
+  {
+   "a": "fresh-medium2",
+   "b": "fresh-medium",
+   "mean_abs": 0.234,
+   "signed_mean_rgb": [
+    0.004,
+    0.006,
+    0.003
+   ],
+   "share_over_32": 0.04
+  },
+  {
+   "a": "fresh-high2",
+   "b": "fresh-high",
+   "mean_abs": 0.193,
+   "signed_mean_rgb": [
+    0.002,
+    0.002,
+    0.002
+   ],
+   "share_over_32": 0.012
+  },
+  {
+   "a": "inplace-medium",
+   "b": "fresh-medium",
+   "mean_abs": 0.871,
+   "signed_mean_rgb": [
+    -0.015,
+    -0.004,
+    0.0
+   ],
+   "share_over_32": 0.228
+  },
+  {
+   "a": "inplace-medium",
+   "b": "fresh-medium2",
+   "mean_abs": 0.839,
+   "signed_mean_rgb": [
+    -0.019,
+    -0.01,
+    -0.003
+   ],
+   "share_over_32": 0.227
+  },
+  {
+   "a": "inplace-high",
+   "b": "fresh-high",
+   "mean_abs": 1.0,
+   "signed_mean_rgb": [
+    0.023,
+    0.032,
+    0.024
+   ],
+   "share_over_32": 0.384
+  },
+  {
+   "a": "inplace-high",
+   "b": "fresh-high2",
+   "mean_abs": 1.017,
+   "signed_mean_rgb": [
+    0.021,
+    0.031,
+    0.023
+   ],
+   "share_over_32": 0.402
+  },
+  {
+   "a": "inplace-medium",
+   "b": "fresh-high",
+   "mean_abs": 1.577,
+   "signed_mean_rgb": [
+    0.645,
+    0.823,
+    0.674
+   ],
+   "share_over_32": 0.392
+  },
+  {
+   "a": "inplace-high",
+   "b": "fresh-medium",
+   "mean_abs": 1.578,
+   "signed_mean_rgb": [
+    -0.638,
+    -0.795,
+    -0.649
+   ],
+   "share_over_32": 0.399
+  }
+ ]
+}

@@ -995,6 +995,26 @@ pub fn materials(
     (water, terrain)
 }
 
+/// Puts every water material on the tier's shader variant and wave count, as [`materials`] builds
+/// them at that tier: a tier change in place (the surface meshes do not depend on the tier).
+pub fn retier_materials(water_mats: &mut Assets<WaterMaterial>, tier: QualityTier) {
+    let want = |key: WaterKey| WaterKey {
+        freeze: key.freeze,
+        ..WaterKey::for_tier(tier)
+    };
+    let ids: Vec<_> = water_mats
+        .iter()
+        .filter(|(_, m)| m.key != want(m.key) || m.params.wave_count != wave_count(tier))
+        .map(|(id, _)| id)
+        .collect();
+    for id in ids {
+        if let Some(mut m) = water_mats.get_mut(id) {
+            m.key = want(m.key);
+            m.params.wave_count = wave_count(tier);
+        }
+    }
+}
+
 /// Spawns the look-dev patch; `setup` calls it for `Scenario::Water` and `Scenario::WaterKit`.
 pub fn spawn(
     commands: &mut Commands,

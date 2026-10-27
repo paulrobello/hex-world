@@ -1153,10 +1153,17 @@ pub struct PlayWaterCamera;
 /// transmission. Drops the gate's far-focus DOF, which blurs every close-up (as the look-dev does).
 pub fn prepare_camera(cam: &mut EntityCommands, tier: QualityTier) {
     cam.insert((DepthPrepass, PlayWaterCamera));
-    if WaterKey::for_tier(tier).refraction {
-        cam.insert(ScreenSpaceTransmission::default());
-    }
+    set_transmission(cam, tier);
     cam.remove::<DepthOfField>();
+}
+
+/// Screen-space transmission on the play camera exactly where the tier's water refracts.
+pub fn set_transmission(cam: &mut EntityCommands, tier: QualityTier) {
+    if WaterKey::for_tier(tier).refraction {
+        cam.insert_if_new(ScreenSpaceTransmission::default());
+    } else {
+        cam.remove::<ScreenSpaceTransmission>();
+    }
 }
 
 /// Assets the water sync builds with.

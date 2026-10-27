@@ -1,0 +1,22 @@
+17:13:06 before cold round 1 (load { 2.15 2.46 2.31 })
+17:14:29 before warm round 1 (load { 2.75 2.62 2.38 })
+17:15:39 after cold round 1 (load { 2.43 2.62 2.40 })
+17:17:21 after warm round 1 (load { 2.04 2.45 2.36 })
+17:18:34 after_nowarm cold round 1 (load { 1.93 2.36 2.33 })
+17:19:56 after_nowarm warm round 1 (load { 2.23 2.38 2.34 })
+17:21:07 after cold round 2 (load { 2.44 2.39 2.34 })
+17:22:49 after warm round 2 (load { 2.12 2.38 2.35 })
+17:24:01 after_nowarm cold round 2 (load { 2.24 2.38 2.35 })
+17:25:24 after_nowarm warm round 2 (load { 2.41 2.45 2.38 })
+17:26:35 before cold round 2 (load { 2.68 2.52 2.41 })
+17:27:57 before warm round 2 (load { 2.71 2.55 2.43 })
+17:29:08 after_nowarm cold round 3 (load { 2.25 2.50 2.42 })
+17:30:31 after_nowarm warm round 3 (load { 2.26 2.46 2.41 })
+17:31:41 before cold round 3 (load { 2.72 2.58 2.46 })
+17:33:04 before warm round 3 (load { 2.54 2.56 2.46 })
+17:34:14 after cold round 3 (load { 2.62 2.57 2.47 })
+17:35:56 after warm round 3 (load { 3.20 2.79 2.56 })
+17:37:08 done
+rounds exit 0
+summary exit 0
+Tue Oct 27 17:37:08 UTC 2026

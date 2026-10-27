@@ -1,0 +1,203 @@
+{
+  "when": "2026-10-27T17:31:41.563Z",
+  "radius": 8,
+  "window_ms": 10000,
+  "guard": true,
+  "query": "&tier_warm=off",
+  "summary": {
+    "#1 high>medium": {
+      "runs": 1,
+      "stall_ms": 779.2,
+      "longest_frame_ms": 567.3,
+      "slow_frames": 1,
+      "rebuild_settled_ms": 828.6,
+      "settled_after_stall_ms": 49.4,
+      "indicator_shown_ms": 567.3,
+      "indicator_hidden_after_stall_ms": 49.4,
+      "pipelines_added": 39,
+      "max_load": 2.63
+    },
+    "#2 medium>high": {
+      "runs": 1,
+      "stall_ms": 7941.8,
+      "longest_frame_ms": 62.8,
+      "slow_frames": 2,
+      "rebuild_settled_ms": 166.2,
+      "settled_after_stall_ms": -7775.6,
+      "indicator_shown_ms": 62.8,
+      "indicator_hidden_after_stall_ms": -7775.6,
+      "pipelines_added": 1,
+      "max_load": 2.83
+    },
+    "#3 high>medium": {
+      "runs": 1,
+      "stall_ms": 7289.4,
+      "longest_frame_ms": 39.9,
+      "slow_frames": 2,
+      "rebuild_settled_ms": 115.9,
+      "settled_after_stall_ms": -7173.5,
+      "indicator_shown_ms": 36.8,
+      "indicator_hidden_after_stall_ms": -7173.5,
+      "pipelines_added": 0,
+      "max_load": 2.76
+    },
+    "ready_ms": 2918,
+    "warmup_longest_frame_ms": null,
+    "warmup_settled_longest_frame_ms": null,
+    "warmup_ready_longest_frame_ms": null
+  },
+  "warmups": [
+    {
+      "round": 0,
+      "ready_ms": 2918,
+      "warmup": {
+        "active": false,
+        "added": 0,
+        "current": false,
+        "enabled": false,
+        "frames": 0,
+        "pipelines": 97,
+        "runs": 0,
+        "tiers": []
+      }
+    }
+  ],
+  "rows": [
+    {
+      "round": 0,
+      "step": "high>medium",
+      "index": 0,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 779.2,
+      "first_frame_ms": 567.3,
+      "longest_frame_ms": 567.3,
+      "slow_frames": 1,
+      "over_50ms": 1,
+      "slow_frame_ms": [
+        184.2
+      ],
+      "slow_sum_ms": 184.2,
+      "frames_in_window": 558,
+      "tier_followed_ms": 567.3,
+      "rebuild_settled_ms": 828.6,
+      "settled_after_stall_ms": 49.4,
+      "indicator_shown_ms": 567.3,
+      "indicator_hidden_ms": 828.6,
+      "indicator_hidden_after_stall_ms": 49.4,
+      "pipelines_added": 39,
+      "engine_tail": [
+        {
+          "frame": 46,
+          "ms": 250,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 49,
+          "ms": 184.2,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.63,
+      "load_after": 2.6,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "medium>high",
+      "index": 1,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 7941.8,
+      "first_frame_ms": 62.8,
+      "longest_frame_ms": 62.8,
+      "slow_frames": 2,
+      "over_50ms": 0,
+      "slow_frame_ms": [
+        32.1,
+        25.8
+      ],
+      "slow_sum_ms": 57.9,
+      "frames_in_window": 596,
+      "tier_followed_ms": 62.8,
+      "rebuild_settled_ms": 166.2,
+      "settled_after_stall_ms": -7775.6,
+      "indicator_shown_ms": 62.8,
+      "indicator_hidden_ms": 166.2,
+      "indicator_hidden_after_stall_ms": -7775.6,
+      "pipelines_added": 1,
+      "engine_tail": [
+        {
+          "frame": 35,
+          "ms": 63.4,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 38,
+          "ms": 32.1,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 507,
+          "ms": 25.8,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.71,
+      "load_after": 2.83,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "high>medium",
+      "index": 2,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 7289.4,
+      "first_frame_ms": 36.8,
+      "longest_frame_ms": 39.9,
+      "slow_frames": 2,
+      "over_50ms": 0,
+      "slow_frame_ms": [
+        28,
+        39.9
+      ],
+      "slow_sum_ms": 67.9,
+      "frames_in_window": 599,
+      "tier_followed_ms": 36.8,
+      "rebuild_settled_ms": 115.9,
+      "settled_after_stall_ms": -7173.5,
+      "indicator_shown_ms": 36.8,
+      "indicator_hidden_ms": 115.9,
+      "indicator_hidden_after_stall_ms": -7173.5,
+      "pipelines_added": 0,
+      "engine_tail": [
+        {
+          "frame": 33,
+          "ms": 37.4,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 204,
+          "ms": 27.8,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 468,
+          "ms": 40,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.76,
+      "load_after": 2.72,
+      "load_discarded": 0
+    }
+  ],
+  "errors": []
+}

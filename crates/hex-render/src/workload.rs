@@ -349,6 +349,10 @@ pub struct GateConfig {
     /// `grass_distance=<near|medium|far|very-far|multiplier>`: how far grass draws
     /// (`play::grass::Distances`); `set_grass_distance` changes it live.
     pub grass_distance: hex_play_state::GrassDistance,
+    /// `tier_warm=on|off`: create the neighbouring quality tiers' pipelines while play is idle
+    /// (`hex_play::tier::warm`). Off by default (owner A33 O2, 2026-10-27): on, a quality change no
+    /// longer waits on the browser compiling them, but the warm-ups hold the page after READY.
+    pub tier_warm: bool,
 }
 
 impl Default for GateConfig {
@@ -374,6 +378,7 @@ impl Default for GateConfig {
             water_fixed: false,
             grass: hex_play_state::Density::NORMAL,
             grass_distance: hex_play_state::GrassDistance::NEAR,
+            tier_warm: false,
         }
     }
 }

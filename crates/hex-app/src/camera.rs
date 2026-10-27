@@ -149,7 +149,7 @@ pub fn pick_hover(
     active: Res<ActiveScenario>,
     game: Res<crate::game::GameState>,
     windows: Query<&Window, With<PrimaryWindow>>,
-    cameras: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
+    cameras: Query<(&Camera, &GlobalTransform), hex_render::post::GameCamera>,
     script: Res<crate::control::CommandQueue>,
     mut last: Local<Option<Axial>>,
     mut queue: ResMut<ActionQueue>,

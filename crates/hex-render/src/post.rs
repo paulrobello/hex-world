@@ -1,6 +1,7 @@
 //! Camera post stack per quality tier: TAA, SSAO, bloom and depth of field.
 use bevy::{
     anti_alias::taa::TemporalAntiAliasing,
+    core_pipeline::prepass::NormalPrepass,
     pbr::ScreenSpaceAmbientOcclusion,
     post_process::{bloom::Bloom, dof::DepthOfField},
     prelude::*,
@@ -59,6 +60,29 @@ pub fn camera_post_bundle(_tier: QualityTier) -> impl Bundle {
 pub fn camera_ssao(tier: QualityTier) -> Option<ScreenSpaceAmbientOcclusion> {
     matches!(tier, QualityTier::High | QualityTier::Ultra)
         .then(ScreenSpaceAmbientOcclusion::default)
+}
+
+/// A hidden camera that draws another tier's view for a few frames so its pipelines exist before a
+/// quality change (`hex_play::tier::warm`), and the water copy only it sees. Never the game camera:
+/// systems that act on the game camera skip it.
+#[derive(Component, Clone, Copy, Debug, Default)]
+pub struct TierWarmCamera;
+
+/// Query filter for the game camera: a 3D camera that is not a [`TierWarmCamera`].
+pub type GameCamera = (With<Camera3d>, Without<TierWarmCamera>);
+
+/// Gives a full-post camera its tier's SSAO, or takes it off with the normal prepass SSAO requires
+/// (nothing else here uses one), so a camera changed in place keys its pipelines like one spawned
+/// at the tier.
+pub fn set_camera_ssao(cam: &mut EntityCommands, tier: QualityTier) {
+    match camera_ssao(tier) {
+        Some(ssao) => {
+            cam.insert_if_new(ssao);
+        }
+        None => {
+            cam.remove::<(ScreenSpaceAmbientOcclusion, NormalPrepass)>();
+        }
+    }
 }
 
 pub(crate) fn specialize_target(

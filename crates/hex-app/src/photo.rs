@@ -260,7 +260,7 @@ pub fn sync(
     exports: Res<PhotoExports>,
     tilt: Option<Res<TiltOverride>>,
     mut paused: ResMut<AgentsPaused>,
-    mut cams: Query<(Entity, PhotoCamera), With<Camera3d>>,
+    mut cams: Query<(Entity, PhotoCamera), hex_render::post::GameCamera>,
 ) {
     let Some((cam, (mut t, mut proj, mut exposure, mut dof))) = cams.iter_mut().next() else {
         return;
@@ -436,7 +436,7 @@ pub fn focus_pick(
     mut focus: ResMut<PhotoFocus>,
     mut settings: ResMut<PhotoSettings>,
     ground: Option<Res<WalkGround>>,
-    cams: Query<(&Transform, &Projection), With<Camera3d>>,
+    cams: Query<(&Transform, &Projection), hex_render::post::GameCamera>,
 ) {
     let Some(uv) = focus.request.take() else {
         return;
@@ -581,7 +581,7 @@ pub fn run_exports(
     mut images: ResMut<Assets<Image>>,
     windows: Query<&Window, With<PrimaryWindow>>,
     limits: Option<Res<GpuLimits>>,
-    mut cams: Query<&mut RenderTarget, With<Camera3d>>,
+    mut cams: Query<&mut RenderTarget, hex_render::post::GameCamera>,
 ) {
     let exports = &mut *exports;
     if let Some(job) = &mut exports.job {

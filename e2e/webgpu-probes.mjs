@@ -27,7 +27,8 @@ export function clampSampledTextures(lim) {
 // `{ pass, sampled, ibl, transmission }` for the water scenario's pipelines, `pass` being "water"
 // (water.wesl) or "terrain" (water_terrain.wesl). `boid` lists `{ sampled, ibl, transmission }` for each
 // render pipeline whose fragment module is the boid material (it declares the `boid_verts` field,
-// assets/shaders/boid_material.wesl).
+// assets/shaders/boid_material.wesl). `created` counts every render pipeline created, and `labels`
+// lists their labels in order.
 export function countSampledTextures() {
   const FRAGMENT = 2;
   const perBgl = new WeakMap();
@@ -39,7 +40,7 @@ export function countSampledTextures() {
   const waterModules = new WeakMap();
   const boidModules = new WeakMap();
   const grassModules = new WeakMap();
-  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [], boid: [], grass: [] };
+  const stats = { max: 0, layouts: [], kit: [], tilt: [], water: [], boid: [], grass: [], created: 0, labels: [] };
   window.__sampledTextures = stats;
   const csm = GPUDevice.prototype.createShaderModule;
   GPUDevice.prototype.createShaderModule = function (desc) {
@@ -82,6 +83,8 @@ export function countSampledTextures() {
     return layout;
   };
   const record = (desc) => {
+    stats.created++;
+    stats.labels.push(desc?.label ?? null);
     if (desc?.fragment?.module && tiltModules.has(desc.fragment.module)) {
       const sampled = perLayout.get(desc.layout) ?? null;
       if (!stats.tilt.some((t) => t.sampled === sampled)) stats.tilt.push({ sampled });

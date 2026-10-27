@@ -385,7 +385,7 @@ pub fn run(
     mut commands: Commands,
     mut queue: ResMut<PersistQueue>,
     mut game: ResMut<GameState>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
+    mut cameras: Query<&mut Transform, hex_render::post::GameCamera>,
     (mut tilt, mut pinned, tier_default): (
         ResMut<TiltShiftSettings>,
         ResMut<TiltPinned>,
@@ -466,7 +466,7 @@ pub fn run(
 /// Keeps [`LATEST`] current, after the frame's game actions and persistence commands.
 pub fn keep_latest(
     game: Res<GameState>,
-    cameras: Query<&Transform, With<Camera3d>>,
+    cameras: Query<&Transform, hex_render::post::GameCamera>,
     (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
     walk: Res<crate::walk::WalkSession>,
@@ -520,7 +520,7 @@ pub fn save_on_exit(
     flags: Res<RunFlags>,
     mut exits: MessageReader<AppExit>,
     game: Res<GameState>,
-    cameras: Query<&Transform, With<Camera3d>>,
+    cameras: Query<&Transform, hex_render::post::GameCamera>,
     (tilt, chosen): (Res<TiltShiftSettings>, Res<TiltPinned>),
     saved: Res<SavedSettings>,
     walk: Res<crate::walk::WalkSession>,

@@ -513,10 +513,11 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 // carries the water camera components (depth prepass, screen-space transmission at High), and placed
 // river, beach and ocean tiles draw with the water and terrain materials next to the kit pieces. With
 // the device clamped to WebGPU's default 16 the kit forward pipeline must bind the transmission
-// texture at exactly 16, and the water pipelines must match the water scenario's High counts.
+// texture at exactly 16, and the water pipelines must match the water scenario's High counts. The
+// counts are High's alone, so the idle warm-up of Medium's pipelines is off here (case 8b covers it).
 {
   const clamp = WEBGPU_DEFAULT_SAMPLED;
-  const query = "?scenario=play&post=full";
+  const query = "?scenario=play&post=full&tier_warm=off";
   await withPage(gpuArgs, async (page) => {
     await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
@@ -610,6 +611,71 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     if (state.gpu?.maxSampledTexturesPerShaderStage !== clamp) fail(`${tag}: hexWorld.state().gpu ${JSON.stringify(state.gpu)}`);
     if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
     await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-play-water.png" });
+  });
+}
+
+// 8b. Quality warm-up in play (crates/hex-play/src/tier/warm.rs, PRD §9.2): with the device clamped to
+// 16, the same water world at High warms Medium's pipelines once idle. They must fit the clamp (the
+// kit forward without SSAO and the normal prepass samples 14), and a change to Medium afterwards
+// must keep every tile and create no pipeline.
+{
+  const clamp = WEBGPU_DEFAULT_SAMPLED;
+  const query = "?scenario=play&post=full&tier=high&tier_warm=on";
+  await withPage(gpuArgs, async (page) => {
+    await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    await page.goto(base + query);
+    const tag = `tier warm-up ${query} (clamped ${clamp})`;
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      fail(`${tag}: never ready; sampled textures per stage max ${(await page.evaluate(() => window.__sampledTextures))?.max}`);
+      return;
+    }
+    const runs0 = await page.evaluate(() => {
+      const h = window.hexWorld;
+      h.selectTile("river_straight"); h.placeTile(-1, 0);
+      h.selectTile("river_bend"); h.placeTile(-1, 1);
+      h.selectTile("beach"); h.placeTile(1, 0);
+      h.selectTile("ocean"); h.placeTile(2, 0);
+      return h.state().tier?.warm?.runs ?? 0;
+    });
+    // The water tiles create pipelines, so a warm-up must follow them once play is idle again.
+    const warmed = await page.waitForFunction((r0) => {
+      const s = window.hexWorld.state();
+      const w = s.tier?.warm;
+      return s.tiles === 5 && s.play?.rising.length === 0 && w?.runs > r0 && !w.active;
+    }, runs0, { timeout: 90_000, polling: 250 }).then(() => true, () => false);
+    // Fish and birds keep arriving after the tiles: switch only once the latest warm-up covers them.
+    const current = await page.waitForFunction(() => window.hexWorld.state().tier?.warm?.current === true,
+      null, { timeout: 60_000, polling: 100 }).then(() => true, () => false);
+    if (!current) fail(`${tag}: the warm-up never caught up with the pipelines: ${JSON.stringify((await page.evaluate(() => window.hexWorld.state())).tier?.warm)}`);
+    const before = await page.evaluate(() => ({ sampled: window.__sampledTextures, state: window.hexWorld.state() }));
+    const warm = before.state.tier?.warm;
+    console.log(`${tag}: warm-up ${JSON.stringify(warm)}; kit pipelines ${JSON.stringify(before.sampled.kit.map(({ groups, ...k }) => k))}, ` +
+      `water pipelines ${JSON.stringify(before.sampled.water)}`);
+    if (!warmed || !warm?.enabled || !(warm.runs > 0) || JSON.stringify(warm.tiers) !== '["medium"]')
+      fail(`${tag}: no finished warm-up for Medium: ${JSON.stringify(warm)}`);
+    const fwd = before.sampled.kit.filter((k) => k.pass === "forward" && k.ibl).map((k) => k.sampled);
+    if (!fwd.includes(KIT_SAMPLED_WITH_WATER.forward) || !fwd.includes(KIT_SAMPLED_WITH_WATER.forward - 2))
+      fail(`${tag}: kit forward pipelines sample ${fwd}, expected High's ${KIT_SAMPLED_WITH_WATER.forward} and Medium's ${KIT_SAMPLED_WITH_WATER.forward - 2}`);
+    if (!before.sampled.water.some((k) => k.pass === "water" && k.ibl && k.sampled === WATER_SAMPLED.medium.water))
+      fail(`${tag}: no Medium water pipeline (${WATER_SAMPLED.medium.water} sampled) was warmed: ${JSON.stringify(before.sampled.water)}`);
+    if (!(before.sampled.max <= clamp)) fail(`${tag}: a pipeline layout uses ${before.sampled.max} sampled textures`);
+    const created = before.sampled.created;
+    await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "medium" }));
+    // Counted when the change is drawn: the warm-up of High's pipelines that follows once play is
+    // idle again creates its own.
+    const drawnAt = await page.waitForFunction(() => {
+      const t = window.hexWorld.state().tier;
+      return t.tier === "medium" && t.changes > 0 && !t.rebuilding && window.__sampledTextures.created;
+    }, null, { timeout: 30_000, polling: "raf" }).then((h) => h.jsonValue(), () => null);
+    const drawn = drawnAt != null;
+    const after = await page.evaluate(() => ({ sampled: window.__sampledTextures, state: window.hexWorld.state() }));
+    const added = after.sampled.labels.slice(created, drawnAt ?? undefined);
+    console.log(`${tag}: the change to Medium drawn ${drawn}, ${added.length} pipelines created ${JSON.stringify(added)}; tiles ${after.state.tiles}`);
+    if (!drawn) fail(`${tag}: the change to Medium was never drawn: ${JSON.stringify(after.state.tier)}`);
+    if (added.length) fail(`${tag}: the change to Medium created ${added.length} pipelines after the warm-up: ${JSON.stringify(added)}`);
+    if (after.state.tiles !== 5) fail(`${tag}: tiles ${after.state.tiles} after the change, expected 5`);
+    if (!(after.sampled.max <= clamp)) fail(`${tag}: a pipeline layout uses ${after.sampled.max} sampled textures`);
   });
 }
 

@@ -342,6 +342,15 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
         state.f.tier_explicit |= t.is_some();
         set_or_warn(&mut state.f.gate.tier, t, k, v, &mut state.warnings);
     }),
+    ("tier_warm", |state, k, v| {
+        set_or_warn(
+            &mut state.f.gate.tier_warm,
+            hex_render::parse_shadows(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
     ("offscreen", |state, k, v| {
         set_or_warn(
             &mut state.f.offscreen,
@@ -534,6 +543,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tilt",
         "tilt_strength",
         "tier",
+        "tier_warm",
         "gpu_timing",
         "kit_ablate",
         "water_clock",
@@ -683,6 +693,18 @@ mod tests {
         assert!(f.offscreen && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("offscreen", "maybe")]));
         assert!(!f.offscreen && w.len() == 1);
+    }
+
+    #[test]
+    fn tier_warm_flag() {
+        let (f, w) = flags_from_pairs(&[]);
+        assert!(!f.gate.tier_warm, "off by default (owner A33 O2)");
+        let (f, w2) = flags_from_pairs(&p(&[("tier_warm", "on")]));
+        assert!(f.gate.tier_warm && w.is_empty() && w2.is_empty());
+        let (f, _) = flags_from_pairs(&p(&[("tier_warm", "off")]));
+        assert!(!f.gate.tier_warm);
+        let (_, w) = flags_from_pairs(&p(&[("tier_warm", "maybe")]));
+        assert_eq!(w.len(), 1);
     }
 
     #[test]

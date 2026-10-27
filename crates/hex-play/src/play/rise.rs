@@ -1080,7 +1080,10 @@ pub struct CameraShake {
 
 /// First: takes last frame's shake off the camera, so input, picking, scripted camera moves and
 /// state dumps all see the unshaken transform.
-pub fn unshake(mut shake: ResMut<CameraShake>, mut cams: Query<&mut Transform, With<Camera3d>>) {
+pub fn unshake(
+    mut shake: ResMut<CameraShake>,
+    mut cams: Query<&mut Transform, crate::post::GameCamera>,
+) {
     if let Some((e, off)) = shake.applied.take()
         && let Ok(mut t) = cams.get_mut(e)
     {
@@ -1096,7 +1099,7 @@ pub fn shake(
     reduced: Res<ReducedMotion>,
     rises: Res<PlayRises>,
     mut shake: ResMut<CameraShake>,
-    mut cams: Query<(Entity, &mut Transform), With<Camera3d>>,
+    mut cams: Query<(Entity, &mut Transform), crate::post::GameCamera>,
 ) {
     if active.0 != Scenario::Play || reduced.0 {
         return;

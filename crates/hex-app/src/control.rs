@@ -375,7 +375,7 @@ pub struct CommandSettings<'w> {
 
 #[derive(bevy::ecs::system::SystemParam)]
 pub struct CommandScene<'w, 's> {
-    cameras: Query<'w, 's, &'static mut Transform, With<Camera3d>>,
+    cameras: Query<'w, 's, &'static mut Transform, hex_render::post::GameCamera>,
     scene: Query<'w, 's, Entity, With<SceneEntity>>,
     time: Res<'w, Time<bevy::time::Virtual>>,
 }
@@ -801,9 +801,17 @@ pub struct CaptureSnapshot<'w> {
 
 #[derive(bevy::ecs::system::SystemParam)]
 pub struct SnapshotCameras<'w, 's> {
-    cameras: Query<'w, 's, &'static Transform, With<Camera3d>>,
-    views: Query<'w, 's, (&'static Camera, &'static GlobalTransform), With<Camera3d>>,
-    fx_cams: Query<'w, 's, (), (With<hex_render::photo_fx::PhotoFx>, With<Camera3d>)>,
+    cameras: Query<'w, 's, &'static Transform, hex_render::post::GameCamera>,
+    views: Query<'w, 's, (&'static Camera, &'static GlobalTransform), hex_render::post::GameCamera>,
+    fx_cams: Query<
+        'w,
+        's,
+        (),
+        (
+            With<hex_render::photo_fx::PhotoFx>,
+            hex_render::post::GameCamera,
+        ),
+    >,
 }
 
 /// Publishes the state read by `hexWorld.state()`/`dumpState()` and `--dump-state`.

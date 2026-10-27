@@ -16,7 +16,7 @@ use hex_core::{Axial, HEX_RADIUS, hex_prism};
 
 use crate::{
     ActiveScenario, ActiveView, Scenario,
-    post::{camera_post_bundle, camera_ssao},
+    post::{camera_post_bundle, set_camera_ssao},
     workload::{GateConfig, GateView, Layout, PostMode},
 };
 
@@ -808,9 +808,7 @@ pub fn setup(
         if water {
             cam.remove::<bevy::post_process::dof::DepthOfField>();
         }
-        if let Some(ssao) = camera_ssao(tier) {
-            cam.insert(ssao);
-        }
+        set_camera_ssao(&mut cam, tier);
     }
     if kit {
         cam.insert(crate::grade::camera_bundle(&config));

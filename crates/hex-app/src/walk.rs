@@ -319,7 +319,7 @@ pub fn sync(
             Option<&EnvironmentMapLight>,
             Option<&mut Skybox>,
         ),
-        With<Camera3d>,
+        hex_render::post::GameCamera,
     >,
 ) {
     let Some((cam, mut t, mut proj, env, sky)) = cams.iter_mut().next() else {

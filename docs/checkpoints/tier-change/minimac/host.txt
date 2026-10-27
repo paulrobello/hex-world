@@ -1,0 +1,5 @@
+Tue Oct 27 17:13:06 UTC 2026
+v26.12.1
+10:13  up 27 days, 23:47, 5 users, load averages: 2.15 2.46 2.31
+27.0.1
+Apple M4

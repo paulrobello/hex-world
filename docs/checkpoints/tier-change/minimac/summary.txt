@@ -1,0 +1,28 @@
+after cold (rounds 1,2,3, loads 2.04-3.50): READY 8806 ms
+  #1 high>medium: stall 639.2 [597.6, 5528.8] ms, longest 455.3 ms, pipelines +0
+  #2 medium>high: stall 998.2 [185.1, 3000.8] ms, longest 42.7 ms, pipelines +0
+  #3 high>medium: stall 1192.5 [58.9, 3471.7] ms, longest 42.8 ms, pipelines +0
+  warm-up: longest frame 6680.3 [6522, 6765.1] ms (right after READY 3248 ms, after the world settled 6680.3 ms), 4 runs
+after warm (rounds 1,2,3, loads 1.93-3.29): READY 2907 ms
+  #1 high>medium: stall 4016.9 [3563.1, 5377.2] ms, longest 40.5 ms, pipelines +0
+  #2 medium>high: stall 1676.6 [1266.6, 2931.3] ms, longest 40.7 ms, pipelines +0
+  #3 high>medium: stall 2197.8 [2101.4, 3417.5] ms, longest 41.3 ms, pipelines +0
+  warm-up: longest frame 217.4 [216.2, 223.7] ms (right after READY 217.4 ms, after the world settled 181.7 ms), 4 runs
+after_nowarm cold (rounds 1,2,3, loads 2.19-2.79): READY 8853 ms
+  #1 high>medium: stall 10807.6 [10701.3, 10810.1] ms, longest 9719.1 ms, pipelines +39
+  #2 medium>high: stall 4531.6 [3992.2, 4534.8] ms, longest 466.1 ms, pipelines +1
+  #3 high>medium: stall 3310.5 [2745.4, 3315.5] ms, longest 34.5 ms, pipelines +0
+  warm-up: longest frame undefined [undefined, undefined] ms (right after READY undefined ms, after the world settled undefined ms), 0 runs
+after_nowarm warm (rounds 1,2,3, loads 2.08-2.86): READY 2918 ms
+  #1 high>medium: stall 792.2 [779.2, 861] ms, longest 567.3 ms, pipelines +39
+  #2 medium>high: stall 7941.8 [7418.1, 7982.1] ms, longest 57.6 ms, pipelines +1
+  #3 high>medium: stall 7289.4 [6801.5, 7894.4] ms, longest 39.9 ms, pipelines +0
+  warm-up: longest frame undefined [undefined, undefined] ms (right after READY undefined ms, after the world settled undefined ms), 0 runs
+before cold (rounds 1,2,3, loads 2.50-3.00): READY 8764 ms
+  #1 high>medium: stall 10427 [10295.2, 10460.7] ms, longest 9701.4 ms, pipelines +-
+  #2 medium>high: stall 7478.2 [6989, 7562.7] ms, longest 555.8 ms, pipelines +-
+  #3 high>medium: stall 7083.8 [6630.6, 7168.3] ms, longest 142.7 ms, pipelines +-
+before warm (rounds 1,2,3, loads 2.36-3.08): READY 2920 ms
+  #1 high>medium: stall 843.9 [833.7, 926.1] ms, longest 694.2 ms, pipelines +-
+  #2 medium>high: stall 302.6 [299.4, 310.2] ms, longest 180 ms, pipelines +-
+  #3 high>medium: stall 3243.3 [140.8, 3273.5] ms, longest 140.8 ms, pipelines +-

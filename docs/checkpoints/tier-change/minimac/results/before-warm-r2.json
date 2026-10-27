@@ -1,0 +1,181 @@
+{
+  "when": "2026-10-27T17:29:08.166Z",
+  "radius": 8,
+  "window_ms": 10000,
+  "guard": true,
+  "query": "",
+  "summary": {
+    "#1 high>medium": {
+      "runs": 1,
+      "stall_ms": 833.7,
+      "longest_frame_ms": 698.8,
+      "slow_frames": 1,
+      "rebuild_settled_ms": 833.7,
+      "settled_after_stall_ms": 0,
+      "indicator_shown_ms": 698.8,
+      "indicator_hidden_after_stall_ms": 0,
+      "pipelines_added": null,
+      "max_load": 2.93
+    },
+    "#2 medium>high": {
+      "runs": 1,
+      "stall_ms": 302.6,
+      "longest_frame_ms": 177.5,
+      "slow_frames": 2,
+      "rebuild_settled_ms": 265.9,
+      "settled_after_stall_ms": -36.7,
+      "indicator_shown_ms": 177.5,
+      "indicator_hidden_after_stall_ms": -36.7,
+      "pipelines_added": null,
+      "max_load": 2.78
+    },
+    "#3 high>medium": {
+      "runs": 1,
+      "stall_ms": 140.8,
+      "longest_frame_ms": 140.8,
+      "slow_frames": 0,
+      "rebuild_settled_ms": 199.9,
+      "settled_after_stall_ms": 59.1,
+      "indicator_shown_ms": 140.8,
+      "indicator_hidden_after_stall_ms": 59.1,
+      "pipelines_added": null,
+      "max_load": 2.52
+    },
+    "ready_ms": 2918,
+    "warmup_longest_frame_ms": null,
+    "warmup_settled_longest_frame_ms": null,
+    "warmup_ready_longest_frame_ms": null
+  },
+  "warmups": [
+    {
+      "round": 0,
+      "ready_ms": 2918,
+      "warmup": null
+    }
+  ],
+  "rows": [
+    {
+      "round": 0,
+      "step": "high>medium",
+      "index": 0,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 833.7,
+      "first_frame_ms": 698.8,
+      "longest_frame_ms": 698.8,
+      "slow_frames": 1,
+      "over_50ms": 1,
+      "slow_frame_ms": [
+        112.5
+      ],
+      "slow_sum_ms": 112.5,
+      "frames_in_window": 554,
+      "tier_followed_ms": 698.8,
+      "rebuild_settled_ms": 833.7,
+      "settled_after_stall_ms": 0,
+      "indicator_shown_ms": 698.8,
+      "indicator_hidden_ms": 833.7,
+      "indicator_hidden_after_stall_ms": 0,
+      "pipelines_added": null,
+      "engine_tail": [
+        {
+          "frame": 20,
+          "ms": 250,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 23,
+          "ms": 112.5,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.93,
+      "load_after": 2.78,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "medium>high",
+      "index": 1,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 302.6,
+      "first_frame_ms": 177.5,
+      "longest_frame_ms": 177.5,
+      "slow_frames": 2,
+      "over_50ms": 0,
+      "slow_frame_ms": [
+        29.4,
+        36.7
+      ],
+      "slow_sum_ms": 66.1,
+      "frames_in_window": 589,
+      "tier_followed_ms": 177.5,
+      "rebuild_settled_ms": 265.9,
+      "settled_after_stall_ms": -36.7,
+      "indicator_shown_ms": 177.5,
+      "indicator_hidden_ms": 265.9,
+      "indicator_hidden_after_stall_ms": -36.7,
+      "pipelines_added": null,
+      "engine_tail": [
+        {
+          "frame": 6,
+          "ms": 180.5,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 9,
+          "ms": 29.5,
+          "pipelines_waiting": 0
+        },
+        {
+          "frame": 12,
+          "ms": 36.8,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.78,
+      "load_after": 2.52,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "step": "high>medium",
+      "index": 2,
+      "tiles": 208,
+      "renderer": "apple metal-3",
+      "ready_ms": 2918,
+      "stall_ms": 140.8,
+      "first_frame_ms": 140.8,
+      "longest_frame_ms": 140.8,
+      "slow_frames": 0,
+      "over_50ms": 0,
+      "slow_frame_ms": [],
+      "slow_sum_ms": 0,
+      "frames_in_window": 593,
+      "tier_followed_ms": 140.8,
+      "rebuild_settled_ms": 199.9,
+      "settled_after_stall_ms": 59.1,
+      "indicator_shown_ms": 140.8,
+      "indicator_hidden_ms": 199.9,
+      "indicator_hidden_after_stall_ms": 59.1,
+      "pipelines_added": null,
+      "engine_tail": [
+        {
+          "frame": 26,
+          "ms": 141.5,
+          "pipelines_waiting": 0
+        }
+      ],
+      "requests": [],
+      "load_before": 2.52,
+      "load_after": 2.36,
+      "load_discarded": 0
+    }
+  ],
+  "errors": []
+}

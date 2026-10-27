@@ -993,7 +993,7 @@ pub fn apply_actions(
     mut game: ResMut<GameState>,
     active: Res<ActiveScenario>,
     mut walk: ResMut<crate::walk::WalkSession>,
-    mut cameras: Query<&mut Transform, With<Camera3d>>,
+    mut cameras: Query<&mut Transform, hex_render::post::GameCamera>,
 ) {
     for action in queue.0.drain(..) {
         if action.is_walk() {

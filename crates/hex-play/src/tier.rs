@@ -8,6 +8,9 @@
 //! as drawn only once the GPU has finished a frame drawn with the rebuilt scene ([`mark_drawn`]).
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicUsize, Ordering};
 
+pub mod warm;
+pub use warm::WarmReport;
+
 use bevy::{
     diagnostic::FrameCount,
     prelude::*,
@@ -21,9 +24,10 @@ use bevy::{
 use crate::{
     SceneEntity,
     play::PlaySpawned,
-    post::QualityTier,
-    tilt_shift::{TiltPinned, TiltShiftSettings, kept_tilt},
-    workload::GateConfig,
+    post::{QualityTier, TierWarmCamera, set_camera_ssao},
+    tilt_shift::{TiltPinned, TiltShiftSettings, TiltTierDefault, kept_tilt, settings_for},
+    water::{WaterMaterial, retier_materials, tiles::PlayWaterCamera},
+    workload::{GateConfig, PostMode},
 };
 
 /// The rebuild the render world waits on: `(generation << 32) | frame`, the generation being
@@ -283,6 +287,8 @@ pub struct TierChoice {
     pub drawn: u32,
     /// Quality requests handled (`set_tier` and a loaded save's quality), no-ops included.
     pub requests: u32,
+    /// The pipeline warm-up for the neighbouring tiers ([`warm`]).
+    pub warm: WarmReport,
 }
 
 impl TierChoice {
@@ -321,6 +327,7 @@ impl TierChoice {
             "drawn": self.drawn,
             "requests": self.requests,
             "rebuilding": self.rebuilding(),
+            "warm": self.warm.json(),
         })
     }
 
@@ -408,6 +415,10 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
     }
     info!("tier: {} -> {}", current.name(), tier.name());
     world.resource_mut::<GateConfig>().tier = tier;
+    if world.resource::<crate::ActiveScenario>().0 == crate::Scenario::Play {
+        retier_play(world, tier);
+        return;
+    }
     let camera = world
         .query_filtered::<&Transform, With<Camera3d>>()
         .iter(world)
@@ -445,6 +456,75 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
             *c = t;
         }
     }
+}
+
+/// A tier change in the play scenario keeps the scene: tiles, their water, scatter, agents and the
+/// camera stay, and only what the tier drives changes, to what `scene::setup` builds at the tier.
+/// The camera's SSAO and screen-space transmission, the water's shader variant and wave count, the
+/// tilt-shift default and the flock size change here; grass and the car cap follow
+/// `GateConfig::tier` on their own.
+fn retier_play(world: &mut World, tier: QualityTier) {
+    let config = *world.resource::<GateConfig>();
+    crate::boids::set_budget(world, crate::boids::BoidBudget::for_tier(tier));
+    let cams: Vec<(Entity, bool)> = world
+        .query_filtered::<(Entity, Has<PlayWaterCamera>), (
+            With<Camera3d>,
+            With<SceneEntity>,
+            Without<TierWarmCamera>,
+        )>()
+        .iter(world)
+        .collect();
+    let mut commands = world.commands();
+    for (cam, water) in cams {
+        let mut cam = commands.entity(cam);
+        if config.post == PostMode::Full {
+            set_camera_ssao(&mut cam, tier);
+        }
+        // An unprepared camera gets the tier's transmission from `play::sync`.
+        if water {
+            crate::water::tiles::set_transmission(&mut cam, tier);
+        }
+    }
+    world.flush();
+    world.insert_resource(WaterRetier {
+        tier,
+        frames: WATER_RETIER_FRAMES,
+    });
+    let rebuilt = settings_for(&config, true, tier);
+    let pinned = world.get_resource::<TiltPinned>().is_some_and(|p| p.0);
+    if let Some(mut now) = world.get_resource_mut::<TiltShiftSettings>() {
+        *now = kept_tilt(*now, rebuilt, pinned);
+    }
+    world.insert_resource(TiltTierDefault(rebuilt));
+}
+
+/// Frames the water's shader variant trails the camera's view in an in-place change.
+const WATER_RETIER_FRAMES: u8 = 2;
+
+/// An in-place change's water variant, applied [`WATER_RETIER_FRAMES`] after the camera's view
+/// components. The frames between draw the old variant under the new view, a pipeline the warm-up
+/// created (its camera draws the real water); the other order would create the new variant under
+/// the old view, a pipeline no tier draws again.
+#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WaterRetier {
+    pub tier: QualityTier,
+    pub frames: u8,
+}
+
+fn retier_water(
+    mut commands: Commands,
+    pending: Option<ResMut<WaterRetier>>,
+    mats: Option<ResMut<Assets<WaterMaterial>>>,
+) {
+    let (Some(mut pending), Some(mut mats)) = (pending, mats) else {
+        return;
+    };
+    if pending.frames > 0 {
+        pending.frames -= 1;
+        return;
+    }
+    retier_materials(&mut mats, pending.tier);
+    commands.remove_resource::<WaterRetier>();
 }
 
 /// Runs detection once the render device exists, then (web, detected only) the warm-up probe.
@@ -510,7 +590,7 @@ fn track_rebuild(
     mut choice: ResMut<TierChoice>,
     frame: Res<FrameCount>,
     active: Res<crate::ActiveScenario>,
-    spawned: Option<Res<PlaySpawned>>,
+    (spawned, water): (Option<Res<PlaySpawned>>, Option<Res<WaterRetier>>),
 ) {
     if !choice.rebuilding() {
         return;
@@ -520,7 +600,9 @@ fn track_rebuild(
         choice.drawn = generation;
         return;
     }
-    if active.0 == crate::Scenario::Play && spawned.is_some_and(|s| s.redraw_pending()) {
+    if active.0 == crate::Scenario::Play
+        && (spawned.is_some_and(|s| s.redraw_pending()) || water.is_some())
+    {
         return;
     }
     if (ARMED.load(Ordering::Acquire) >> 32) as u32 != generation {
@@ -576,10 +658,14 @@ pub struct TierPlugin {
 impl Plugin for TierPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(TierChoice::new(self.tier, self.explicit))
-            .add_systems(Update, (detect_tier, track_rebuild));
+            .add_systems(
+                Update,
+                (detect_tier, retier_water, track_rebuild, warm::warm).chain(),
+            );
         if let Some(render_app) = app.get_sub_app_mut(RenderApp) {
             render_app.add_systems(Render, mark_drawn.in_set(RenderSystems::Cleanup));
         }
+        warm::build(app);
     }
 }
 
@@ -779,6 +865,152 @@ mod tests {
             (j["requests"].as_u64(), j["rebuilding"].as_bool()),
             (Some(0), Some(false))
         );
+    }
+
+    /// A world holding what a play scene's tier change touches: a camera built as `setup` and
+    /// `play::sync` build it at `tier`, the play water materials, and three tiles with a child.
+    fn play_world(tier: QualityTier) -> (World, Vec<Entity>, Entity) {
+        use crate::play::PlayTileRoot;
+        use crate::water::{TerrainMaterial, materials};
+        let mut world = World::new();
+        let config = GateConfig {
+            tier,
+            post: PostMode::Full,
+            ..default()
+        };
+        world.insert_resource(config);
+        world.insert_resource(crate::ActiveScenario(crate::Scenario::Play));
+        world.insert_resource(TierChoice::new(tier, false));
+        world.insert_resource(settings_for(&config, true, tier));
+        world.init_resource::<TiltPinned>();
+        world.init_resource::<Assets<Image>>();
+        world.init_resource::<Assets<WaterMaterial>>();
+        world.init_resource::<Assets<TerrainMaterial>>();
+        world.resource_scope(|world, mut images: Mut<Assets<Image>>| {
+            world.resource_scope(|world, mut water: Mut<Assets<WaterMaterial>>| {
+                let mut terrain = world.resource_mut::<Assets<TerrainMaterial>>();
+                materials(&mut images, &mut water, &mut terrain, tier, 0.0);
+            });
+        });
+        let cam = fresh_camera(&mut world, tier);
+        let tiles = (0..3)
+            .map(|i| {
+                world
+                    .spawn((
+                        PlayTileRoot,
+                        Transform::from_xyz(i as f32, 0.0, 0.0),
+                        SceneEntity,
+                    ))
+                    .with_child((Transform::IDENTITY, SceneEntity))
+                    .id()
+            })
+            .collect();
+        (world, tiles, cam)
+    }
+
+    /// The play camera as `scene::setup` spawns it at `tier` and `play::sync` prepares it.
+    fn fresh_camera(world: &mut World, tier: QualityTier) -> Entity {
+        let mut commands = world.commands();
+        let mut cam = commands.spawn((Camera3d::default(), Msaa::Off, SceneEntity));
+        cam.insert(crate::post::camera_post_bundle(tier));
+        set_camera_ssao(&mut cam, tier);
+        crate::water::tiles::prepare_camera(&mut cam, tier);
+        let id = cam.id();
+        world.flush();
+        id
+    }
+
+    /// The camera's component set, with the tier-driven ones named (component names need Bevy's
+    /// `debug` feature).
+    fn components(world: &World, e: Entity) -> (Vec<usize>, [bool; 3]) {
+        use bevy::{
+            core_pipeline::prepass::NormalPrepass,
+            pbr::{ScreenSpaceAmbientOcclusion, ScreenSpaceTransmission},
+        };
+        let r = world.entity(e);
+        let mut ids: Vec<usize> = r
+            .archetype()
+            .components()
+            .iter()
+            .map(|c| c.index())
+            .collect();
+        ids.sort_unstable();
+        let named = [
+            r.contains::<ScreenSpaceAmbientOcclusion>(),
+            r.contains::<NormalPrepass>(),
+            r.contains::<ScreenSpaceTransmission>(),
+        ];
+        (ids, named)
+    }
+
+    /// Criterion: a quality change in play respawns no tile, and leaves the camera, the water and
+    /// the tilt-shift default as a scene built at the new tier would have them.
+    #[test]
+    fn a_play_tier_change_keeps_every_tile_and_matches_a_fresh_scene() {
+        use crate::water::{WaterKey, wave_count};
+        for (from, to) in [
+            (High, Medium),
+            (Medium, High),
+            (High, Low),
+            (Low, High),
+            (Medium, Low),
+        ] {
+            let (mut world, tiles, cam) = play_world(from);
+            let children: Vec<Entity> = tiles
+                .iter()
+                .map(|&t| world.entity(t).get::<Children>().unwrap()[0])
+                .collect();
+            apply_tier(&mut world, to, TierSource::Runtime, "test".into());
+            world.flush();
+            for (_, m) in world.resource::<Assets<WaterMaterial>>().iter() {
+                assert_eq!(
+                    m.key,
+                    WaterKey::for_tier(from),
+                    "the water trails the camera"
+                );
+            }
+            let water_frames = (0..=WATER_RETIER_FRAMES)
+                .map(|_| {
+                    world.run_system_cached(retier_water).unwrap();
+                    world.flush();
+                })
+                .count();
+            assert_eq!(water_frames as u8, WATER_RETIER_FRAMES + 1);
+            assert!(
+                world.get_resource::<WaterRetier>().is_none(),
+                "the water variant follows {WATER_RETIER_FRAMES} frames after the camera"
+            );
+            for e in tiles.iter().chain(&children) {
+                assert!(
+                    world.get_entity(*e).is_ok(),
+                    "{from:?}->{to:?}: {e} was despawned"
+                );
+            }
+            assert_eq!(world.resource::<GateConfig>().tier, to);
+            assert_eq!(world.resource::<TierChoice>().changes, 1);
+            let fresh = fresh_camera(&mut world, to);
+            assert_eq!(
+                components(&world, cam),
+                components(&world, fresh),
+                "{from:?}->{to:?}: the kept camera differs from one built at the tier"
+            );
+            let mats = world.resource::<Assets<WaterMaterial>>();
+            assert_eq!(mats.len(), 1, "no water material is added");
+            for (_, m) in mats.iter() {
+                assert_eq!(m.key, WaterKey::for_tier(to));
+                assert_eq!(m.params.wave_count, wave_count(to));
+            }
+            let config = *world.resource::<GateConfig>();
+            assert_eq!(
+                world.resource::<TiltTierDefault>().0,
+                settings_for(&config, true, to)
+            );
+            assert_eq!(
+                *world.resource::<TiltShiftSettings>(),
+                settings_for(&config, true, to),
+                "an unpinned tilt-shift takes the tier's default"
+            );
+        }
     }
 
     #[test]

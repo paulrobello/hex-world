@@ -475,6 +475,17 @@ export interface TierState {
   requests: number;
   /** `drawn !== changes`. */
   rebuilding: boolean;
+  /** The idle pipeline warm-up for the neighbouring tier (`hex_play::tier::warm`; on by default on the web). */
+  warm?: {
+    enabled: boolean;
+    active: boolean;
+    runs: number;
+    tiers: TierName[];
+    added: number;
+    frames: number;
+    pipelines: number;
+    current: boolean;
+  };
 }
 
 /** One look preset as `state().grade.presets` lists it. */
