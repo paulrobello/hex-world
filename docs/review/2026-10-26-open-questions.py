@@ -39,31 +39,16 @@ B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
 SECTIONS = [
-    ("A35", "Glossy foliage found by the new matte-foliage gate", [
-        ("Q1", "A new kit gate requires every leaf, needle, frond and flower slot to keep a median roughness of at "
-               "least 0.7 (the bushes and forest shrubs were matted from 0.50-0.64 after your shiny-bush report; "
-               "grass draws at 0.78). These current slots are below it and sit on a shrink-only allow-list until you "
-               "decide: the six oaks' leaf cards (median 0.58) and their canopy shells (0.62), the holly "
-               "shrub_forest_b (0.37, built glossy on purpose), dune grass (0.66), ferns (0.67), and the water-lily "
-               "petal and bud (0.60). Spruce needles (0.81), wildflowers (0.70), wheat (0.72) and the B2 hedges pass."),
+    ("A37", "Where the title theme plays", [
+        ("Q1", "title-theme (179 s, approved with the music set) is mastered, but the game has no title screen and no "
+               "event plays it, so it never sounds. As of today it is left out of the deployed site (it was 7 MB "
+               "of the deploy that nothing fetched) until something plays it. Browsers only allow sound after the "
+               "first click, so it cannot play over the opening load."),
     ], [
-        ("O1", "Matte everything listed except the holly, which keeps its real-world gloss: the oaks, dune grass and "
-               "ferns map onto 0.76-0.86 the way the bushes did (only the ORM green channel changes; thumbnails of "
-               "oak, forest and beach tiles shift slightly), and lily flower parts leave the rule. Recommended."),
-        ("O2", "Matte everything listed, holly included."),
-        ("O3", "Matte only the oaks (the card's original complaint was the same sheen); leave the rest allow-listed."),
-    ], []),
-    ("A36", "Music bitrates against the full payload", [
-        ("Q1", "With the P2 content in, one player downloads about 120 MiB in a full session (BC7 textures, WebM audio); "
-               "music is 15 MiB of it (12%), all streamed in the background when a cue first plays, never in the 21 MiB "
-               "initial download. Cutting Opus 128 to 96 kbps (and AAC 160 to 128) saves about 2.75 MB in a session "
-               "that hears four cues; loudness, loop points and stereo width are unchanged, and the high band keeps its "
-               "energy but its texture changes (measured, not heard). Lower rates (Opus 64, AAC 96) audibly risk the top "
-               "end and AAC 96 breaks a loop seam, so they are off the table. Listen to meadow-day, the brightest cue: "
-               "http://127.0.0.1:8095/.claude/worktrees/agent-af09c276bdfa7ba55/docs/review/music-bitrate.html"),
-    ], [
-        ("O1", "Keep the current bitrates (Opus 128k, AAC 160k). Recommended: music is outside every budget."),
-        ("O2", "Cut to Opus 96k and AAC 128k, if you hear no difference on meadow-day."),
+        ("O1", "Play it when a new, empty world starts (after the New world click), fading into the biome music "
+               "once the first tiles go down. Recommended: the closest moment to a title screen the game has now."),
+        ("O2", "Play it on the world list (Worlds sheet) while it is open."),
+        ("O3", "Keep it unshipped until a title or menu screen exists."),
     ], []),
 ]
 
@@ -86,7 +71,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, fifth round. A19 to A33 are answered (A33 O2 on 2026-10-27). A34 answered 2026-10-27 (&quot;all approved&quot;). A35 and A36 answered 2026-10-27 (A35 O1, A36 O1). Nothing is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A37 is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
