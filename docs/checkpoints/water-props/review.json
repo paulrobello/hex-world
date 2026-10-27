@@ -1,0 +1,642 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   12,
+   172,
+   165
+  ],
+  "look_at": [
+   12,
+   0,
+   -2
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 4,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth_l"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": -4,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "hover",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 6,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 6,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "wait",
+  "frames": 700
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   79.56921938165306,
+   52.0,
+   110.0
+  ],
+  "look_at": [
+   41.569219381653056,
+   -1.0,
+   72.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 45
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-play-bend-a"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -31.282032302755084,
+   52.0,
+   110.0
+  ],
+  "look_at": [
+   -69.28203230275508,
+   -1.0,
+   72.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 45
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-play-spring"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   47.4,
+   3.6,
+   82.3
+  ],
+  "look_at": [
+   40.4,
+   -0.9,
+   75.3
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 45
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-close-bend-a"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -63.4,
+   3.2,
+   75.3
+  ],
+  "look_at": [
+   -68.3,
+   -1.39,
+   70.8
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 45
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-close-spring"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -67.6,
+   7.5,
+   77.0
+  ],
+  "look_at": [
+   -68.6,
+   -1.39,
+   70.6
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 45
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-pads-side-by-side"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "walk",
+  "on": true,
+  "pointer_lock": null
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "walk_to",
+  "x": 47.0,
+  "z": 77.2,
+  "heading": 315,
+  "pitch": -4
+ },
+ {
+  "cmd": "wait",
+  "frames": 90
+ },
+ {
+  "cmd": "photo_export",
+  "scale": 1,
+  "name": "wp-eye-bend-a"
+ },
+ {
+  "cmd": "wait",
+  "frames": 20
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wp-review-state"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "exit"
+ }
+]

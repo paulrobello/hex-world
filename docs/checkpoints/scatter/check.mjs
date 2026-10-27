@@ -6,9 +6,9 @@
 // counts, and the 20-tile world's overview camera stays inside the 500-draw budget (owner A2 Q1,
 // 2026-10-21: close cameras are tracked, not gated). The mixed world (scatter-mixed.json: the
 // beach-dressing mouth world's rivers, mouths, beaches and ocean plus forest, oak, meadow and road,
-// 31 tiles drawing all 48 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
+// 32 tiles drawing all 52 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
 // printed as tracked, not gated (548 framing every tile on 2026-10-26; 452 since the per-cell
-// cascade skip of 2026-10-27, which fits only because one tile lies past the cascade 3 bound: the
+// cascade skip of 2026-10-27, 464 with B3's lily pads and reed beds, which fits only because one tile lies past the cascade 3 bound: the
 // fix is structural, shared scatter materials, not fewer props). Scatter (mesh, material)
 // pairs are tracked, not gated (A24 Q5, replacing A2 Q2's 60 per LOD and 180 in all).
 import { readFileSync } from "node:fs";
@@ -108,10 +108,13 @@ const PIECES = [
     "wildflower_clump", "bush_verge", "river_stones", "shrub_forest", "sapling_spruce"].flatMap((p) => [p, `${p}_b`, `${p}_c`]),
   ..."abcde".split("").map((v) => (v === "a" ? "wildflower_single" : `wildflower_single_${v}`)),
   "river_reeds", "river_reeds_b", "seabed_rock", "seabed_pebbles",
+  // Water props (owner A26, 2026-10-27): at seed 1 the bend at -3,2 keeps lily_cluster, the spring
+  // at -4,3 lily_cluster_c, and the bend at 0,3 lily_cluster_b and reed_bed.
+  "lily_cluster", "lily_cluster_b", "lily_cluster_c", "reed_bed",
 ];
 const mixed = read("scatter-mixed-world");
 const mixedTiles = [...new Set(mixed.play.tiles.map((t) => t.tile))].sort();
-check(mixed.tiles === 31, "the 31-tile mixed world (refused placements would be missing)", mixed.tiles);
+check(mixed.tiles === 32, "the 32-tile mixed world (refused placements would be missing)", mixed.tiles);
 check(["beach", "forest", "meadow", "oak", "ocean", "river_straight", "road_straight"].every((t) => mixedTiles.includes(t)), "river, beach, ocean, forest, oak, meadow and road tiles", mixedTiles);
 check(Object.values(mixed.packs).every((v) => v === "ready") && mixed.scatter.waiting.length === 0, "mixed: every pack ready, no tile waits", mixed.packs);
 const missing = PIECES.filter((p) => !(mixed.scatter.drawn_by_piece[p] > 0));

@@ -1,0 +1,256 @@
+{
+  "pieceId": "lily_cluster_c",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/lily_cluster_c.py",
+    "sha256": "4bde4099d5cf81107b5485e81ea88ae64704b693cf4815ee166681b38cc51598"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
+    },
+    {
+      "path": "scripts/blender/kit/_water_props.py",
+      "sha256": "0ebbea596a805b004306bef56df9123fb58653df35c8b85302cf419a88955e37"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "masks": {
+        "colorspace": "linear",
+        "size": 16
+      }
+    },
+    "device": "none",
+    "lod2Drops": {
+      "water_lily_bud": "under a pixel at 400 m: the bud is 0.12 m across and 0.25 m tall (0.4 x 0.8 px at 0.31 m/px)"
+    },
+    "marginPx": 0,
+    "masks": {
+      "ao": 1,
+      "lilyUv": [
+        0.03125,
+        0.03125
+      ],
+      "night": 0,
+      "porosity": 0.8,
+      "snow": 1
+    },
+    "props": {
+      "extra": "bud",
+      "lod2Pads": 3,
+      "padRadii": [
+        0.5,
+        0.45,
+        0.4,
+        0.34,
+        0.3
+      ],
+      "pads": 5,
+      "reachM": 1.173,
+      "slotsPerLod": [
+        [
+          "river_lily",
+          "water_lily_bud"
+        ],
+        [
+          "river_lily",
+          "water_lily_bud"
+        ],
+        [
+          "river_lily"
+        ]
+      ],
+      "tris": [
+        51,
+        21,
+        6
+      ]
+    },
+    "reason": "no Cycles bake: colour-only slots and a constant masks map on the planar UV0",
+    "receiverSignature": "dcd432aed756f5e35574d161ea286160bc60fc6c35a319348a2c05008bd27112",
+    "samples": 0,
+    "skipped": true
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 51,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 21,
+      "ratio": 0.4117647058823529
+    },
+    {
+      "lod": 2,
+      "tris": 6,
+      "ratio": 0.11764705882352941
+    }
+  ],
+  "collider": {
+    "node": "lily_cluster_c_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": null,
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 468,
+        "astc": 468
+      },
+      "glbBytes": 14344
+    },
+    "textureEncodes": [
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 5,
+        "bytes": 468,
+        "sha256": "140b0c178b4977d0e9c60cc821a1a8ed4810eccab80e1da3844230e018adc804"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 5,
+        "bytes": 468,
+        "sha256": "a7aacc3d1b6edba058800ce3e4f377034189cd3f23a260b0b7b8c5a3e97bae0a"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 274,
+        "sha256": "6e24f3cacdef537e1e7a888a71ff1a571c9e58dab9f17b8c45f54d1664a10b9a"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.glb",
+      "sha256": "10c83a7f03adc9c5625cf605666143957325483e562a4b6444b29148dae5fc57",
+      "bytes": 14344
+    },
+    {
+      "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.bc7.ktx2",
+      "sha256": "140b0c178b4977d0e9c60cc821a1a8ed4810eccab80e1da3844230e018adc804",
+      "bytes": 468
+    },
+    {
+      "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.astc.ktx2",
+      "sha256": "a7aacc3d1b6edba058800ce3e4f377034189cd3f23a260b0b7b8c5a3e97bae0a",
+      "bytes": 468
+    },
+    {
+      "path": "assets/kit/p1/lily_cluster_c/lily_cluster_c.masks.png",
+      "sha256": "6e24f3cacdef537e1e7a888a71ff1a571c9e58dab9f17b8c45f54d1664a10b9a",
+      "bytes": 274
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/water_props/ref-1.jpg",
+      "sha256": "8523572616871eedf8de45d50d89d0a3a13080f6d30bd28e4e248310df499029",
+      "sourceSha256": "13e32f0a075406e7dc48219a35bfc1ba69a99af02711b268e43a00805bd7c94f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "9dc35812-3fd3-4878-9e4d-8b1882db6bd3",
+      "prompt": "Three separate clusters of round flat lily pads, each a smooth plain disc with one narrow wedge-shaped notch cut in from the rim to the centre, lying flat, matte dark olive-green with a slightly lighter centre and a few pads overlapping a little lie apart from each other on the plain grey studio floor, each with a soft contact shadow: at the back left a small cluster of three pads, at the back right a larger spreading cluster of seven pads of mixed sizes with one white water lily flower of pointed white petals around a golden-yellow centre open on it, and at the front a cluster of five pads with one closed pointed pale-pink flower bud on a short stem among them, smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole group centred in frame and seen from the front-left from a high three-quarter angle. The picture shows only the three lily pad clusters on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/water_props/ref-2.jpg",
+      "sha256": "b232be4fc0255a9c5df0e17bf48da010d9fd30355700ea74f91e6ff12bfb1198",
+      "sourceSha256": "690a3c322e3323a09cf51f97fd5e10ce81e63d1253abedd0a3b4b2fc2ad7309c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "98e9ace1-d44d-4ee3-87ef-c177142713d2",
+      "prompt": "A single oval reed clump: a dense stand of many dozens of tall slender common reed stems growing close together, each stem straight and thin with narrow grey-green leaves angling out along its length, most stems topped by a soft feathery drooping plume in buff and soft purple-brown, the middle stems tallest so the stand has a soft domed outline, a few dry straw-coloured stems among the green, and no cattail heads, rising from a low flat oval patch of dark wet mud, smooth sculpted forms like a quality scale model with a bold readable silhouette, with a soft contact shadow on the plain grey studio floor, the whole clump centred in frame and seen from the front-left at a three-quarter angle. The picture shows only the reeds on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/water_props/ref-3.jpg",
+      "sha256": "8736918735cc5ee0d9ba49644490805cda9e7b9732f5279713cd73255535da76",
+      "sourceSha256": "a1b842e32b49691861d0956acd16ff7390b66903c7ee49ca1bba80da4ac83389",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "fa24b18b-8c97-4546-85b3-d42d97ad751a",
+      "prompt": "Spring tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. Near the middle of the tile a small round spring pool about 11 m across sits in a shallow grassy hollow, ringed by weathered lichen-spotted grey granite rocks, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, a pale pebbly floor showing through the water. On the pool float three small clusters of round flat lily pads, each a smooth plain disc with one narrow wedge-shaped notch cut in from the rim to the centre, lying flat, matte dark olive-green with a slightly lighter centre and a few pads overlapping a little, each pad about 0.8 m across, one cluster with one white water lily flower of pointed white petals around a golden-yellow centre, and at the back edge of the pool a dense stand of many dozens of tall slender common reed stems growing close together, each stem straight and thin with narrow grey-green leaves angling out along its length, most stems topped by a soft feathery drooping plume in buff and soft purple-brown, the middle stems tallest so the stand has a soft domed outline, a few dry straw-coloured stems among the green, and no cattail heads grows out of the shallow water, about 4 m long and 2.5 m tall. An 8 m wide river runs out of the pool to the middle of the front flat edge in a channel sunk below the meadow surface between natural earthy banks. Where the river reaches the tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. The rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/water_props/ref-4.jpg",
+      "sha256": "2e99815a105625a68718aa7a0d19c3fa70f5f15d5e1f46e88e5bc9285954ff73",
+      "sourceSha256": "2c53859db6eae63cd2e194da9e18bcb7e11a549892fb9a45930fd5686ff352a4",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "0f5356a4-762e-4d72-bebf-d1b08da34974",
+      "prompt": "Slow river bend tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. An 8 m wide river curves gently across the tile from the middle of one flat edge to the middle of the flat edge two positions away, skipping one edge, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed, the water calm and slow. On the calm water close to the inner bank of the curve float two clusters of round flat lily pads, each a smooth plain disc with one narrow wedge-shaped notch cut in from the rim to the centre, lying flat, matte dark olive-green with a slightly lighter centre and a few pads overlapping a little, each pad about 0.8 m across, one with one white water lily flower of pointed white petals around a golden-yellow centre, and along the inner bank at the water's edge stands a dense stand of many dozens of tall slender common reed stems growing close together, each stem straight and thin with narrow grey-green leaves angling out along its length, most stems topped by a soft feathery drooping plume in buff and soft purple-brown, the middle stems tallest so the stand has a soft domed outline, a few dry straw-coloured stems among the green, and no cattail heads, its stems rising from the water, about 5 m long and 2.5 m tall. Where the river reaches each tile side wall, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. The rest of the tile is open meadow grass, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-27T05:32:17.938Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/water_props/ref-1.jpg",
+        "assets-source/refs/water_props/ref-2.jpg",
+        "assets-source/refs/water_props/ref-3.jpg",
+        "assets-source/refs/water_props/ref-4.jpg"
+      ],
+      "notes": "Approved in chat (\"All recommendations approved\", 2026-10-27, A26 on the open-questions page, sheet docs/checkpoints/water-props-refs/refs-sheet.jpg). ref-1 sets the pads' colour and form (dark olive, reusing the spring's river_lily slot); ref-2 the reed bed; ref-3 and ref-4 are layout only. Pieces: lily_cluster (3 pads, about 1.8 m), lily_cluster_b (7 pads with the white flower, about 2.8 m), lily_cluster_c (5 pads with the pink bud, about 2.4 m), reed_bed (dense common reed, about 4 x 2 m footprint, 2.4 m tall). Scatter: spring lilies 1.0 and reed bed 0.5; river_bend lilies 0.6 and reed bed 0.4; not straights, forks or mouths; their own seeded 0-2 per tile. Never on ocean, beach or the mouth fan; pads within 4.0 m of the centreline minus their radius; reed bed rooted 3.0-3.6 m out (0.4-0.8 m deep); spring within 6.5 m of the node, clear of the built-in pads; 1.5 m from the hex edge. LOD: pads drop past 400 m; reed bed keeps a low silhouette."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "B3 water props (2026-10-27)",
+      "requested": "2026-10-27",
+      "notes": "Pending owner review; not an approval. New water-surface scatter prop: five river_lily pads about 2.4 m across with a pink bud (B3, refs approved as A26 on 2026-10-27). Review assets-source/kit/lily_cluster_c/renders/ and docs/checkpoints/water-props/ (review sheet)."
+    }
+  ]
+}

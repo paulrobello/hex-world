@@ -721,8 +721,8 @@ shots-grass:
 # road and a river, a house cluster; then a forest rising,
 # bulldozed, undone, and again under reduced motion) after every pack has landed, then
 # scatter-stream.json with the streamed packs held (a forest and the start meadow before and after
-# their packs land), then scatter-mixed.json (a 31-tile river, beach and ocean world with forest,
-# oak, meadow and road, all 48 scatter pieces drawn). Copies JPEG stills and the state dumps next to
+# their packs land), then scatter-mixed.json (a 32-tile river, beach and ocean world with forest,
+# oak, meadow and road, all 52 scatter pieces drawn). Copies JPEG stills and the state dumps next to
 # it, and asserts the dumps (check.mjs: per-tile counts, roosts, undo, reduced motion, streaming,
 # the 20-tile overview's draw calls gated at 500 with the close cameras tracked, the mixed world's
 # pieces; its overview draws, over 500 until shared scatter materials land, and the scatter pairs

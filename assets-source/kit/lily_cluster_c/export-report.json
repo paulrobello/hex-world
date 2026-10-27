@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/lily_cluster_c.py",
+    "sha256": "4bde4099d5cf81107b5485e81ea88ae64704b693cf4815ee166681b38cc51598"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
+    },
+    {
+      "path": "scripts/blender/kit/_water_props.py",
+      "sha256": "0ebbea596a805b004306bef56df9123fb58653df35c8b85302cf419a88955e37"
+    }
+  ],
+  "lodTris": {
+    "lily_cluster_c_lod0": 51,
+    "lily_cluster_c_lod1": 21,
+    "lily_cluster_c_lod2": 6
+  },
+  "nodes": [
+    "lily_cluster_c",
+    "lily_cluster_c_collider",
+    "lily_cluster_c_lod0",
+    "lily_cluster_c_lod1",
+    "lily_cluster_c_lod2"
+  ],
+  "pieceId": "lily_cluster_c",
+  "sockets": []
+}

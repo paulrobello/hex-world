@@ -1023,9 +1023,10 @@ const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
 /// Since 2026-10-26 every river bank's stones and reeds are runtime scatter (`river_stones`,
 /// `river_reeds` and their variants, ordinary props under 1,500): the channel and mouth centres left
 /// the kit, and river_spring_center keeps only its granite ring and lily pads, far under this
-/// ceiling.
+/// ceiling. The `reed_bed` water-surface scatter prop (B3, owner A26, 2026-10-27: "within the
+/// approved 2,500-tri river-dressing budget") is a dense stand of about 70 common-reed stems.
 const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
-const RIVER_DRESSING_PROPS: &[&str] = &["river_spring_center"];
+const RIVER_DRESSING_PROPS: &[&str] = &["river_spring_center", "reed_bed"];
 
 /// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.
 fn lod0_budget(p: &PieceEntry) -> usize {

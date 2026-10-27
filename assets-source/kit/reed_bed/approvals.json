@@ -1,0 +1,11 @@
+[
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "B3 water props (2026-10-27)",
+    "requested": "2026-10-27",
+    "notes": "Pending owner review; not an approval. New water-surface scatter prop: a dense common-reed stand about 4 x 2 m and 2.4 m tall with buff and purple-brown plumes (B3, refs approved as A26 on 2026-10-27). Review assets-source/kit/reed_bed/renders/ and docs/checkpoints/water-props/ (review sheet)."
+  }
+]

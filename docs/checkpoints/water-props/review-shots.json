@@ -1,0 +1,66 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/water-props/review.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        340.37,
+        431.05,
+        361.04
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 17.2,
+      "load_after": [
+        314.29,
+        420.8,
+        358.6
+      ],
+      "frames": {
+        "wp-play-bend-a": {
+          "mean": 0.1765,
+          "problem": null
+        },
+        "wp-play-spring": {
+          "mean": 0.1381,
+          "problem": null
+        },
+        "wp-close-bend-a": {
+          "mean": 0.3692,
+          "problem": null
+        },
+        "wp-close-spring": {
+          "mean": 0.355,
+          "problem": null
+        },
+        "wp-pads-side-by-side": {
+          "mean": 0.3435,
+          "problem": null
+        },
+        "wp-eye-bend-a": {
+          "mean": 0.3049,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

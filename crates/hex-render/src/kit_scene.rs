@@ -381,6 +381,12 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -2, 6, at, yaw_deg)
         });
     }
+    for &(piece, at, yaw_deg, y) in WATER_PROPS {
+        v.push(Placement {
+            y,
+            ..hero(piece, -2, 4, at, yaw_deg)
+        });
+    }
     // The river fork (owner 2026-10-20) on (-3, 4), west of the river straights: river_fork_base
     // at rot 1 (river on world edges 1 and 3 facing empty cells and 5 meeting the tight
     // bend on (-2, 3); its grass edge 0 meets the straight's grass edge 3 on (-2, 4)) with a river_edge stub on each River
@@ -678,6 +684,19 @@ const RIVER_BANK: &[(&str, [f32; 2], f32, f32)] = &[
     ("river_stones_c", [0.449, 8.978], 60.0, -1.295),
     ("river_reeds", [-5.003, 1.734], 0.0, -0.572),
     ("river_reeds_b", [7.676, 2.496], 0.0, -0.462),
+];
+
+/// (piece, at, yaw, height) of the water-surface scatter props (B3, owner A26, 2026-10-27) on the
+/// upstream river straight at (-2, 4), rot 1, in RIVER_BANK's frame (u t + v n): the lily clusters
+/// float at the water at rest plus 0.01 m (-1.39, as the spring's pads) within 4.0 m of the centre
+/// line less their reach, and the reed bed stands at the water at rest (-1.4) 3.3 m out on the +n
+/// bank, its local +x along -t and its Blender +y (runtime -z) up the bank (yaw 240). The kit
+/// scenario draws no water, so the channel shows dry here; play draws the water.
+const WATER_PROPS: &[(&str, [f32; 2], f32, f32)] = &[
+    ("lily_cluster", [-0.864, -4.697], 30.0, -1.39),
+    ("lily_cluster_b", [-1.145, 1.816], 150.0, -1.39),
+    ("lily_cluster_c", [4.299, 4.446], 270.0, -1.39),
+    ("reed_bed", [-4.608, -1.381], 240.0, -1.4),
 ];
 
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
@@ -1388,6 +1407,17 @@ mod tests {
         ] {
             assert!(
                 on(piece, (-2, 6)) && on("river_straight_base", (-2, 6)),
+                "{piece}"
+            );
+        }
+        for piece in [
+            "lily_cluster",
+            "lily_cluster_b",
+            "lily_cluster_c",
+            "reed_bed",
+        ] {
+            assert!(
+                on(piece, (-2, 4)) && on("river_straight_base", (-2, 4)),
                 "{piece}"
             );
         }

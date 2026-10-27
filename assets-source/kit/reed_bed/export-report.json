@@ -1,0 +1,35 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/reed_bed.py",
+    "sha256": "34423134caad79a6bd9dabedcd49369029ea3c3c21c381e7ee4a5f55a2ee007d"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_river_dress.py",
+      "sha256": "3761223a50d85b8cdfb1cb1bce63902d91e82278ebf608f2185e3de35981deb5"
+    },
+    {
+      "path": "scripts/blender/kit/_water_props.py",
+      "sha256": "0ebbea596a805b004306bef56df9123fb58653df35c8b85302cf419a88955e37"
+    }
+  ],
+  "lodTris": {
+    "reed_bed_lod0": 2400,
+    "reed_bed_lod1": 352,
+    "reed_bed_lod2": 16
+  },
+  "nodes": [
+    "reed_bed",
+    "reed_bed_collider",
+    "reed_bed_lod0",
+    "reed_bed_lod1",
+    "reed_bed_lod2"
+  ],
+  "pieceId": "reed_bed",
+  "sockets": []
+}

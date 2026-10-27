@@ -854,7 +854,9 @@
         "rail": false,
         "scatter": [
           "river_stones",
-          "river_reeds"
+          "river_reeds",
+          "lily_cluster",
+          "reed_bed"
         ],
         "stopped": [
           false,
@@ -986,7 +988,9 @@
         "rail": false,
         "scatter": [
           "river_stones",
-          "river_reeds"
+          "river_reeds",
+          "lily_cluster",
+          "reed_bed"
         ],
         "stopped": [
           false,

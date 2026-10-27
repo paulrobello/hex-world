@@ -1,0 +1,53 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 16
+    }
+  },
+  "device": "none",
+  "lod2Drops": {},
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "lilyUv": [
+      0.03125,
+      0.03125
+    ],
+    "night": 0.0,
+    "porosity": 0.8,
+    "snow": 1.0
+  },
+  "props": {
+    "extra": null,
+    "lod2Pads": 1,
+    "padRadii": [
+      0.46,
+      0.4,
+      0.32
+    ],
+    "pads": 3,
+    "reachM": 0.8966,
+    "slotsPerLod": [
+      [
+        "river_lily"
+      ],
+      [
+        "river_lily"
+      ],
+      [
+        "river_lily"
+      ]
+    ],
+    "tris": [
+      18,
+      9,
+      2
+    ]
+  },
+  "reason": "no Cycles bake: colour-only slots and a constant masks map on the planar UV0",
+  "receiverSignature": "8e01156573b5c745497ff8155471dd11c00ef6fbfdb4cb0c2c605edfc7d3f4a2",
+  "samples": 0,
+  "skipped": true
+}

@@ -389,7 +389,24 @@ const PLANTS: &[(&str, &str)] = &[
     ("bakery_pad_hedge", "the bakery forecourt's clipped hedge"),
     ("river_reed", "reed blades on the river banks"),
     ("river_cattail", "cattail seed heads on the reeds"),
-    ("river_lily", "lily pads on the spring pool"),
+    (
+        "river_lily",
+        "lily pads on the spring pool and the lily_cluster scatter props",
+    ),
+    (
+        "water_lily_petal",
+        "the white water lily's petals on lily_cluster_b",
+    ),
+    (
+        "water_lily_heart",
+        "the white water lily's yellow heart on lily_cluster_b",
+    ),
+    (
+        "water_lily_bud",
+        "the pink water-lily bud on lily_cluster_c",
+    ),
+    ("reed_bed_leaf", "the reed bed's stems and leaves"),
+    ("reed_bed_plume", "the reed bed's plumes and buff stems"),
     (
         "rail_station_flowers",
         "flowers in the station platform's tubs",

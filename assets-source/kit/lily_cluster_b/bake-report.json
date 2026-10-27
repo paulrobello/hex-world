@@ -1,0 +1,64 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "masks": {
+      "colorspace": "linear",
+      "size": 16
+    }
+  },
+  "device": "none",
+  "lod2Drops": {
+    "water_lily_heart": "about a pixel at 400 m: the flower is 0.33 m across and 0.08 m tall (1.1 x 0.3 px at 0.31 m/px), and LOD2 is held to 15% of LOD0 by the pads it keeps",
+    "water_lily_petal": "about a pixel at 400 m: the flower is 0.33 m across and 0.08 m tall (1.1 x 0.3 px at 0.31 m/px), and LOD2 is held to 15% of LOD0 by the pads it keeps"
+  },
+  "marginPx": 0,
+  "masks": {
+    "ao": 1.0,
+    "lilyUv": [
+      0.03125,
+      0.03125
+    ],
+    "night": 0.0,
+    "porosity": 0.8,
+    "snow": 1.0
+  },
+  "props": {
+    "extra": "flower",
+    "lod2Pads": 7,
+    "padRadii": [
+      0.48,
+      0.44,
+      0.4,
+      0.36,
+      0.33,
+      0.3,
+      0.26
+    ],
+    "pads": 7,
+    "reachM": 1.3886,
+    "slotsPerLod": [
+      [
+        "river_lily",
+        "water_lily_heart",
+        "water_lily_petal"
+      ],
+      [
+        "river_lily",
+        "water_lily_heart",
+        "water_lily_petal"
+      ],
+      [
+        "river_lily"
+      ]
+    ],
+    "tris": [
+      108,
+      34,
+      14
+    ]
+  },
+  "reason": "no Cycles bake: colour-only slots and a constant masks map on the planar UV0",
+  "receiverSignature": "1b2a4f053a492cded9a483a22f135712515da73eee1a71f8c97d3522b5079949",
+  "samples": 0,
+  "skipped": true
+}

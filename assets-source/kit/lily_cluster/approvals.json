@@ -1,0 +1,11 @@
+[
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "B3 water props (2026-10-27)",
+    "requested": "2026-10-27",
+    "notes": "Pending owner review; not an approval. New water-surface scatter prop: three river_lily pads about 1.8 m across (B3, refs approved as A26 on 2026-10-27). Review assets-source/kit/lily_cluster/renders/ and docs/checkpoints/water-props/ (review sheet)."
+  }
+]

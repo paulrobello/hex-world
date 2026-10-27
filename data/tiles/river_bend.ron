@@ -20,6 +20,10 @@
         scatter: [
             (piece: "river_stones", density: 0.7),
             (piece: "river_reeds", density: 0.75),
+            // Lily clusters on the water and reed beds standing in it (owner A26, 2026-10-27): a
+            // seeded 0 to 2 per tile of their own (`hex-play` scatter WATER_MAX).
+            (piece: "lily_cluster", density: 0.6),
+            (piece: "reed_bed", density: 0.4),
         ],
     ),
 )

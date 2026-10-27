@@ -132,6 +132,8 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
         "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
         "river_stones" | "river_reeds" => &BANK_FLOORS,
+        "lily_cluster" => &[WATER_FLOOR],
+        "reed_bed" => &[WATER_FLOOR, "river_grass"],
         "seabed_rock" | "seabed_pebbles" => &[SEABED_FLOOR],
         _ => &[],
     }
@@ -185,6 +187,7 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
     ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
     ("river_stones", &["river_stones_b", "river_stones_c"]),
     ("river_reeds", &["river_reeds_b"]),
+    ("lily_cluster", &["lily_cluster_b", "lily_cluster_c"]),
     ("shrub_forest", &["shrub_forest_b", "shrub_forest_c"]),
     ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
 ];
@@ -629,6 +632,34 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "river_reeds_b",
         Footprint {
             ground: 0.83,
+            crown: 0.0,
+        },
+    ),
+    (
+        "lily_cluster",
+        Footprint {
+            ground: 0.9,
+            crown: 0.0,
+        },
+    ),
+    (
+        "lily_cluster_b",
+        Footprint {
+            ground: 1.4,
+            crown: 0.0,
+        },
+    ),
+    (
+        "lily_cluster_c",
+        Footprint {
+            ground: 1.2,
+            crown: 0.0,
+        },
+    ),
+    (
+        "reed_bed",
+        Footprint {
+            ground: 1.85,
             crown: 0.0,
         },
     ),
@@ -1590,7 +1621,25 @@ fn mask(
             let river = n.kind == NetworkKind::River;
             (river, (line, lane_clearance(rule, half, fp)))
         })
-        .partition(|(river, _)| bank.is_some() && *river);
+        .partition(|(river, _)| (bank.is_some() || water_prop(piece)) && *river);
+    // A water prop: its own band, border and spring reach, at its largest scale from anywhere in
+    // its cell, and a lily cluster's whole footprint over open water.
+    let springs = spring_nodes(def);
+    let water_reach = fp.ground * (1.0 + scale_jitter(fp));
+    let off_water_cell = |k: usize, p: Vec2| {
+        water_prop(piece)
+            && raster[k].is_none_or(|(h, _)| {
+                off_water(
+                    lily(piece),
+                    &springs,
+                    p,
+                    water_reach,
+                    h,
+                    RASTER * std::f32::consts::FRAC_1_SQRT_2,
+                )
+            })
+    };
+    let wet = |k: usize| !lily(piece) || raster[k].is_some_and(|(h, _)| h < WATER_REST);
     let rivers: Vec<Vec<Vec2>> = rivers.into_iter().map(|(_, (l, _))| l).collect();
     let lanes: Vec<(Vec<Vec2>, f32)> = lanes.into_iter().map(|(_, l)| l).collect();
     let off_bank = |k: usize, p: Vec2| {
@@ -1621,6 +1670,7 @@ fn mask(
                 || band.is_some_and(|b| lanes.iter().all(|(l, _)| polyline_distance(p, l) > b))
                 || beach.is_some_and(|(b, c)| off_beach_band(b, c, p, fp.ground))
                 || off_bank(k, p)
+                || off_water_cell(k, p)
                 || seabed_border.is_some_and(|r| hex_reach(p) > r)
             {
                 continue;
@@ -1630,6 +1680,7 @@ fn mask(
                 (0..CELLS as i32).contains(&ii)
                     && (0..CELLS as i32).contains(&jj)
                     && on_floor(jj as usize * CELLS + ii as usize)
+                    && wet(jj as usize * CELLS + ii as usize)
             });
             if covered {
                 cells.push(k as u32);
@@ -1868,14 +1919,14 @@ pub fn beach_count(seed: u64) -> usize {
 /// and repetitive, change scatter to 0-4 things").
 pub const RIVER_MAX: usize = 4;
 
-/// Whether a tile is dressed as a riverbank: it scatters, and only bank props ([`bank_band`]).
+/// Whether a tile is dressed as a riverbank: it scatters bank props ([`bank_band`]), and nothing
+/// else but water props ([`water_prop`], capped on their own by [`keep_water`]).
 pub fn river_family(def: &TileDef) -> bool {
-    !def.props.scatter.is_empty()
-        && def
-            .props
-            .scatter
+    let rules = &def.props.scatter;
+    rules.iter().any(|r| bank_band(r.piece.as_str()).is_some())
+        && rules
             .iter()
-            .all(|r| bank_band(r.piece.as_str()).is_some())
+            .all(|r| bank_band(r.piece.as_str()).is_some() || water_prop(r.piece.as_str()))
 }
 
 /// How many bank props a river tile with seed `seed` keeps: 0 to [`RIVER_MAX`], evenly.
@@ -1898,24 +1949,168 @@ pub fn dressing_cap(def: &TileDef, seed: u64) -> Option<usize> {
 /// Keeps `cap` of a capped tile's placed pieces ([`dressing_cap`]), picked jointly across its rules
 /// from its own stream, so a kept piece stands exactly where it stood among all of them, and plans
 /// what it keeps (a shortfall still means only that the spacing could not fit a piece).
-fn keep_dressing(out: &mut Layout, seed: u64, cap: usize) {
-    let n = out.instances.len();
+/// Water props ([`water_prop`]) are not dressing: [`keep_water`] caps them on a stream of their own.
+fn keep_dressing(out: &mut Layout, seed: u64, cap: usize, water: &[bool]) {
+    keep_among(
+        out,
+        Rng(seed ^ 0x6E3D_19B7_A2C5_F041),
+        cap,
+        |i: &Instance| !water[i.rule as usize],
+    );
+}
+
+/// Keeps `cap` of the instances `among` selects, picked from `rng`, and every other instance.
+fn keep_among(out: &mut Layout, mut rng: Rng, cap: usize, among: impl Fn(&Instance) -> bool) {
+    let idx: Vec<usize> = (0..out.instances.len())
+        .filter(|&i| among(&out.instances[i]))
+        .collect();
+    let n = idx.len();
     let k = cap.min(n);
-    let mut rng = Rng(seed ^ 0x6E3D_19B7_A2C5_F041);
     let mut pick: Vec<usize> = (0..n).collect();
     for i in 0..k {
         let j = i + rng.below(n - i);
         pick.swap(i, j);
     }
-    let mut keep = vec![false; n];
+    let mut keep: Vec<bool> = out.instances.iter().map(|i| !among(i)).collect();
     for &i in &pick[..k] {
-        keep[i] = true;
+        keep[idx[i]] = true;
     }
     let mut kept = keep.into_iter();
     out.instances.retain(|_| kept.next().unwrap_or(false));
     out.planned = (0..out.planned.len())
         .map(|ri| out.placed(ri) as u32)
         .collect();
+}
+
+// ---------------------------------------------------------------------------------------------
+// Water props (owner A26, 2026-10-27): lily pad clusters floating on the river and spring water,
+// and reed beds standing in it, a seeded 0 to [`WATER_MAX`] per tile of their own, so the bank
+// props' 0 to [`RIVER_MAX`] keep exactly the draw and the places they had.
+
+/// Whether `piece` is a water prop: a lily cluster ([`LILY_Y`], over the bed's open water) or a
+/// reed bed ([`REED_BED_BAND`]). Only the spring and the 120° bend list them.
+pub fn water_prop(piece: &str) -> bool {
+    matches!(family(piece), "lily_cluster" | "reed_bed")
+}
+
+fn lily(piece: &str) -> bool {
+    family(piece) == "lily_cluster"
+}
+
+/// The slot a water prop stands over: the river and spring bases' bed, an [`excluded_slot`] that
+/// [`floor_ok`] passes as one of the [`BANK_FLOORS`]. The whole footprint must have it topmost, so
+/// a prop keeps clear of the spring centre's own lily pads and granite, which lie over it.
+pub const WATER_FLOOR: &str = "river_bed";
+/// The water at rest (water contract §1).
+pub const WATER_REST: f32 = -1.4;
+/// Where a lily cluster's pads lie (its pivot): 1 cm over the water at rest, as
+/// `river_spring_center`'s own pads, where the river weight is 1 and the waves and swash are still.
+/// Every footprint point's bed lies under [`WATER_REST`]: on a river that is 4.0 m from the
+/// centreline less the cluster's radius (`_river.profile_z`).
+pub const LILY_Y: f32 = WATER_REST + 0.01;
+/// Bed height band of a reed bed's centre: 0.4 to 0.8 m of water, 3.0 to 3.6 m from a river
+/// centreline on `_river.profile_z`. Its pivot stands at [`WATER_REST`], its +x along the bank's
+/// contour and its -z (Blender +y) uphill, so its stems reach the bank under every one of them.
+pub const REED_BED_BAND: (f32, f32) = (-2.23, -1.80);
+/// A water prop keeps its whole footprint, at its largest scale, this far inside the hex border.
+pub const WATER_BORDER: f32 = 1.5;
+/// On a spring tile ([`spring_nodes`]) a reed bed's centre and a lily cluster's whole footprint stay
+/// within this of the spring node: the pool's water surface reaches 6.5 m from it (§3b).
+pub const SPRING_REACH: f32 = 6.5;
+/// Most water props one tile keeps (owner A26: "their own seeded 0-2").
+pub const WATER_MAX: usize = 2;
+
+/// How many water props a tile with seed `seed` keeps: 0 to [`WATER_MAX`], evenly.
+pub fn water_count(seed: u64) -> usize {
+    Rng(seed ^ 0x3C9A_E1F7_0B52_D84B).below(WATER_MAX + 1)
+}
+
+/// Keeps [`water_count`] of a tile's water props (`water` per rule), picked on a stream of their
+/// own; every other instance stays.
+fn keep_water(out: &mut Layout, seed: u64, water: &[bool]) {
+    keep_among(
+        out,
+        Rng(seed ^ 0x8F14_6B2D_C7A9_3E05),
+        water_count(seed),
+        |i: &Instance| water[i.rule as usize],
+    );
+}
+
+/// The spring nodes of a tile: the river network nodes of a tile with no coastline (water
+/// contract §3b), in the tile frame the scatter works in.
+pub fn spring_nodes(def: &TileDef) -> Vec<Vec2> {
+    if Coastline::of(def, 0).is_some() {
+        return vec![];
+    }
+    let node = |e: &Endpoint| match e {
+        Endpoint::Node(id) => def
+            .nodes
+            .iter()
+            .find(|n| n.id == *id)
+            .map(|n| Vec2::from(n.at)),
+        Endpoint::Edge(_) => None,
+    };
+    def.networks
+        .iter()
+        .filter(|n| n.kind == NetworkKind::River)
+        .flat_map(|n| [node(&n.from), node(&n.to)])
+        .flatten()
+        .collect()
+}
+
+/// Whether a water prop with its centre at `p` over the bed height `h` and a ground reach `reach`
+/// (at its largest scale) stands out of place, `slop` metres allowed for a dart off its cell centre:
+/// within [`WATER_BORDER`] of the border, beyond [`SPRING_REACH`] of a spring node, a lily
+/// cluster's centre over no water, or a reed bed's off its [`REED_BED_BAND`].
+fn off_water(lily: bool, springs: &[Vec2], p: Vec2, reach: f32, h: f32, slop: f32) -> bool {
+    let (low, high) = REED_BED_BAND;
+    hex_reach(p) + reach + slop > APOTHEM - WATER_BORDER
+        || springs
+            .iter()
+            .any(|s| p.distance(*s) + slop + if lily { reach } else { 0.0 } > SPRING_REACH)
+        || if lily {
+            h >= WATER_REST
+        } else {
+            h + slop < low || h - slop > high
+        }
+}
+
+/// The height a water prop at `p` stands at ([`LILY_Y`] or [`WATER_REST`]), checked exactly at
+/// the dart: [`off_water`], and a lily cluster's every rim and half-rim point over the
+/// [`WATER_FLOOR`] under the water at rest. `h` is the bed under the centre.
+fn water_stand(
+    surface: &Surface,
+    piece: &str,
+    springs: &[Vec2],
+    p: Vec2,
+    reach: f32,
+    h: f32,
+) -> Option<f32> {
+    let lily = lily(piece);
+    if off_water(lily, springs, p, reach, h, 0.0) {
+        return None;
+    }
+    if !lily {
+        return Some(WATER_REST);
+    }
+    let wet = |q: Vec2| {
+        surface
+            .at(q.x, q.y)
+            .is_some_and(|(y, s)| s == WATER_FLOOR && y < WATER_REST)
+    };
+    let ring = ring16();
+    (ring.iter().all(|d| wet(p + reach * *d)) && ring.iter().all(|d| wet(p + 0.5 * reach * *d)))
+        .then_some(LILY_Y)
+}
+
+/// A reed bed's yaw from draw `u`: its -z (Blender +y) up the slope at `p` (central differences
+/// 0.5 m apart), within [`DRIFT_YAW_JITTER`]; `None` where the ground is level or missing.
+fn uphill_yaw(surface: &Surface, p: Vec2, u: f32) -> Option<f32> {
+    let h = |dx: f32, dz: f32| surface.at(p.x + dx, p.y + dz).map(|(y, _)| y);
+    let n = Vec2::new(h(0.5, 0.0)? - h(-0.5, 0.0)?, h(0.0, 0.5)? - h(0.0, -0.5)?);
+    // Quat::from_rotation_y(yaw) turns the piece's -z to (-sin yaw, -cos yaw) in (x, z).
+    (n.length_squared() > 1e-6)
+        .then(|| portable_atan2(-n.x, -n.y) + (2.0 * u - 1.0) * DRIFT_YAW_JITTER)
 }
 
 /// Every instance the darts place for a tile before a capped tile keeps its [`dressing_cap`], in
@@ -1926,6 +2121,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     // (centre, ground reach, rule) of everything placed so far.
     let mut placed: Vec<(Vec2, f32, usize)> = vec![];
     let coast = Coastline::of(def, 0);
+    let springs = spring_nodes(def);
     for (ri, rule) in def.props.scatter.iter().enumerate() {
         let piece = rule.piece.as_str();
         let fp = group_footprint(piece);
@@ -1954,6 +2150,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let vary = rule.vary.clamp(0.0, 1.0);
         let beach = beach_band(piece);
         let bank = bank_band(piece);
+        let water = water_prop(piece);
         let mut n = 0;
         for _ in 0..ATTEMPTS * want + 64 {
             if n == want {
@@ -1986,17 +2183,29 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
             if !clear {
                 continue;
             }
-            let Some(y) = stand(&ground.surface, p, floors, reach, bank.is_none()) else {
+            let level = bank.is_none() && !water;
+            let Some(y) = stand(&ground.surface, p, floors, reach, level) else {
                 continue;
             };
             // The mask checks the band at its cell centres; the dart, off-centre, exactly.
             if bank.is_some_and(|(low, high)| y < low || y > high) {
                 continue;
             }
+            let y = match water.then(|| {
+                let r = reach * (1.0 + jitter);
+                water_stand(&ground.surface, piece, &springs, p, r, y)
+            }) {
+                Some(None) => continue,
+                Some(Some(w)) => w,
+                None => y,
+            };
             let y = if seabed(piece) { SEABED_Y } else { y };
             let u = rng.unit();
             let yaw = match bank.and_then(|_| contour(&ground.surface, p)) {
                 Some(t) => along_yaw(t, u),
+                None if water && !lily(piece) => {
+                    uphill_yaw(&ground.surface, p, u).unwrap_or(u * TAU)
+                }
                 None => instance_yaw(beach, coast, p, u),
             };
             let scale = 1.0 + jitter * (2.0 * rng.unit() - 1.0);
@@ -2031,8 +2240,17 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
 /// The scatter of a tile with definition `def` and seed `seed` on its prepared ground.
 pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut out = every_dart(def, seed, ground);
+    let water: Vec<bool> = def
+        .props
+        .scatter
+        .iter()
+        .map(|r| water_prop(r.piece.as_str()))
+        .collect();
     if let Some(cap) = dressing_cap(def, seed) {
-        keep_dressing(&mut out, seed, cap);
+        keep_dressing(&mut out, seed, cap, &water);
+    }
+    if water.contains(&true) {
+        keep_water(&mut out, seed, &water);
     }
     let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
     by_distance.sort_by(|&a, &b| {
@@ -2669,7 +2887,9 @@ mod tests {
                                 def.id,
                                 inst.pos
                             );
-                            if off == Vec3::ZERO {
+                            // A water prop stands on the water, not the bed
+                            // (`water_props_stand_on_the_water`).
+                            if off == Vec3::ZERO && !water_prop(piece) {
                                 assert!(
                                     inst.pos.y <= h + 1e-4 && inst.pos.y > h - 0.1,
                                     "{} {piece}: y {} vs surface {h}",
@@ -2701,7 +2921,9 @@ mod tests {
                             }
                         }
                         for (n, (line, half)) in def.networks.iter().zip(&lanes) {
-                            if n.kind == NetworkKind::River && bank_band(piece).is_some() {
+                            if n.kind == NetworkKind::River
+                                && (bank_band(piece).is_some() || water_prop(piece))
+                            {
                                 continue;
                             }
                             let need = lane_clearance(r, *half, fp);
@@ -3336,12 +3558,13 @@ mod tests {
             let mut with_props = 0;
             for s in 0..64 {
                 let seed = cell_seed(13, Axial::new(s, -s / 2));
-                let l = layout(def, seed, &g);
+                let full = layout(def, seed, &g);
+                assert_eq!(full, layout(def, seed, &g), "{id}: same seed, same bank");
+                let l = bank_only(def, &full);
                 let n = l.instances.len();
                 assert!(n <= RIVER_MAX, "{id} seed {seed}: {n} props");
                 seen[n] += 1;
-                assert_eq!(l, layout(def, seed, &g), "{id}: same seed, same bank");
-                let all = every_dart(def, seed, &g);
+                let all = bank_only(def, &every_dart(def, seed, &g));
                 assert!(
                     all.instances.len() >= RIVER_MAX,
                     "{id} seed {seed}: room for 4"
@@ -3412,6 +3635,7 @@ mod tests {
                         match family(inst.piece(rule)) {
                             "river_reeds" => r += 1,
                             "river_stones" => stones += 1,
+                            "lily_cluster" | "reed_bed" => {}
                             other => panic!("{id}: {other} is not a bank prop"),
                         }
                     }
@@ -3428,6 +3652,262 @@ mod tests {
                     "{id} over {seeds} seeds: reed share {share:.2} ({reeds} reeds, {stones} stones)"
                 );
             }
+        }
+    }
+
+    /// The mixed scatter world (`docs/checkpoints/scatter/scatter-mixed.json`, seed 1) draws every
+    /// water prop, as `check.mjs` asserts: the bend at -3,2 keeps a lily_cluster, the spring at -4,3
+    /// a lily_cluster_c, and the bend at 0,3 (below the spring at 0,2) a lily_cluster_b and a reed bed.
+    #[test]
+    fn the_mixed_world_draws_every_water_prop() {
+        let c = catalog();
+        for (id, q, r, want) in [
+            ("river_bend", -3, 2, &["lily_cluster", "lily_cluster"][..]),
+            ("river_spring", -4, 3, &["lily_cluster_c"][..]),
+            ("river_bend", 0, 3, &["lily_cluster_b", "reed_bed"][..]),
+        ] {
+            let def = c.get(id).unwrap();
+            let l = layout(def, cell_seed(1, Axial::new(q, r)), &prepared(def).unwrap());
+            let water: Vec<&str> = l
+                .instances
+                .iter()
+                .map(|i| i.piece(def.props.scatter[i.rule as usize].piece.as_str()))
+                .filter(|p| water_prop(p))
+                .collect();
+            assert_eq!(water, want, "{id} at {q},{r}");
+        }
+    }
+
+    /// `l` without its water props ([`water_prop`]).
+    fn bank_only(def: &TileDef, l: &Layout) -> Layout {
+        let mut out = l.clone();
+        out.instances
+            .retain(|i| !water_prop(def.props.scatter[i.rule as usize].piece.as_str()));
+        out
+    }
+
+    /// An instance with its rise rank cleared, for comparing places across layouts.
+    fn placed_as(i: &Instance) -> Instance {
+        Instance {
+            order: 0,
+            ..i.clone()
+        }
+    }
+
+    /// Owner A26 (2026-10-27): the lily clusters and reed beds are listed by the spring and the 120°
+    /// bend alone (not the straights, forks, mouths, bridges, beaches or ocean), after their bank
+    /// props, and adding them leaves every bank prop where it stood and the bank cap as it was: over
+    /// 256 seeds each tile's bank props, kept and darted, equal the same tile's without the water
+    /// rules, instance for instance.
+    #[test]
+    fn water_props_leave_the_bank_props_as_they_were() {
+        let c = catalog();
+        let mut listed: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|d| d.props.scatter.iter().any(|r| water_prop(r.piece.as_str())))
+            .map(|d| d.id.as_str())
+            .collect();
+        listed.sort_unstable();
+        assert_eq!(listed, ["river_bend", "river_spring"]);
+        for id in listed {
+            let def = c.get(id).unwrap();
+            let first = def
+                .props
+                .scatter
+                .iter()
+                .position(|r| water_prop(r.piece.as_str()))
+                .unwrap();
+            assert!(
+                def.props.scatter[first..]
+                    .iter()
+                    .all(|r| water_prop(r.piece.as_str())),
+                "{id}: water props after the bank props"
+            );
+            assert!(river_family(def), "{id}: still capped as a riverbank");
+            let mut dry = def.clone();
+            dry.props.scatter.truncate(first);
+            let (g, gd) = (prepared(def).unwrap(), prepared(&dry).unwrap());
+            for s in 0..256 {
+                let seed = cell_seed(29, Axial::new(s, 1 - s));
+                for (with, without) in [
+                    (
+                        bank_only(def, &layout(def, seed, &g)),
+                        layout(&dry, seed, &gd),
+                    ),
+                    (
+                        bank_only(def, &every_dart(def, seed, &g)),
+                        every_dart(&dry, seed, &gd),
+                    ),
+                ] {
+                    let a: Vec<Instance> = with.instances.iter().map(placed_as).collect();
+                    let b: Vec<Instance> = without.instances.iter().map(placed_as).collect();
+                    assert_eq!(a, b, "{id} seed {seed}: the bank props moved");
+                    assert_eq!(with.planned[..first], without.planned[..], "{id}");
+                }
+            }
+        }
+    }
+
+    /// Each tile keeps a seeded 0 to [`WATER_MAX`] water props ([`water_count`], a stream of its
+    /// own), each standing where the full dart set put it; over seeds every count occurs and the
+    /// three lily clusters and the reed bed all turn up. Prints placed against planned darts per
+    /// rule and the kept histogram.
+    #[test]
+    fn water_props_keep_their_own_zero_to_two() {
+        let c = catalog();
+        for id in ["river_spring", "river_bend"] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let rules: Vec<usize> = (0..def.props.scatter.len())
+                .filter(|&r| water_prop(def.props.scatter[r].piece.as_str()))
+                .collect();
+            let mut seen = [0u32; WATER_MAX + 1];
+            let mut pieces = HashSet::new();
+            let (mut planned, mut darted) = (vec![0u32; rules.len()], vec![0usize; rules.len()]);
+            let seeds = 256;
+            for s in 0..seeds {
+                let seed = cell_seed(31, Axial::new(s, -s));
+                let l = layout(def, seed, &g);
+                let all = every_dart(def, seed, &g);
+                let water: Vec<&Instance> = l
+                    .instances
+                    .iter()
+                    .filter(|i| rules.contains(&(i.rule as usize)))
+                    .collect();
+                let room: usize = rules.iter().map(|&r| all.placed(r)).sum();
+                assert_eq!(water.len(), water_count(seed).min(room), "{id} seed {seed}");
+                seen[water.len()] += 1;
+                for inst in water {
+                    assert!(
+                        all.instances.iter().any(|a| placed_as(inst) == *a),
+                        "{id}: a kept water prop moved"
+                    );
+                    let rule = def.props.scatter[inst.rule as usize].piece.as_str();
+                    pieces.insert(inst.piece(rule).to_owned());
+                }
+                for (k, &r) in rules.iter().enumerate() {
+                    planned[k] += all.planned[r];
+                    darted[k] += all.placed(r);
+                }
+            }
+            let names: Vec<&str> = rules
+                .iter()
+                .map(|&r| def.props.scatter[r].piece.as_str())
+                .collect();
+            println!(
+                "{id} over {seeds} seeds: rules {names:?} planned {planned:?} placed {darted:?}, \
+                 tiles per kept count 0..=2 {seen:?}, pieces {pieces:?}"
+            );
+            assert!(seen.iter().all(|&k| k > 0), "{id}: every count {seen:?}");
+            for p in [
+                "lily_cluster",
+                "lily_cluster_b",
+                "lily_cluster_c",
+                "reed_bed",
+            ] {
+                assert!(pieces.contains(p), "{id}: {p} turns up {pieces:?}");
+            }
+        }
+    }
+
+    /// Every water prop stands where approval A26 puts it, at its largest footprint and scale: a lily
+    /// cluster's pads at [`LILY_Y`], its every rim, half-rim and centre point over the bed under the
+    /// water at rest (4.0 m from a river centreline less its radius) with the bed topmost, so no
+    /// built-in spring pad lies under it; a reed bed at [`WATER_REST`] over a bed 0.4 to 0.8 m deep,
+    /// its -z up the slope; both [`WATER_BORDER`] inside the border and, on the spring, within
+    /// [`SPRING_REACH`] of the node.
+    #[test]
+    fn water_props_stand_on_the_water() {
+        let c = catalog();
+        for id in ["river_spring", "river_bend"] {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let springs = spring_nodes(def);
+            assert_eq!(springs.len(), usize::from(id == "river_spring"), "{id}");
+            let pads: Vec<Vec2> = g
+                .surface
+                .tris
+                .iter()
+                .filter(|(_, _, s)| g.surface.slots[*s as usize] == "river_lily")
+                .flat_map(|(t, _, _)| t.iter().map(|p| Vec2::new(p[0], p[2])))
+                .collect();
+            assert_eq!(
+                pads.is_empty(),
+                id != "river_spring",
+                "{id}: the spring's own pads"
+            );
+            let (mut lilies, mut reeds) = (0, 0);
+            for s in 0..128 {
+                let all = every_dart(def, cell_seed(37, Axial::new(s, 3)), &g);
+                for inst in &all.instances {
+                    let rule = def.props.scatter[inst.rule as usize].piece.as_str();
+                    if !water_prop(rule) {
+                        continue;
+                    }
+                    let piece = inst.piece(rule);
+                    let r = footprint(piece).ground * inst.scale;
+                    let p = inst.pos.xz();
+                    assert!(
+                        hex_reach(p) + r <= APOTHEM - WATER_BORDER + 0.02,
+                        "{id}: {piece} at {p} within 1.5 m of the edge"
+                    );
+                    let (h, slot) = g.surface.at(p.x, p.y).unwrap();
+                    if lily(rule) {
+                        lilies += 1;
+                        assert_eq!(inst.pos.y, LILY_Y, "{id}: pads on the water");
+                        let mut probes = vec![p];
+                        for d in ring16() {
+                            probes.push(p + r * d);
+                            probes.push(p + 0.5 * r * d);
+                        }
+                        for q in probes {
+                            let (y, s) = g.surface.at(q.x, q.y).unwrap();
+                            assert!(
+                                s == WATER_FLOOR && y < WATER_REST,
+                                "{id}: {piece} at {p} reaches {s} at {y}"
+                            );
+                        }
+                        for &v in &pads {
+                            assert!(
+                                v.distance(p) > 0.9 * r,
+                                "{id}: {piece} at {p} over a built-in pad at {v}"
+                            );
+                        }
+                        for n in &springs {
+                            assert!(n.distance(p) + r <= SPRING_REACH + 1e-3, "{id}: spring");
+                        }
+                    } else {
+                        reeds += 1;
+                        assert_eq!(inst.pos.y, WATER_REST, "{id}: reed bed at the water");
+                        assert!(
+                            (REED_BED_BAND.0..=REED_BED_BAND.1).contains(&h),
+                            "{id}: reed bed over {slot} at {h}"
+                        );
+                        let up = Vec2::new(
+                            g.surface.at(p.x + 0.5, p.y).unwrap().0
+                                - g.surface.at(p.x - 0.5, p.y).unwrap().0,
+                            g.surface.at(p.x, p.y + 0.5).unwrap().0
+                                - g.surface.at(p.x, p.y - 0.5).unwrap().0,
+                        )
+                        .normalize();
+                        let minus_z = Vec2::new(-inst.yaw.sin(), -inst.yaw.cos());
+                        assert!(
+                            minus_z.dot(up) >= DRIFT_YAW_JITTER.cos() - 1e-3,
+                            "{id}: reed bed faces the bank"
+                        );
+                        let q = inst.transform().transform_point(Vec3::new(0.0, 0.0, -1.0));
+                        let along = (q.xz() - p).dot(up) / inst.scale;
+                        assert!(along > DRIFT_YAW_JITTER.cos() - 1e-3, "{id}: -z is uphill");
+                        for n in &springs {
+                            assert!(n.distance(p) <= SPRING_REACH + 1e-3, "{id}: spring");
+                        }
+                    }
+                }
+            }
+            println!("{id}: {lilies} lily clusters and {reeds} reed beds darted over 128 seeds");
+            assert!(lilies > 64, "{id}: {lilies} lily clusters");
+            assert!(reeds > 0, "{id}: {reeds} reed beds");
         }
     }
 
