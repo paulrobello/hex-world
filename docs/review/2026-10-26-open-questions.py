@@ -1,4 +1,4 @@
-"""Writes docs/review/2026-10-26-open-questions.html: the owner questions still open on 2026-10-26 (A25, A26),
+"""Writes docs/review/2026-10-26-open-questions.html: the owner questions still open,
 each with its review images embedded, so the page works served locally or published on its own.
 Run from the repo root: python3 docs/review/2026-10-26-open-questions.py
 View: python3 scripts/dev/serve.py 8095 . then http://127.0.0.1:8095/docs/review/2026-10-26-open-questions.html"""
@@ -30,15 +30,34 @@ def figure(path: pathlib.Path, caption: str, width: int = 1400) -> str:
             f"<figcaption>{html.escape(caption)}</figcaption></figure>")
 
 
+B1 = ROOT / ".claude/worktrees/agent-a02bc131da7e3f31b/docs/checkpoints/boulders"
+SHEET_TOP = pathlib.Path("/tmp/claude-501/b1-sheet-top.jpg")
+SHEET_BOTTOM = pathlib.Path("/tmp/claude-501/b1-sheet-bottom.jpg")
+THUMBS = pathlib.Path("/tmp/claude-501/thumbs-cmp.jpg")
+
 SECTIONS = [
-    ("A29", "Engine drops to 60 Hz while a HUD control has focus", [
-        ("Q1", "Found while fixing the frame pacing judder: whenever a HUD control has keyboard focus (opening "
-               "Settings focuses its tab button), the engine falls to a 60 Hz update (Bevy's default for an "
-               "unfocused window). On a 120 Hz display, opening Settings halves the frame rate. "
-               "O1: keep the engine at full rate when the canvas is unfocused on the web (about one line; the "
-               "browser already throttles background tabs). O2: the HUD hands focus back to the canvas when a "
-               "sheet closes (still 60 Hz while a sheet is open). O3: leave it. Recommended: O1."),
-    ], [], []),
+    ("A30", "B1 boulders and outcrop: built and gated, ready to land", [
+        ("Q1", "Approve the five pieces: boulder_granite, _b, _c, _d (2.2 to 4.5 m) and outcrop_granite (8 x 5 x 1.3 m), "
+               "built from the A25 refs at the approved sizes, scatter densities, coast band and LOD rule. They pass every "
+               "asset gate. Recommended: approve."),
+        ("Q2", "Rule order. The boulders and outcrop lead their tiles' scatter rules (O1), so every meadow and forest lays "
+               "out again. Appended after the existing rules instead (O2), earlier props keep their spots, but the outcrop "
+               "never fits (0 placed in 64 seeds on meadow and on forest). Recommended: O1."),
+        ("Q3", "Thumbnails. Meadow and forest thumbnails now show boulders, and the thumbnail camera aims 2 m higher "
+               "(look-at 3.5 to 5.5 m) so a spruce tip no longer touches the frame edge. Every thumbnail shifts slightly, "
+               "as in the comparison below (left: now, right: with B1). Recommended: accept."),
+        ("Q4", "Every-piece check. With boulders sharing the beach's 0 to 6 cap and the forest's rules reordered, the "
+               "31-tile mixed world no longer happens to draw beach_driftwood's base variant or log_fallen_c, so the "
+               "check that every scatter piece draws fails. O1: add a few tiles to the mixed world so every piece draws "
+               "again. O2: accept the miss for those two. Recommended: O1."),
+        ("Q5", "Smaller defaults as built: no outcrop on the coast band (it never fits), no boulders on beach_outer (none "
+               "fit), the outcrop's bake at 109 px/m against about 128 (its size at 1024²), and the small boulders "
+               "ending at 400 m as approved. Recommended: accept."),
+    ], [], [
+        (SHEET_TOP, "B1 review sheet, part 1: the approved refs, the Blender renders with a 1.7 m figure, and the pieces in the kit view"),
+        (SHEET_BOTTOM, "B1 review sheet, part 2: in play on meadow, forest, oak and coast tiles, and at walking eye level"),
+        (THUMBS, "Thumbnails: left as now, right with B1 (boulders in meadow and forest, camera look-at 2 m higher)"),
+    ]),
 ]
 
 CSS = """
@@ -60,7 +79,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, third round. A19 to A28 are answered.</p>"]
+             "<p class=sub>2026-10-27, fourth round. A19 to A29 are answered.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
