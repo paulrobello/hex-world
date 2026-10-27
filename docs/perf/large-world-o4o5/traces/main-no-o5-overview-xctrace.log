@@ -1,0 +1,9 @@
+Starting recording with the Metal System Trace template. Targeting All Processes. Time limit: 4.0 s
+Ctrl-C to stop the recording
+Reached specified time limit, ending recording...
+Run issues were detected (trace is still ready to be viewed):
+* [Warning] Data stream: Signpost intervals with backdated timestamps were emitted that are not visualized on the timeline until immediate mode recording is stopped.
+
+Recording completed. Saving output file...
+Region MACH_HEADER [1ed8040c0 -> 1ed8049e0) outside of relocations in mmap SOD
+Output file saved as: main-no-o5-overview.trace

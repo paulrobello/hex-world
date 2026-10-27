@@ -9,6 +9,11 @@
 // The 31-tile mixed world (docs/checkpoints/scatter/scatter-mixed.json) runs at its every-tile overview and
 // the 20-tile overview pose.
 // usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>   ROUNDS (default 5), WORLDS (default all)
+//    or: node e2e/perf-close-camera.mjs <name>=<dist>[?k=v&...] ... <out.json>   any number of arms, each a dist
+//        and extra page keys (e.g. base=dist no_o4=dist?kit_ablate=coalesce); round r runs the arms rotated by r.
+// WARMUP=1 runs the first arm once on the first world before round 0 and discards it (a session's first run
+// can read fast). Each camera window also records `cpu`: the main-thread time of each engine rAF callback
+// that submitted GPU work, over the window's last 600 frames, so a delta splits into CPU and the rest.
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
@@ -18,8 +23,19 @@ import { buildWorld } from "./build-world.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { guarded, LOAD_LIMIT } from "./perf-load.mjs";
 
-const [distBefore, distAfter, OUT] = process.argv.slice(2);
-if (!OUT) throw new Error("usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>");
+const argv = process.argv.slice(2);
+const OUT = argv.at(-1);
+if (argv.length < 2) throw new Error("usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>");
+// Legacy two positional dists are the arms `before` and `after`.
+const legacy = argv.slice(0, -1).every((a) => !a.includes("="));
+if (legacy && argv.length !== 3) throw new Error("more than two arms need name=dist");
+const ARMS = legacy ? [["before", argv[0], ""], ["after", argv[1], ""]] : argv.slice(0, -1).map((a) => {
+  const [name, rest] = [a.slice(0, a.indexOf("=")), a.slice(a.indexOf("=") + 1)];
+  const [dist, query = ""] = rest.split("?");
+  return [name, dist, query];
+});
+if (new Set(ARMS.map(([n]) => n)).size !== ARMS.length) throw new Error("arm names must differ");
+const WARMUP = process.env.WARMUP === "1";
 const ROUNDS = Number(process.env.ROUNDS ?? 5);
 const SAVE = process.env.SAVE ?? "docs/perf/post-arc001-2026-10-16/local-world.hexworld";
 const W = 2560;
@@ -28,7 +44,10 @@ const WINDOW_FRAMES = 700;
 const SETTLE_FRAMES = 300;
 const KEYS = { scenario: "play", tier: "high", tilt: "off", fps: "off", grass: "off", seed: "1" };
 const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  "--disable-gpu-vsync", "--disable-frame-rate-limit"];
+  "--disable-gpu-vsync", "--disable-frame-rate-limit", ...(process.env.CHROME_ARGS ?? "").split(" ").filter(Boolean)];
+// HOLD_MS: after each camera's window, log `hold <arm> <world> <camera>` and keep the camera for that long,
+// so scripts/perf/large-world-trace.sh can record a Metal System Trace inside it.
+const HOLD_MS = Number(process.env.HOLD_MS ?? 0);
 
 const place = (list) => list.flatMap(([id, cells]) => [{ cmd: "select_tile", id }, ...cells.map(([q, r]) => ({ cmd: "place", q, r }))]);
 const world20 = place([["forest", [[1, 0]]], ["oak", [[2, 0]]], ["forest", [[1, -1], [2, -1]]], ["oak", [[3, -1]]],
@@ -79,8 +98,41 @@ const serve = (dist) => new Promise((ok) => {
     }
   }).listen(0, () => ok(s));
 });
-const servers = { before: await serve(distBefore), after: await serve(distAfter) };
+const servers = Object.fromEntries(await Promise.all(ARMS.map(async ([n, dist]) => [n, await serve(dist)])));
+const extraKeys = Object.fromEntries(ARMS.map(([n, , q]) => [n, Object.fromEntries(new URLSearchParams(q))]));
 const baseOf = (b) => `http://127.0.0.1:${servers[b].address().port}/`;
+// Installed before any page script: the start-to-end time of each rAF callback that submitted GPU work
+// (an engine frame's main-thread time), pushed to `__cb.ms` while `__cb.on` (e2e/frame-pacing.mjs's probe).
+const CB_PROBE = () => {
+  const P = (window.__cb = { on: false, ms: [] });
+  if (!window.GPUQueue) return;
+  let depth = 0;
+  let submitted = false;
+  const raf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = (cb) => raf((ts) => {
+    depth++;
+    const t0 = performance.now();
+    const outer = submitted;
+    submitted = false;
+    try { cb(ts); } finally {
+      if (submitted && P.on) P.ms.push(performance.now() - t0);
+      submitted = outer || submitted;
+      depth--;
+    }
+  });
+  const submit = GPUQueue.prototype.submit;
+  GPUQueue.prototype.submit = function (b) {
+    if (depth > 0) submitted = true;
+    return submit.call(this, b);
+  };
+};
+const msStats = (ms) => {
+  if (ms.length < 3) return null;
+  const s = [...ms].sort((a, b) => a - b);
+  const at = (q) => s[Math.min(s.length - 1, Math.floor(q * s.length))];
+  const r2 = (x) => Math.round(x * 100) / 100;
+  return { frames: s.length, mean: r2(s.reduce((a, b) => a + b, 0) / s.length), p50: r2(at(0.5)), p95: r2(at(0.95)), max: r2(s.at(-1)) };
+};
 const count = (p) => p.multidraw_sets + p.batchable_bins + p.unbatchable + p.non_mesh;
 const saveBytes = [...(await readFile(SAVE))];
 
@@ -90,9 +142,10 @@ async function run(build, worldName) {
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+    await page.addInitScript(CB_PROBE);
     page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
     page.on("pageerror", (e) => errors.push(String(e)));
-    await page.goto(`${baseOf(build)}?${new URLSearchParams(KEYS)}`);
+    await page.goto(`${baseOf(build)}?${new URLSearchParams({ ...KEYS, ...extraKeys[build] })}`);
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 180_000 });
     const gpu = await page.evaluate(async () => {
       const i = (await navigator.gpu.requestAdapter())?.info;
@@ -127,19 +180,27 @@ async function run(build, worldName) {
     for (const [name, c] of Object.entries(world.cameras)) {
       await page.evaluate((j) => window.hexWorld.cmd(j), cam(c));
       const f1 = await page.evaluate(() => window.hexWorld.diag().frames);
+      // The callback probe covers about the window's last 600 frames, as the diag ring does.
+      await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f1 + WINDOW_FRAMES - 600, { timeout: 600_000, polling: 50 });
+      await page.evaluate(() => { window.__cb.ms = []; window.__cb.on = true; });
       await page.waitForFunction((f) => window.hexWorld.diag().frames >= f, f1 + WINDOW_FRAMES, { timeout: 600_000, polling: 250 });
+      const cbMs = await page.evaluate(() => { window.__cb.on = false; return window.__cb.ms; });
       const d = await page.evaluate(() => window.hexWorld.diag());
       const st = await page.evaluate(() => window.hexWorld.state());
       if (st.tier?.tier !== "high") throw new Error(`tier ${st.tier?.tier}`);
       if (st.play?.tiles?.length !== world.tiles) throw new Error(`world has ${st.play?.tiles?.length} tiles`);
       cameras[name] = { p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.max,
-        dropped_over_25ms: d.dropped_over_25ms, samples: d.samples, window_start: f1, read_at_frame: d.frames,
+        dropped_over_25ms: d.dropped_over_25ms, samples: d.samples, cpu: msStats(cbMs), histogram: d.stall?.histogram ?? null, window_start: f1, read_at_frame: d.frames,
         draws: (d.passes ?? []).reduce((n, p) => n + count(p), 0),
         passes: Object.fromEntries((d.passes ?? []).map((p) => [`${p.view}/${p.phase}`, count(p)])),
         kit_draws: d.kit_draws ? { slots: d.kit_draws.slots, total: d.kit_draws.total } : null,
         gpu_timing: d.gpu ?? null, camera_pos: st.camera?.pos, load_at_read: loadavg()[0] };
+      if (HOLD_MS > 0) {
+        console.log(`hold ${build} ${worldName} ${name} mean ${d.mean}`);
+        await page.waitForTimeout(HOLD_MS);
+      }
     }
-    return { build, world: worldName, ...gpu, cameras, console_errors: errors };
+    return { build, keys: extraKeys[build], world: worldName, ...gpu, cameras, console_errors: errors };
   } finally {
     await browser.close();
   }
@@ -148,16 +209,22 @@ async function run(build, worldName) {
 const result = { date: new Date().toISOString(), host: hostname(), cpu: cpus()[0]?.model, viewport: `${W}x${H}`,
   device_scale_factor: 1, keys: KEYS, save: SAVE, browser: { mode: "chromium headless (new), channel chromium, uncapped",
     args: ARGS.join(" ") }, window_frames: WINDOW_FRAMES, settle_frames: SETTLE_FRAMES, load_limit: LOAD_LIMIT,
-  rounds: ROUNDS, rows: [] };
+  rounds: ROUNDS, arms: ARMS.map(([name, dist, query]) => ({ name, dist, keys: query })), rows: [] };
+const names = ARMS.map(([n]) => n);
 try {
+  if (WARMUP) {
+    const g = await guarded(() => run(names[0], RUN_WORLDS[0]).catch((e) => ({ error: String(e.message ?? e) })), "warm-up");
+    result.warmup = { build: names[0], world: RUN_WORLDS[0], error: g.result.error ?? null, load_before: g.load_before, load_after: g.load_after };
+    console.log(`warm-up ${names[0]} ${RUN_WORLDS[0]} discarded (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);
+  }
   for (let r = 0; r < ROUNDS; r++)
     for (const worldName of RUN_WORLDS)
-      for (const build of r % 2 ? ["after", "before"] : ["before", "after"]) {
+      for (const build of names.map((_, i) => names[(i + r) % names.length])) {
         const label = `${build} ${worldName} round ${r}`;
         const g = await guarded(() => run(build, worldName).catch((e) => ({ build, world: worldName, error: String(e.message ?? e) })), label);
         result.rows.push({ round: r, ...g.result, load_before: g.load_before, load_after: g.load_after, load_discarded: g.load_discarded });
         const x = result.rows.at(-1);
-        console.log(`${label}: ${x.error ?? Object.entries(x.cameras).map(([n, c]) => `${n} p50 ${c.p50} p95 ${c.p95} mean ${c.mean} draws ${c.draws}`).join(" | ")}` +
+        console.log(`${label}: ${x.error ?? Object.entries(x.cameras).map(([n, c]) => `${n} p50 ${c.p50} p95 ${c.p95} mean ${c.mean} cpu ${c.cpu?.mean}/${c.cpu?.p95} draws ${c.draws} kit ${c.kit_draws?.total}`).join(" | ")}` +
           ` errors ${x.console_errors?.length ?? "-"} (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);
         await writeFile(OUT, `${JSON.stringify(result, null, 2)}\n`);
       }

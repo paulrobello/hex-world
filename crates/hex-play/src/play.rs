@@ -263,7 +263,11 @@ pub fn finish_kit(
                 packs.mark_lost(&id);
                 continue;
             }
-            let (groups, left_out) = coalesce::coalesce_piece(&parts, &mut meshes, &mut materials);
+            let (groups, left_out) = if hex_render::kit_instances::kit_ablate().coalesce {
+                (vec![], vec![])
+            } else {
+                coalesce::coalesce_piece(&parts, &mut meshes, &mut materials)
+            };
             for (m, why) in left_out {
                 if why != coalesce::Excluded::Alone
                     && let Some(p) = parts.iter().find(|p| p.material.id() == m)

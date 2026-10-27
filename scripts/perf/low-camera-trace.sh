@@ -18,6 +18,10 @@ ulimit -n 10240
 mode=$1 arg=$2 out=$3
 xct() { local sub=$1; shift; [ "$sub" = dump ] && sub=ex""port; /usr/bin/xcrun xctrace "$sub" "$@"; }
 rm -rf "$out.trace"
+# xctrace leaves an instruments*.ktrace (about 270 MB) in $TMPDIR per recording: the ones this run makes
+# are removed at the end.
+tmp=${TMPDIR:-/tmp}
+kt_before=$(ls "$tmp"/instruments*.ktrace 2>/dev/null)
 echo "load before: $(sysctl -n vm.loadavg)"
 if [ "$mode" = web ]; then
   PACING_CHROME_ARGS=--enable-dawn-features=use_user_defined_labels_in_backend PACING_MS=25000 PACING_ARMS=$arg \
@@ -64,5 +68,8 @@ else
 fi
 status=$?
 rm -rf "$out.trace"
+for f in "$tmp"/instruments*.ktrace; do
+  [ -e "$f" ] && ! grep -qxF "$f" <<< "$kt_before" && rm -f "$f"
+done
 [ "$status" -eq 0 ] && [ -z "${KEEP_XML:-}" ] && rm -f "$out-intervals.xml"
 exit "$status"

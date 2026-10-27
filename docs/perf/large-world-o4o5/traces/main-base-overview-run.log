@@ -1,0 +1,4 @@
+hold base world2066 close mean 30.5
+hold base world2066 overview mean 38.92
+base world2066 round 0: close p50 30.4 p95 31.3 mean 30.5 cpu 29.64/30.4 draws 1422 kit 1287 | overview p50 39 p95 40.3 mean 38.92 cpu 26.32/28.2 draws 930 kit 849 errors 0 (load 3.33 -> 3.03)
+wrote traces/main-base-overview-run.json

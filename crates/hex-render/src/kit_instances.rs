@@ -510,6 +510,75 @@ pub fn kit_frame_lods(
         .collect()
 }
 
+/// Perf ablation (`kit_ablate=cascade_clip,coalesce`): each named close-camera draw cut is turned
+/// off, so one build times it against itself (`docs/perf/large-world-o4o5/`). Set once at startup;
+/// the default turns nothing off.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct KitAblate {
+    /// O5 off: the cascade skip takes the whole swept kit bounds, not their on-screen part.
+    pub cascade_clip: bool,
+    /// O4 off: no runtime slot coalescing; every slot draws its own mesh and material.
+    pub coalesce: bool,
+}
+
+impl KitAblate {
+    /// A comma list of `cascade_clip` and `coalesce`, or `none`.
+    pub fn parse(s: &str) -> Option<KitAblate> {
+        let mut a = KitAblate::default();
+        for w in s.split(',').map(str::trim).filter(|w| !w.is_empty()) {
+            match w {
+                "cascade_clip" => a.cascade_clip = true,
+                "coalesce" => a.coalesce = true,
+                "none" => {}
+                _ => return None,
+            }
+        }
+        Some(a)
+    }
+}
+
+static KIT_ABLATE: std::sync::OnceLock<KitAblate> = std::sync::OnceLock::new();
+
+/// Sets the process's [`KitAblate`]; only the first call takes effect.
+pub fn set_kit_ablate(a: KitAblate) {
+    let _ = KIT_ABLATE.set(a);
+}
+
+/// The process's [`KitAblate`] (nothing turned off unless [`set_kit_ablate`] said so).
+pub fn kit_ablate() -> KitAblate {
+    KIT_ABLATE.get().copied().unwrap_or_default()
+}
+
+/// [`shadowed_depth_range`] without the frustum clip (the skip before O5): the view depths of the
+/// whole swept, grown bounds, on screen or not.
+pub fn swept_depth_range(
+    lo: Vec3,
+    hi: Vec3,
+    dir: Vec3,
+    view_from_world: &Mat4,
+    margin: f32,
+) -> ShadowedDepth {
+    if dir.y > -0.05 {
+        return ShadowedDepth::Unbounded;
+    }
+    let (lo, hi) = (lo - Vec3::splat(margin), hi + Vec3::splat(margin));
+    let sweep = dir * ((hi.y - lo.y) / -dir.y);
+    let (mut near, mut far) = (f32::MAX, f32::MIN);
+    for i in 0..8 {
+        let corner = Vec3::new(
+            if i & 1 == 0 { lo.x } else { hi.x },
+            if i & 2 == 0 { lo.y } else { hi.y },
+            if i & 4 == 0 { lo.z } else { hi.z },
+        );
+        for p in [corner, corner + sweep] {
+            let depth = -view_from_world.transform_point3(p).z;
+            near = near.min(depth);
+            far = far.max(depth);
+        }
+    }
+    ShadowedDepth::Range(near, far)
+}
+
 /// What of a shadow-casting region a camera sees, for [`shadowed_depth_range`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ShadowedDepth {
@@ -1495,6 +1564,7 @@ fn queue_kit(
     // camera's world lies past the first cascades and short of the last; a close camera looking
     // down sees none of the world nearer than the first cascade's far bound).
     let mut unsampled: Vec<Entity> = vec![];
+    let ablate_clip = kit_ablate().cascade_clip;
     // Per read cascade, the cells whose shadowed region reaches a view depth the cascade is read
     // at: the same test per tile cell, so a cascade over part of the world takes only that part's
     // casters, and a slot whose parts all lie elsewhere draws nothing into it.
@@ -1535,14 +1605,19 @@ fn queue_kit(
             };
             let margin = SHADOW_REACH_M + SHADOW_REACH_TEXELS * cascade.texel_size;
             let dir = light.transform.forward().as_vec3();
-            let range = match shadowed_depth_range(
-                lo.into(),
-                hi.into(),
-                dir,
-                &view_from_world,
-                &clip_from_world,
-                margin,
-            ) {
+            let range = if ablate_clip {
+                swept_depth_range(lo.into(), hi.into(), dir, &view_from_world, margin)
+            } else {
+                shadowed_depth_range(
+                    lo.into(),
+                    hi.into(),
+                    dir,
+                    &view_from_world,
+                    &clip_from_world,
+                    margin,
+                )
+            };
+            let range = match range {
                 ShadowedDepth::Unbounded => continue,
                 ShadowedDepth::OffScreen => {
                     unsampled.push(cascade_view);

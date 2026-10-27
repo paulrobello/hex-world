@@ -46,6 +46,7 @@ fn main() {
     }
     #[cfg(not(target_arch = "wasm32"))]
     exit_guard::init(flags.dump_state.as_deref(), flags.save.as_deref());
+    hex_render::kit_instances::set_kit_ablate(flags.kit_ablate);
 
     #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
     let mut queue = control::CommandQueue::default();

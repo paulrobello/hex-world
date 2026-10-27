@@ -1,0 +1,4 @@
+hold before world2066 close mean 38.19
+hold before world2066 overview mean 42.21
+before world2066 round 0: close p50 37.9 p95 39.5 mean 38.19 cpu 23.3/24 draws 2264 kit undefined | overview p50 42.3 p95 43.5 mean 42.21 cpu 21.11/21.5 draws 1430 kit undefined errors 0 (load 2.05 -> 2.42)
+wrote traces/fl-before-overview-run.json

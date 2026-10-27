@@ -1,0 +1,4 @@
+hold o5 world2066 close mean 38.16
+hold o5 world2066 overview mean 43.3
+o5 world2066 round 0: close p50 37.9 p95 39.4 mean 38.16 cpu 22.99/23.5 draws 2264 kit 2129 | overview p50 43.4 p95 45 mean 43.3 cpu 20.6/21.1 draws 1256 kit 1171 errors 0 (load 3.48 -> 3.08)
+wrote traces/fl-o5-overview-run.json

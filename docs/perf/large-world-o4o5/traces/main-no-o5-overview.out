@@ -1,0 +1,29 @@
+load before: { 3.19 3.01 2.80 }
+load after trace: { 4.34 3.29 2.92 }
+Finished export to the file: /Users/probello/perf/hex-world-o4o5/traces/main-no-o5-overview-intervals.xml
+{"frames": 76.8, "frame_interval_ms": 39.076, "gpu_busy_ms_per_frame": 38.708, "sum_of_encoders_ms_per_frame": 49.866}
+  15.717  Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d
+  10.624  Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d
+   7.385  Command Buffer 0:Dawn_RenderPassEncoder_early prepass
+   5.482  Command Buffer 0:Dawn_ComputePassEncoder_ssao_preprocess_depth & Dawn_ComputePassEncoder_ssao & Dawn_ComputePassEncoder_ssao_spatial_denoise
+   4.320  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_2
+   1.907  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_3
+   0.977  Command Buffer 0:Dawn_RenderPassEncoder_taa
+   0.387  Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_final_pass
+   0.383  Command Buffer 0:Dawn_ComputePassEncoder_boids & Dawn_ComputePassEncoder_sparse buffer updates
+   0.318  Command Buffer 0:Dawn_RenderPassEncoder_tonemapping
+   0.287  Command Buffer 0:Blit Command 0
+   0.282  Command Buffer 0:Dawn_RenderPassEncoder_upscaling
+   0.282  Command Buffer 0:Dawn_RenderPassEncoder
+   0.281  Command Buffer 0:Blit Command 22
+   0.249  Command Buffer 0:Blit Command 7
+   0.242  Command Buffer 0:Blit Command 15
+   0.206  Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_first_pass
+   0.190  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_1
+   0.102  Command Buffer 0:Dawn_RenderPassEncoder_bloom_upsampling_pass
+   0.093  Command Buffer 0:Dawn_RenderPassEncoder_bloom_downsampling_pass
+   0.085  Command Buffer 0:Dawn_RenderPassEncoder_shadow_directional_light_0_cascade_0
+   0.014  Command Buffer 0:Dawn_ComputePassEncoder_clustering allocation local pass & Dawn_ComputePassEncoder_clustering allocation global pass
+   0.013  Command Buffer 0:Dawn_ComputePassEncoder_bin unpacking & Dawn_ComputePassEncoder_early_mesh_preprocessing
+   0.010  Command Buffer 0:Dawn_RenderPassEncoder_clustering count pass
+   0.009  Command Buffer 0:Dawn_RenderPassEncoder_clustering populate pass

@@ -223,7 +223,9 @@ The optional arms above showed O5 alone at +0.92 ms web mean on the 2,066-tile o
 - O4's merged meshes carry COLOR_0, 16 bytes a vertex. That is under 3% of the kit's vertex bytes in every view. At the 2,066-tile close camera it is 0.7% in the main view, 1.7% in cascade 2 and 2.4% in cascade 3. O4 merges slots within a piece, and every slot of a piece sits in the same tile, so O4 cannot defeat per-tile culling. Each view draws the same instances and vertices in fewer draws.
 - The census found one per-frame cost that grows with the world: the bind-group rebuild, one `createBindGroup` per (slot, LOD) every frame. That is 381 a frame on the 2,066-tile world after O4, and more before it. Both arms had it, and neither change caused it. It is now gone, and the cache-only recipe above times it.
 
-So the census finds no CPU cause in the kit's work for either regression. Both are 3-round deltas on a bimodal web frame-time distribution, between builds that differ in their whole wasm module. To settle them, re-run the optional O5 and O4 arms from [Optional arms](#optional-arms-each-change-alone-web-3-rounds-per-pair) with `ROUNDS=5`.
+So the census finds no CPU cause in the kit's work for either regression.
+
+Settled on 2026-10-27 (`docs/perf/large-world-o4o5/README.md`). A 5-round re-run reproduced both. O4's p95 rise was the old frame-latency limiter's frame pairs: O4 saves main-thread time, and each pair's long frame grew by that amount. Replacing only the limiter (`e88b1bd`) removes it. O5's +1.07 ms was GPU: emptying cascades 0 and 1 cost cascade 2 its overlap with cascade 1. On main, turning either change off in one build (`kit_ablate`) makes no 2,066-tile camera faster.
 
 ## Per-cell cascade skip: MiniMac before/after
 

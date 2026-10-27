@@ -81,6 +81,9 @@ pub struct Flags {
     /// of the window (`crate::offscreen`), so a frame renders in full while the window is occluded
     /// (a locked or sleeping screen, another window on top) and presents nothing.
     pub offscreen: bool,
+    /// Perf ablation, `kit_ablate=cascade_clip,coalesce`: turns off the named close-camera draw
+    /// cuts (O5, O4) to time each against the same build (`hex_render::kit_instances::KitAblate`).
+    pub kit_ablate: hex_render::kit_instances::KitAblate,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -348,6 +351,15 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
             &mut state.warnings,
         )
     }),
+    ("kit_ablate", |state, k, v| {
+        set_or_warn(
+            &mut state.f.kit_ablate,
+            hex_render::kit_instances::KitAblate::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
     ("gpu_timing", |state, k, v| {
         set_or_warn(
             &mut state.f.gpu_timing,
@@ -523,6 +535,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "tilt_strength",
         "tier",
         "gpu_timing",
+        "kit_ablate",
         "water_clock",
         "clock",
         "grass",
@@ -670,6 +683,19 @@ mod tests {
         assert!(f.offscreen && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("offscreen", "maybe")]));
         assert!(!f.offscreen && w.len() == 1);
+    }
+
+    #[test]
+    fn kit_ablate_key() {
+        use hex_render::kit_instances::KitAblate;
+        let (f, w) = flags_from_pairs(&[]);
+        assert!(f.kit_ablate == KitAblate::default() && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("kit_ablate", "coalesce")]));
+        assert!(f.kit_ablate.coalesce && !f.kit_ablate.cascade_clip && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("kit_ablate", "cascade_clip,coalesce")]));
+        assert!(f.kit_ablate.coalesce && f.kit_ablate.cascade_clip && w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("kit_ablate", "grass")]));
+        assert!(f.kit_ablate == KitAblate::default() && w.len() == 1);
     }
 
     #[test]
