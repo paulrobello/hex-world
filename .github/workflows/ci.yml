@@ -152,6 +152,8 @@ jobs:
       - run: make web-size
       # PRD §10: the 30 MiB initial download, measured on the dist/ web-size just built.
       - run: make initial-download
+      # Test fixtures and unplayed cues stay in a local dist/ (web-smoke serves them) but not on Pages.
+      - run: node scripts/web/prune-deploy.mjs dist
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         with:
