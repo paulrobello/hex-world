@@ -639,6 +639,7 @@ fn dump_state(name: &str) {
     #[cfg(not(target_arch = "wasm32"))]
     {
         let path = format!("{}/{name}.json", capture::SHOT_DIR);
+        crate::exit_guard::expect(&path);
         match std::fs::create_dir_all(capture::SHOT_DIR).and_then(|_| std::fs::write(&path, json)) {
             Ok(()) => info!("wrote {path}"),
             Err(e) => warn!("cannot write {path}: {e}"),
@@ -966,7 +967,8 @@ pub fn exit_when_idle(exit: Res<ExitRequest>, mut out: MessageWriter<AppExit>) {
     }
 }
 
-/// Writes `--dump-state` on every exit path, including closing the window.
+/// Writes `--dump-state` on every exit path, including closing the window (in
+/// `OnAppExitSystems`, after the window-close `AppExit`).
 pub fn dump_state_on_exit(flags: Res<RunFlags>, mut exits: MessageReader<AppExit>) {
     if exits.read().next().is_none() {
         return;

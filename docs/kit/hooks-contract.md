@@ -44,7 +44,7 @@ The 21 small prop slots that were listed (2026-10-14) now bind authored masks wi
 |---|---|---|
 | `seabed_rock`, `seabed_pebbles` (until 2026-10-26 `ocean_center`) | `coast_rock`, `coast_pebble` | uniform R 0, G 0, B 0, A 1 (always under the sea, so in `SUBMERGED`) |
 | `beach_pebbles`, `_b`, `_c` (until 2026-10-26 `beach_center`, `beach_outer_center`, `beach_inner_center`, whose field, `_beach_dress.masks_field`, rose from G 0.55 at the grass edge to 1.0 toward the damp band) | `beach_pebble` | uniform R 1, G 0.65 (about the old field's value where the pebbles lay), B 0, A 1 (`_stones.py`) |
-| `river_straight_center`, `river_bend_center` | `river_stone`, `river_reed`, `river_cattail` | R 1; G porosity 1.0 at the waterline easing to 0.8 up the bank (`_river_dress.masks_field`); B 0; A 1 |
+| `river_stones`, `_b`, `_c`, `river_reeds`, `_b` (until 2026-10-26 `river_straight_center` and `river_bend_center`, whose field, `_river_dress.masks_field`, eased G from 1.0 at the waterline to 0.8 up the bank) | `river_stone`, `river_reed`, `river_cattail` | uniform R 1, G 0.9 (a bank prop stands between the waterline and the bank top), B 0, A 1 (`_bank_props.py`) |
 | `river_road_bridge_center` | `river_stone`, `river_reed`, `river_cattail`, `bridge_stone` | the existing map: the river centres' field over the dressing's own texels and a 32 px halo (so the unbaked A = 0 background stays out of its mips), and R 1, G 0.8, B 0, A 1 on the causeway's parked texel block (`_river_bridge.dress_masks`); the road's AO texels are unchanged, and so are its mips 0 to 4 |
 
 `bridge_stone` is a world-space tileable slot whose UV0 is parked on one texel, so its masks are uniform. Wetness that varies with height on the causeway would need a real UV0 for it.

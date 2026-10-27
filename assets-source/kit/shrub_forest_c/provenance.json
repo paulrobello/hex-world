@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/shrub_forest_c.py",
-    "sha256": "8e2160c9b9aee02e06e3796bfad12a95f2c128094e0918d0ca30a68fdcac9782"
+    "sha256": "76a28dfca387bd174413adbcc9f471f445cbf5c018b22a47dc9b2c0abd1c276e"
   },
   "generatorDeps": [
     {
@@ -18,6 +18,14 @@
     {
       "path": "scripts/blender/kit/_shrub_bramble.py",
       "sha256": "7e3b20e2c2670968e4301eb6cf98652490558cbf67a42aec47edb96b5bb3d8f4"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub_matte.py",
+      "sha256": "5866fa55da8cd7ea5d20062f2a82de2803577b28c207085cdbbee0e127a607fb"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "authoringAgent": {
@@ -191,8 +199,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 924629,
-        "astc": 925366
+        "bc7": 915761,
+        "astc": 918177
       },
       "glbBytes": 194616
     },
@@ -205,8 +213,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 559272,
-        "sha256": "514c74b71b0626a6d2735b432a0b72e152452c17271b76e4d581624e1713bb89"
+        "bytes": 558858,
+        "sha256": "c279d3a2a2b63392069be11eb1e24aba57f0172c703fcb492453ec9aa2517f20"
       },
       {
         "channel": "albedo",
@@ -216,8 +224,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 568135,
-        "sha256": "38c67953e614b98c06c5380fb4712184248011a8bbdb0d29885c3adaea7a283a"
+        "bytes": 567616,
+        "sha256": "93d4639003dd362bafe4685cb071fbacb2b6c1338772b36f6b8eed064840d452"
       },
       {
         "channel": "albedo",
@@ -267,8 +275,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 149177,
-        "sha256": "1f5be12f770f6e7dab987e25147ecf9085b696441bdf01fa3b8f93bc4eed6548"
+        "bytes": 148804,
+        "sha256": "866750d082d60aab91416a74b25219cd73ab2ae238afa2989c7f1e2573d3b41f"
       },
       {
         "channel": "normal",
@@ -278,8 +286,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 148311,
-        "sha256": "708e435ccbb5671a308c97fb282c04b75af2edd20d36123c88366cc213b2f041"
+        "bytes": 147935,
+        "sha256": "2066f6eb89acf2c3b444a13f1af95913dd819cb48a13d858caebd2da216568b9"
       },
       {
         "channel": "normal",
@@ -298,8 +306,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 215197,
-        "sha256": "775fe8325c24d74a5005dd897ce30e66e68f99d1b71ac9ef42eb75256f2e54fe"
+        "bytes": 207116,
+        "sha256": "e65c9df1b5b132ebc8cf23b061df10313c7e61a9d96d5302e2907c5590ddd7c4"
       },
       {
         "channel": "orm",
@@ -309,8 +317,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 207970,
-        "sha256": "739155f067fb98278d5aa7dfc27a41dbc5665df22dd8cf40409be0e954e20234"
+        "bytes": 201676,
+        "sha256": "3b442b4c4035c0894751f76cd9e9979d34ce67f297cbc7ad5701d383e0e64df4"
       },
       {
         "channel": "orm",
@@ -318,8 +326,8 @@
         "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 127457,
-        "sha256": "26b87db439f5e48e3a3d41fe9f0aa8a7868a477159d77de9e6a14a452ee84ba8"
+        "bytes": 127692,
+        "sha256": "a5da9ac5d509233fa29cc04b73d832e60881cfd672a72571977765b72bf545bf"
       }
     ]
   },
@@ -331,13 +339,13 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.albedo.bc7.ktx2",
-      "sha256": "514c74b71b0626a6d2735b432a0b72e152452c17271b76e4d581624e1713bb89",
-      "bytes": 559272
+      "sha256": "c279d3a2a2b63392069be11eb1e24aba57f0172c703fcb492453ec9aa2517f20",
+      "bytes": 558858
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.albedo.astc.ktx2",
-      "sha256": "38c67953e614b98c06c5380fb4712184248011a8bbdb0d29885c3adaea7a283a",
-      "bytes": 568135
+      "sha256": "93d4639003dd362bafe4685cb071fbacb2b6c1338772b36f6b8eed064840d452",
+      "bytes": 567616
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.albedo.png",
@@ -361,13 +369,13 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.normal.bc7.ktx2",
-      "sha256": "1f5be12f770f6e7dab987e25147ecf9085b696441bdf01fa3b8f93bc4eed6548",
-      "bytes": 149177
+      "sha256": "866750d082d60aab91416a74b25219cd73ab2ae238afa2989c7f1e2573d3b41f",
+      "bytes": 148804
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.normal.astc.ktx2",
-      "sha256": "708e435ccbb5671a308c97fb282c04b75af2edd20d36123c88366cc213b2f041",
-      "bytes": 148311
+      "sha256": "2066f6eb89acf2c3b444a13f1af95913dd819cb48a13d858caebd2da216568b9",
+      "bytes": 147935
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.normal.png",
@@ -376,18 +384,18 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.orm.bc7.ktx2",
-      "sha256": "775fe8325c24d74a5005dd897ce30e66e68f99d1b71ac9ef42eb75256f2e54fe",
-      "bytes": 215197
+      "sha256": "e65c9df1b5b132ebc8cf23b061df10313c7e61a9d96d5302e2907c5590ddd7c4",
+      "bytes": 207116
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.orm.astc.ktx2",
-      "sha256": "739155f067fb98278d5aa7dfc27a41dbc5665df22dd8cf40409be0e954e20234",
-      "bytes": 207970
+      "sha256": "3b442b4c4035c0894751f76cd9e9979d34ce67f297cbc7ad5701d383e0e64df4",
+      "bytes": 201676
     },
     {
       "path": "assets/kit/p1/shrub_forest_c/shrub_forest_c.orm.png",
-      "sha256": "26b87db439f5e48e3a3d41fe9f0aa8a7868a477159d77de9e6a14a452ee84ba8",
-      "bytes": 127457
+      "sha256": "a5da9ac5d509233fa29cc04b73d832e60881cfd672a72571977765b72bf545bf",
+      "bytes": 127692
     }
   ],
   "references": [
@@ -413,7 +421,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T18:04:15.462Z",
+    "date": "2026-10-27T01:14:39.347Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",

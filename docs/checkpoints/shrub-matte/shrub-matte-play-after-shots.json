@@ -1,0 +1,48 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/shrub-matte/shrub-matte-play.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        884.53,
+        735.5,
+        448.77
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 23.4,
+      "load_after": [
+        871.99,
+        744.39,
+        460.27
+      ],
+      "frames": {
+        "matte-play-near": {
+          "mean": 0.1478,
+          "problem": null
+        },
+        "matte-play-sun": {
+          "mean": 0.0924,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

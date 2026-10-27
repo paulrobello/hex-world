@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/shrub_forest_c.py",
-    "sha256": "8e2160c9b9aee02e06e3796bfad12a95f2c128094e0918d0ca30a68fdcac9782"
+    "sha256": "76a28dfca387bd174413adbcc9f471f445cbf5c018b22a47dc9b2c0abd1c276e"
   },
   "generatorDeps": [
     {
@@ -16,6 +16,14 @@
     {
       "path": "scripts/blender/kit/_shrub_bramble.py",
       "sha256": "7e3b20e2c2670968e4301eb6cf98652490558cbf67a42aec47edb96b5bb3d8f4"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub_matte.py",
+      "sha256": "5866fa55da8cd7ea5d20062f2a82de2803577b28c207085cdbbee0e127a607fb"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "lodTris": {

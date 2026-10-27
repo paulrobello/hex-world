@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/shrub_forest.py",
-    "sha256": "bfe34d93a4df0704ff65819f8b7f866c8c0981744d2a6e073a6b359a12c2653a"
+    "sha256": "383d96282ea25bb2462468ea0d050c34273f3ade72ff87f51fe977957f4ad233"
   },
   "generatorDeps": [
     {
@@ -14,6 +14,14 @@
     {
       "path": "scripts/blender/kit/_shrub.py",
       "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub_matte.py",
+      "sha256": "5866fa55da8cd7ea5d20062f2a82de2803577b28c207085cdbbee0e127a607fb"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "authoringAgent": {
@@ -182,8 +190,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 890084,
-        "astc": 890420
+        "bc7": 881584,
+        "astc": 884469
       },
       "glbBytes": 168060
     },
@@ -196,8 +204,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 529917,
-        "sha256": "fa317642aabb9c2c02472b413502d02471efa9d1bcf55ab2c51599445d6a9090"
+        "bytes": 529446,
+        "sha256": "e36bc6c8c194df4e025899b63b9359cb15e76a4842b5e552a7dce33747c520eb"
       },
       {
         "channel": "albedo",
@@ -207,8 +215,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 539168,
-        "sha256": "0888ee04f541bad54906e7762183ef8272b44d014fe23edcfa6b2136c043d7da"
+        "bytes": 538462,
+        "sha256": "928096861106ba8e5a2314e424db0aa14b1a77d5c36b7dba12f38bbc04cfcb96"
       },
       {
         "channel": "albedo",
@@ -258,8 +266,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 148063,
-        "sha256": "42e0c441d953b5607abd9469af7e588d246ee3858b25622dbb45ea0d4f83caa2"
+        "bytes": 147686,
+        "sha256": "772881a571b6fd1d3689bb4b2fff12bf4d33fcd2d327a057e2b6cd035789a51d"
       },
       {
         "channel": "normal",
@@ -269,8 +277,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 147162,
-        "sha256": "64a9d97704cf5a5ea7066ed7f6fbea3583d1774c9d309723d094870a6cb45642"
+        "bytes": 146726,
+        "sha256": "6d327354abf08a5ce3adf72fa0285d10ecaa590143be0fa24ca494dbd2446f1b"
       },
       {
         "channel": "normal",
@@ -289,8 +297,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 211121,
-        "sha256": "a42eda79cad68c90eea5e096e158dd2acac6e0c3398cff46e3f82abe3a519002"
+        "bytes": 203469,
+        "sha256": "86ee99a2dec1b265d2207c4656774666124a0b355facf2239c16083f97bc2e23"
       },
       {
         "channel": "orm",
@@ -300,8 +308,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 203140,
-        "sha256": "637a52471487f8069d11afb27d5147473f672b6e152b07a122d7fd853cd4e7ab"
+        "bytes": 198331,
+        "sha256": "e34a573ab4ce752e8eb01a483c0b640921f60b521832752dfd1c46828b0f87af"
       },
       {
         "channel": "orm",
@@ -309,8 +317,8 @@
         "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 125672,
-        "sha256": "1a42d97fdc0dbd2e926d952fe91bc18df379c56d281e2749af88eabc50088519"
+        "bytes": 125770,
+        "sha256": "29e9c56893fb75694f5baf752258bec08464d227be9720257c2f1cc301f5ad0e"
       }
     ]
   },
@@ -322,13 +330,13 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.bc7.ktx2",
-      "sha256": "fa317642aabb9c2c02472b413502d02471efa9d1bcf55ab2c51599445d6a9090",
-      "bytes": 529917
+      "sha256": "e36bc6c8c194df4e025899b63b9359cb15e76a4842b5e552a7dce33747c520eb",
+      "bytes": 529446
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.astc.ktx2",
-      "sha256": "0888ee04f541bad54906e7762183ef8272b44d014fe23edcfa6b2136c043d7da",
-      "bytes": 539168
+      "sha256": "928096861106ba8e5a2314e424db0aa14b1a77d5c36b7dba12f38bbc04cfcb96",
+      "bytes": 538462
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.albedo.png",
@@ -352,13 +360,13 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.bc7.ktx2",
-      "sha256": "42e0c441d953b5607abd9469af7e588d246ee3858b25622dbb45ea0d4f83caa2",
-      "bytes": 148063
+      "sha256": "772881a571b6fd1d3689bb4b2fff12bf4d33fcd2d327a057e2b6cd035789a51d",
+      "bytes": 147686
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.astc.ktx2",
-      "sha256": "64a9d97704cf5a5ea7066ed7f6fbea3583d1774c9d309723d094870a6cb45642",
-      "bytes": 147162
+      "sha256": "6d327354abf08a5ce3adf72fa0285d10ecaa590143be0fa24ca494dbd2446f1b",
+      "bytes": 146726
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.normal.png",
@@ -367,18 +375,18 @@
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.bc7.ktx2",
-      "sha256": "a42eda79cad68c90eea5e096e158dd2acac6e0c3398cff46e3f82abe3a519002",
-      "bytes": 211121
+      "sha256": "86ee99a2dec1b265d2207c4656774666124a0b355facf2239c16083f97bc2e23",
+      "bytes": 203469
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.astc.ktx2",
-      "sha256": "637a52471487f8069d11afb27d5147473f672b6e152b07a122d7fd853cd4e7ab",
-      "bytes": 203140
+      "sha256": "e34a573ab4ce752e8eb01a483c0b640921f60b521832752dfd1c46828b0f87af",
+      "bytes": 198331
     },
     {
       "path": "assets/kit/p1/shrub_forest/shrub_forest.orm.png",
-      "sha256": "1a42d97fdc0dbd2e926d952fe91bc18df379c56d281e2749af88eabc50088519",
-      "bytes": 125672
+      "sha256": "29e9c56893fb75694f5baf752258bec08464d227be9720257c2f1cc301f5ad0e",
+      "bytes": 125770
     }
   ],
   "references": [
@@ -404,7 +412,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T11:10:39.333Z",
+    "date": "2026-10-27T01:14:33.719Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",

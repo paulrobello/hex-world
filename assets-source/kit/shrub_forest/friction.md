@@ -18,3 +18,9 @@
    cell needs that test and its comment updated; `make checkall` caught it. Proposed skill text
    (project.md, Fast loops and runtime couplings): "A new kit-scenario cell changes
    `hex_render::tests::tile_counts`."
+
+## Matte leaves (owner A23 Q2, 2026-10-26)
+
+5. **The staged GLB never matches the committed one.** To prove a map-only rebuild left the mesh alone, the first check compared `target/kit-stage/<id>/<id>.glb` with `assets/kit/p1/<id>/<id>.glb` and reported a difference: the staged file is the raw Blender export (239 KB), the committed one the glTF-Transform meshopt output of `kit-compress` (168 KB). Compare the committed GLB before and after `kit-compress` instead (identical here). About 3 minutes lost. Proposed skill text (pitfalls.md): "Prove an unchanged mesh on the compressed GLB: hash `assets/kit/p1/<id>/<id>.glb` before the rebuild and after `kit-compress`. The staged GLB in `target/kit-stage/` is the uncompressed Blender export and never equals the committed file."
+6. **`kit-check` fails until the approval note's citations are committed** (`provenance_notes_cite_only_committed_files`: the new helper and the sheet). Expected per gates.md (Provenance); commit, then rerun. No time lost, no skill change.
+7. **An untextured six-view render changed for an unchanged GLB** (shrub_forest `renders/right.jpg`, load about 600). This is the EEVEE-under-load variance gates.md already records (Determinism); the GLB hashes are identical. No skill change.

@@ -4304,21 +4304,26 @@ fn citation_errors(src: &str, v: &serde_json::Value, tracked: &BTreeSet<String>)
     e
 }
 
-/// Every provenance, piece approvals.json and reference approval.json cites only committed
-/// evidence (`citation_errors`). Reads the tracked file list from git.
-#[test]
-fn provenance_notes_cite_only_committed_files() {
+/// The repo's tracked files (repo-relative, "/" separators), from git.
+fn tracked_files() -> BTreeSet<String> {
     let out = std::process::Command::new("git")
         .args(["ls-files", "-z"])
         .current_dir(repo())
         .output()
-        .expect("git ls-files (the citation check needs the tracked file list)");
+        .expect("git ls-files (this check needs the tracked file list)");
     assert!(out.status.success(), "git ls-files failed");
-    let tracked: BTreeSet<String> = String::from_utf8_lossy(&out.stdout)
+    String::from_utf8_lossy(&out.stdout)
         .split('\0')
         .filter(|f| !f.is_empty())
         .map(String::from)
-        .collect();
+        .collect()
+}
+
+/// Every provenance, piece approvals.json and reference approval.json cites only committed
+/// evidence (`citation_errors`). Reads the tracked file list from git.
+#[test]
+fn provenance_notes_cite_only_committed_files() {
+    let tracked = tracked_files();
     let records: Vec<&String> = tracked
         .iter()
         .filter(|f| {
@@ -4391,6 +4396,109 @@ fn citations_must_be_committed_files() {
         e.iter().any(|m| m.contains("target/kit-stage/x.png")),
         "{e:?}"
     );
+}
+
+/// Folders under `assets/kit/p1/` and `assets-source/kit/` that hold no single piece, with why.
+const NOT_PIECE_FOLDERS: &[(&str, &str)] = &[
+    (
+        "assets/kit/p1/ibl",
+        "the image-based light (crates/hex-render/src/lookdev.rs)",
+    ),
+    ("assets/kit/p1/materials", "the tileable material sets"),
+    (
+        "assets/kit/p1/fixture_tile",
+        "the fixture's probe tileable set (kit_src=fixture_tiled)",
+    ),
+    (
+        "assets-source/kit/materials",
+        "the tileable material sets' sources",
+    ),
+    (
+        "assets-source/kit/forest_forest_edge",
+        "family notes and shots of forest_forest_edge_e0 to _e5",
+    ),
+];
+
+/// Tracked kit artifacts of a piece not in `ids`: a generator `scripts/blender/kit/<id>.py`, a
+/// source folder `assets-source/kit/<id>/` or a runtime folder `assets/kit/p1/<id>/`. Helpers
+/// (`_*.py`), material-set generators (`mat_*.py`) and `NOT_PIECE_FOLDERS` are exempt.
+fn orphan_kit_artifacts(tracked: &BTreeSet<String>, ids: &BTreeSet<String>) -> BTreeSet<String> {
+    let mut out = BTreeSet::new();
+    for f in tracked {
+        if let Some(name) = f.strip_prefix("scripts/blender/kit/") {
+            if let Some(id) = name.strip_suffix(".py")
+                && !id.contains('/')
+                && !id.starts_with('_')
+                && !id.starts_with("mat_")
+                && !ids.contains(id)
+            {
+                out.insert(f.clone());
+            }
+            continue;
+        }
+        for root in ["assets/kit/p1/", "assets-source/kit/"] {
+            if let Some((id, _)) = f.strip_prefix(root).and_then(|r| r.split_once('/')) {
+                let dir = format!("{root}{id}");
+                if !ids.contains(id) && !NOT_PIECE_FOLDERS.iter().any(|(d, _)| *d == dir) {
+                    out.insert(format!("{dir}/"));
+                }
+            }
+        }
+    }
+    out
+}
+
+/// A piece that leaves the manifest takes its generator, source folder and runtime folder with it
+/// (the six river dressing centres stayed on disk after leaving it, 2026-10-26). Ids come from the
+/// runtime kit and the gate fixture; tracked files only.
+#[test]
+fn no_kit_artifacts_outside_the_manifest() {
+    let tracked = tracked_files();
+    let ids: BTreeSet<String> = kits()
+        .iter()
+        .flat_map(|k| k.manifest.pieces.iter().map(|p| p.id.clone()))
+        .collect();
+    let orphans = orphan_kit_artifacts(&tracked, &ids);
+    assert!(
+        orphans.is_empty(),
+        "kit artifacts of pieces not in assets/kit/manifest.json (delete them, or land the \
+         manifest entry):\n  {}",
+        orphans.into_iter().collect::<Vec<_>>().join("\n  ")
+    );
+    for (dir, why) in NOT_PIECE_FOLDERS {
+        assert!(
+            tracked.iter().any(|f| f.starts_with(&format!("{dir}/"))),
+            "NOT_PIECE_FOLDERS lists {dir} ({why}), which holds no tracked file"
+        );
+    }
+}
+
+#[test]
+fn orphan_kit_artifacts_names_each_kind() {
+    let tracked: BTreeSet<String> = [
+        "scripts/blender/kit/gone.py",
+        "scripts/blender/kit/kept.py",
+        "scripts/blender/kit/_helper.py",
+        "scripts/blender/kit/mat_grass.py",
+        "assets-source/kit/gone/provenance.json",
+        "assets-source/kit/kept/provenance.json",
+        "assets-source/kit/materials/grass/provenance.json",
+        "assets/kit/p1/gone/gone.glb",
+        "assets/kit/p1/gone/gone.masks.png",
+        "assets/kit/p1/kept/kept.glb",
+        "assets/kit/p1/ibl/noon.diffuse.ktx2",
+    ]
+    .map(String::from)
+    .into();
+    let ids: BTreeSet<String> = ["kept".to_string()].into();
+    let want: BTreeSet<String> = [
+        "scripts/blender/kit/gone.py",
+        "assets-source/kit/gone/",
+        "assets/kit/p1/gone/",
+    ]
+    .map(String::from)
+    .into();
+    assert_eq!(orphan_kit_artifacts(&tracked, &ids), want);
 }
 
 /// (piece, slot) pairs whose owner-approved LOD2 left the slot out before the LOD2 slot rule

@@ -1,6 +1,6 @@
 // Bank stones and reed clumps are runtime scatter (owner, 2026-10-26: "scatter type items like rocks and
 // reeds should not be built into the tile"), a seeded 0 to 4 per tile (`hex-play` scatter RIVER_MAX).
-// Tight river bend across adjacent edges (river_bend_60_base, river_bend_60_center): straight from
+// Tight river bend across adjacent edges (river_bend_60_base): straight from
 // each edge midpoint in to the joint plane 1 m inside the border (the river_edge stubs), joined by
 // the 7.423 m radius arc tangent to both about (12.856, 7.423), turning 120 degrees. The points are
 // the two joints and the arc sampled every 2.5 degrees between them, a polyline for hex-sim and the

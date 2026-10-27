@@ -3051,6 +3051,7 @@ dependencies = [
  "hex-render",
  "hex-sim",
  "image",
+ "libc",
  "serde",
  "serde_json",
  "wasm-bindgen",

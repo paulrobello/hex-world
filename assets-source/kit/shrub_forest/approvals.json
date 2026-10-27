@@ -11,5 +11,14 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "matte-leaves",
+    "requested": "2026-10-26",
+    "notes": "Pending owner review; not an approval. Rebuilt for owner A23 Q2 (2026-10-26): the hazel leaf texels' roughness (ORM G) was 0.50-0.64 (mean 0.575 over the opaque texels), which read as a glossy grey sheen across the shrub in play, as on the verge bushes before e379d55. scripts/blender/kit/_shrub_matte.py now runs the family build with _shrub.cluster_tile wrapped through _verge_bush.matte, mapping texels under 0.7 linearly onto 0.76-0.86 (mean 0.812); the shade blob (0.85) keeps its value. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the albedo and normal KTX2 re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/shrub-matte/sheet.jpg. The controller records the owner's decision."
   }
 ]

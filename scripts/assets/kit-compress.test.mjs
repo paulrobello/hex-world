@@ -101,9 +101,10 @@ test("the UASTC encode is single-threaded and byte-identical for identical input
 // Pins the ASLR-off spawn: libktx's RDO pass hashes struct padding, so with ASLR on this masks PNG
 // encoded to one of two files (mip 3 differs) in about 3 of 10 runs even at idle (2026-10-26). Ten
 // encodes give a ~3% chance of passing with the bug present. The hash is the same on every host seen.
+// The fixture is the retired river_fork_center piece's masks PNG, byte for byte.
 test("the UASTC encode of a known trigger PNG is byte-identical over ten runs", async () => {
   const dir = await mkdtemp(join(tmpdir(), "kitc-"));
-  const png = join(dirname(fileURLToPath(import.meta.url)), "../../assets/kit/p1/river_fork_center/river_fork_center.masks.png");
+  const png = join(dirname(fileURLToPath(import.meta.url)), "test-fixtures/river_fork_center.masks.png");
   const outs = await Promise.all(Array.from({ length: 10 }, async (_, i) =>
     readFile(await encodeUastc(png, "masks", join(dir, `r${i}.ktx2`)))));
   const shas = outs.map((b) => createHash("sha256").update(b).digest("hex"));

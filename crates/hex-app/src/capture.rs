@@ -21,7 +21,14 @@ pub fn pending() -> u32 {
     PENDING.load(Ordering::SeqCst)
 }
 
+/// Records `target/shots/<name>.png` with the exit watchdog as a file this run writes.
+pub fn expect_shot(_name: &str) {
+    #[cfg(not(target_arch = "wasm32"))]
+    crate::exit_guard::expect(format!("{SHOT_DIR}/{_name}.png"));
+}
+
 pub fn request(commands: &mut Commands, name: &str) {
+    expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
     let name = name.to_string();
     commands
@@ -53,6 +60,7 @@ pub fn request_unless_blank(
     blank: std::sync::Arc<std::sync::atomic::AtomicBool>,
     keep_black: bool,
 ) {
+    expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
     let name = name.to_string();
     commands
@@ -79,6 +87,7 @@ pub fn request_image(
     image: Handle<Image>,
     done: impl Fn(Result<UVec2, String>) + Send + Sync + 'static,
 ) {
+    expect_shot(name);
     PENDING.fetch_add(1, Ordering::SeqCst);
     let name = name.to_string();
     commands

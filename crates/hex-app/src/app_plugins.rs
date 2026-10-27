@@ -1,5 +1,8 @@
+use bevy::app::OnAppExitSystems;
 use bevy::prelude::*;
 
+#[cfg(not(target_arch = "wasm32"))]
+use crate::exit_guard;
 use crate::{actions, control, persist, photo, photo_fx};
 
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -70,7 +73,7 @@ impl Plugin for PersistPlugin {
             .init_resource::<persist::SavedSettings>()
             .add_systems(Update, persist::run.in_set(AppSet::Persist))
             .add_systems(Update, persist::keep_latest.in_set(AppSet::Latest))
-            .add_systems(Last, persist::save_on_exit);
+            .add_systems(Last, persist::save_on_exit.in_set(OnAppExitSystems));
     }
 }
 
@@ -82,6 +85,17 @@ impl Plugin for ControlPlugin {
             .add_systems(Update, control::run_commands.in_set(AppSet::Commands))
             .add_systems(Update, control::publish_state.in_set(AppSet::State))
             .add_systems(Update, control::exit_when_idle.in_set(AppSet::Exit))
-            .add_systems(Last, control::dump_state_on_exit);
+            .add_systems(Last, control::dump_state_on_exit.in_set(OnAppExitSystems));
+        // Every exit write runs in `OnAppExitSystems`, after the window-close `AppExit`
+        // (`ExitSystems`); the process ends after them instead of in Bevy's teardown.
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            app.add_systems(
+                Update,
+                exit_guard::arm_on_request.after(control::exit_when_idle),
+            )
+            .add_systems(Last, exit_guard::exit_after_writes.after(OnAppExitSystems));
+            exit_guard::add_render_delay(app);
+        }
     }
 }

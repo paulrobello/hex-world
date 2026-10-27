@@ -1,4 +1,0 @@
-# river_fork_center friction
-
-- **`_river_dress.centre_frame` sends any layout but "straight" down the bend branch, with no error (0 min, found by reading).** `_river_fork_dress.py` replaces it (a module global, looked up at call time) with a version that walks the three arms and passes every other layout to the original, and `_check` asserts both. Proposed skill text (`pitfalls.md`, Water beds): "`_river_dress.build_dressing` needs a `centre_frame` for a new layout; without one it silently places along the 24 m bend arc."
-- **`build_dressing` places 5 reed clumps per side whatever the layout (0 min).** Spread over three arms by the fraction along the walk (0.1, 0.3, 0.5, 0.7, 0.9 per side), one arm gets one clump per side and the other two get two; accepted, since the straight and bend centres place the same 10 clumps, and the sheet shows the spread. No skill change.

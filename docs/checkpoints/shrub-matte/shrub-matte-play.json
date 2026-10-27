@@ -1,0 +1,17 @@
+[
+  {"cmd": "select_tile", "id": "forest"},
+  {"cmd": "place", "q": 1, "r": 0},
+  {"cmd": "place", "q": 1, "r": -1},
+  {"cmd": "place", "q": 2, "r": -1},
+  {"cmd": "place", "q": 2, "r": 0},
+  {"cmd": "place", "q": 1, "r": 1},
+  {"cmd": "hover", "q": 6, "r": -6},
+  {"cmd": "camera", "pos": [8, 9, 14], "look_at": [21, 0.5, 0]},
+  {"cmd": "wait", "frames": 600},
+  {"cmd": "screenshot", "name": "matte-play-near"},
+  {"cmd": "camera", "pos": [16.0, 3.2, 7.5], "look_at": [17.72, 0.5, 1.0]},
+  {"cmd": "wait", "frames": 20},
+  {"cmd": "screenshot", "name": "matte-play-sun"},
+  {"cmd": "wait", "frames": 10},
+  {"cmd": "exit"}
+]

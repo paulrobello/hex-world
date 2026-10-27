@@ -10,6 +10,8 @@ mod bridge;
 mod camera;
 mod capture;
 mod control;
+#[cfg(not(target_arch = "wasm32"))]
+mod exit_guard;
 mod game;
 mod persist;
 mod photo;
@@ -39,6 +41,8 @@ fn main() {
     if flags.thumbs {
         thumbs::force_flags(&mut flags);
     }
+    #[cfg(not(target_arch = "wasm32"))]
+    exit_guard::init(flags.dump_state.as_deref(), flags.save.as_deref());
 
     #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
     let mut queue = control::CommandQueue::default();

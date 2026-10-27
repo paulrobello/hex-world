@@ -1,0 +1,21 @@
+[
+  { "cmd": "scenario", "name": "kit" },
+  { "cmd": "wait", "frames": 180 },
+  { "cmd": "camera", "pos": [-35.0, 28.0, 76.0], "look_at": [-53.0, 0.0, 48.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "matte-kit-play" },
+  { "cmd": "camera", "pos": [-48.6, 2.0, 51.3], "look_at": [-52.93, 0.6, 47.0] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "matte-hazel-sun" },
+  { "cmd": "camera", "pos": [-42.9, 1.8, 49.5], "look_at": [-47.43, 0.5, 45.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "matte-bramble-sun" },
+  { "cmd": "camera", "pos": [-42.5, 1.7, 51.0], "look_at": [-48.5, 0.7, 45.8] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "matte-kit-eye" },
+  { "cmd": "camera", "pos": [-9.0, 1.7, 9.0], "look_at": [2.0, 0.6, 4.5] },
+  { "cmd": "wait", "frames": 15 },
+  { "cmd": "screenshot", "name": "matte-verge-eye" },
+  { "cmd": "wait", "frames": 10 },
+  { "cmd": "exit" }
+]

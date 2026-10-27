@@ -59,14 +59,9 @@ const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
 /// lands on depends on pack loading and screenshot readback, which take wall time.
 const PINNED_TIME: std::time::Duration = std::time::Duration::from_secs(10);
 const PINNED_WATER_T: f32 = 10.0;
-/// How long after the last capture the run may take to exit before the watchdog ends the process,
-/// so a hung teardown never blocks `make thumbs`. The watchdog then checks every image on disk:
-/// all present exits 0 with a warning (a teardown slowed by host load is not a failed run), any
-/// missing exits [`WATCHDOG_EXIT`].
-const EXIT_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(20);
-const WATCHDOG_EXIT: i32 = 3;
-/// Test hook: seconds the main thread sleeps after sending `AppExit`, standing in for a slow or
-/// hung teardown so the watchdog can be exercised through `make thumbs`.
+/// Test hook: seconds the main thread sleeps after sending `AppExit`, before the exit writes and
+/// the fast exit, standing in for a slow or hung exit so the `exit_guard` watchdog can be
+/// exercised through `make thumbs`.
 const TEARDOWN_DELAY_ENV: &str = "HEXW_THUMBS_TEARDOWN_DELAY_SECS";
 
 /// The thumbnail mode's fixed render settings: the play scenario with no post stack, tilt-shift
@@ -248,57 +243,6 @@ fn pin_clocks(mut time: ResMut<Time>, clock: Option<ResMut<WaterClock>>) {
     }
 }
 
-/// The watchdog's exit code and message: 0 when every expected image is a non-empty file,
-/// [`WATCHDOG_EXIT`] naming the missing ones otherwise.
-fn watchdog_verdict(expected: &[std::path::PathBuf]) -> (i32, String) {
-    let missing: Vec<&std::path::PathBuf> = expected
-        .iter()
-        .filter(|p| !std::fs::metadata(p).is_ok_and(|m| m.is_file() && m.len() > 0))
-        .collect();
-    let secs = EXIT_WATCHDOG.as_secs();
-    if missing.is_empty() {
-        return (
-            0,
-            format!(
-                "hex-world: thumbs: WARNING: the app did not exit within {secs} s of the last \
-                 capture; all {} images are verified on disk, so exiting 0",
-                expected.len()
-            ),
-        );
-    }
-    let names: Vec<String> = missing
-        .iter()
-        .take(5)
-        .map(|p| p.display().to_string())
-        .collect();
-    (
-        WATCHDOG_EXIT,
-        format!(
-            "hex-world: thumbs: the app did not exit within {secs} s of the last capture and \
-             {} of {} images are missing ({}{}); exiting with {WATCHDOG_EXIT}",
-            missing.len(),
-            expected.len(),
-            names.join(", "),
-            if missing.len() > names.len() {
-                ", ..."
-            } else {
-                ""
-            }
-        ),
-    )
-}
-
-/// Ends the process with [`watchdog_verdict`]'s code unless it exits within [`EXIT_WATCHDOG`]. A
-/// thread, not a system: a teardown that hangs may never run another frame.
-fn arm_exit_watchdog(expected: Vec<std::path::PathBuf>) {
-    std::thread::spawn(move || {
-        std::thread::sleep(EXIT_WATCHDOG);
-        let (code, msg) = watchdog_verdict(&expected);
-        eprintln!("{msg}");
-        std::process::exit(code);
-    });
-}
-
 /// Holds the thumbnail camera and the key clear colour and hides the GPU flock every frame.
 fn stage_scene(
     mut commands: Commands,
@@ -372,15 +316,11 @@ fn drive(
         );
         // The last capture is encoded (a shot stage waits for it), so exit this frame rather than
         // through `exit_when_idle`, which is unordered against this system.
+        // Every capture recorded its image with `exit_guard`, whose watchdog checks them all.
+        // Armed here, not by `exit_guard`'s systems, so the test delay below runs under it.
         exit.0 = true;
         app_exit.write(AppExit::Success);
-        arm_exit_watchdog(
-            stages
-                .iter()
-                .filter_map(|s| s.shot.as_ref())
-                .map(|name| format!("{}/{name}.png", capture::SHOT_DIR).into())
-                .collect(),
-        );
+        crate::exit_guard::arm();
         if let Some(secs) = std::env::var(TEARDOWN_DELAY_ENV)
             .ok()
             .and_then(|v| v.parse::<u64>().ok())
@@ -559,39 +499,6 @@ mod tests {
             [0, 1, 2, 0, 1, 2],
             "rows at 0, 60 and 120 degrees (owner D5)"
         );
-    }
-
-    #[test]
-    fn watchdog_passes_only_when_every_image_is_on_disk() {
-        let dir = std::env::temp_dir().join(format!("hexw-thumbs-watchdog-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&dir);
-        std::fs::create_dir_all(&dir).unwrap();
-        let expected: Vec<std::path::PathBuf> = ["a-r0.png", "b-r0.png", "c-r3.png"]
-            .iter()
-            .map(|n| dir.join(n))
-            .collect();
-        for p in &expected {
-            std::fs::write(p, b"png").unwrap();
-        }
-        let (code, msg) = watchdog_verdict(&expected);
-        assert_eq!(code, 0, "{msg}");
-        assert!(
-            msg.contains("WARNING") && msg.contains("all 3 images"),
-            "{msg}"
-        );
-
-        std::fs::remove_file(&expected[1]).unwrap();
-        let (code, msg) = watchdog_verdict(&expected);
-        assert_eq!(code, WATCHDOG_EXIT, "{msg}");
-        assert!(msg.contains("1 of 3") && msg.contains("b-r0.png"), "{msg}");
-
-        std::fs::write(&expected[1], b"").unwrap();
-        let (code, msg) = watchdog_verdict(&expected);
-        assert_eq!(
-            code, WATCHDOG_EXIT,
-            "an empty file is not a written image: {msg}"
-        );
-        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
