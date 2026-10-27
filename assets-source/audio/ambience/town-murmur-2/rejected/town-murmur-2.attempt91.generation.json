@@ -1,0 +1,44 @@
+{
+  "cueId": "town-murmur-2",
+  "provider": "ElevenLabs",
+  "endpoint": "POST /v1/sound-generation",
+  "model": "eleven_text_to_sound_v2",
+  "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+  "outputFormat": "mp3_44100_128",
+  "prompt": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
+  "parameters": {
+    "text": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 3.0,
+    "prompt_influence": 0.7
+  },
+  "generationId": "943211e8f55dfe9627ebd8f2d2214c07",
+  "responseHeaders": {
+    "date": "Tue, 27 Oct 2026 18:36:41 GMT",
+    "server": "uvicorn",
+    "access-control-expose-headers": "character-cost",
+    "character-cost": "30",
+    "content-length": "48944",
+    "content-type": "audio/mpeg",
+    "vary": "Accept-Language",
+    "access-control-allow-origin": "*",
+    "access-control-allow-headers": "*",
+    "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
+    "access-control-max-age": "600",
+    "strict-transport-security": "max-age=1800;",
+    "x-trace-id": "943211e8f55dfe9627ebd8f2d2214c07",
+    "x-region": "us-central1",
+    "via": "1.1 google",
+    "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
+    "connection": "close"
+  },
+  "generatedAt": "2026-10-27T18:36:42+00:00",
+  "attempt": 91,
+  "creditsCharged": 30,
+  "sourceFile": "town-murmur-2.mp3",
+  "tool": {
+    "elevenlabsSkill": "~/.claude/skills/elevenlabs/scripts/generate.py",
+    "elevenlabsSkillSha256": "5d1a77aa6050a5acc3480d8292a778944e1622163576c50641a56af937aef943"
+  },
+  "rejectedReason": "round 9, not kept: the latch (centroid 2.4-2.7 kHz) runs straight into the thud within 0.1 s, then a second rattle at 0.6-0.7 s (centroid up to 2.0 kHz); its first 300 ms after the onset hold the smallest share above 3 kHz (2.6%), but at matched loudness more energy up there than attempt 90 (-14.0 against -39.1 dB relative to integrated loudness), from the latch click and the thud attack, both inside that window"
+}

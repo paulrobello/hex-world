@@ -5,16 +5,16 @@
   "model": "eleven_text_to_sound_v2",
   "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
   "outputFormat": "mp3_44100_128",
-  "prompt": "A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.",
+  "prompt": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
   "parameters": {
-    "text": "A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.",
+    "text": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
     "model_id": "eleven_text_to_sound_v2",
     "duration_seconds": 3.0,
-    "prompt_influence": 0.6
+    "prompt_influence": 0.7
   },
-  "generationId": "a93aec1d2ef8740c06b98bd4b16e858b",
+  "generationId": "e226826f527824f879e0f844feaa64cb",
   "responseHeaders": {
-    "date": "Tue, 27 Oct 2026 15:53:34 GMT",
+    "date": "Tue, 27 Oct 2026 18:36:27 GMT",
     "server": "uvicorn",
     "access-control-expose-headers": "character-cost",
     "character-cost": "30",
@@ -26,14 +26,14 @@
     "access-control-allow-methods": "POST, PATCH, OPTIONS, DELETE, GET, PUT",
     "access-control-max-age": "600",
     "strict-transport-security": "max-age=1800;",
-    "x-trace-id": "a93aec1d2ef8740c06b98bd4b16e858b",
+    "x-trace-id": "e226826f527824f879e0f844feaa64cb",
     "x-region": "us-central1",
     "via": "1.1 google",
     "alt-svc": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000",
     "connection": "close"
   },
-  "generatedAt": "2026-10-27T15:53:34+00:00",
-  "attempt": 81,
+  "generatedAt": "2026-10-27T18:36:27+00:00",
+  "attempt": 90,
   "creditsCharged": 30,
   "sourceFile": "town-murmur-2.mp3",
   "tool": {

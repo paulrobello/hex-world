@@ -1469,19 +1469,19 @@
       "playback": "decode",
       "channels": 1,
       "loop": null,
-      "durationSeconds": 3.0,
-      "decodedBytes": 576000,
+      "durationSeconds": 2.694708,
+      "decodedBytes": 517384,
       "targetLufs": -16.0,
       "files": {
         "webm": {
           "path": "ambience/town-murmur-2.webm",
-          "sha256": "bb35d7542ad22e380132bb487ed85bbd7a5582fa6ed2130aba600c68e51efa68",
-          "bytes": 22085
+          "sha256": "871a18f676c52e7a1e743f3e92159e9d880dd4dd210a611830bf4df285321b39",
+          "bytes": 19419
         },
         "m4a": {
           "path": "ambience/town-murmur-2.m4a",
-          "sha256": "ca3deded2c25d3ce18e44b6031b2bce2fc7c5dd6afb91d53f00e7dbeeb631e7c",
-          "bytes": 52644
+          "sha256": "86c0fba10cba7291b52003966ceb2bc54ee898581c4365ad4a7b788b92d38007",
+          "bytes": 50655
         }
       },
       "provenance": "assets-source/audio/ambience/town-murmur-2/provenance.json"

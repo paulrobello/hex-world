@@ -15,28 +15,28 @@
     "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
     "outputFormat": "mp3_44100_128"
   },
-  "prompt": "A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.",
+  "prompt": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
   "promptFile": null,
   "parameters": {
-    "text": "A wooden cottage door with an iron thumb latch heard from a little way down a village street: the latch clicks, the door creaks briefly open and then shuts with a soft wooden knock, about two seconds. No voices, no music. Studio-quiet background, with silence before and after.",
+    "text": "A heavy wooden cottage door pulled shut, heard muffled from across a quiet village street: a dull, low wooden latch clack, then a soft, deep thud as the heavy door settles into its frame. Warm, low and muffled. No creak, no squeak, no hinge, no scrape, no metal ring, nothing high-pitched. No voices, no music. Studio-quiet background, with silence before and after.",
     "model_id": "eleven_text_to_sound_v2",
     "duration_seconds": 3.0,
-    "prompt_influence": 0.6
+    "prompt_influence": 0.7
   },
   "generation": {
-    "id": "a93aec1d2ef8740c06b98bd4b16e858b",
-    "generatedAt": "2026-10-27T15:53:34+00:00",
-    "attempt": 81,
+    "id": "e226826f527824f879e0f844feaa64cb",
+    "generatedAt": "2026-10-27T18:36:27+00:00",
+    "attempt": 90,
     "creditsCharged": 30,
     "record": {
       "path": "assets-source/audio/ambience/town-murmur-2/generation.json",
-      "sha256": "d324acfb7f394f44f5027716d8907ba459d1b7585a89d6305e9bd3d1b5437e29",
-      "bytes": 2076
+      "sha256": "b12b73441cbcacf70a5a6b357713f8fdf04eb19fd9a2ca79c8a7dc63f67937e2",
+      "bytes": 2254
     }
   },
   "source": {
     "path": "assets-source/audio/ambience/town-murmur-2/town-murmur-2.mp3",
-    "sha256": "139011d16d5031bf8195c20190eb0d79e0e2b487ad0a23365d2c5229a05517b0",
+    "sha256": "9df7af0d035480258ba5a4b3861a348efb7b2bb784977f03a0ed9f5fa6df6a82",
     "bytes": 48944,
     "codec": "mp3",
     "sampleRate": 44100,
@@ -49,25 +49,25 @@
     "truePeakCeilingDb": -1.0,
     "masterTruePeakDb": -2.0,
     "before": {
-      "integrated": -17.7,
+      "integrated": -38.5,
       "lra": 20.0,
-      "truePeak": -0.4
+      "truePeak": -17.4
     },
     "master": {
-      "integrated": -16.0,
-      "lra": 20.0,
-      "truePeak": -2.3
+      "integrated": -16.5,
+      "lra": 0.0,
+      "truePeak": -2.0
     },
     "after": {
       "webm": {
-        "integrated": -16.0,
-        "lra": 20.0,
-        "truePeak": -1.9
+        "integrated": -16.5,
+        "lra": 0.0,
+        "truePeak": -1.4
       },
       "m4a": {
-        "integrated": -16.0,
-        "lra": 20.0,
-        "truePeak": -2.2
+        "integrated": -16.5,
+        "lra": 0.0,
+        "truePeak": -1.9
       }
     }
   },
@@ -79,7 +79,7 @@
     },
     {
       "step": "trim",
-      "leadFramesRemoved": 0,
+      "leadFramesRemoved": 14654,
       "tailFramesRemoved": 0,
       "leadThresholdDb": -45.0,
       "tailThresholdDb": -60.0,
@@ -91,22 +91,22 @@
     {
       "step": "loudness",
       "pass1": {
-        "integrated": -17.7,
-        "lra": 20.0,
-        "truePeak": -0.4
+        "integrated": -36.4,
+        "lra": 0.0,
+        "truePeak": -17.4
       },
       "targetLufs": -16.0,
-      "gainDb": 1.7,
-      "requiredPeakReductionDb": 3.3,
+      "gainDb": 20.4,
+      "requiredPeakReductionDb": 5.0,
       "mode": "limited",
-      "limiterInputGainDb": 2.8,
-      "limiterPasses": 2,
+      "limiterInputGainDb": 29.4,
+      "limiterPasses": 4,
       "limiterCeilingDb": -2.5,
-      "windowsOverCeilingPct": 4.0
+      "windowsOverCeilingPct": 4.5
     },
     {
       "step": "settle",
-      "trimDb": 0.2
+      "trimDb": 0.5
     },
     {
       "step": "encode-webm",
@@ -119,72 +119,72 @@
   ],
   "master": {
     "path": "target/audio-master/ambience/town-murmur-2.wav",
-    "sha256": "1b0c9fb548d0214746481183e6affaa2a3ada86b0ae70a6aee60a8d200d710ee",
-    "frames": 144000,
+    "sha256": "37da37b7508522418a124d27ab26ad64bc3f22492d0daaf1663a3be2ac29e83b",
+    "frames": 129346,
     "sampleRate": 48000,
     "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
   },
   "runtime": [
     {
       "path": "assets/audio/ambience/town-murmur-2.webm",
-      "sha256": "bb35d7542ad22e380132bb487ed85bbd7a5582fa6ed2130aba600c68e51efa68",
-      "bytes": 22085,
+      "sha256": "871a18f676c52e7a1e743f3e92159e9d880dd4dd210a611830bf4df285321b39",
+      "bytes": 19419,
       "codec": "opus",
       "bitrate": "64k",
       "channels": 1,
       "sampleRate": 48000,
-      "durationSeconds": 3.008,
-      "decodedFrames": 144000,
+      "durationSeconds": 2.702,
+      "decodedFrames": 129346,
       "loudness": {
-        "integrated": -16.0,
-        "lra": 20.0,
-        "truePeak": -1.9
+        "integrated": -16.5,
+        "lra": 0.0,
+        "truePeak": -1.4
       },
       "floor": {
-        "peakWindowDb": -10.2,
-        "floorDb": -65.2,
-        "floorBelowPeakDb": 55.0,
+        "peakWindowDb": -7.0,
+        "floorDb": -52.3,
+        "floorBelowPeakDb": 45.3,
         "floorBandPct": {
-          "below1500": 94.7,
-          "1500to9k": 5.3,
-          "above9k": 0.0
+          "below1500": 86.2,
+          "1500to9k": 12.9,
+          "above9k": 0.9
         },
-        "interiorWindows": 60,
+        "interiorWindows": 53,
         "problems": []
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/town-murmur-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/town-murmur-2.webm"
     },
     {
       "path": "assets/audio/ambience/town-murmur-2.m4a",
-      "sha256": "ca3deded2c25d3ce18e44b6031b2bce2fc7c5dd6afb91d53f00e7dbeeb631e7c",
-      "bytes": 52644,
+      "sha256": "86c0fba10cba7291b52003966ceb2bc54ee898581c4365ad4a7b788b92d38007",
+      "bytes": 50655,
       "codec": "aac",
       "bitrate": "160k",
       "channels": 1,
       "sampleRate": 48000,
-      "durationSeconds": 3.0,
-      "decodedFrames": 144000,
+      "durationSeconds": 2.6947,
+      "decodedFrames": 129346,
       "loudness": {
-        "integrated": -16.0,
-        "lra": 20.0,
-        "truePeak": -2.2
+        "integrated": -16.5,
+        "lra": 0.0,
+        "truePeak": -1.9
       },
       "floor": {
-        "peakWindowDb": -10.2,
-        "floorDb": -65.3,
-        "floorBelowPeakDb": 55.1,
+        "peakWindowDb": -6.9,
+        "floorDb": -52.5,
+        "floorBelowPeakDb": 45.6,
         "floorBandPct": {
-          "below1500": 96.0,
-          "1500to9k": 4.0,
-          "above9k": 0.0
+          "below1500": 86.4,
+          "1500to9k": 12.8,
+          "above9k": 0.8
         },
-        "interiorWindows": 60,
+        "interiorWindows": 53,
         "problems": []
       },
       "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/town-murmur-2.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 160k -movflags +faststart assets/audio/ambience/town-murmur-2.m4a"
     }
   ],
-  "decodedBytes": 576000,
+  "decodedBytes": 517384,
   "toolVersions": {
     "ffmpeg": "9.0.2",
     "libavcodec": "63.1.102",
@@ -196,14 +196,14 @@
     "scripts": {
       "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
       "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
-      "scripts/audio/review.py": "cd56507e621a35d91042d8e30f36db72f0e30fd0cce3da865eeee185fe583002"
+      "scripts/audio/review.py": "d6434b8d11347ac4c5c87ddb08ad4bb16140e16cd97d4a0a24f39e79299f2a6b"
     }
   },
   "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
   "deviation": null,
   "approvals": {
     "technical": "make audio-check",
-    "creative": "owner rejected 2026-10-27: \"i dont like the high pitch screetch at the start\"; redo pending",
+    "creative": "pending owner audition (docs/review/approvals.html, review.html); this take (attempt 90, review round 9) is the redo that answers the owner's 2026-10-27 rejection of attempt 81: \"i dont like the high pitch screetch at the start\"",
     "rights": "owner attestation, PRD D21",
     "owner": "pending"
   }
