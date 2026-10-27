@@ -142,6 +142,8 @@ The p95 rise is still real as a measurement. With Settings closed, frame-to-fram
 
 **Open, outside grass.** With Settings closed, this camera paces at 63 ms per two frames, which alternate around 11 and 52 ms in the after arm. With Settings open, the same frames run at about 10 ms. That cadence is the same in both arms and predates this work. It is a separate finding about the closed-Settings HUD or presentation, not grass.
 
+**Resolved 2026-10-27 (`docs/perf/frame-pacing/`).** The Settings sheet does not cause the pairing. The web frame-latency limiter let every other frame through one over its limit, so a GPU-bound page ran frames in back-to-back pairs. The limiter now counts a frame from its first submit. Opening Settings moves focus off the canvas, which puts Bevy on its 60 Hz unfocused update. The Settings-open windows here (`baseline`, `drag`, `still_0`, `still_150`) therefore measured the page's rAF loop, not engine frames, and their "about 10 ms" and lower means are not frame times.
+
 ### Re-run of the still-frame metric (orchestrator, MiniMac)
 
 Nothing needs rebuilding. Only `e2e/perf-grass-drag.mjs` changed, so both `dist` builds are the arms already measured: before `041ad32`, after `8200ef6`. MiniMac's scratch directory was removed, so copy both `dist` directories over again as in the copy step above, from the build host's worktrees. Rebuild them from those two commits only if those worktrees are gone. Then rsync `e2e/` from the commit that adds `pairs` (this README's latest commit), and run 3 alternating rounds as in the loop above.

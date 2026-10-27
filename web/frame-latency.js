@@ -21,13 +21,21 @@
     source = "default";
   }
   if (!window.GPUQueue || !window.requestAnimationFrame) return;
-  var queue = null, submitted = false, inflight = 0, deferrals = 0, nextId = -1;
+  var queue = null, frame = null, inflight = 0, deferrals = 0, nextId = -1;
   var waiting = [], byId = new Map();
   var submit = GPUQueue.prototype.submit;
+  // The frame counts as in flight from its first submit, not from the end of its callback: Bevy asks
+  // for its next animation frame after submitting, inside the same callback, and a count taken only
+  // at the callback's end let that request through, so every other frame overran the limit by one
+  // and frames ran in back-to-back pairs once the GPU was the bottleneck (docs/perf/frame-pacing/).
   GPUQueue.prototype.submit = function (buffers) {
     queue = this;
-    submitted = true;
-    return submit.call(this, buffers);
+    var r = submit.call(this, buffers);
+    if (frame && !frame.counted) {
+      frame.counted = true;
+      inflight++;
+    }
+    return r;
   };
   var raf = window.requestAnimationFrame.bind(window);
   var caf = window.cancelAnimationFrame.bind(window);
@@ -38,17 +46,15 @@
       e.real = raf(e.run);
     }
   }
-  // A callback that submitted counts as one frame in flight until the queue reports the work done.
+  // A callback that submitted counts as one frame in flight until the queue reports all its work done.
   function counted(cb) {
     return function (ts) {
-      submitted = false;
+      var f = (frame = { counted: false });
       try {
         cb(ts);
       } finally {
-        if (submitted && queue) {
-          inflight++;
-          queue.onSubmittedWorkDone().then(finished, finished);
-        }
+        frame = null;
+        if (f.counted) queue.onSubmittedWorkDone().then(finished, finished);
       }
     };
   }

@@ -1,0 +1,20 @@
+{
+  "short": {
+    "n": 53,
+    "interval_ms": 11.92,
+    "after_ms": 1,
+    "renderer_busy_ms": 0.78,
+    "gpu_busy_ms": 1,
+    "backpressure_ms": 1,
+    "callback_ms": 10.92
+  },
+  "long": {
+    "n": 53,
+    "interval_ms": 44.86,
+    "after_ms": 33.99,
+    "renderer_busy_ms": 1.18,
+    "gpu_busy_ms": 33.94,
+    "backpressure_ms": 30.2,
+    "callback_ms": 10.87
+  }
+}

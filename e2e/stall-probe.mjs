@@ -38,7 +38,8 @@ const ARMS = {
   limit2: { limit: 2 },
   limit2_paced: { limit: 2, paced: true },
   limit3: { limit: 3 },
-  // The shipped opt-in key (web/frame-latency.js), same limiter.
+  // The shipped key (web/frame-latency.js). Since 2026-10-27 it counts a frame from its first submit;
+  // LIMITER below keeps the earlier end-of-callback count the 2026-10-14 runs measured.
   fl3: { keys: { frame_latency: "3" } },
   fl3_paced: { keys: { frame_latency: "3" }, paced: true },
 };
