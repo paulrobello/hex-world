@@ -148,6 +148,83 @@ The changes contribute as follows:
 - O5 produces the 20-tile forest-cluster win, and costs about 0.9 ms of mean at the 2,066-tile overview.
 - O4 cuts the most draws: 84 to 116 per 20-tile camera and 401 at the 2,066-tile close camera. On this host it changes no mean frame time, and it adds 1.3 to 1.4 ms of p95 on the 2,066-tile world.
 
+## Far-cascade LOD rules (rejected) and the kit bind-group cache
+
+Two far-cascade LOD rules cut the 2,066-tile close camera's draws: a clamp per cascade (`d8cd4cd`) to 1,235, and one LOD per cascade (`e06edcf`) to 1,018, from 1,535. They raised the kit's shadow indices by 9-26% and 1.8-2.8 times. MiniMac timed them (`results-clamp-2026-10-26.json`, branch perf-batch27, `386f459`). The clamp, together with the bind-group cache (`6c3bd36`), was slower than `041ad32` on the 2,066-tile world:
+
+- web mean: +1.03 ms at the close camera, +1.43 ms at the overview;
+- web p95: +3.0 ms and +3.5 ms;
+- native: +0.93 ms and +1.16 ms.
+
+The 20-tile cameras did not change, and the one-LOD rule was 4 to 7 ms slower still. Both rules are reverted. `docs/checkpoints/far-cascade-lod/README.md` has their counts.
+
+What remains is the group-2 bind group cache. On the 2,066-tile world it cuts 381 `createBindGroup` calls a frame (127 slots times 3 LODs) to 0 (`diag.kit_queue.bind_groups_created`). On the web each call reaches the browser's GPU process, so the saving is wasm main-thread time in every frame. Natively, `create_bind_group` is a cheap wgpu call. So the recipe below times the web only.
+
+### Cache only against main
+
+| Arm | Commit | What it holds |
+|---|---|---|
+| before | `041ad32` | main |
+| cache | the branch head that reverts the cascade rules (`git log -1 --format=%h -- docs/checkpoints/far-cascade-lod/README.md`) | the bind-group cache and the `kit_queue` census (off unless `HEXW_KIT_QUEUE` is set natively, so the web never runs it) |
+
+Draws and shading are identical in both arms: far cascades cast as on main, and `make thumbs` is byte-identical.
+
+Build each arm's `dist/` as in [Builds](#builds) (`/tmp/ccd-before` at `041ad32`, `/tmp/ccd-cache` at the cache sha; `make build-web` only, no native binary). Then copy:
+
+```bash
+for arm in before cache; do
+  rsync -a --delete /tmp/ccd-$arm/dist/ minimac:perf/hex-world-ccd/$arm/dist/
+done
+# The web harness (with its WORLDS filter) and the save come from the cache arm.
+rsync -a --delete --exclude node_modules /tmp/ccd-cache/e2e/ minimac:perf/hex-world-ccd/e2e/
+rsync -a /tmp/ccd-cache/web/ui/src/ minimac:perf/hex-world-ccd/web/ui/src/
+rsync -a /tmp/ccd-cache/docs/perf/post-arc001-2026-10-16/local-world.hexworld minimac:perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/
+ssh minimac 'cd perf/hex-world-ccd/e2e && npm ci --no-audit --no-fund'
+```
+
+Book the window first. `kit_draws` runs in both arms on census frames, about 20 of each 600-frame window, so it does not bias the pair. On MiniMac:
+
+```bash
+ssh minimac
+cd perf/hex-world-ccd
+ulimit -n 10240
+# The 2,066-tile close camera and overview only, 5 rounds, arms alternating (about 40 minutes).
+WORLDS=world2066 caffeinate -d -u node e2e/perf-close-camera.mjs before/dist cache/dist cache-only-web.json
+```
+
+Check before reading the timings:
+
+- Each row's `draws` is equal in both arms: about 1,609 web at the close camera and 952 to 976 at the overview.
+- The renderer is ANGLE Metal Apple M4.
+- Every run passed the load guard.
+
+Report each camera's paired mean and p95 deltas (cache minus before; median, minimum and maximum over the 5 rounds) as [What to report](#what-to-report) says. Write the result to `docs/perf/close-camera-draws/results-cache-<date>.json`.
+
+A real saving shows as a negative mean delta at both cameras. The cache removes the same 381 calls at both, so the saving should be about equal. A delta inside the round-to-round spread means the calls cost less than this harness can resolve, and the cache stays for the CPU work it saves.
+
+#### Result, MiniMac 2026-10-26 (`results-cache-2026-10-26.json`)
+
+Run by the orchestrator, 21:43-21:56Z. Host: MiniMac (Apple M4), headless Chromium on ANGLE Metal Apple M4, 2,066-tile world, 5 rounds, arms alternating, host load 2.1-3.8 before and after every run. Before arm: main's play build (code identical to `041ad32`). Cache arm: `ec47f79`. Draws equal in every run: 1,609 close, 952 overview.
+
+Cache minus before, per round (ms):
+
+| Camera | Mean delta, rounds 0-4 | Median | p95 delta, rounds 0-4 | Median |
+|---|---|---|---|---|
+| close | +1.86, -0.07, -0.04, -0.15, -0.01 | -0.04 | +3.3, +0.3, +1.2, -0.1, +0.5 | +0.5 |
+| overview | +2.62, -0.06, -0.12, -0.01, -0.03 | -0.03 | +5.4, +1.2, +2.0, 0.0, +0.2 | +1.2 |
+
+Round 0's before run was the first run of the session and ran about 2 ms faster than every other run of either arm (close mean 32.72 against 34.41-34.63), so round 0 is an outlier. Over rounds 1-4 the mean delta is -0.01 to -0.15 ms at both cameras: no measurable saving. The p95 deltas lean slightly positive (median +0.5 ms close, +1.2 ms overview), inside the before arm's own p95 spread over those rounds (45.9-46.9 close, 64.5-66.6 overview). Read: removing the 381 `createBindGroup` calls a frame costs nothing measurable and saves nothing measurable on the web at this world size. The cache stays for the CPU work it removes, per the rule above.
+
+### O5 and O4 regressions, re-read with CPU counts
+
+The optional arms above showed O5 alone at +0.92 ms web mean on the 2,066-tile overview, and O4 alone at +1.3 to 1.4 ms web p95 on the 2,066-tile world. `diag.kit_queue` counts the kit's work per view without timing (`docs/checkpoints/far-cascade-lod/kit-queue/`). It does not explain either regression:
+
+- O5 adds no per-view work. Per frame it adds one `shadowed_depth_range` per cascade: 30 polygons clipped by up to 6 planes, plus up to 20 plane triples. It also adds one pass over the cells' bounds. Its only output is the list of cascades the kit skips, and at the 2,066-tile overview those are cascades 0 and 1. By construction it cannot add a draw, instance or vertex to any view.
+- O4's merged meshes carry COLOR_0, 16 bytes a vertex. That is under 3% of the kit's vertex bytes in every view. At the 2,066-tile close camera it is 0.7% in the main view, 1.7% in cascade 2 and 2.4% in cascade 3. O4 merges slots within a piece, and every slot of a piece sits in the same tile, so O4 cannot defeat per-tile culling. Each view draws the same instances and vertices in fewer draws.
+- The census found one per-frame cost that grows with the world: the bind-group rebuild, one `createBindGroup` per (slot, LOD) every frame. That is 381 a frame on the 2,066-tile world after O4, and more before it. Both arms had it, and neither change caused it. It is now gone, and the cache-only recipe above times it.
+
+So the census finds no CPU cause in the kit's work for either regression. Both are 3-round deltas on a bimodal web frame-time distribution, between builds that differ in their whole wasm module. To settle them, re-run the optional O5 and O4 arms from [Optional arms](#optional-arms-each-change-alone-web-3-rounds-per-pair) with `ROUNDS=5`.
+
 ## What to report
 
 - For each world and camera: the median, minimum and maximum over the runs of p50, p95 and mean per arm, and after minus before. Uncapped web frames on MiniMac are bimodal (`docs/perf/lod-band-instanced.json`), so mean and p95 are the stable statistics.

@@ -6,7 +6,7 @@
 // seed=1. Each run is a fresh browser on one build and one world; every camera window is read
 // 700 frames after the camera move, so the 600-frame diag ring holds only it. Builds alternate
 // order each round; every run sits inside e2e/perf-load.mjs's guard (1-minute load <= 15).
-// usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>   ROUNDS (default 5)
+// usage: node e2e/perf-close-camera.mjs <dist-before> <dist-after> <out.json>   ROUNDS (default 5), WORLDS (default all)
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
@@ -44,6 +44,11 @@ const WORLDS = {
     overview: [20, 160, 150, 20, 0, -5],
   } },
 };
+// WORLDS=world2066 (comma list) runs only the named worlds; every world by default.
+const RUN_WORLDS = (process.env.WORLDS ?? Object.keys(WORLDS).join(",")).split(",").filter((w) => {
+  if (!WORLDS[w]) throw new Error(`unknown world ${w}; known: ${Object.keys(WORLDS).join(", ")}`);
+  return true;
+});
 const cam = ([x, y, z, lx, ly, lz]) => ({ cmd: "camera", pos: [x, y, z], look_at: [lx, ly, lz] });
 
 const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
@@ -136,7 +141,7 @@ const result = { date: new Date().toISOString(), host: hostname(), cpu: cpus()[0
   rounds: ROUNDS, rows: [] };
 try {
   for (let r = 0; r < ROUNDS; r++)
-    for (const worldName of Object.keys(WORLDS))
+    for (const worldName of RUN_WORLDS)
       for (const build of r % 2 ? ["after", "before"] : ["before", "after"]) {
         const label = `${build} ${worldName} round ${r}`;
         const g = await guarded(() => run(build, worldName).catch((e) => ({ build, world: worldName, error: String(e.message ?? e) })), label);

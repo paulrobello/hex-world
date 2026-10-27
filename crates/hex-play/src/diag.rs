@@ -565,6 +565,11 @@ fn sample(
         c.mesh_material_pairs = pairs.len();
         st.census = c;
         PASS_CENSUS_REQUESTED.store(true, Ordering::Relaxed);
+        // The kit queue census walks every cell per view and re-ranges each clamped cascade, so it
+        // runs only when asked (`HEXW_KIT_QUEUE`, native): census frames fall inside timed windows.
+        if kit_queue_enabled() {
+            hex_render::kit_instances::request_queue_stats();
+        }
         crate::instanced::request_census();
     }
     if st.frames.is_multiple_of(30) {
@@ -665,6 +670,7 @@ fn sample(
             "gpu": crate::gpu_timing::diag_json(gpu_timing.is_some_and(|g| g.enabled)),
             "stall": stall_json(&st.stats, &st.stalls),
             "kit_draws": KIT_CENSUS.lock().unwrap().as_ref().map(kit_census_json),
+            "kit_queue": hex_render::kit_instances::queue_stats().map(|q| kit_queue_json(&q)),
         });
         snap.json = merge_json(&snap.json, &extra);
     }
@@ -685,6 +691,39 @@ fn kit_census_json(k: &KitDrawCensus) -> serde_json::Value {
         .collect();
     let total: usize = k.by_piece.values().map(|[c, s]| c + s).sum();
     serde_json::json!({"slots": k.slots, "total": total, "by_piece": by_piece})
+}
+
+/// Whether `HEXW_KIT_QUEUE` asks for the kit queue census (never on the web).
+fn kit_queue_enabled() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| std::env::var_os("HEXW_KIT_QUEUE").is_some())
+}
+
+/// The `kit_queue` snapshot field: the instanced kit's per-view queue census.
+fn kit_queue_json(q: &hex_render::kit_instances::KitQueueStats) -> serde_json::Value {
+    let views: Vec<serde_json::Value> = q
+        .views
+        .iter()
+        .map(|v| {
+            serde_json::json!({
+                "view": v.view,
+                "skipped": v.skipped,
+                "cells_visible": v.cells_visible,
+                "draws": v.draws,
+                "instances": v.instances,
+                "vertices": v.vertices,
+                "vertex_bytes": v.vertex_bytes,
+                "color_bytes": v.color_bytes,
+                "indices": v.indices,
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "slots": q.slots,
+        "cells": q.cells,
+        "bind_groups_created": q.bind_groups_created,
+        "views": views,
+    })
 }
 
 #[cfg(test)]

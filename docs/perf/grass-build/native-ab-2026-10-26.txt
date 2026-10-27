@@ -1,0 +1,195 @@
+
+meadow@0,0                    27566 blades    68 clears  median 1.829 ms  digest c27154c56bf640d4
+meadow@3,-1                   27545 blades    69 clears  median 1.789 ms  digest 462df52b14060e34
+meadow@-5,2                   27515 blades    69 clears  median 1.776 ms  digest ace94e897f3d0df4
+forest@0,0                     8232 blades    35 clears  median 1.135 ms  digest 7c85c83bc14b5cd6
+forest@3,-1                    8359 blades    35 clears  median 1.118 ms  digest e6630c718e886474
+forest@-5,2                    8309 blades    35 clears  median 1.109 ms  digest 1316beec3d9e02e3
+oak@0,0                        8232 blades    12 clears  median 1.091 ms  digest 7c85c83bc14b5cd6
+oak@3,-1                       8359 blades    13 clears  median 1.111 ms  digest e6630c718e886474
+oak@-5,2                       8309 blades    12 clears  median 1.082 ms  digest 1316beec3d9e02e3
+windmill@0,0                  26612 blades    11 clears  median 1.714 ms  digest 82073149fdbc335b
+windmill@3,-1                 26612 blades    11 clears  median 1.695 ms  digest 272fda88ca9ab4af
+windmill@-5,2                 26560 blades    11 clears  median 1.695 ms  digest c7ae95ca6b8ed5fd
+farm@0,0                      23656 blades    36 clears  median 1.580 ms  digest c3062b2e21ca3923
+farm@3,-1                     23770 blades    39 clears  median 1.586 ms  digest 2e6a6945732d8488
+farm@-5,2                     23692 blades    38 clears  median 1.588 ms  digest 039b397279121795
+wheat_field@0,0               11232 blades     9 clears  median 1.966 ms  digest 46b0d8f36b495916
+wheat_field@3,-1              11208 blades     9 clears  median 1.931 ms  digest 446e06fd141ff415
+wheat_field@-5,2              11193 blades     9 clears  median 1.914 ms  digest 0395289e2c848588
+house_cluster@0,0             15719 blades     4 clears  median 1.781 ms  digest e9b492e273166669
+house_cluster@3,-1            15632 blades     4 clears  median 1.784 ms  digest 8d7264a3832769e7
+house_cluster@-5,2            15489 blades     4 clears  median 1.739 ms  digest ac3a56c075214e23
+bakery@0,0                    15397 blades     1 clears  median 2.013 ms  digest 342fa3194a21e049
+bakery@3,-1                   15423 blades     1 clears  median 1.997 ms  digest 5ede6b09f2335e2f
+bakery@-5,2                   15392 blades     1 clears  median 1.969 ms  digest c943c704e1233bbf
+road_straight@0,0             20052 blades    24 clears  median 2.005 ms  digest f4c09ea12997efaa
+road_straight@3,-1            20062 blades    24 clears  median 1.977 ms  digest e0adfc7c3061c2bb
+road_straight@-5,2            20081 blades    24 clears  median 1.956 ms  digest 7ec8b7a14c92bacd
+road_bend_120@0,0             20342 blades    24 clears  median 2.073 ms  digest 4c52c2e81a1716b4
+road_bend_120@3,-1            20384 blades    24 clears  median 2.066 ms  digest 8f3489b434dad3ed
+road_bend_120@-5,2            20371 blades    24 clears  median 2.087 ms  digest b4bc868ba1533dab
+road_bend_60@0,0              21361 blades    24 clears  median 2.086 ms  digest 7d0979c1c6ea1026
+road_bend_60@3,-1             21402 blades    24 clears  median 2.057 ms  digest c9787359fa4f9911
+road_bend_60@-5,2             21402 blades    24 clears  median 2.048 ms  digest 660b5a968d0e4627
+road_junction@0,0             16899 blades    24 clears  median 2.225 ms  digest 59f6b905e8dcfeb9
+road_junction@3,-1            16902 blades    24 clears  median 2.239 ms  digest 8a622c77275761ba
+road_junction@-5,2            16945 blades    24 clears  median 2.212 ms  digest 767c131e599bb26d
+rail_straight@0,0             21983 blades    20 clears  median 1.910 ms  digest 0d4810be4020cd5d
+rail_straight@3,-1            21979 blades    20 clears  median 1.880 ms  digest 6fbfa9ef87eef1c8
+rail_straight@-5,2            21969 blades    20 clears  median 1.867 ms  digest 80cec72deca54773
+rail_bend_60@0,0              24339 blades    20 clears  median 2.021 ms  digest 7a175dd02d5847db
+rail_bend_60@3,-1             24328 blades    20 clears  median 1.992 ms  digest 70450166f0df0fef
+rail_bend_60@-5,2             24320 blades    20 clears  median 1.970 ms  digest cabae9928874edd6
+rail_bend_120@0,0             22503 blades    20 clears  median 2.039 ms  digest 12b554267d50dd43
+rail_bend_120@3,-1            22511 blades    20 clears  median 2.022 ms  digest 3040f459bec930ce
+rail_bend_120@-5,2            22488 blades    20 clears  median 2.038 ms  digest aaf348918123455e
+rail_junction@0,0             19732 blades    20 clears  median 2.185 ms  digest b245f6599b57c2c1
+rail_junction@3,-1            19734 blades    20 clears  median 2.142 ms  digest 83e9483447e1d9f2
+rail_junction@-5,2            19724 blades    20 clears  median 2.139 ms  digest 86fbd457227fcb98
+rail_road_crossing@0,0        16027 blades    20 clears  median 2.328 ms  digest 38fbd5a3671c54d2
+rail_road_crossing@3,-1       16031 blades    20 clears  median 2.319 ms  digest fdbaba8dc7f694a8
+rail_road_crossing@-5,2       16035 blades    20 clears  median 2.285 ms  digest a0f087068d80e2e0
+rail_station@0,0              17027 blades    22 clears  median 1.527 ms  digest 4da7b9c791d52261
+rail_station@3,-1             17004 blades    22 clears  median 1.508 ms  digest d83b2c258dd88236
+rail_station@-5,2             17017 blades    22 clears  median 1.514 ms  digest a18cd912239ceed2
+river_straight@0,0            13159 blades     0 clears  median 1.422 ms  digest 0cac975df52d68c9
+river_straight@3,-1           13110 blades     0 clears  median 1.400 ms  digest dbc9fd4bb8e59326
+river_straight@-5,2           13146 blades     0 clears  median 1.390 ms  digest 50589512fa39a64a
+river_bend@0,0                14142 blades     0 clears  median 1.548 ms  digest aeb44fba444e5bee
+river_bend@3,-1               14187 blades     0 clears  median 1.534 ms  digest 742346b57f29b93f
+river_bend@-5,2               14207 blades     0 clears  median 1.538 ms  digest 715e1f68bf6406f8
+river_bend_60@0,0             16977 blades     0 clears  median 1.636 ms  digest 040984ccd8c828f7
+river_bend_60@3,-1            17163 blades     0 clears  median 1.640 ms  digest 2570c52b314b6a96
+river_bend_60@-5,2            17077 blades     0 clears  median 1.627 ms  digest b82ff98ac2d2976d
+river_road_bridge@0,0         10603 blades     0 clears  median 1.946 ms  digest fe157f7a878c7718
+river_road_bridge@3,-1        10621 blades     0 clears  median 1.921 ms  digest 58bdd89727e1cd51
+river_road_bridge@-5,2        10613 blades     0 clears  median 1.903 ms  digest 54653221d620a266
+river_rail_bridge@0,0         10297 blades     0 clears  median 1.560 ms  digest ed8b402e33b9cb05
+river_rail_bridge@3,-1        10302 blades     0 clears  median 1.543 ms  digest eb98ae55041d2c66
+river_rail_bridge@-5,2        10312 blades     0 clears  median 1.517 ms  digest 223f44d041bcdafe
+river_spring@0,0              14643 blades     0 clears  median 1.569 ms  digest 0a4040eedad94ab2
+river_spring@3,-1             14653 blades     0 clears  median 1.554 ms  digest 644bf2686f131650
+river_spring@-5,2             14688 blades     0 clears  median 1.553 ms  digest 7e794680a499a179
+river_fork@0,0                 9621 blades     0 clears  median 1.272 ms  digest 08db202475cb6daf
+river_fork@3,-1                9625 blades     0 clears  median 1.248 ms  digest 20a1f6a8590d4d3b
+river_fork@-5,2                9680 blades     0 clears  median 1.253 ms  digest 6d945a03d96a5671
+beach@0,0                      2539 blades     0 clears  median 0.567 ms  digest b240526bd72d6154
+beach@3,-1                     2601 blades     4 clears  median 0.568 ms  digest 3f5a6ac157ff27f7
+beach@-5,2                     2611 blades     5 clears  median 0.569 ms  digest c2fa65474276beb5
+beach_outer@0,0                 499 blades     0 clears  median 0.296 ms  digest 91fe774c36ad6c11
+beach_outer@3,-1                565 blades     4 clears  median 0.301 ms  digest cbc2c26398722920
+beach_outer@-5,2                567 blades     5 clears  median 0.303 ms  digest b9db8b316f8f01bb
+beach_inner@0,0                5485 blades     0 clears  median 0.871 ms  digest 993030432125f955
+beach_inner@3,-1               5585 blades     4 clears  median 0.878 ms  digest 0e2dc1cab4b45355
+beach_inner@-5,2               5496 blades     5 clears  median 0.878 ms  digest 6b0ca4f25889c99d
+river_mouth@0,0                1463 blades     0 clears  median 0.477 ms  digest 5c2cb6645fc4fada
+river_mouth@3,-1               1441 blades     4 clears  median 0.476 ms  digest 891a343ebe8434e6
+river_mouth@-5,2               1448 blades     5 clears  median 0.472 ms  digest ed7571158fdd4a6c
+river_mouth_l@0,0              1411 blades     0 clears  median 0.511 ms  digest f35fc04c3d0552d5
+river_mouth_l@3,-1             1501 blades     4 clears  median 0.516 ms  digest bb1d686b4d608fd3
+river_mouth_l@-5,2             1513 blades     5 clears  median 0.513 ms  digest 394d258213c02fb8
+90 builds, 41 rounds: worst median 2.328 ms, mean median 1.561 ms, digest 922e04ec1819a73c
+meadow prepare: median 2.124 ms
+road_junction prepare: median 1.144 ms
+rail_road_crossing prepare: median 0.997 ms
+beach prepare: median 0.910 ms
+meadow@0,0 fingerprint (27566 blades): median 0.909 ms
+test play::grass_bench::grass_bench ... ok
+meadow@0,0                   old 4.939 ms  new 1.821 ms  ratio 0.369
+meadow@3,-1                  old 5.026 ms  new 1.831 ms  ratio 0.364
+meadow@-5,2                  old 4.933 ms  new 1.831 ms  ratio 0.371
+forest@0,0                   old 3.173 ms  new 1.143 ms  ratio 0.360
+forest@3,-1                  old 3.122 ms  new 1.146 ms  ratio 0.367
+forest@-5,2                  old 3.246 ms  new 1.136 ms  ratio 0.350
+oak@0,0                      old 2.582 ms  new 1.104 ms  ratio 0.427
+oak@3,-1                     old 2.642 ms  new 1.094 ms  ratio 0.414
+oak@-5,2                     old 2.491 ms  new 1.090 ms  ratio 0.438
+windmill@0,0                 old 2.823 ms  new 1.730 ms  ratio 0.613
+windmill@3,-1                old 2.901 ms  new 1.734 ms  ratio 0.598
+windmill@-5,2                old 2.744 ms  new 1.736 ms  ratio 0.633
+farm@0,0                     old 3.601 ms  new 1.609 ms  ratio 0.447
+farm@3,-1                    old 3.629 ms  new 1.600 ms  ratio 0.441
+farm@-5,2                    old 3.615 ms  new 1.606 ms  ratio 0.444
+wheat_field@0,0              old 2.824 ms  new 1.980 ms  ratio 0.701
+wheat_field@3,-1             old 2.795 ms  new 1.958 ms  ratio 0.701
+wheat_field@-5,2             old 2.799 ms  new 1.958 ms  ratio 0.700
+house_cluster@0,0            old 2.331 ms  new 1.810 ms  ratio 0.777
+house_cluster@3,-1           old 2.331 ms  new 1.794 ms  ratio 0.770
+house_cluster@-5,2           old 2.301 ms  new 1.782 ms  ratio 0.774
+bakery@0,0                   old 2.558 ms  new 2.035 ms  ratio 0.796
+bakery@3,-1                  old 2.544 ms  new 2.059 ms  ratio 0.809
+bakery@-5,2                  old 2.537 ms  new 2.017 ms  ratio 0.795
+road_straight@0,0            old 3.113 ms  new 2.035 ms  ratio 0.654
+road_straight@3,-1           old 3.126 ms  new 2.032 ms  ratio 0.650
+road_straight@-5,2           old 3.102 ms  new 2.027 ms  ratio 0.653
+road_bend_120@0,0            old 3.181 ms  new 2.101 ms  ratio 0.660
+road_bend_120@3,-1           old 3.180 ms  new 2.101 ms  ratio 0.661
+road_bend_120@-5,2           old 3.191 ms  new 2.092 ms  ratio 0.656
+road_bend_60@0,0             old 3.212 ms  new 2.109 ms  ratio 0.657
+road_bend_60@3,-1            old 3.203 ms  new 2.088 ms  ratio 0.652
+road_bend_60@-5,2            old 3.204 ms  new 2.110 ms  ratio 0.658
+road_junction@0,0            old 3.293 ms  new 2.249 ms  ratio 0.683
+road_junction@3,-1           old 3.287 ms  new 2.245 ms  ratio 0.683
+road_junction@-5,2           old 3.305 ms  new 2.249 ms  ratio 0.680
+rail_straight@0,0            old 2.948 ms  new 1.933 ms  ratio 0.656
+rail_straight@3,-1           old 2.945 ms  new 1.923 ms  ratio 0.653
+rail_straight@-5,2           old 2.947 ms  new 1.918 ms  ratio 0.651
+rail_bend_60@0,0             old 3.059 ms  new 2.033 ms  ratio 0.665
+rail_bend_60@3,-1            old 3.053 ms  new 2.016 ms  ratio 0.660
+rail_bend_60@-5,2            old 3.056 ms  new 2.025 ms  ratio 0.663
+rail_bend_120@0,0            old 3.067 ms  new 2.058 ms  ratio 0.671
+rail_bend_120@3,-1           old 3.066 ms  new 2.057 ms  ratio 0.671
+rail_bend_120@-5,2           old 3.058 ms  new 2.061 ms  ratio 0.674
+rail_junction@0,0            old 3.182 ms  new 2.196 ms  ratio 0.690
+rail_junction@3,-1           old 3.185 ms  new 2.196 ms  ratio 0.690
+rail_junction@-5,2           old 3.161 ms  new 2.202 ms  ratio 0.697
+rail_road_crossing@0,0       old 3.253 ms  new 2.346 ms  ratio 0.721
+rail_road_crossing@3,-1      old 3.246 ms  new 2.334 ms  ratio 0.719
+rail_road_crossing@-5,2      old 3.243 ms  new 2.345 ms  ratio 0.723
+rail_station@0,0             old 2.404 ms  new 1.566 ms  ratio 0.651
+rail_station@3,-1            old 2.379 ms  new 1.544 ms  ratio 0.649
+rail_station@-5,2            old 2.378 ms  new 1.546 ms  ratio 0.650
+river_straight@0,0           old 2.538 ms  new 1.433 ms  ratio 0.565
+river_straight@3,-1          old 2.531 ms  new 1.421 ms  ratio 0.561
+river_straight@-5,2          old 2.517 ms  new 1.415 ms  ratio 0.562
+river_bend@0,0               old 2.777 ms  new 1.568 ms  ratio 0.565
+river_bend@3,-1              old 2.764 ms  new 1.556 ms  ratio 0.563
+river_bend@-5,2              old 2.777 ms  new 1.564 ms  ratio 0.563
+river_bend_60@0,0            old 2.829 ms  new 1.665 ms  ratio 0.589
+river_bend_60@3,-1           old 2.812 ms  new 1.654 ms  ratio 0.588
+river_bend_60@-5,2           old 2.804 ms  new 1.644 ms  ratio 0.586
+river_road_bridge@0,0        old 3.018 ms  new 1.959 ms  ratio 0.649
+river_road_bridge@3,-1       old 3.021 ms  new 1.958 ms  ratio 0.648
+river_road_bridge@-5,2       old 3.007 ms  new 1.947 ms  ratio 0.647
+river_rail_bridge@0,0        old 2.883 ms  new 1.568 ms  ratio 0.544
+river_rail_bridge@3,-1       old 2.872 ms  new 1.561 ms  ratio 0.543
+river_rail_bridge@-5,2       old 2.879 ms  new 1.574 ms  ratio 0.547
+river_spring@0,0             old 2.680 ms  new 1.580 ms  ratio 0.589
+river_spring@3,-1            old 2.672 ms  new 1.593 ms  ratio 0.596
+river_spring@-5,2            old 2.677 ms  new 1.567 ms  ratio 0.585
+river_fork@0,0               old 2.685 ms  new 1.285 ms  ratio 0.478
+river_fork@3,-1              old 2.675 ms  new 1.270 ms  ratio 0.475
+river_fork@-5,2              old 2.689 ms  new 1.268 ms  ratio 0.471
+beach@0,0                    old 1.987 ms  new 0.574 ms  ratio 0.289
+beach@3,-1                   old 1.999 ms  new 0.573 ms  ratio 0.287
+beach@-5,2                   old 1.973 ms  new 0.577 ms  ratio 0.292
+beach_outer@0,0              old 1.862 ms  new 0.296 ms  ratio 0.159
+beach_outer@3,-1             old 1.860 ms  new 0.304 ms  ratio 0.164
+beach_outer@-5,2             old 1.847 ms  new 0.304 ms  ratio 0.165
+beach_inner@0,0              old 2.020 ms  new 0.884 ms  ratio 0.438
+beach_inner@3,-1             old 2.044 ms  new 0.891 ms  ratio 0.436
+beach_inner@-5,2             old 2.041 ms  new 0.899 ms  ratio 0.440
+river_mouth@0,0              old 2.111 ms  new 0.477 ms  ratio 0.226
+river_mouth@3,-1             old 2.098 ms  new 0.482 ms  ratio 0.230
+river_mouth@-5,2             old 2.113 ms  new 0.476 ms  ratio 0.225
+river_mouth_l@0,0            old 2.155 ms  new 0.511 ms  ratio 0.237
+river_mouth_l@3,-1           old 2.161 ms  new 0.522 ms  ratio 0.242
+river_mouth_l@-5,2           old 2.166 ms  new 0.513 ms  ratio 0.237
+meadow@0,0 fingerprint (27566 blades): median 0.909 ms
+90 cases, 41 rounds: worst median old 5.026 ms new 2.346 ms, median ratio 0.598
+test play::grass_bench::grass_ab ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 266 filtered out; finished in 17.30s
+
+

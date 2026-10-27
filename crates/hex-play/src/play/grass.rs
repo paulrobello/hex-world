@@ -96,8 +96,9 @@ pub const FADE_END: f32 = 58.0;
 /// they drop it.
 pub const BUILD_RADIUS: f32 = FADE_END + 2.0;
 pub const DROP_RADIUS: f32 = BUILD_RADIUS + 12.0;
-/// New tile groups per frame, nearest first, and the frame's build time (ms) after which no further
-/// one starts (the first always does), so walking into new tiles never hitches a frame.
+/// New tile groups per frame, nearest first, and the frame's grass build budget (ms): a further one
+/// starts only while the time spent so far plus the frame's slowest tile so far fits in it (the
+/// first always starts), so walking into new tiles never hitches a frame.
 pub const BUILDS_PER_FRAME: usize = 3;
 pub const BUILD_BUDGET_MS: f32 = 4.0;
 /// Scale on the shared wind's push for grass.
@@ -283,37 +284,58 @@ pub fn style(slot: &str) -> Style {
 /// Shifts a linear colour's hue (turns) and lightness in a gamma-2 space close to sRGB, with
 /// arithmetic and `sqrt` only so native and wasm agree.
 pub fn jitter(c: [f32; 3], dh: f32, dl: f32) -> [f32; 3] {
-    let [r, g, b] = c.map(|x| x.max(0.0).sqrt());
-    let (hi, lo) = (r.max(g).max(b), r.min(g).min(b));
-    let l = 0.5 * (hi + lo);
-    let d = hi - lo;
-    let (h, s) = if d <= 1e-6 {
-        (0.0, 0.0)
-    } else {
-        let s = (d / (1.0 - (2.0 * l - 1.0).abs()).max(1e-6)).min(1.0);
-        let h = if hi == r {
-            ((g - b) / d).rem_euclid(6.0)
-        } else if hi == g {
-            (b - r) / d + 2.0
+    Hsl::new(c).shift(dh, dl)
+}
+
+/// A linear colour's hue (turns), saturation and lightness in [`jitter`]'s gamma-2 space: a slot's
+/// base colour, found once per tile and shifted per blade.
+#[derive(Clone, Copy, Debug)]
+pub struct Hsl {
+    h: f32,
+    s: f32,
+    l: f32,
+}
+
+impl Hsl {
+    pub fn new(c: [f32; 3]) -> Self {
+        let [r, g, b] = c.map(|x| x.max(0.0).sqrt());
+        let (hi, lo) = (r.max(g).max(b), r.min(g).min(b));
+        let l = 0.5 * (hi + lo);
+        let d = hi - lo;
+        let (h, s) = if d <= 1e-6 {
+            (0.0, 0.0)
         } else {
-            (r - g) / d + 4.0
+            let s = (d / (1.0 - (2.0 * l - 1.0).abs()).max(1e-6)).min(1.0);
+            let h = if hi == r {
+                ((g - b) / d).rem_euclid(6.0)
+            } else if hi == g {
+                (b - r) / d + 2.0
+            } else {
+                (r - g) / d + 4.0
+            };
+            (h / 6.0, s)
         };
-        (h / 6.0, s)
-    };
-    let h = (h + dh).rem_euclid(1.0) * 6.0;
-    let l = (l + dl).clamp(0.0, 1.0);
-    let chroma = (1.0 - (2.0 * l - 1.0).abs()) * s;
-    let x = chroma * (1.0 - (h.rem_euclid(2.0) - 1.0).abs());
-    let (r, g, b) = match h as u32 {
-        0 => (chroma, x, 0.0),
-        1 => (x, chroma, 0.0),
-        2 => (0.0, chroma, x),
-        3 => (0.0, x, chroma),
-        4 => (x, 0.0, chroma),
-        _ => (chroma, 0.0, x),
-    };
-    let m = l - 0.5 * chroma;
-    [r + m, g + m, b + m].map(|v| v * v)
+        Self { h, s, l }
+    }
+
+    /// The linear colour with its hue shifted by `dh` turns and its lightness by `dl`.
+    pub fn shift(self, dh: f32, dl: f32) -> [f32; 3] {
+        let Self { h, s, l } = self;
+        let h = (h + dh).rem_euclid(1.0) * 6.0;
+        let l = (l + dl).clamp(0.0, 1.0);
+        let chroma = (1.0 - (2.0 * l - 1.0).abs()) * s;
+        let x = chroma * (1.0 - (h.rem_euclid(2.0) - 1.0).abs());
+        let (r, g, b) = match h as u32 {
+            0 => (chroma, x, 0.0),
+            1 => (x, chroma, 0.0),
+            2 => (0.0, chroma, x),
+            3 => (0.0, x, chroma),
+            4 => (x, 0.0, chroma),
+            _ => (chroma, 0.0, x),
+        };
+        let m = l - 0.5 * chroma;
+        [r + m, g + m, b + m].map(|v| v * v)
+    }
 }
 
 /// The grass slots of a tile's ground pieces with their linear tint.
@@ -431,7 +453,50 @@ impl Clear {
             }
         }
     }
+
+    /// A tile-local (x, z) box, `(min, max)`, holding every point [`Clear::contains`] accepts with
+    /// [`BOUNDS_MARGIN`] to spare, so testing it first never changes a point's answer.
+    pub fn bounds(&self) -> (Vec2, Vec2) {
+        let (centre, reach) = match *self {
+            Clear::Disc { centre, radius } => (centre, Vec2::splat(radius)),
+            Clear::Box { centre, half, axis } => (
+                centre,
+                Vec2::new(
+                    axis.x.abs() * half.x + axis.y.abs() * half.y,
+                    axis.y.abs() * half.x + axis.x.abs() * half.y,
+                ),
+            ),
+            Clear::Rock {
+                centre,
+                scale,
+                outline,
+                ..
+            } => {
+                // The accepted region is the convex outline with every side pushed out by the gap:
+                // its farthest point from the centre is one of its corners, where neighbouring
+                // pushed sides meet.
+                let gap = PROP_GAP / scale;
+                let n = outline.len();
+                let inward = |k: usize| {
+                    let e = Vec2::from(outline[(k + 1) % n]) - Vec2::from(outline[k]);
+                    e.perp() / e.length()
+                };
+                let far = (0..n)
+                    .map(|k| {
+                        let (a, b) = (inward((k + n - 1) % n), inward(k));
+                        (Vec2::from(outline[k]) - gap * (a + b) / (1.0 + a.dot(b))).length()
+                    })
+                    .fold(0.0, f32::max);
+                (centre, Vec2::splat(far * scale))
+            }
+        };
+        let reach = reach + BOUNDS_MARGIN;
+        (centre - reach, centre + reach)
+    }
 }
+
+/// Slack (m) on [`Clear::bounds`] against rounding and an axis a hair off unit length.
+pub const BOUNDS_MARGIN: f32 = 0.01;
 
 /// `(cos, sin)` of `deg` degrees from `+`, `*`, `/` and `round` alone: `sin`/`cos` may differ by
 /// an ulp between native libm and wasm's, and a tile's blades must be the same on both.
@@ -542,45 +607,80 @@ pub fn layout(
     let water = crate::water::tiles::WATER_Y + WATER_MARGIN;
     let mut out = GrassLayout::default();
     let mut ground = 0u32;
+    // Per surface slot: its style and its base colour's HSL when it is a grass slot.
+    let grass: Vec<Option<(Style, Hsl)>> = surface
+        .slots()
+        .iter()
+        .map(|name| {
+            let tint = slots.get(name)?;
+            let base = [0, 1, 2].map(|k| tint[k] * GRASS_ALBEDO_MEAN[k]);
+            Some((style(name), Hsl::new(base)))
+        })
+        .collect();
+    // Buckets of the ground where a blade can root: one of their triangles is a grass slot's that
+    // reaches the water line (a triangle's height may overshoot its corners by `top`'s 1e-5
+    // barycentric slack, far under 1 cm). Elsewhere every point is skipped either way.
+    let live = surface.buckets_where(|slot, t| {
+        grass[usize::from(slot)].is_some() && t.iter().any(|v| v[1] + 0.01 >= water)
+    });
+    let bounds: Vec<((Vec2, Vec2), &Clear)> = excluded.iter().map(|c| (c.bounds(), c)).collect();
+    // The clears whose bounds reach the current grid row, with their x extent.
+    let mut row: Vec<(f32, f32, &Clear)> = Vec::with_capacity(bounds.len());
     for j in 0..n {
+        let z0 = -HEX_RADIUS + j as f32 * step - BOUNDS_MARGIN;
+        let z1 = -HEX_RADIUS + (j + 1) as f32 * step + BOUNDS_MARGIN;
+        row.clear();
+        row.extend(
+            bounds
+                .iter()
+                .filter(|((lo, hi), _)| lo.y <= z1 && hi.y >= z0)
+                .map(|((lo, hi), c)| (lo.x, hi.x, *c)),
+        );
         for i in 0..n {
-            // Every grid point draws the same numbers whether or not it grows a blade.
-            let r = [(); 11].map(|_| rng.unit());
+            // Every grid point takes the same 11 draws whether or not it grows a blade, and makes
+            // only those it reads.
+            let at = Rng(rng.0);
+            rng.skip(11);
+            let r = |k: u64| at.unit_at(k);
             let p = Vec2::new(
-                -HEX_RADIUS + (i as f32 + r[0]) * step,
-                -HEX_RADIUS + (j as f32 + r[1]) * step,
+                -HEX_RADIUS + (i as f32 + r(0)) * step,
+                -HEX_RADIUS + (j as f32 + r(1)) * step,
             );
-            if scatter::hex_reach(p) >= APOTHEM || excluded.iter().any(|c| c.contains(p)) {
+            if scatter::hex_reach(p) >= APOTHEM
+                || row
+                    .iter()
+                    .any(|&(x0, x1, c)| p.x >= x0 && p.x <= x1 && c.contains(p))
+            {
                 continue;
             }
-            let Some((y, slot)) = surface.at(p.x, p.y) else {
+            if !Surface::bucket_at(p.x, p.y).is_some_and(|b| live[b]) {
+                continue;
+            }
+            let Some((y, slot)) = surface.top(p.x, p.y) else {
                 continue;
             };
-            let Some(tint) = slots.get(slot) else {
+            let Some((st, hsl)) = grass[usize::from(slot)] else {
                 continue;
             };
             if y < water {
                 continue;
             }
             ground += 1;
-            let st = style(slot);
-            if r[2] >= st.density {
+            if r(2) >= st.density {
                 continue;
             }
-            let scale = lerp(SCALE, r[10]);
-            let base = [0, 1, 2].map(|k| tint[k] * GRASS_ALBEDO_MEAN[k]);
+            let scale = lerp(SCALE, r(10));
             out.blades.push(Blade {
                 root: Vec3::new(p.x, y, p.y),
-                yaw_deg: ((r[3] * 360.0) as u16).min(359),
-                rank: 0.9 * r[4],
-                height: lerp(st.height, r[5]) * scale,
-                width: lerp(st.width, r[8]) * scale,
-                color: jitter(
-                    base,
-                    HUE_JITTER * (2.0 * r[6] - 1.0),
-                    LIGHT_JITTER * (2.0 * r[7] - 1.0),
+                yaw_deg: ((r(3) * 360.0) as u16).min(359),
+                rank: 0.9 * r(4),
+                height: lerp(st.height, r(5)) * scale,
+                width: lerp(st.width, r(8)) * scale,
+                color: hsl.shift(
+                    HUE_JITTER * (2.0 * r(6) - 1.0),
+                    LIGHT_JITTER * (2.0 * r(7) - 1.0),
                 ),
-                keep: r[9],
+                keep: r(9),
             });
         }
     }
@@ -630,8 +730,19 @@ impl GrassInstances {
         if layout.blades.is_empty() {
             return None;
         }
-        let mut order: Vec<&Blade> = layout.blades.iter().collect();
-        order.sort_by(|a, b| a.keep.total_cmp(&b.keep));
+        // `keep` is never negative, so its bits sort as its value; the index breaks ties in
+        // generation order.
+        let mut keys: Vec<u64> = layout
+            .blades
+            .iter()
+            .enumerate()
+            .map(|(i, b)| u64::from(b.keep.to_bits()) << 32 | i as u64)
+            .collect();
+        keys.sort_unstable();
+        let order: Vec<&Blade> = keys
+            .iter()
+            .map(|k| &layout.blades[*k as u32 as usize])
+            .collect();
         let unorm = |c: f32| (c.clamp(0.0, 1.0) * 65535.0).round() as u16;
         let blades = order
             .iter()
@@ -726,6 +837,9 @@ struct Built {
     cell: Axial,
     /// The tile's Lush set, kept so a density change only changes the drawn count.
     layout: Arc<GrassLayout>,
+    /// `layout`'s fingerprint for the report, found once: hashing a tile's blades takes about as
+    /// long as building them, too long to repeat for every tile every frame.
+    fingerprint: u64,
     /// The group and its instances; `None` when the tile has no blade (no grass ground).
     group: Option<(Entity, Arc<GrassInstances>)>,
     /// Blades drawn at the current density.
@@ -742,6 +856,9 @@ pub struct PlayGrass {
     /// The slowest single tile build (seeded set and instances, ms) in the latest frame that built
     /// one.
     last_build_ms: f32,
+    /// The whole grass work (ms) of the latest frame that built a tile: every tile's ground,
+    /// exclusions, build, group and fingerprint, the span the per-frame budget holds.
+    last_frame_build_ms: f32,
     /// The slowest single density change (a group's drawn count, ms) in the latest frame that
     /// changed one.
     last_swap_ms: f32,
@@ -777,6 +894,7 @@ pub fn report(
 ) -> String {
     let d = Distances::new(distance);
     let build_ms = (state.last_build_ms * 100.0).round() / 100.0;
+    let frame_ms = (state.last_frame_build_ms * 100.0).round() / 100.0;
     let swap_ms = (state.last_swap_ms * 100.0).round() / 100.0;
     let mut rows: BTreeMap<(i32, i32), String> = BTreeMap::new();
     let (mut blades, mut instances, mut bytes) = (0usize, 0usize, 0usize);
@@ -795,7 +913,7 @@ pub fn report(
                 b.key.tile,
                 b.blades,
                 b.layout.area_m2.round(),
-                b.layout.fingerprint()
+                b.fingerprint
             ),
         );
     }
@@ -804,7 +922,7 @@ pub fn report(
         bytes += BLADE_MESH_BYTES;
     }
     format!(
-        "{{\"density\":{},\"distance\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"instances\":{instances},\"mesh_bytes\":{bytes},\"uploads\":{},\"per_m2\":{},\"thin\":[{},{},{THIN_KEEP}],\"fade\":[{},{}],\"build_radius\":{},\"last_build_ms\":{build_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
+        "{{\"density\":{},\"distance\":{},\"status\":\"{status}\",\"groups\":{groups},\"blades\":{blades},\"triangles\":{},\"instances\":{instances},\"mesh_bytes\":{bytes},\"uploads\":{},\"per_m2\":{},\"thin\":[{},{},{THIN_KEEP}],\"fade\":[{},{}],\"build_radius\":{},\"last_build_ms\":{build_ms},\"last_frame_build_ms\":{frame_ms},\"last_swap_ms\":{swap_ms},\"tiles\":[{}]}}",
         f64::from(density.percent()) / 100.0,
         f64::from(distance.hundredths()) / 100.0,
         blades * BLADE_TRIANGLES,
@@ -967,9 +1085,12 @@ pub fn sync(
     }
     let mut builds = 0;
     let frame = bevy::platform::time::Instant::now();
-    let spent = |builds: usize| {
+    // The slowest tile's whole work this frame (ms): a further build starts only if one more like
+    // it still ends inside the budget (the first always starts).
+    let mut worst_tile: f32 = 0.0;
+    let spent = |builds: usize, worst_tile: f32| {
         builds >= BUILDS_PER_FRAME
-            || (builds > 0 && frame.elapsed().as_secs_f32() * 1000.0 >= BUILD_BUDGET_MS)
+            || (builds > 0 && frame.elapsed().as_secs_f32() * 1000.0 + worst_tile > BUILD_BUDGET_MS)
     };
     let mut todo: Vec<(f32, Entity, Axial, Key)> = wanted
         .iter()
@@ -983,9 +1104,10 @@ pub fn sync(
     });
     let mut slowest: Option<f32> = None;
     for (_, root, cell, key) in todo {
-        if spent(builds) || density.is_off() {
+        if spent(builds, worst_tile) || density.is_off() {
             break;
         }
+        let tile = bevy::platform::time::Instant::now();
         let Some(def) = catalog.0.get(&key.tile) else {
             continue;
         };
@@ -1020,14 +1142,17 @@ pub fn sync(
             Built {
                 key,
                 cell,
+                fingerprint: l.fingerprint(),
                 layout: l,
                 group,
                 blades,
             },
         );
+        worst_tile = worst_tile.max(tile.elapsed().as_secs_f32() * 1000.0);
     }
     if let Some(ms) = slowest {
         state.last_build_ms = ms;
+        state.last_frame_build_ms = frame.elapsed().as_secs_f32() * 1000.0;
     }
     let json = report(state, density, distance, status, groups.iter().count());
     if out.0 != json {
@@ -1540,6 +1665,64 @@ mod tests {
         };
         assert_eq!(within(0.0, tower), 0, "grass inside the tower");
         assert!(within(tower, tower + 1.0) > 0, "no grass at the tower foot");
+    }
+
+    /// `layout` tests a clear only where its bounds reach, so every point a clear accepts must lie
+    /// inside its bounds: discs, turned boxes and every rock outline at small and large scales and
+    /// any turn, sampled densely around each.
+    #[test]
+    fn clear_bounds_hold_every_point_the_clear_accepts() {
+        let mut clears = vec![
+            Clear::Disc {
+                centre: Vec2::new(1.0, -2.0),
+                radius: 0.25,
+            },
+            Clear::Disc {
+                centre: Vec2::ZERO,
+                radius: 0.0,
+            },
+        ];
+        for deg in [0.0, 17.0, 45.0, 90.0, 133.0, 271.0] {
+            let axis = cos_sin_deg(deg);
+            clears.push(Clear::Box {
+                centre: Vec2::new(-3.0, 4.0),
+                half: Vec2::new(2.5, 0.4),
+                axis,
+            });
+            for (_, outline) in ROCK_BASES {
+                for scale in [0.3, 0.8, 1.0, 1.6] {
+                    clears.push(Clear::Rock {
+                        centre: Vec2::new(5.0, 2.0),
+                        axis,
+                        scale,
+                        outline,
+                    });
+                }
+            }
+        }
+        for c in &clears {
+            let (lo, hi) = c.bounds();
+            let (mid, half) = ((lo + hi) / 2.0, (hi - lo) / 2.0);
+            let mut accepted = 0;
+            for j in 0..=200 {
+                for i in 0..=200 {
+                    let t = Vec2::new(i as f32, j as f32) / 100.0 - 1.0;
+                    let p = mid + t * (half + 0.2);
+                    if c.contains(p) {
+                        accepted += 1;
+                        assert!(
+                            p.cmpge(lo).all() && p.cmple(hi).all(),
+                            "{c:?} accepts {p} outside its bounds {lo}..{hi}"
+                        );
+                        let slack = (p - lo).min(hi - p).min_element();
+                        assert!(slack > 0.9 * BOUNDS_MARGIN, "{c:?}: {p} within {slack} m");
+                    }
+                }
+            }
+            if !matches!(c, Clear::Disc { radius: 0.0, .. }) {
+                assert!(accepted > 0, "{c:?} accepted no sample");
+            }
+        }
     }
 
     fn disc(c: &Clear) -> (Vec2, f32) {

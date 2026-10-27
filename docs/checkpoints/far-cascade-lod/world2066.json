@@ -1,0 +1,16 @@
+[
+  {"cmd": "hover", "q": 9, "r": -9},
+  {"cmd": "toggle", "what": "photo"},
+  {"cmd": "photo", "dof": "off", "pause_agents": false},
+  {"cmd": "wait", "frames": 780},
+  {"cmd": "wait", "frames": 600},
+  {"cmd": "camera", "pos": [10, 12, 40], "look_at": [0, 0, 0]},
+  {"cmd": "wait", "frames": 90},
+  {"cmd": "dump_state", "name": "draws-close"},
+  {"cmd": "screenshot", "name": "draws-close"},
+  {"cmd": "camera", "pos": [20, 160, 150], "look_at": [20, 0, -5]},
+  {"cmd": "wait", "frames": 90},
+  {"cmd": "dump_state", "name": "draws-overview"},
+  {"cmd": "screenshot", "name": "draws-overview"},
+  {"cmd": "exit"}
+]

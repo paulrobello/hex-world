@@ -1590,6 +1590,7 @@
       "groups",
       "instances",
       "last_build_ms",
+      "last_frame_build_ms",
       "last_swap_ms",
       "mesh_bytes",
       "per_m2",

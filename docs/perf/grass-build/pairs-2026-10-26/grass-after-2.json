@@ -1,0 +1,959 @@
+{
+  "date": "2026-10-26T22:07:12.313Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off",
+    "grass": "1"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(10)",
+    "tiles": 317,
+    "counts": {
+      "meadow": 51,
+      "river_straight": 48,
+      "forest": 44,
+      "beach": 45,
+      "river_bend": 7,
+      "beach_inner": 7,
+      "beach_outer": 11,
+      "house_cluster": 10,
+      "road_straight": 15,
+      "ocean": 79
+    }
+  },
+  "drag": {
+    "percents": [
+      95,
+      90,
+      85,
+      80,
+      75,
+      70,
+      65,
+      60,
+      55,
+      50,
+      45,
+      40,
+      35,
+      30,
+      25,
+      20,
+      15,
+      10,
+      5,
+      0,
+      5,
+      10,
+      15,
+      20,
+      25,
+      30,
+      35,
+      40,
+      45,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100,
+      105,
+      110,
+      115,
+      120,
+      125,
+      130,
+      135,
+      140,
+      145,
+      150,
+      145,
+      140,
+      135,
+      130,
+      125,
+      120,
+      115,
+      110,
+      105,
+      100,
+      95,
+      90,
+      85,
+      80,
+      75,
+      70,
+      65,
+      60,
+      55,
+      50,
+      55,
+      60,
+      65,
+      70,
+      75,
+      80,
+      85,
+      90,
+      95,
+      100
+    ],
+    "ms": 5000,
+    "baseline_ms": 5000,
+    "path": "Settings sheet slider: input per step, change on release (150 ms throttle, flush)"
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "runs": 1,
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "run": 0,
+      "build_id": "a0873289a1",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "frame_latency": {
+        "limit": 3,
+        "source": "default"
+      },
+      "tiles": 317,
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "steps": 80,
+      "step_ms": 62.5,
+      "still_closed": {
+        "frames": 157,
+        "p50": 49.4,
+        "p95": 53.2,
+        "p99": 53.7,
+        "max": 63.3,
+        "mean": 31.76,
+        "over_16_6ms": 79,
+        "over_25ms": 79,
+        "pairs": {
+          "pairs": 78,
+          "short_mean": 11.06,
+          "long_mean": 52.21,
+          "alternation": 1
+        },
+        "tail_ms": [
+          49.4,
+          49.8,
+          50.5,
+          50.5,
+          50.8,
+          50.9,
+          50.9,
+          50.9,
+          50.9,
+          51,
+          51.3,
+          51.4,
+          51.4,
+          51.4,
+          51.7,
+          51.8,
+          51.8,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          51.9,
+          52,
+          52,
+          52,
+          52,
+          52,
+          52,
+          52,
+          52,
+          52,
+          52.1,
+          52.1,
+          52.1,
+          52.1,
+          52.1,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.2,
+          52.3,
+          52.3,
+          52.3,
+          52.3,
+          52.3,
+          52.3,
+          52.4,
+          52.4,
+          52.4,
+          52.4,
+          52.5,
+          52.5,
+          52.5,
+          52.7,
+          53,
+          53.1,
+          53.2,
+          53.2,
+          53.2,
+          53.2,
+          53.3,
+          53.4,
+          53.4,
+          53.4,
+          53.5,
+          53.7,
+          63.3
+        ]
+      },
+      "baseline": {
+        "frames": 298,
+        "p50": 11.9,
+        "p95": 26.9,
+        "p99": 32.6,
+        "max": 57,
+        "mean": 16.75,
+        "over_16_6ms": 148,
+        "over_25ms": 49,
+        "pairs": {
+          "pairs": 149,
+          "short_mean": 9.53,
+          "long_mean": 23.98,
+          "alternation": 1
+        },
+        "tail_ms": [
+          25.1,
+          25.1,
+          25.3,
+          25.4,
+          25.4,
+          25.5,
+          25.5,
+          25.5,
+          25.5,
+          25.5,
+          25.7,
+          25.8,
+          25.8,
+          25.8,
+          26.1,
+          26.2,
+          26.3,
+          26.3,
+          26.5,
+          26.5,
+          26.5,
+          26.6,
+          26.6,
+          26.6,
+          26.6,
+          26.6,
+          26.6,
+          26.7,
+          26.7,
+          26.8,
+          26.8,
+          26.8,
+          26.9,
+          26.9,
+          26.9,
+          26.9,
+          27,
+          27,
+          27,
+          27,
+          27,
+          27.1,
+          27.1,
+          28.2,
+          28.4,
+          32,
+          32.6,
+          37.2,
+          57
+        ]
+      },
+      "drag": {
+        "frames": 293,
+        "p50": 16.67,
+        "p95": 29.9,
+        "p99": 61.6,
+        "max": 66.8,
+        "mean": 17.02,
+        "over_16_6ms": 148,
+        "over_25ms": 41,
+        "pairs": {
+          "pairs": 146,
+          "short_mean": 10.13,
+          "long_mean": 23.97,
+          "alternation": 0.95
+        },
+        "tail_ms": [
+          25.1,
+          25.1,
+          25.1,
+          25.2,
+          25.2,
+          25.3,
+          25.5,
+          25.6,
+          25.7,
+          25.8,
+          25.9,
+          26.6,
+          26.6,
+          26.7,
+          26.9,
+          27.4,
+          27.5,
+          27.5,
+          27.7,
+          27.8,
+          28.2,
+          28.3,
+          28.4,
+          29.4,
+          29.4,
+          29.6,
+          29.9,
+          30.5,
+          31.7,
+          33,
+          33,
+          33.33,
+          34.9,
+          38.5,
+          50.6,
+          53.3,
+          56,
+          58,
+          61.6,
+          65.2,
+          66.8
+        ],
+        "tail": [
+          {
+            "ms": 27.5,
+            "at_ms": 69.4,
+            "since_send_ms": 90
+          },
+          {
+            "ms": 53.3,
+            "at_ms": 132.2,
+            "since_send_ms": 2.7
+          },
+          {
+            "ms": 56,
+            "at_ms": 199.2,
+            "since_send_ms": 69.7
+          },
+          {
+            "ms": 26.7,
+            "at_ms": 465.3,
+            "since_send_ms": 24.8
+          },
+          {
+            "ms": 34.9,
+            "at_ms": 656.7,
+            "since_send_ms": 66.3
+          },
+          {
+            "ms": 29.4,
+            "at_ms": 906.4,
+            "since_send_ms": 14.7
+          },
+          {
+            "ms": 29.9,
+            "at_ms": 1216.6,
+            "since_send_ms": 22.7
+          },
+          {
+            "ms": 26.6,
+            "at_ms": 1275.3,
+            "since_send_ms": 81.4
+          },
+          {
+            "ms": 29.4,
+            "at_ms": 1728.8,
+            "since_send_ms": 80.7
+          },
+          {
+            "ms": 65.2,
+            "at_ms": 1951.4,
+            "since_send_ms": 148.6
+          },
+          {
+            "ms": 50.6,
+            "at_ms": 2012.1,
+            "since_send_ms": 50.8
+          },
+          {
+            "ms": 25.2,
+            "at_ms": 2082.3,
+            "since_send_ms": 121
+          },
+          {
+            "ms": 25.6,
+            "at_ms": 2277.8,
+            "since_send_ms": 16
+          },
+          {
+            "ms": 31.7,
+            "at_ms": 2341.9,
+            "since_send_ms": 80.1
+          },
+          {
+            "ms": 26.6,
+            "at_ms": 2378.6,
+            "since_send_ms": 116.8
+          },
+          {
+            "ms": 25.3,
+            "at_ms": 2476.8,
+            "since_send_ms": 58.1
+          },
+          {
+            "ms": 26.9,
+            "at_ms": 2577.4,
+            "since_send_ms": 6.3
+          },
+          {
+            "ms": 33.33,
+            "at_ms": 2675.43,
+            "since_send_ms": 104.33
+          },
+          {
+            "ms": 33,
+            "at_ms": 2781.6,
+            "since_send_ms": 60.3
+          },
+          {
+            "ms": 28.3,
+            "at_ms": 2885.7,
+            "since_send_ms": 13.5
+          },
+          {
+            "ms": 61.6,
+            "at_ms": 3023.4,
+            "since_send_ms": 0.2
+          },
+          {
+            "ms": 29.6,
+            "at_ms": 3091.5,
+            "since_send_ms": 68.3
+          },
+          {
+            "ms": 25.1,
+            "at_ms": 3126,
+            "since_send_ms": 102.8
+          },
+          {
+            "ms": 28.2,
+            "at_ms": 3164.4,
+            "since_send_ms": 141.2
+          },
+          {
+            "ms": 27.7,
+            "at_ms": 3270.3,
+            "since_send_ms": 96.4
+          },
+          {
+            "ms": 30.5,
+            "at_ms": 3341.2,
+            "since_send_ms": 17.5
+          },
+          {
+            "ms": 27.8,
+            "at_ms": 3446.3,
+            "since_send_ms": 122.6
+          },
+          {
+            "ms": 25.2,
+            "at_ms": 3481.1,
+            "since_send_ms": 7
+          },
+          {
+            "ms": 25.1,
+            "at_ms": 3585.7,
+            "since_send_ms": 111.6
+          },
+          {
+            "ms": 66.8,
+            "at_ms": 3688.8,
+            "since_send_ms": 51.3
+          },
+          {
+            "ms": 27.5,
+            "at_ms": 3793.1,
+            "since_send_ms": 3.2
+          },
+          {
+            "ms": 25.5,
+            "at_ms": 3891.5,
+            "since_send_ms": 101.6
+          },
+          {
+            "ms": 33,
+            "at_ms": 4093.6,
+            "since_send_ms": 1.3
+          },
+          {
+            "ms": 25.9,
+            "at_ms": 4192.5,
+            "since_send_ms": 100.2
+          },
+          {
+            "ms": 38.5,
+            "at_ms": 4329.6,
+            "since_send_ms": 83.6
+          },
+          {
+            "ms": 27.4,
+            "at_ms": 4398.6,
+            "since_send_ms": 0.2
+          },
+          {
+            "ms": 25.1,
+            "at_ms": 4589.9,
+            "since_send_ms": 39.4
+          },
+          {
+            "ms": 28.4,
+            "at_ms": 4652,
+            "since_send_ms": 101.5
+          },
+          {
+            "ms": 58,
+            "at_ms": 4719.7,
+            "since_send_ms": 16.1
+          },
+          {
+            "ms": 25.8,
+            "at_ms": 4849.2,
+            "since_send_ms": 145.6
+          },
+          {
+            "ms": 25.7,
+            "at_ms": 4947.1,
+            "since_send_ms": 25.7
+          }
+        ]
+      },
+      "sends": {
+        "count": 34,
+        "min": 0,
+        "max": 1.45,
+        "last": 1,
+        "mean_gap_ms": 149.76,
+        "densities": [
+          0.95,
+          0.85,
+          0.75,
+          0.6,
+          0.5,
+          0.35,
+          0.25,
+          0.1,
+          0,
+          0.1,
+          0.25,
+          0.35,
+          0.5,
+          0.6,
+          0.75,
+          0.85,
+          0.95,
+          1.1,
+          1.2,
+          1.35,
+          1.45,
+          1.4,
+          1.3,
+          1.2,
+          1.05,
+          0.95,
+          0.8,
+          0.7,
+          0.55,
+          0.55,
+          0.7,
+          0.8,
+          0.9,
+          1
+        ]
+      },
+      "still_0": {
+        "frames": 320,
+        "p50": 16.67,
+        "p95": 32.5,
+        "p99": 51.5,
+        "max": 60.9,
+        "mean": 15.67,
+        "over_16_6ms": 160,
+        "over_25ms": 26,
+        "pairs": {
+          "pairs": 160,
+          "short_mean": 8.73,
+          "long_mean": 22.61,
+          "alternation": 1
+        },
+        "tail_ms": [
+          27.9,
+          28,
+          28.1,
+          28.2,
+          28.3,
+          28.4,
+          28.9,
+          29.5,
+          31.5,
+          32.5,
+          32.5,
+          32.6,
+          32.6,
+          32.6,
+          32.7,
+          32.8,
+          33,
+          33.7,
+          34,
+          46.6,
+          50.1,
+          51.4,
+          51.5,
+          52,
+          60.6,
+          60.9
+        ]
+      },
+      "still_150": {
+        "frames": 259,
+        "p50": 11.3,
+        "p95": 49.6,
+        "p99": 63.5,
+        "max": 68.4,
+        "mean": 19.3,
+        "over_16_6ms": 127,
+        "over_25ms": 88,
+        "pairs": {
+          "pairs": 129,
+          "short_mean": 9.32,
+          "long_mean": 29.24,
+          "alternation": 0.97
+        },
+        "tail_ms": [
+          25.1,
+          25.1,
+          25.1,
+          25.1,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.2,
+          25.3,
+          25.3,
+          25.3,
+          25.4,
+          25.4,
+          25.4,
+          25.4,
+          25.4,
+          25.5,
+          25.5,
+          25.5,
+          25.6,
+          25.7,
+          25.9,
+          26,
+          26.1,
+          26.1,
+          26.2,
+          26.2,
+          26.2,
+          26.2,
+          26.3,
+          26.3,
+          26.4,
+          26.5,
+          26.6,
+          26.9,
+          27.1,
+          27.5,
+          27.6,
+          27.8,
+          27.8,
+          27.9,
+          28.1,
+          28.1,
+          28.1,
+          28.1,
+          28.1,
+          28.2,
+          28.3,
+          28.3,
+          28.4,
+          28.4,
+          29,
+          29,
+          29.1,
+          29.2,
+          29.2,
+          29.2,
+          29.3,
+          29.3,
+          29.4,
+          29.5,
+          29.5,
+          29.6,
+          29.6,
+          29.6,
+          29.6,
+          29.7,
+          30.4,
+          31.5,
+          33.8,
+          49.6,
+          59.1,
+          59.5,
+          60.3,
+          61.5,
+          61.7,
+          61.9,
+          62.1,
+          63,
+          63.2,
+          63.5,
+          63.8,
+          68.4
+        ]
+      },
+      "before": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 0.9,
+          "last_swap_ms": 0
+        }
+      },
+      "after": {
+        "tiles": 317,
+        "tier": "high",
+        "tier_changes": 0,
+        "entities": 569,
+        "pieces": 0,
+        "grass": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 0.9,
+          "last_swap_ms": 0
+        }
+      },
+      "rebuild": {
+        "uploads_delta": 0,
+        "groups_delta": 0,
+        "instances_delta": 0,
+        "tier_changes_delta": 0,
+        "tiles_delta": 0,
+        "entities_delta": 0,
+        "last_swap_ms_after": 0,
+        "none": true
+      },
+      "counts": {
+        "at_100": {
+          "density": 1,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 179574,
+          "triangles": 1077444,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 0.9,
+          "last_swap_ms": 0
+        },
+        "at_150": {
+          "density": 1.5,
+          "distance": 1,
+          "status": "on",
+          "groups": 25,
+          "blades": 269117,
+          "triangles": 1614702,
+          "instances": 269117,
+          "mesh_bytes": 8611900,
+          "uploads": 25,
+          "last_build_ms": 0.9,
+          "last_swap_ms": 0
+        },
+        "bytes_per_group": 344476
+      },
+      "build": {
+        "at_100": {
+          "groups_built": 50,
+          "frames_building": 33,
+          "slowest_tile_per_frame_ms": {
+            "p50": 2.6,
+            "p95": 2.9,
+            "max": 2.9,
+            "mean": 2.34
+          },
+          "grass_work_per_frame_ms": {
+            "p50": 3.6,
+            "p95": 4.9,
+            "max": 5.4,
+            "mean": 3.48
+          },
+          "far": {
+            "density": 1,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 615126,
+            "triangles": 3690756,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 75,
+            "last_build_ms": 1.3,
+            "last_swap_ms": 0
+          }
+        },
+        "at_150": {
+          "groups_built": 42,
+          "frames_building": 26,
+          "slowest_tile_per_frame_ms": {
+            "p50": 2.5,
+            "p95": 2.8,
+            "max": 2.9,
+            "mean": 2.22
+          },
+          "grass_work_per_frame_ms": {
+            "p50": 3.5,
+            "p95": 4.6,
+            "max": 5.5,
+            "mean": 3.39
+          },
+          "far": {
+            "density": 1.5,
+            "distance": 2,
+            "status": "on",
+            "groups": 75,
+            "blades": 922071,
+            "triangles": 5532426,
+            "instances": 922071,
+            "mesh_bytes": 29506428,
+            "uploads": 117,
+            "last_build_ms": 1.2,
+            "last_swap_ms": 0
+          }
+        }
+      },
+      "console_errors": [],
+      "load_before": 3.0673828125,
+      "load_after": 2.705078125,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "runs": 1,
+    "still_closed_p95_median": 53.2,
+    "baseline_p95_median": 26.9,
+    "drag_p95_median": 29.9,
+    "baseline_over_25ms": [
+      49
+    ],
+    "drag_over_25ms": [
+      41
+    ],
+    "still_0_p95_median": 32.5,
+    "still_150_p95_median": 49.6,
+    "drag_minus_baseline_p95_ms": [
+      3
+    ],
+    "drag_minus_baseline_max_ms": [
+      9.8
+    ],
+    "drag_extra_over_25ms": [
+      -8
+    ],
+    "set_grass_sends": [
+      34
+    ],
+    "no_rebuild": true
+  }
+}

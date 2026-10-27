@@ -1253,7 +1253,8 @@ pub type Tri = [[f32; 3]; 3];
 /// bucketed on a 1 m grid.
 pub struct Surface {
     slots: Vec<String>,
-    tris: Vec<(Tri, u16)>,
+    /// Each triangle with its doubled signed (x, z) area, which `top` divides by.
+    tris: Vec<(Tri, f32, u16)>,
     buckets: Vec<Vec<u32>>,
 }
 
@@ -1289,7 +1290,7 @@ impl Surface {
                 }
             } as u16;
             let i = tris.len() as u32;
-            tris.push((t, slot));
+            tris.push((t, d, slot));
             let lo = |k: usize| bucket(t.iter().map(|p| p[k]).fold(f32::MAX, f32::min));
             let hi = |k: usize| bucket(t.iter().map(|p| p[k]).fold(f32::MIN, f32::max));
             for bz in lo(2)..=hi(2) {
@@ -1305,14 +1306,14 @@ impl Surface {
         }
     }
 
-    fn top(&self, x: f32, z: f32) -> Option<(f32, u16)> {
+    /// Height and slot index ([`Surface::slots`]) of the topmost upward triangle over (x, z).
+    pub(crate) fn top(&self, x: f32, z: f32) -> Option<(f32, u16)> {
         if x.abs() >= EXTENT || z.abs() >= EXTENT {
             return None;
         }
         let mut best: Option<(f32, u16)> = None;
         for &i in &self.buckets[bucket(z) * BUCKETS + bucket(x)] {
-            let ([a, b, c], slot) = self.tris[i as usize];
-            let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+            let ([a, b, c], d, slot) = self.tris[i as usize];
             let u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
             let v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
             if u < -1e-5 || v < -1e-5 || u + v > 1.0 + 1e-5 {
@@ -1330,6 +1331,30 @@ impl Surface {
     pub fn at(&self, x: f32, z: f32) -> Option<(f32, &str)> {
         self.top(x, z)
             .map(|(h, s)| (h, self.slots[s as usize].as_str()))
+    }
+
+    /// The slot names, indexed by the slot index [`Surface::top`] returns.
+    pub(crate) fn slots(&self) -> &[String] {
+        &self.slots
+    }
+
+    /// Per bucket of the grid [`Surface::top`] searches, whether any of its triangles passes
+    /// `keep` (given its slot index and corners).
+    pub(crate) fn buckets_where(&self, keep: impl Fn(u16, &Tri) -> bool) -> Vec<bool> {
+        self.buckets
+            .iter()
+            .map(|b| {
+                b.iter().any(|&i| {
+                    let (t, _, slot) = &self.tris[i as usize];
+                    keep(*slot, t)
+                })
+            })
+            .collect()
+    }
+
+    /// The bucket [`Surface::top`] searches for (x, z), `None` where it finds nothing.
+    pub(crate) fn bucket_at(x: f32, z: f32) -> Option<usize> {
+        (x.abs() < EXTENT && z.abs() < EXTENT).then(|| bucket(z) * BUCKETS + bucket(x))
     }
 }
 
@@ -1726,6 +1751,17 @@ impl Rng {
 
     pub(crate) fn unit(&mut self) -> f32 {
         (self.next() >> 40) as f32 / (1u64 << 24) as f32
+    }
+
+    /// The `unit` the `k`th next draw (from 0) would return, without drawing: SplitMix64's state
+    /// steps by a constant, so a draw can be made out of order.
+    pub(crate) fn unit_at(&self, k: u64) -> f32 {
+        Rng(self.0.wrapping_add(k.wrapping_mul(0x9E37_79B9_7F4A_7C15))).unit()
+    }
+
+    /// Steps past the next `n` draws, as `n` calls to `next` would.
+    pub(crate) fn skip(&mut self, n: u64) {
+        self.0 = self.0.wrapping_add(n.wrapping_mul(0x9E37_79B9_7F4A_7C15));
     }
 
     fn below(&mut self, n: usize) -> usize {
@@ -2447,6 +2483,64 @@ mod tests {
 
     fn prepared(def: &TileDef) -> Option<Prepared> {
         prepare(def, &catalog(), &mut |id| lod0(id))
+    }
+
+    /// `Surface::top`, with each triangle's divisor found once in `Surface::new`, answers as a scan
+    /// of every triangle whose (x, z) box meets the point's 1 m bucket, in order, computing it.
+    #[test]
+    fn top_matches_a_scan_of_its_bucket() {
+        let c = catalog();
+        for id in [
+            "meadow",
+            "road_junction",
+            "rail_road_crossing",
+            "river_rail_bridge",
+            "beach",
+        ] {
+            let s = prepared(c.get(id).unwrap()).unwrap().surface;
+            let scan = |x: f32, z: f32| {
+                if x.abs() >= EXTENT || z.abs() >= EXTENT {
+                    return None;
+                }
+                let mut best: Option<(f32, u16)> = None;
+                for ([a, b, cc], _, slot) in &s.tris {
+                    let t = [*a, *b, *cc];
+                    let lo = |k: usize| bucket(t.iter().map(|p| p[k]).fold(f32::MAX, f32::min));
+                    let hi = |k: usize| bucket(t.iter().map(|p| p[k]).fold(f32::MIN, f32::max));
+                    if !(lo(0)..=hi(0)).contains(&bucket(x))
+                        || !(lo(2)..=hi(2)).contains(&bucket(z))
+                    {
+                        continue;
+                    }
+                    let d = (b[0] - a[0]) * (cc[2] - a[2]) - (cc[0] - a[0]) * (b[2] - a[2]);
+                    let u = ((x - a[0]) * (cc[2] - a[2]) - (cc[0] - a[0]) * (z - a[2])) / d;
+                    let v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+                    if u < -1e-5 || v < -1e-5 || u + v > 1.0 + 1e-5 {
+                        continue;
+                    }
+                    let y = a[1] + u * (b[1] - a[1]) + v * (cc[1] - a[1]);
+                    if best.is_none_or(|(h, _)| y > h) {
+                        best = Some((y, *slot));
+                    }
+                }
+                best
+            };
+            let mut rng = Rng(7);
+            for _ in 0..20_000 {
+                let (x, z) = (rng.unit() * 34.0 - 17.0, rng.unit() * 34.0 - 17.0);
+                assert_eq!(s.top(x, z), scan(x, z), "{id} at ({x}, {z})");
+            }
+            // Points on and beside the bucket edges and quarter lines.
+            for k in 0..=(EXTENT * 8.0) as i32 {
+                let v = k as f32 * 0.25 - EXTENT;
+                for e in [-1e-4, 0.0, 1e-4] {
+                    for w in [-7.3, 0.05, 11.9] {
+                        assert_eq!(s.top(v + e, w), scan(v + e, w), "{id} at ({}, {w})", v + e);
+                        assert_eq!(s.top(w, v + e), scan(w, v + e), "{id} at ({w}, {})", v + e);
+                    }
+                }
+            }
+        }
     }
 
     fn rule(piece: &str, density: f32) -> ScatterRule {

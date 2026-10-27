@@ -524,6 +524,8 @@ export interface GrassState {
   build_radius: number;
   /** The slowest single tile build (seeded set and instances, ms) in the latest frame that built one. */
   last_build_ms: number;
+  /** The whole grass work (ms) of the latest frame that built a tile: every tile's ground, exclusions, build, group and fingerprint. */
+  last_frame_build_ms: number;
   /** The slowest single density change (a group's drawn count, ms) in the latest frame that changed one. */
   last_swap_ms: number;
   tiles: GrassTile[];
@@ -794,6 +796,7 @@ export const STATE_FIELDS = {
     fade: true,
     build_radius: true,
     last_build_ms: true,
+    last_frame_build_ms: true,
     last_swap_ms: true,
     tiles: true,
   }),

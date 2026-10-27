@@ -6,7 +6,14 @@
 //! carry the `KitMaterial` binding (group 3) and are binned as `NonMesh` items, group 2 binds
 //! the record + id buffers (`hex_render::kit_instances`), and the kit shaders' `KIT_INSTANCED`
 //! def replaces the per-mesh uniform with the record.
-use std::{collections::HashMap, ops::Range, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::Range,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 
 use bevy::{
     asset::{UntypedAssetId, uuid::Uuid},
@@ -211,6 +218,73 @@ fn draw_index(meta_index: usize, band: bool) -> usize {
 pub struct KitLodDebug {
     pub force: Option<u8>,
     pub tint: bool,
+}
+
+/// One view's instanced kit work in a census frame (`diag.kit_queue`): what the queue culled,
+/// binned and drew, counted on the CPU, so a change's work can be compared without timing.
+#[derive(Clone, Debug, Default)]
+pub struct KitQueueView {
+    /// `main` or `cascade<i>`.
+    pub view: String,
+    /// The screen-aware cascade skip (O5) left the cascade without kit draws.
+    pub skipped: bool,
+    /// Culling cells (tiles) in the view's frustum.
+    pub cells_visible: u32,
+    pub draws: u32,
+    pub instances: u64,
+    /// Vertices the draws fetch (instances times the mesh's vertices).
+    pub vertices: u64,
+    /// Vertex buffer bytes behind them (vertices times the mesh's interleaved stride).
+    pub vertex_bytes: u64,
+    /// The share of `vertex_bytes` that is COLOR_0 (16 bytes a vertex on the coalesced meshes).
+    pub color_bytes: u64,
+    /// Indices drawn (instances times the mesh's indices): three per triangle.
+    pub indices: u64,
+}
+
+/// The instanced kit's queue census (`diag.kit_queue`).
+#[derive(Clone, Debug, Default)]
+pub struct KitQueueStats {
+    pub slots: u32,
+    pub cells: u32,
+    /// Group-2 bind groups created by the frame's prepare (one per (slot, LOD) when rebuilt).
+    pub bind_groups_created: u32,
+    pub views: Vec<KitQueueView>,
+}
+
+static QUEUE_STATS_REQUESTED: AtomicBool = AtomicBool::new(false);
+static QUEUE_STATS: Mutex<Option<KitQueueStats>> = Mutex::new(None);
+
+/// Asks the next queue for a [`KitQueueStats`] census (the diag census frame does).
+pub fn request_queue_stats() {
+    QUEUE_STATS_REQUESTED.store(true, Ordering::Relaxed);
+}
+
+/// The last census taken, if any.
+pub fn queue_stats() -> Option<KitQueueStats> {
+    QUEUE_STATS.lock().ok().and_then(|s| s.clone())
+}
+
+/// Mesh facts per `draw_index` for the census: vertices, indices, stride, COLOR_0.
+type DrawMeshInfo = HashMap<usize, (u64, u64, u64, bool)>;
+
+/// Sums a view's `ranges` into a census row.
+fn view_census(view: String, ranges: &[(usize, Range<u32>)], info: &DrawMeshInfo) -> KitQueueView {
+    let mut v = KitQueueView {
+        view,
+        draws: ranges.len() as u32,
+        ..default()
+    };
+    for (draw, r) in ranges {
+        let n = u64::from(r.end - r.start);
+        let (verts, indices, stride, color) = info.get(draw).copied().unwrap_or_default();
+        v.instances += n;
+        v.vertices += n * verts;
+        v.vertex_bytes += n * verts * stride;
+        v.color_bytes += if color { n * verts * 16 } else { 0 };
+        v.indices += n * indices;
+    }
+    v
 }
 
 /// LOD `lod`'s band edges `[x, y, z, w]` in metres from the camera, the per-entity
@@ -698,6 +772,10 @@ struct KitGpu {
     /// Slot draws binned last frame. Bevy's binned phases retain items across frames until
     /// `remove`d, so each queue first unbins these or culled and despawned slots stay binned.
     queued: Vec<MainEntity>,
+    /// The (record, metadata) buffers `bind_groups` bind.
+    bound: Option<(BufferId, BufferId)>,
+    /// Bind groups the last prepare created (the queue census reports it).
+    bind_groups_made: u32,
 }
 
 impl Default for KitGpu {
@@ -713,6 +791,8 @@ impl Default for KitGpu {
             draws: HashMap::default(),
             parts: Vec::new(),
             queued: Vec::new(),
+            bound: None,
+            bind_groups_made: 0,
         }
     }
 }
@@ -1176,6 +1256,14 @@ fn prepare_kit_bind_group(
     else {
         return;
     };
+    // The bind groups bind only the record and metadata buffers, so they hold until either is
+    // recreated (a new instance set or a tint change). Rebuilt every frame, they cost one
+    // `createBindGroup` per (slot, LOD) per frame, a call into the browser's GPU process on the web.
+    let key = (pieces.id(), meta.id());
+    if gpu.bound == Some(key) && !gpu.bind_groups.is_empty() {
+        gpu.bind_groups_made = 0;
+        return;
+    }
     let layout = pipeline_cache.get_bind_group_layout(&pipeline.instances);
     let entries = |offset: u64| {
         [
@@ -1203,6 +1291,8 @@ fn prepare_kit_bind_group(
             )
         })
         .collect();
+    gpu.bound = Some(key);
+    gpu.bind_groups_made = gpu.bind_groups.len() as u32;
 }
 // ---------------------------------------------------------------------------------------------
 // Queue.
@@ -1334,6 +1424,29 @@ fn queue_kit(
     if draws.is_empty() {
         return;
     }
+    let census = QUEUE_STATS_REQUESTED.swap(false, Ordering::Relaxed);
+    let mut stats = KitQueueStats::default();
+    let mut info = DrawMeshInfo::default();
+    if census {
+        for dr in &draws {
+            let Some(m) = render_meshes.get(dr.mesh) else {
+                continue;
+            };
+            let indices = match &m.buffer_info {
+                RenderMeshBufferInfo::Indexed { count, .. } => u64::from(*count),
+                RenderMeshBufferInfo::NonIndexed => u64::from(m.vertex_count),
+            };
+            info.insert(
+                dr.slot_idx,
+                (
+                    u64::from(m.vertex_count),
+                    indices,
+                    m.layout.0.layout().array_stride,
+                    m.layout.0.contains(Mesh::ATTRIBUTE_COLOR),
+                ),
+            );
+        }
+    }
     let d = scene.0.clone();
     gpu.draws.clear();
     gpu.ids.clear();
@@ -1425,6 +1538,15 @@ fn queue_kit(
         let ranges = kit_view_ranges(&d, &lods, &parts, &frustum, false, gpu.ids.values_mut());
         for (slot_idx, r) in &ranges {
             gpu.draws.insert((ve, *slot_idx), r.clone());
+        }
+        if census {
+            let mut v = view_census("main".into(), &ranges, &info);
+            v.cells_visible = d
+                .chunks
+                .iter()
+                .filter(|c| frustum.intersects_obb(&c.aabb, &Affine3A::IDENTITY, true, true))
+                .count() as u32;
+            stats.views.push(v);
         }
         // Main pass: opaque and alpha-mask phases.
         if let Some(phase) = opaque_phases.get_mut(&view.retained_view_entity) {
@@ -1556,10 +1678,17 @@ fn queue_kit(
         }
     }
     for (ve, view, light) in &lights {
-        let LightEntity::Directional { .. } = light else {
+        let LightEntity::Directional { cascade_index, .. } = light else {
             continue;
         };
         if unsampled.contains(&ve) {
+            if census {
+                stats.views.push(KitQueueView {
+                    view: format!("cascade{cascade_index}"),
+                    skipped: true,
+                    ..default()
+                });
+            }
             continue;
         }
         let Some(phase) = shadow_phases.get_mut(&view.retained_view_entity) else {
@@ -1571,6 +1700,15 @@ fn queue_kit(
         let ranges = kit_view_ranges(&d, &lods, &parts, &frustum, true, gpu.ids.values_mut());
         for (slot_idx, r) in &ranges {
             gpu.draws.insert((ve, *slot_idx), r.clone());
+        }
+        if census {
+            let mut v = view_census(format!("cascade{cascade_index}"), &ranges, &info);
+            v.cells_visible = d
+                .chunks
+                .iter()
+                .filter(|c| frustum.intersects_obb(&c.aabb, &Affine3A::IDENTITY, false, true))
+                .count() as u32;
+            stats.views.push(v);
         }
         let key = MeshPipelineKey::DEPTH_PREPASS | MeshPipelineKey::UNCLIPPED_DEPTH_ORTHO;
         for dr in &draws {
@@ -1604,6 +1742,14 @@ fn queue_kit(
     }
     gpu.queued = draws.iter().map(|dr| dr.main_entity).collect();
     gpu.parts = parts;
+    if census {
+        stats.slots = d.slots.len() as u32;
+        stats.cells = d.chunks.len() as u32;
+        stats.bind_groups_created = gpu.bind_groups_made;
+        if let Ok(mut s) = QUEUE_STATS.lock() {
+            *s = Some(stats);
+        }
+    }
     if gpu.ids.is_empty() {
         gpu.ids.push(0);
     }

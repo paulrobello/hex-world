@@ -1,0 +1,160 @@
+{
+ "note": "Draws over every pass and cascade (native). world20: docs/checkpoints/lod-band-instanced/draws.json at 1600x1000 with grass; world2066: docs/checkpoints/far-cascade-lod/world2066.json at 2560x1440, High, grass off, --load docs/perf/post-arc001-2026-10-16/local-world.hexworld.",
+ "before": {
+  "commit": "041ad32",
+  "world20": {
+   "overview": {
+    "draws": 335,
+    "by_view": {
+     "main": 218,
+     "cascade0": 0,
+     "cascade1": 0,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 291,
+    "kit_slots": 97
+   },
+   "forest-cluster": {
+    "draws": 436,
+    "by_view": {
+     "main": 212,
+     "cascade0": 0,
+     "cascade1": 107,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 388,
+    "kit_slots": 97
+   },
+   "meadow": {
+    "draws": 497,
+    "by_view": {
+     "main": 224,
+     "cascade0": 49,
+     "cascade1": 107,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 437,
+    "kit_slots": 97
+   },
+   "band": {
+    "draws": 640,
+    "by_view": {
+     "main": 326,
+     "cascade0": 0,
+     "cascade1": 147,
+     "cascade2": 157,
+     "cascade3": 10
+    },
+    "kit_draws": 596,
+    "kit_slots": 97
+   }
+  },
+  "world2066": {
+   "close": {
+    "draws": 1535,
+    "by_view": {
+     "main": 568,
+     "cascade0": 71,
+     "cascade1": 179,
+     "cascade2": 324,
+     "cascade3": 393
+    },
+    "kit_draws": 1474,
+    "kit_slots": 127
+   },
+   "overview": {
+    "draws": 923,
+    "by_view": {
+     "main": 414,
+     "cascade0": 0,
+     "cascade1": 0,
+     "cascade2": 237,
+     "cascade3": 272
+    },
+    "kit_draws": 871,
+    "kit_slots": 127
+   }
+  }
+ },
+ "after": {
+  "world20": {
+   "overview": {
+    "draws": 335,
+    "by_view": {
+     "main": 218,
+     "cascade0": 0,
+     "cascade1": 0,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 291,
+    "kit_slots": 97
+   },
+   "forest-cluster": {
+    "draws": 436,
+    "by_view": {
+     "main": 212,
+     "cascade0": 0,
+     "cascade1": 107,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 388,
+    "kit_slots": 97
+   },
+   "meadow": {
+    "draws": 497,
+    "by_view": {
+     "main": 224,
+     "cascade0": 49,
+     "cascade1": 107,
+     "cascade2": 107,
+     "cascade3": 10
+    },
+    "kit_draws": 437,
+    "kit_slots": 97
+   },
+   "band": {
+    "draws": 590,
+    "by_view": {
+     "main": 326,
+     "cascade0": 0,
+     "cascade1": 97,
+     "cascade2": 157,
+     "cascade3": 10
+    },
+    "kit_draws": 546,
+    "kit_slots": 97
+   }
+  },
+  "world2066": {
+   "close": {
+    "draws": 1235,
+    "by_view": {
+     "main": 568,
+     "cascade0": 71,
+     "cascade1": 94,
+     "cascade2": 232,
+     "cascade3": 270
+    },
+    "kit_draws": 1174,
+    "kit_slots": 127
+   },
+   "overview": {
+    "draws": 831,
+    "by_view": {
+     "main": 414,
+     "cascade0": 0,
+     "cascade1": 0,
+     "cascade2": 145,
+     "cascade3": 272
+    },
+    "kit_draws": 779,
+    "kit_slots": 127
+   }
+  }
+ }
+}

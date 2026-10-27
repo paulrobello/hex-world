@@ -26,6 +26,8 @@ mod chunks;
 mod coalesce;
 pub mod ghost;
 pub mod grass;
+#[cfg(test)]
+mod grass_bench;
 pub mod grass_gpu;
 pub mod packs;
 mod plugins;

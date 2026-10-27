@@ -60,12 +60,28 @@ const base = `http://127.0.0.1:${server.address().port}/`;
 
 const round2 = (x) => Math.round(x * 100) / 100;
 const pct = (s, p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];
+// Consecutive frame intervals taken two at a time, in order: the mean of each pair's shorter and
+// longer interval, and `alternation`, the share of pairs whose shorter interval is at most the
+// window's lower median and longer one at least its upper median, and unequal (near 1 when frames
+// alternate short and long, about 0.5 when long frames come in runs, 0 when frames are even). When frames alternate at a fixed pair period, main-thread work saved moves from the
+// short frame to the long one: the mean holds, p95 (the long frames) rises, the short frame falls
+// by the work saved.
+export function pairStats(ms) {
+  const pairs = [];
+  for (let i = 0; i + 1 < ms.length; i += 2) pairs.push([Math.min(ms[i], ms[i + 1]), Math.max(ms[i], ms[i + 1])]);
+  if (!pairs.length) return null;
+  const sorted = [...ms].sort((a, b) => a - b);
+  const lo = sorted[Math.floor((sorted.length - 1) / 2)], hi = sorted[Math.ceil((sorted.length - 1) / 2)];
+  const mean = (v) => round2(v.reduce((a, b) => a + b, 0) / v.length);
+  return { pairs: pairs.length, short_mean: mean(pairs.map(([a]) => a)), long_mean: mean(pairs.map(([, b]) => b)),
+    alternation: round2(pairs.filter(([a, b]) => a < b && a <= lo && b >= hi).length / pairs.length) };
+}
 function stats(ms) {
   const s = [...ms].sort((a, b) => a - b);
   return { frames: s.length, p50: round2(pct(s, 0.5)), p95: round2(pct(s, 0.95)), p99: round2(pct(s, 0.99)),
     max: round2(s.at(-1)), mean: round2(s.reduce((a, b) => a + b, 0) / s.length),
     over_16_6ms: s.filter((x) => x > BUDGET_MS).length, over_25ms: s.filter((x) => x > 25).length,
-    tail_ms: s.filter((x) => x > 25).map(round2) };
+    pairs: pairStats(ms), tail_ms: s.filter((x) => x > 25).map(round2) };
 }
 const grassOf = (st) => ({ density: st.grass.density, distance: st.grass.distance, status: st.grass.status,
   groups: st.grass.groups, blades: st.grass.blades, triangles: st.grass.triangles, instances: st.grass.instances,
@@ -131,7 +147,7 @@ const buildPhase = (page) => page.evaluate(() => new Promise((resolve) => {
   const tick = () => {
     const g = hw.state().grass;
     const built = g.uploads - prev.uploads;
-    if (built > 0) samples.push({ built, ms: g.last_build_ms });
+    if (built > 0) samples.push({ built, ms: g.last_build_ms, frame_ms: g.last_frame_build_ms ?? null });
     still = g.uploads === prev.uploads && g.groups === prev.groups ? still + 1 : 0;
     prev = g;
     if (still >= 120) resolve({ before: g0, after: g, samples });
@@ -154,12 +170,17 @@ const dropPhase = (page) => page.evaluate(() => new Promise((resolve) => {
 }));
 // `last_build_ms` is the slowest single tile build (seeded set and instance records) of the latest
 // frame that built one; the upload counter can trail the build by a frame, so each sample is that
-// frame's slowest tile, an upper bound on the tiles beside it.
+// frame's slowest tile, an upper bound on the tiles beside it. `last_frame_build_ms` (builds from
+// 2026-10-26 on; null before) is that frame's whole grass work, the span the 4 ms budget holds.
+const msStats = (v) => {
+  const s = [...v].sort((a, b) => a - b);
+  return s.length ? { p50: round2(pct(s, 0.5)), p95: round2(pct(s, 0.95)), max: round2(s.at(-1)),
+    mean: round2(s.reduce((a, b) => a + b, 0) / s.length) } : null;
+};
 function buildStats(p) {
-  const slowest = p.samples.map((s) => s.ms).sort((a, b) => a - b);
   return { groups_built: p.after.uploads - p.before.uploads, frames_building: p.samples.length,
-    slowest_tile_per_frame_ms: slowest.length ? { p50: round2(pct(slowest, 0.5)), p95: round2(pct(slowest, 0.95)),
-      max: round2(slowest.at(-1)), mean: round2(slowest.reduce((a, b) => a + b, 0) / slowest.length) } : null };
+    slowest_tile_per_frame_ms: msStats(p.samples.map((s) => s.ms)),
+    grass_work_per_frame_ms: msStats(p.samples.map((s) => s.frame_ms).filter((m) => m != null)) };
 }
 
 async function run() {
@@ -216,8 +237,10 @@ async function run() {
     const sends = { count: sent.length, min: Math.min(...sent), max: Math.max(...sent), last: sent.at(-1),
       mean_gap_ms: sent.length > 1 ? round2((dragged.sends.at(-1).t - dragged.sends[0].t) / (sent.length - 1)) : null,
       densities: sent };
-    // The throttle sends the latest value at most every 150 ms, so a step through an end may be skipped.
-    if (sends.count < 25 || sends.min > 0.1 || sends.max < 1.4 || sends.last !== 1)
+    // The throttle sends the latest value at most every 150 ms, so a step through an end may be skipped,
+    // and a slower build sends fewer (the 041ad32 arm sent 24 on MiniMac, 2026-10-26): the check is that
+    // the drag reached both ends and settled on 1, not an exact count.
+    if (sends.count < 20 || sends.min > 0.1 || sends.max < 1.4 || sends.last !== 1)
       throw new Error(`the drag did not drive set_grass through the slider: ${JSON.stringify(sends)}`);
     // Let the release's set_grass land, then read the scene once.
     await page.waitForFunction(() => window.hexWorld.state().grass.density === 1, null, { timeout: 10_000, polling: 100 });
