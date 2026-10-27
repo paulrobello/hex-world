@@ -4,15 +4,15 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds batches 27 and 28 (`af963ad`, pushed 19:14Z 2026-10-26, CI watched). `dist/` rebuilt.
+- `main` holds batches 27-32 (`8464de8`, pushed 2026-10-27 02:43Z). `dist/` rebuilt.
 - Batch 28 landed: riverbank stones and reeds are runtime scatter, a seeded 0 to 4 per river tile (owner, 2026-10-26: scatter is never baked into a tile). Five new props (`river_stones`, `_b`, `_c`, `river_reeds`, `_b`); the channel and mouth centres left the manifest; the road and rail bridges and the spring lost their baked dressing (the spring keeps its granite ring and lilies, A21). 41 thumbnails changed. Riverbank card closed. The six removed centres' generators, `assets-source/kit/` and `assets/kit/p1/` folders and their three dress helpers (`_mouth_dress`, `_river_bend_60_dress`, `_river_fork_dress`) are deleted too; `kit-compress.test.mjs` keeps `river_fork_center`'s masks PNG as `scripts/assets/test-fixtures/`, and `kit_gate::no_kit_artifacts_outside_the_manifest` now fails on any such leftover.
 - Batch 27 landed: cars follow at the queue spacing and yield at merges, crossings and yards (`tests/yielding.rs`). Card stays open on criterion 2: no test asserts the 6.9 m spacing for general following yet.
-- Batch 29 landed (`84ca31f`, CI green): beach pebbles and seabed stones as runtime scatter (beach and ocean centres dropped; A24 all yes) and the matte verge bushes (A23 pending).
-- Waiting for macdaddy 01:00-04:00Z 2026-10-27 (booking 01a17a471301, load-tolerant):
-  - Batch 30 in `../hex-world-wt/land-b30` (`bcbb4d7` rebased on batch 29): scripted and thumbs runs ignore live input (the shots-scatter flake, card 01a1798512d7), the thumbs watchdog exits 0 when every image is on disk (card 01a179e9f1c8), queue-spacing assertions (car-yield criterion 2). checkall-ci, thumbs and web-smoke passed. shots-scatter hung in teardown after Exit (killed at 22:16Z, card 01a17a46f7ac). Rerun shots-scatter, then land.
-  - Render (`worktree-agent-aaa39f84d10202f98`, 21106cb): cascade LOD pin and clamp reverted, bind-group cache kept. MiniMac cache-only timing done: no measurable web change. Squash and land.
-  - Grass build (`worktree-agent-ad4d4159bb5bcd17e`, 3c6eacb): the MiniMac pairs re-run confirmed the still-frame p95 cause and the gate held (p95 2.9-3.0 ms). Land it, merge its README by hand, and update PRD 9.1 with the p95.
-  - Then dispatch: the scatter gate on a mixed river, beach and ocean world plus the kit showcase props (card 01a179d801c9), and the teardown-hang watchdog (card 01a17a46f7ac).
+- Batch 32 landed (`8464de8`): native runs end the process once every output is written. This skips a Bevy/winit teardown deadlock: in a forced repro the render thread sat in winit `Window::drop` dispatch_sync while the main thread sat in `RenderAppChannels::drop`; vault note Debugging/bevy-native-exit-deadlock-macos-pipelined-rendering-winit.md. An exit watchdog samples any future hang into `target/exit-hang-<pid>.txt`. Also: the six dead river centres and three helpers are deleted, with an orphan-artifact kit gate; hazel and bramble leaves are matte (A27 look approval pending); river bank reeds and stones are half and half (A22 Q2); the kit showcase holds the coast and bank props; scatter pairs are tracked, and a mixed river/beach/ocean world is in shots-scatter. That world's overview is 548 draws, over the 500 budget, tracked on card 01a17b1967e5 (shared scatter materials).
+- Batch 31 landed (`e1cae5a`, CI green): kit bind-group cache (cascade LOD pin and clamp rejected); grass build 2x faster, web p95 2.9-3.0 ms on MiniMac.
+- Batch 30 landed (`de54703`, CI green): scripted and thumbs runs ignore live window input (the shots-scatter 'held' flake was a stray F key toggling walk mode); thumbs watchdog; car queue-spacing assertions (car-yield card closed).
+- Batch 29 landed (`84ca31f`, CI green): beach and seabed scatter, matte verge bushes.
+- Running (macdaddy booked to 08:00Z 2026-10-27, load-tolerant): the shared scatter materials agent (card 01a17b1967e5) and the frame pacing diagnosis (card 01a179600790). Both hand back MiniMac recipes for the orchestrator to book and run.
+- B1 boulders and B3 lily pads and reed bed: reference sets on main (`assets-source/refs/boulders`, `water_props`); waiting on owner A25 and A26 (open-questions page https://artifacts.pardev.net/a/01a17a68d64b70e1a86e84e65d1362cc). B2 follows.
 - Batch 26: `0ace163`..`c56ee37`; batch 25 is `d908e36`, CI green (run 40324963259).
 - Batch 26 landed: the owner's A16/A17 approvals (21 pieces), the bulldoze dust reverted to its previous size (owner A9), the close-camera MiniMac frame times (`docs/perf/close-camera-draws/`), A3/A18 answers in the PRD.
 - Batch 25 landed: close-camera draws (screen-aware cascade skip, runtime slot coalescing per piece, per-tile culling): 20-tile overview 419 -> 335, forest cluster 633 -> 436, meadow 645 -> 497; MiniMac 2,066-tile close camera -3.7 ms web mean, -4.4 ms native. Cards closed: close-camera draws, draw budget.
@@ -52,9 +52,9 @@ No Blender agents are running (2026-10-26 19:20Z). The scatter-rebuild agents (r
 
 ## Waiting on Paul
 
-- A19: which Blender pieces next (recommended B1 boulders/outcrops and B3 water-surface props, then B2 dry-stone walls).
-- A22: approve the 5 riverbank props and the rebuilt bridges and spring (`docs/checkpoints/riverbank-scatter/sheet.jpg`); raise the reed share (2 reed props to 9 stone clusters on the test stretch)?
-- A23: approve the matte verge bushes (`docs/checkpoints/bush-shine/sheet.jpg`); also matte `shrub_forest` and `shrub_forest_c` (same 0.50-0.64 leaf roughness)?
+- A25 (B1 boulder refs, Q1-Q7) and A26 (B3 lily and reed refs, Q8-Q12) on the open-questions page; each question has a recommended default.
+- A27: approve the matte hazel and bramble shrubs (`docs/checkpoints/shrub-matte/sheet.jpg`).
+- Whether hex-world yields its macdaddy windows to par-term's package-update work (a peer relayed an owner priority directive; not verified).
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
