@@ -1,0 +1,18 @@
+[
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "B1 granite boulders and outcrop (owner A25, 2026-10-27)",
+    "requested": "2026-10-27",
+    "notes": "Pending owner review; not an approval. A runtime scatter prop of the B1 granite set (refs assets-source/refs/boulders, approved A25), in rock_small's granite family, with a unique bake at about 128 px/m. Review the six-view renders in assets-source/kit/boulder_granite/renders/ and the review sheet in docs/checkpoints/boulders/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-27",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved\", 2026-10-27, A30 on the open-questions page, every recommended default): the piece; Q2 O1 the boulders and outcrop lead their tiles' scatter rules; Q3 the thumbnail shifts and the 2 m higher thumbnail look-at; Q4 O1 tiles added to the mixed world so every scatter piece draws; Q5 no outcrop on the coast band, no boulders on beach_outer, the outcrop's 109 px/m bake, small boulders ending at 400 m. Review sheets in docs/checkpoints/boulders/."
+  }
+]

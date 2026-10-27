@@ -129,6 +129,14 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest"
         | "sapling_spruce" => &["forest_base_floor"],
         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
+        // The granite boulders and outcrop (owner A25): the meadow, the forest and oak litter, and
+        // on a coast the grass-to-sand band ([`coast_band`]).
+        "boulder_granite" | "outcrop_granite" => &[
+            "forest_base_floor",
+            "meadow_base_cap",
+            "beach_grass",
+            BEACH_FLOOR,
+        ],
         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
         "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
         "river_stones" | "river_reeds" => &BANK_FLOORS,
@@ -172,6 +180,14 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
     ("log_fallen", &["log_fallen_b", "log_fallen_c"]),
     ("rock_small", &["rock_small_b", "rock_small_c"]),
     (
+        "boulder_granite",
+        &[
+            "boulder_granite_b",
+            "boulder_granite_c",
+            "boulder_granite_d",
+        ],
+    ),
+    (
         "wildflower_clump",
         &["wildflower_clump_b", "wildflower_clump_c"],
     ),
@@ -200,6 +216,8 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
 pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[
     ("bush_verge", &[2, 1, 1]),
     ("wildflower_single", &[9, 9, 9, 9, 4]),
+    // Owner A25: the two small boulders most, the big rounded one rarest.
+    ("boulder_granite", &[3, 3, 2, 1]),
 ];
 
 /// Pick weights that replace [`VARIANT_WEIGHTS`] on a verge tile ([`verge_tile`]): the poppy is 1
@@ -371,8 +389,27 @@ pub fn beach_band(piece: &str) -> Option<BeachBand> {
             thin: 0.0,
             along: true,
         }),
+        // Granite boulders and the outcrop (owner A25, ref-4): the grass-to-sand band, centres
+        // from 3 m landward of the grass line to 1.5 m onto the sand, thinning seaward. Only on a
+        // coast tile ([`coast_band`]); inland they scatter freely.
+        "boulder_granite" | "outcrop_granite" => Some(BeachBand {
+            near: BEACH_TOP_S - 3.0,
+            far: BEACH_TOP_S + 1.5,
+            thin: 0.4,
+            along: false,
+        }),
         _ => None,
     }
+}
+
+/// `piece`'s [`beach_band`] on `def`. A piece that also stands inland (one of its
+/// [`floor_slots`] is an ordinary floor: the granite boulders) keeps its band only on a tile with a
+/// coastline and scatters freely elsewhere; beach-only dressing keeps its band everywhere, so it
+/// never stands off a coast.
+pub fn coast_band(def: &TileDef, piece: &str) -> Option<BeachBand> {
+    let band = beach_band(piece)?;
+    let inland = floor_slots(piece).iter().any(|s| !excluded_slot(s));
+    (!inland || Coastline::of(def, 0).is_some()).then_some(band)
 }
 
 /// The [`excluded_slot`]s a piece may stand on when its [`floor_slots`] list them: the dry sand of
@@ -702,6 +739,41 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "rock_small_c",
         Footprint {
             ground: 1.07,
+            crown: 0.0,
+        },
+    ),
+    (
+        "boulder_granite",
+        Footprint {
+            ground: 1.15,
+            crown: 0.0,
+        },
+    ),
+    (
+        "boulder_granite_b",
+        Footprint {
+            ground: 1.36,
+            crown: 0.0,
+        },
+    ),
+    (
+        "boulder_granite_c",
+        Footprint {
+            ground: 1.8,
+            crown: 0.0,
+        },
+    ),
+    (
+        "boulder_granite_d",
+        Footprint {
+            ground: 2.31,
+            crown: 0.0,
+        },
+    ),
+    (
+        "outcrop_granite",
+        Footprint {
+            ground: 4.25,
             crown: 0.0,
         },
     ),
@@ -1588,7 +1660,7 @@ fn mask(
     let fp = group_footprint(piece);
     let floors = floor_slots(piece);
     let ok_slot: Vec<bool> = surface.slots.iter().map(|s| floor_ok(floors, s)).collect();
-    let beach = beach_band(piece).map(|b| (b, Coastline::of(def, 0)));
+    let beach = coast_band(def, piece).map(|b| (b, Coastline::of(def, 0)));
     let on_floor = |k: usize| raster[k].is_some_and(|(_, s)| ok_slot[s as usize]);
     // The footprint, the half diagonal a dart may land from its cell centre, and the half diagonal
     // from a footprint point to the nearest sample. `stand` then checks the footprint exactly.
@@ -1904,9 +1976,11 @@ pub const BEACH_MAX: usize = 6;
 /// but beach dressing and bank props ([`bank_band`]: the river mouths' banks).
 pub fn beach_family(def: &TileDef) -> bool {
     let rules = &def.props.scatter;
-    rules.iter().any(|r| beach_band(r.piece.as_str()).is_some())
+    rules
+        .iter()
+        .any(|r| coast_band(def, r.piece.as_str()).is_some())
         && rules.iter().all(|r| {
-            beach_band(r.piece.as_str()).is_some() || bank_band(r.piece.as_str()).is_some()
+            coast_band(def, r.piece.as_str()).is_some() || bank_band(r.piece.as_str()).is_some()
         })
 }
 
@@ -2148,7 +2222,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let jitter = scale_jitter(fp);
         let floors = floor_slots(piece);
         let vary = rule.vary.clamp(0.0, 1.0);
-        let beach = beach_band(piece);
+        let beach = coast_band(def, piece);
         let bank = bank_band(piece);
         let water = water_prop(piece);
         let mut n = 0;
@@ -2655,6 +2729,16 @@ mod tests {
         TileCatalog::builtin().unwrap()
     }
 
+    /// The index of `def`'s scatter rule naming `piece` (the pine forest and the meadow lead with
+    /// their granite outcrop and boulders).
+    fn rule_of(def: &TileDef, piece: &str) -> u8 {
+        def.props
+            .scatter
+            .iter()
+            .position(|r| r.piece.as_str() == piece)
+            .unwrap() as u8
+    }
+
     fn glb(id: &str) -> Option<(gltf::Document, Vec<gltf::buffer::Data>)> {
         let m = parse_manifest(MANIFEST).unwrap();
         let e = m.pieces.iter().find(|p| p.id == id)?;
@@ -2979,12 +3063,19 @@ mod tests {
                 for (ri, r) in def.props.scatter.iter().enumerate() {
                     let want = r.density * CAP_AREA / 100.0;
                     let n = l.placed(ri);
-                    assert_eq!(
-                        n as u32,
-                        l.planned[ri],
-                        "{id} {}: shortfall",
-                        r.piece.as_str()
-                    );
+                    // Two granite outcrops (4.25 m reach, so 8.5 m apart inside a 9.3 m reach of
+                    // the centre) do not always fit one tile: at owner A25's 0.2 about 1 tile in
+                    // 64 plans two, and keeps one.
+                    let two_outcrops =
+                        r.piece.as_str() == "outcrop_granite" && l.planned[ri] >= 2 && n >= 1;
+                    if !two_outcrops {
+                        assert_eq!(
+                            n as u32,
+                            l.planned[ri],
+                            "{id} {}: shortfall",
+                            r.piece.as_str()
+                        );
+                    }
                     assert!((n as f32 - want).abs() < 1.0, "{id}: {n} vs {want}");
                     sums[ri] += n;
                     let fp = group_footprint(r.piece.as_str());
@@ -3032,7 +3123,7 @@ mod tests {
         let trees: Vec<Vec2> = l
             .instances
             .iter()
-            .filter(|i| i.rule == 0)
+            .filter(|i| i.rule == rule_of(def, "tree_forest"))
             .map(|i| i.pos.xz())
             .collect();
         let nn: Vec<f32> = trees
@@ -3979,7 +4070,19 @@ mod tests {
                 .iter()
                 .position(|r| r.piece.as_str() == "beach_pebbles")
                 .unwrap_or_else(|| panic!("{id}: a beach_pebbles rule"));
-            assert_eq!(rule + 1, def.props.scatter.len(), "{id}: pebbles last");
+            // The pebbles come last among the beach dressing; only the inland granite boulders
+            // (owner A25), band-limited on a coast, follow them.
+            let inland = def
+                .props
+                .scatter
+                .iter()
+                .filter(|r| family(r.piece.as_str()) == "boulder_granite")
+                .count();
+            assert_eq!(
+                rule + 1 + inland,
+                def.props.scatter.len(),
+                "{id}: pebbles last"
+            );
             let seeds = 256;
             let mut kept = vec![0usize; def.props.scatter.len()];
             let (mut with_pebbles, mut darts) = (0, 0);
@@ -4316,7 +4419,7 @@ mod tests {
             for i in layout(&def, seed, &g)
                 .instances
                 .iter()
-                .filter(|i| i.rule == 0)
+                .filter(|i| i.rule == rule_of(&def, "tree_forest"))
             {
                 assert!(
                     i.pos.xz().length() >= HERO_CROWN * 7.1 + 0.5 - 0.2,
@@ -4523,16 +4626,26 @@ mod tests {
         assert_eq!(
             pieces(pine),
             [
+                "outcrop_granite",
+                "boulder_granite",
+                "log_fallen",
                 "tree_forest",
                 "rock_small",
                 "fern_clump",
-                "log_fallen",
                 "shrub_forest",
                 "sapling_spruce"
             ]
         );
         assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
-        assert_eq!(pieces(oak), ["rock_small", "wildflower_clump", "tree_oak"]);
+        assert_eq!(
+            pieces(oak),
+            [
+                "rock_small",
+                "wildflower_clump",
+                "tree_oak",
+                "boulder_granite"
+            ]
+        );
         assert_eq!(oak.props.hero.len(), 1);
         assert_eq!(oak.props.hero[0].piece.as_str(), "tree_hero_oak");
         let g = prepared(oak).unwrap();
@@ -4558,22 +4671,24 @@ mod tests {
     fn meadow_flowers_grow_in_clustered_drifts() {
         let c = catalog();
         let meadow = c.get("meadow").unwrap();
-        assert!(meadow.props.scatter[0].drift, "the meadow's flowers drift");
-        assert!(!meadow.props.scatter[1].drift, "its rocks do not");
+        let fl = usize::from(rule_of(meadow, "wildflower_clump"));
+        assert!(meadow.props.scatter[fl].drift, "the meadow's flowers drift");
+        let rocks = usize::from(rule_of(meadow, "rock_small"));
+        assert!(!meadow.props.scatter[rocks].drift, "its rocks do not");
         let mut even = meadow.clone();
-        even.props.scatter[0].drift = false;
+        even.props.scatter[fl].drift = false;
         let g = prepared(meadow).unwrap();
         let quad = |x: f32, z: f32| ((x / 4.0).floor() as i32, (z / 4.0).floor() as i32);
         let dispersion = |def: &TileDef, seed: u64| {
             let l = layout(def, seed, &g);
             let mut quads: BTreeMap<(i32, i32), u32> = BTreeMap::new();
-            for &k in &g.masks[0].cells {
+            for &k in &g.masks[fl].cells {
                 let k = k as usize;
                 quads
                     .entry(quad(cell_centre(k % CELLS), cell_centre(k / CELLS)))
                     .or_default();
             }
-            for i in l.instances.iter().filter(|i| i.rule == 0) {
+            for i in l.instances.iter().filter(|i| usize::from(i.rule) == fl) {
                 *quads.entry(quad(i.pos.x, i.pos.z)).or_default() += 1;
             }
             let n = quads.len() as f32;

@@ -232,6 +232,8 @@
         "period": 1,
         "rail": false,
         "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
           "wildflower_clump",
           "rock_small",
           "wildflower_single"
@@ -266,10 +268,12 @@
         "period": 1,
         "rail": false,
         "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "log_fallen",
           "tree_forest",
           "rock_small",
           "fern_clump",
-          "log_fallen",
           "shrub_forest",
           "sapling_spruce"
         ],
@@ -305,7 +309,8 @@
         "scatter": [
           "rock_small",
           "wildflower_clump",
-          "tree_oak"
+          "tree_oak",
+          "boulder_granite"
         ],
         "stopped": [
           false,
@@ -1057,7 +1062,8 @@
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
-          "beach_pebbles"
+          "beach_pebbles",
+          "boulder_granite"
         ],
         "stopped": [
           false,
@@ -1125,7 +1131,8 @@
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
-          "beach_pebbles"
+          "beach_pebbles",
+          "boulder_granite"
         ],
         "stopped": [
           false,

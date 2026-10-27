@@ -1,0 +1,91 @@
+{
+  "aoDistanceM": 0.5,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.4642350375652313,
+      "min": 0.20444446802139282,
+      "p01": 0.2705882489681244,
+      "p05": 0.29945099353790283,
+      "texels": 623166
+    },
+    "ao": {
+      "mean": 0.9055985808372498,
+      "min": 0.0941176563501358,
+      "p01": 0.3450980484485626,
+      "p05": 0.501960813999176,
+      "texels": 623166
+    },
+    "mossFraction": 0.01941376776011528,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.7681106925010681,
+      "min": 0.7215686440467834,
+      "p01": 0.7215686440467834,
+      "p05": 0.7215686440467834,
+      "texels": 623166
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.08,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderReach": 1.346,
+  "device": "CPU",
+  "joints": [],
+  "lod2Drops": {
+    "boulder_granite_b_rock": "owner A25 (2026-10-27): past 400 m only boulder_granite_c, boulder_granite_d and outcrop_granite are drawn; the two small boulders leave LOD2"
+  },
+  "marginPx": 8,
+  "maxRayDistanceM": 0.25,
+  "receiverSignature": "b7ee80189703077fa9d04eb68f95ef689b021a8452c64e18262fd8b355b20f87",
+  "samples": 32,
+  "shape": {
+    "groundReach": 1.293,
+    "sizeAboveGround": [
+      2.624,
+      2.199,
+      1.412
+    ],
+    "z": [
+      -0.477,
+      1.412
+    ]
+  },
+  "skipped": false,
+  "stones": [
+    {
+      "centre": [
+        0.0,
+        0.0,
+        0.33
+      ],
+      "semi": [
+        1.25,
+        1.07,
+        1.1
+      ]
+    }
+  ],
+  "texelDensityPxPerM": {
+    "max": 233.9982017471077,
+    "median": 217.99117911867282,
+    "min": 164.40923517861043
+  },
+  "texelMinPxPerM": 104.0
+}

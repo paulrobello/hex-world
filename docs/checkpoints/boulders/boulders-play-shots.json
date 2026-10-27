@@ -1,0 +1,58 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/boulders/boulders-play.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        158.22,
+        205.36,
+        221.17
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 8.1,
+      "load_after": [
+        148.39,
+        201.7,
+        219.68
+      ],
+      "frames": {
+        "b1-play": {
+          "mean": 0.176,
+          "problem": null
+        },
+        "b1-play-oak-scale": {
+          "mean": 0.2104,
+          "problem": null
+        },
+        "b1-play-meadow": {
+          "mean": 0.2495,
+          "problem": null
+        },
+        "b1-play-walk-eye": {
+          "mean": 0.3033,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

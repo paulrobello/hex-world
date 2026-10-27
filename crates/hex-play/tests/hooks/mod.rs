@@ -293,10 +293,12 @@ fn slot_triangles(
     let plain = rewrite_glb(&bytes).map_err(|e| format!("{}: {e}", p.id))?;
     let (doc, buffers, _) = gltf::import_slice(&plain).map_err(|e| format!("{}: {e}", p.id))?;
     let mesh_name = lod_mesh_name(&p.id, lod);
-    let mesh = doc
-        .meshes()
-        .find(|m| m.name() == Some(mesh_name.as_str()))
-        .ok_or_else(|| format!("{}: mesh {mesh_name} missing", p.id))?;
+    let found = doc.meshes().find(|m| m.name() == Some(mesh_name.as_str()));
+    // A piece the gate lets ship without LOD2 (owner A25) draws nothing there.
+    if found.is_none() && lod == 2 && super::LOD2_ABSENT.contains(&p.id.as_str()) {
+        return Ok(vec![]);
+    }
+    let mesh = found.ok_or_else(|| format!("{}: mesh {mesh_name} missing", p.id))?;
     // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
     let rotor_name = rotor_mesh_name(&p.id, lod);
     let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));

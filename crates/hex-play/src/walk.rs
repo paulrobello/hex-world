@@ -109,6 +109,12 @@ pub const OBSTACLES: &[&str] = &[
     "rock_small",
     "rock_small_b",
     "rock_small_c",
+    // The granite boulders and outcrop (owner A25): the outcrop's top is not walkable either.
+    "boulder_granite",
+    "boulder_granite_b",
+    "boulder_granite_c",
+    "boulder_granite_d",
+    "outcrop_granite",
     "river_stones",
     "river_stones_b",
     "river_stones_c",
@@ -1544,7 +1550,10 @@ pub(crate) mod tests {
         for &piece in OBSTACLES {
             assert_eq!(
                 prop_kind(piece) == "rock",
-                piece.starts_with("rock_") || piece.starts_with("river_stones"),
+                piece.starts_with("rock_")
+                    || piece.starts_with("river_stones")
+                    || piece.starts_with("boulder_granite")
+                    || piece == "outcrop_granite",
                 "{piece} reports {}",
                 prop_kind(piece)
             );

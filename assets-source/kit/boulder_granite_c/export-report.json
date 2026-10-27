@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/boulder_granite_c.py",
+    "sha256": "8565a51f4dfcd5880cdda34ff8ffd7d5cc952c8797fcefdf31ef2bfc8898436a"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    }
+  ],
+  "lodTris": {
+    "boulder_granite_c_lod0": 1372,
+    "boulder_granite_c_lod1": 587,
+    "boulder_granite_c_lod2": 175
+  },
+  "nodes": [
+    "boulder_granite_c",
+    "boulder_granite_c_collider",
+    "boulder_granite_c_lod0",
+    "boulder_granite_c_lod1",
+    "boulder_granite_c_lod2"
+  ],
+  "pieceId": "boulder_granite_c",
+  "sockets": []
+}

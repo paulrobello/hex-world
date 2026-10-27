@@ -1,0 +1,862 @@
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index eeffb9b..053aa67 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -556,6 +556,31 @@
+       "slots": { "rock_small_c_rock": { "unique": true, "masks": true } },
+       "maps": { "albedo": "p1/rock_small_c/rock_small_c.albedo", "normal": "p1/rock_small_c/rock_small_c.normal",
+                 "orm": "p1/rock_small_c/rock_small_c.orm", "masks": "p1/rock_small_c/rock_small_c.masks" } },
++    { "id": "boulder_granite", "pack": "props", "kind": "prop", "glb": "p1/boulder_granite/boulder_granite.glb",
++      "provenance": "assets-source/kit/boulder_granite/provenance.json",
++      "slots": { "boulder_granite_rock": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/boulder_granite/boulder_granite.albedo", "normal": "p1/boulder_granite/boulder_granite.normal",
++                "orm": "p1/boulder_granite/boulder_granite.orm", "masks": "p1/boulder_granite/boulder_granite.masks" } },
++    { "id": "boulder_granite_b", "pack": "props", "kind": "prop", "glb": "p1/boulder_granite_b/boulder_granite_b.glb",
++      "provenance": "assets-source/kit/boulder_granite_b/provenance.json",
++      "slots": { "boulder_granite_b_rock": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/boulder_granite_b/boulder_granite_b.albedo", "normal": "p1/boulder_granite_b/boulder_granite_b.normal",
++                "orm": "p1/boulder_granite_b/boulder_granite_b.orm", "masks": "p1/boulder_granite_b/boulder_granite_b.masks" } },
++    { "id": "boulder_granite_c", "pack": "props", "kind": "prop", "glb": "p1/boulder_granite_c/boulder_granite_c.glb",
++      "provenance": "assets-source/kit/boulder_granite_c/provenance.json",
++      "slots": { "boulder_granite_c_rock": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/boulder_granite_c/boulder_granite_c.albedo", "normal": "p1/boulder_granite_c/boulder_granite_c.normal",
++                "orm": "p1/boulder_granite_c/boulder_granite_c.orm", "masks": "p1/boulder_granite_c/boulder_granite_c.masks" } },
++    { "id": "boulder_granite_d", "pack": "props", "kind": "prop", "glb": "p1/boulder_granite_d/boulder_granite_d.glb",
++      "provenance": "assets-source/kit/boulder_granite_d/provenance.json",
++      "slots": { "boulder_granite_d_rock": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/boulder_granite_d/boulder_granite_d.albedo", "normal": "p1/boulder_granite_d/boulder_granite_d.normal",
++                "orm": "p1/boulder_granite_d/boulder_granite_d.orm", "masks": "p1/boulder_granite_d/boulder_granite_d.masks" } },
++    { "id": "outcrop_granite", "pack": "props", "kind": "prop", "glb": "p1/outcrop_granite/outcrop_granite.glb",
++      "provenance": "assets-source/kit/outcrop_granite/provenance.json",
++      "slots": { "outcrop_granite_rock": { "unique": true, "masks": true } },
++      "maps": { "albedo": "p1/outcrop_granite/outcrop_granite.albedo", "normal": "p1/outcrop_granite/outcrop_granite.normal",
++                "orm": "p1/outcrop_granite/outcrop_granite.orm", "masks": "p1/outcrop_granite/outcrop_granite.masks" } },
+     { "id": "hay_bale_round", "pack": "props", "kind": "prop", "glb": "p1/hay_bale_round/hay_bale_round.glb",
+       "provenance": "assets-source/kit/hay_bale_round/provenance.json",
+       "slots": { "hay_bale_round_straw": { "unique": true, "masks": true } },
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index 6f47884..33c1bf3 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -181,6 +181,91 @@ pub const ROCK_BASES: &[(&str, RockBase)] = &[
+             [-0.829, -0.138],
+         ],
+     ),
++    (
++        "boulder_granite",
++        [
++            [1.023, 0.265],
++            [0.850, 0.566],
++            [0.336, 0.863],
++            [-0.321, 0.863],
++            [-0.939, 0.505],
++            [-1.090, 0.244],
++            [-1.090, -0.244],
++            [-0.882, -0.604],
++            [-0.418, -0.873],
++            [0.293, -0.873],
++            [0.778, -0.593],
++            [1.023, -0.168],
++        ],
++    ),
++    (
++        "boulder_granite_b",
++        [
++            [1.222, 0.202],
++            [1.006, 0.577],
++            [0.260, 1.007],
++            [-0.444, 1.007],
++            [-1.079, 0.641],
++            [-1.295, 0.267],
++            [-1.295, -0.199],
++            [-1.022, -0.671],
++            [-0.345, -1.062],
++            [0.178, -1.062],
++            [0.903, -0.643],
++            [1.222, -0.091],
++        ],
++    ),
++    (
++        "boulder_granite_c",
++        [
++            [0.897, 0.234],
++            [0.490, 0.941],
++            [-0.008, 1.228],
++            [-0.616, 1.228],
++            [-1.562, 0.682],
++            [-1.771, 0.320],
++            [-1.771, -0.272],
++            [-1.477, -0.781],
++            [-0.934, -1.095],
++            [0.004, -1.095],
++            [0.664, -0.714],
++            [0.897, -0.309],
++        ],
++    ),
++    (
++        "boulder_granite_d",
++        [
++            [2.189, 0.360],
++            [1.816, 1.005],
++            [0.699, 1.651],
++            [-0.793, 1.651],
++            [-1.768, 1.087],
++            [-2.171, 0.389],
++            [-2.171, -0.431],
++            [-1.811, -1.055],
++            [-0.680, -1.708],
++            [0.353, -1.708],
++            [1.708, -0.926],
++            [2.189, -0.093],
++        ],
++    ),
++    (
++        "outcrop_granite",
++        [
++            [4.015, 0.009],
++            [3.049, 1.682],
++            [1.674, 2.476],
++            [-1.290, 2.476],
++            [-3.325, 1.302],
++            [-4.087, -0.020],
++            [-4.087, -0.257],
++            [-3.448, -1.364],
++            [-1.435, -2.526],
++            [1.332, -2.526],
++            [3.294, -1.394],
++            [4.015, -0.144],
++        ],
++    ),
+ ];
+ const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
+ /// The shared blade mesh: two crossed planes (an X from above, so the blade holds a silhouette from
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 284cb56..87eb178 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -129,6 +129,14 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
+         "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest"
+         | "sapling_spruce" => &["forest_base_floor"],
+         "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
++        // The granite boulders and outcrop (owner A25): the meadow, the forest and oak litter, and
++        // on a coast the grass-to-sand band ([`coast_band`]).
++        "boulder_granite" | "outcrop_granite" => &[
++            "forest_base_floor",
++            "meadow_base_cap",
++            "beach_grass",
++            BEACH_FLOOR,
++        ],
+         "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
+         "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
+         "river_stones" | "river_reeds" => &BANK_FLOORS,
+@@ -169,6 +177,14 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
+     ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
+     ("log_fallen", &["log_fallen_b", "log_fallen_c"]),
+     ("rock_small", &["rock_small_b", "rock_small_c"]),
++    (
++        "boulder_granite",
++        &[
++            "boulder_granite_b",
++            "boulder_granite_c",
++            "boulder_granite_d",
++        ],
++    ),
+     (
+         "wildflower_clump",
+         &["wildflower_clump_b", "wildflower_clump_c"],
+@@ -197,6 +213,8 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
+ pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[
+     ("bush_verge", &[2, 1, 1]),
+     ("wildflower_single", &[9, 9, 9, 9, 4]),
++    // Owner A25: the two small boulders most, the big rounded one rarest.
++    ("boulder_granite", &[3, 3, 2, 1]),
+ ];
+ 
+ /// Pick weights that replace [`VARIANT_WEIGHTS`] on a verge tile ([`verge_tile`]): the poppy is 1
+@@ -368,10 +386,29 @@ pub fn beach_band(piece: &str) -> Option<BeachBand> {
+             thin: 0.0,
+             along: true,
+         }),
++        // Granite boulders and the outcrop (owner A25, ref-4): the grass-to-sand band, centres
++        // from 3 m landward of the grass line to 1.5 m onto the sand, thinning seaward. Only on a
++        // coast tile ([`coast_band`]); inland they scatter freely.
++        "boulder_granite" | "outcrop_granite" => Some(BeachBand {
++            near: BEACH_TOP_S - 3.0,
++            far: BEACH_TOP_S + 1.5,
++            thin: 0.4,
++            along: false,
++        }),
+         _ => None,
+     }
+ }
+ 
++/// `piece`'s [`beach_band`] on `def`. A piece that also stands inland (one of its
++/// [`floor_slots`] is an ordinary floor: the granite boulders) keeps its band only on a tile with a
++/// coastline and scatters freely elsewhere; beach-only dressing keeps its band everywhere, so it
++/// never stands off a coast.
++pub fn coast_band(def: &TileDef, piece: &str) -> Option<BeachBand> {
++    let band = beach_band(piece)?;
++    let inland = floor_slots(piece).iter().any(|s| !excluded_slot(s));
++    (!inland || Coastline::of(def, 0).is_some()).then_some(band)
++}
++
+ /// The [`excluded_slot`]s a piece may stand on when its [`floor_slots`] list them: the dry sand of
+ /// the beach and river-mouth bases, and the ocean floor.
+ pub const FLOOR_EXEMPT: [&str; 2] = [BEACH_FLOOR, SEABED_FLOOR];
+@@ -674,6 +711,41 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
+             crown: 0.0,
+         },
+     ),
++    (
++        "boulder_granite",
++        Footprint {
++            ground: 1.15,
++            crown: 0.0,
++        },
++    ),
++    (
++        "boulder_granite_b",
++        Footprint {
++            ground: 1.36,
++            crown: 0.0,
++        },
++    ),
++    (
++        "boulder_granite_c",
++        Footprint {
++            ground: 1.8,
++            crown: 0.0,
++        },
++    ),
++    (
++        "boulder_granite_d",
++        Footprint {
++            ground: 2.31,
++            crown: 0.0,
++        },
++    ),
++    (
++        "outcrop_granite",
++        Footprint {
++            ground: 4.25,
++            crown: 0.0,
++        },
++    ),
+     (
+         "wildflower_clump",
+         Footprint {
+@@ -1557,7 +1629,7 @@ fn mask(
+     let fp = group_footprint(piece);
+     let floors = floor_slots(piece);
+     let ok_slot: Vec<bool> = surface.slots.iter().map(|s| floor_ok(floors, s)).collect();
+-    let beach = beach_band(piece).map(|b| (b, Coastline::of(def, 0)));
++    let beach = coast_band(def, piece).map(|b| (b, Coastline::of(def, 0)));
+     let on_floor = |k: usize| raster[k].is_some_and(|(_, s)| ok_slot[s as usize]);
+     // The footprint, the half diagonal a dart may land from its cell centre, and the half diagonal
+     // from a footprint point to the nearest sample. `stand` then checks the footprint exactly.
+@@ -1853,9 +1925,11 @@ pub const BEACH_MAX: usize = 6;
+ /// but beach dressing and bank props ([`bank_band`]: the river mouths' banks).
+ pub fn beach_family(def: &TileDef) -> bool {
+     let rules = &def.props.scatter;
+-    rules.iter().any(|r| beach_band(r.piece.as_str()).is_some())
++    rules
++        .iter()
++        .any(|r| coast_band(def, r.piece.as_str()).is_some())
+         && rules.iter().all(|r| {
+-            beach_band(r.piece.as_str()).is_some() || bank_band(r.piece.as_str()).is_some()
++            coast_band(def, r.piece.as_str()).is_some() || bank_band(r.piece.as_str()).is_some()
+         })
+ }
+ 
+@@ -1952,7 +2026,7 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+         let jitter = scale_jitter(fp);
+         let floors = floor_slots(piece);
+         let vary = rule.vary.clamp(0.0, 1.0);
+-        let beach = beach_band(piece);
++        let beach = coast_band(def, piece);
+         let bank = bank_band(piece);
+         let mut n = 0;
+         for _ in 0..ATTEMPTS * want + 64 {
+@@ -2437,6 +2511,16 @@ mod tests {
+         TileCatalog::builtin().unwrap()
+     }
+ 
++    /// The index of `def`'s scatter rule naming `piece` (the pine forest and the meadow lead with
++    /// their granite outcrop and boulders).
++    fn rule_of(def: &TileDef, piece: &str) -> u8 {
++        def.props
++            .scatter
++            .iter()
++            .position(|r| r.piece.as_str() == piece)
++            .unwrap() as u8
++    }
++
+     fn glb(id: &str) -> Option<(gltf::Document, Vec<gltf::buffer::Data>)> {
+         let m = parse_manifest(MANIFEST).unwrap();
+         let e = m.pieces.iter().find(|p| p.id == id)?;
+@@ -2757,12 +2841,19 @@ mod tests {
+                 for (ri, r) in def.props.scatter.iter().enumerate() {
+                     let want = r.density * CAP_AREA / 100.0;
+                     let n = l.placed(ri);
+-                    assert_eq!(
+-                        n as u32,
+-                        l.planned[ri],
+-                        "{id} {}: shortfall",
+-                        r.piece.as_str()
+-                    );
++                    // Two granite outcrops (4.25 m reach, so 8.5 m apart inside a 9.3 m reach of
++                    // the centre) do not always fit one tile: at owner A25's 0.2 about 1 tile in
++                    // 64 plans two, and keeps one.
++                    let two_outcrops =
++                        r.piece.as_str() == "outcrop_granite" && l.planned[ri] >= 2 && n >= 1;
++                    if !two_outcrops {
++                        assert_eq!(
++                            n as u32,
++                            l.planned[ri],
++                            "{id} {}: shortfall",
++                            r.piece.as_str()
++                        );
++                    }
+                     assert!((n as f32 - want).abs() < 1.0, "{id}: {n} vs {want}");
+                     sums[ri] += n;
+                     let fp = group_footprint(r.piece.as_str());
+@@ -2810,7 +2901,7 @@ mod tests {
+         let trees: Vec<Vec2> = l
+             .instances
+             .iter()
+-            .filter(|i| i.rule == 0)
++            .filter(|i| i.rule == rule_of(def, "tree_forest"))
+             .map(|i| i.pos.xz())
+             .collect();
+         let nn: Vec<f32> = trees
+@@ -3499,7 +3590,19 @@ mod tests {
+                 .iter()
+                 .position(|r| r.piece.as_str() == "beach_pebbles")
+                 .unwrap_or_else(|| panic!("{id}: a beach_pebbles rule"));
+-            assert_eq!(rule + 1, def.props.scatter.len(), "{id}: pebbles last");
++            // The pebbles come last among the beach dressing; only the inland granite boulders
++            // (owner A25), band-limited on a coast, follow them.
++            let inland = def
++                .props
++                .scatter
++                .iter()
++                .filter(|r| family(r.piece.as_str()) == "boulder_granite")
++                .count();
++            assert_eq!(
++                rule + 1 + inland,
++                def.props.scatter.len(),
++                "{id}: pebbles last"
++            );
+             let seeds = 256;
+             let mut kept = vec![0usize; def.props.scatter.len()];
+             let (mut with_pebbles, mut darts) = (0, 0);
+@@ -3836,7 +3939,7 @@ mod tests {
+             for i in layout(&def, seed, &g)
+                 .instances
+                 .iter()
+-                .filter(|i| i.rule == 0)
++                .filter(|i| i.rule == rule_of(&def, "tree_forest"))
+             {
+                 assert!(
+                     i.pos.xz().length() >= HERO_CROWN * 7.1 + 0.5 - 0.2,
+@@ -4043,16 +4146,26 @@ mod tests {
+         assert_eq!(
+             pieces(pine),
+             [
++                "outcrop_granite",
++                "boulder_granite",
++                "log_fallen",
+                 "tree_forest",
+                 "rock_small",
+                 "fern_clump",
+-                "log_fallen",
+                 "shrub_forest",
+                 "sapling_spruce"
+             ]
+         );
+         assert!(pine.props.hero.is_empty() && pine.agents.is_empty());
+-        assert_eq!(pieces(oak), ["rock_small", "wildflower_clump", "tree_oak"]);
++        assert_eq!(
++            pieces(oak),
++            [
++                "rock_small",
++                "wildflower_clump",
++                "tree_oak",
++                "boulder_granite"
++            ]
++        );
+         assert_eq!(oak.props.hero.len(), 1);
+         assert_eq!(oak.props.hero[0].piece.as_str(), "tree_hero_oak");
+         let g = prepared(oak).unwrap();
+@@ -4078,22 +4191,24 @@ mod tests {
+     fn meadow_flowers_grow_in_clustered_drifts() {
+         let c = catalog();
+         let meadow = c.get("meadow").unwrap();
+-        assert!(meadow.props.scatter[0].drift, "the meadow's flowers drift");
+-        assert!(!meadow.props.scatter[1].drift, "its rocks do not");
++        let fl = usize::from(rule_of(meadow, "wildflower_clump"));
++        assert!(meadow.props.scatter[fl].drift, "the meadow's flowers drift");
++        let rocks = usize::from(rule_of(meadow, "rock_small"));
++        assert!(!meadow.props.scatter[rocks].drift, "its rocks do not");
+         let mut even = meadow.clone();
+-        even.props.scatter[0].drift = false;
++        even.props.scatter[fl].drift = false;
+         let g = prepared(meadow).unwrap();
+         let quad = |x: f32, z: f32| ((x / 4.0).floor() as i32, (z / 4.0).floor() as i32);
+         let dispersion = |def: &TileDef, seed: u64| {
+             let l = layout(def, seed, &g);
+             let mut quads: BTreeMap<(i32, i32), u32> = BTreeMap::new();
+-            for &k in &g.masks[0].cells {
++            for &k in &g.masks[fl].cells {
+                 let k = k as usize;
+                 quads
+                     .entry(quad(cell_centre(k % CELLS), cell_centre(k / CELLS)))
+                     .or_default();
+             }
+-            for i in l.instances.iter().filter(|i| i.rule == 0) {
++            for i in l.instances.iter().filter(|i| usize::from(i.rule) == fl) {
+                 *quads.entry(quad(i.pos.x, i.pos.z)).or_default() += 1;
+             }
+             let n = quads.len() as f32;
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index f64113f..ebb2add 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -109,6 +109,12 @@ pub const OBSTACLES: &[&str] = &[
+     "rock_small",
+     "rock_small_b",
+     "rock_small_c",
++    // The granite boulders and outcrop (owner A25): the outcrop's top is not walkable either.
++    "boulder_granite",
++    "boulder_granite_b",
++    "boulder_granite_c",
++    "boulder_granite_d",
++    "outcrop_granite",
+     "river_stones",
+     "river_stones_b",
+     "river_stones_c",
+@@ -1541,7 +1547,10 @@ pub(crate) mod tests {
+         for &piece in OBSTACLES {
+             assert_eq!(
+                 prop_kind(piece) == "rock",
+-                piece.starts_with("rock_") || piece.starts_with("river_stones"),
++                piece.starts_with("rock_")
++                    || piece.starts_with("river_stones")
++                    || piece.starts_with("boulder_granite")
++                    || piece == "outcrop_granite",
+                 "{piece} reports {}",
+                 prop_kind(piece)
+             );
+diff --git a/crates/hex-play/tests/hooks/mod.rs b/crates/hex-play/tests/hooks/mod.rs
+index 60090ec..19108f3 100644
+--- a/crates/hex-play/tests/hooks/mod.rs
++++ b/crates/hex-play/tests/hooks/mod.rs
+@@ -293,10 +293,12 @@ fn slot_triangles(
+     let plain = rewrite_glb(&bytes).map_err(|e| format!("{}: {e}", p.id))?;
+     let (doc, buffers, _) = gltf::import_slice(&plain).map_err(|e| format!("{}: {e}", p.id))?;
+     let mesh_name = lod_mesh_name(&p.id, lod);
+-    let mesh = doc
+-        .meshes()
+-        .find(|m| m.name() == Some(mesh_name.as_str()))
+-        .ok_or_else(|| format!("{}: mesh {mesh_name} missing", p.id))?;
++    let found = doc.meshes().find(|m| m.name() == Some(mesh_name.as_str()));
++    // A piece the gate lets ship without LOD2 (owner A25) draws nothing there.
++    if found.is_none() && lod == 2 && super::LOD2_ABSENT.contains(&p.id.as_str()) {
++        return Ok(vec![]);
++    }
++    let mesh = found.ok_or_else(|| format!("{}: mesh {mesh_name} missing", p.id))?;
+     // A LOD's rotor (if any) draws beside it and samples the same masks atlas.
+     let rotor_name = rotor_mesh_name(&p.id, lod);
+     let rotor = doc.meshes().find(|m| m.name() == Some(rotor_name.as_str()));
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index a6334b7..3bcd7e8 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -408,6 +408,34 @@ fn wind_errors(id: &str, lod: &str, v: &[WindVert]) -> Vec<String> {
+ /// Minimum median texel density per textured material (D2: trees and props ≥ 256 px/m).
+ const TEXEL_MIN_PX_PER_M: f32 = 256.0;
+ 
++/// The granite boulders and outcrop (B1, owner A25 2026-10-27: "a unique bake per piece at about
++/// 128 px/m"): 2.2 to 8 m across, so 256 px/m would need a 2048² albedo, far over the `piece` KTX2
++/// class. Their floor sits a little under the ruling's 128 for the outcrop's packing (about 110).
++const BOULDER_TEXEL_MIN_PX_PER_M: f32 = 100.0;
++const BOULDER_PIECES: &[&str] = &[
++    "boulder_granite",
++    "boulder_granite_b",
++    "boulder_granite_c",
++    "boulder_granite_d",
++    "outcrop_granite",
++];
++
++/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set, else
++/// `TEXEL_MIN_PX_PER_M`.
++fn texel_min(id: &str) -> f32 {
++    if BOULDER_PIECES.contains(&id) {
++        BOULDER_TEXEL_MIN_PX_PER_M
++    } else {
++        TEXEL_MIN_PX_PER_M
++    }
++}
++
++/// Pieces that ship no `<id>_lod2` at all (owner A25 2026-10-27: past 400 m only
++/// boulder_granite_c, _d and outcrop_granite are drawn). Each still names its one slot in the bake
++/// report's `lod2Drops` (`lod2_drop_errors`); the runtime ends a slot with no LOD2 mesh at 400 m
++/// (`lod_cover`).
++const LOD2_ABSENT: &[&str] = &["boulder_granite", "boulder_granite_b"];
++
+ /// Per-triangle texel density in px/m: sqrt(uv_area · px² / world_area). `px` is the texture width
+ /// times any UV0 scale (a tileable set's `tileUvScale`). Degenerate triangles are skipped.
+ fn face_densities(pos: &[[f32; 3]], uv: &[[f32; 2]], idx: &[u32], px: f32) -> Vec<f32> {
+@@ -452,9 +480,10 @@ fn median(v: &[f32]) -> f32 {
+ /// the many leaf cards hide low bark density.
+ fn texel_errors(id: &str, material: &str, densities: &[f32]) -> Vec<String> {
+     let m = median(densities);
+-    if m < TEXEL_MIN_PX_PER_M {
++    let min = texel_min(id);
++    if m < min {
+         vec![format!(
+-            "{id}: {material} median texel density {m:.1} px/m < {TEXEL_MIN_PX_PER_M} (per material)"
++            "{id}: {material} median texel density {m:.1} px/m < {min} (per material)"
+         )]
+     } else {
+         vec![]
+@@ -1053,7 +1082,11 @@ fn lod_budget_errors(
+     }
+     for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio)] {
+         match lod_tris[i] {
++            None if i == 2 && LOD2_ABSENT.contains(&id) => {}
+             None => e.push(format!("{id}: mesh {id}_lod{i} missing")),
++            Some(_) if i == 2 && LOD2_ABSENT.contains(&id) => e.push(format!(
++                "{id}: LOD2_ABSENT lists it, but it ships {id}_lod2: remove it from the list"
++            )),
+             Some(t) if t as f32 > max * t0 as f32 => {
+                 e.push(format!("{id}: LOD{i} {t} tris > {max} x LOD0 {t0}"))
+             }
+@@ -2386,11 +2419,15 @@ fn check_bevy(kit: &Kit) -> Vec<String> {
+             format!("{id}_lod2"),
+             format!("{id}_collider"),
+         ] {
+-            if !g.named_nodes.contains_key(want.as_str()) {
++            let absent = LOD2_ABSENT.contains(&id.as_str()) && want == format!("{id}_lod2");
++            if !absent && !g.named_nodes.contains_key(want.as_str()) {
+                 e.push(format!("{id}: bevy node {want} missing"));
+             }
+         }
+         for lod in 0..3 {
++            if lod == 2 && LOD2_ABSENT.contains(&id.as_str()) {
++                continue;
++            }
+             if !g.named_meshes.contains_key(lod_mesh_name(id, lod).as_str()) {
+                 e.push(format!(
+                     "{id}: bevy mesh {id}_lod{lod} missing (runtime looks meshes up by name)"
+@@ -3474,6 +3511,38 @@ fn rotor_tris_count_toward_the_lod_budget() {
+     assert!(axle_offset(&[[0.0, 1.0, 0.0], [0.0, -0.9, 0.0]]) > ROTOR_AXLE_TOL);
+ }
+ 
++/// Only the pieces `LOD2_ABSENT` lists (owner A25) may ship without `<id>_lod2`, and a listed piece
++/// that ships one fails, so the list cannot go stale.
++#[test]
++fn only_listed_pieces_ship_without_lod2() {
++    let t = [Some(1_000), Some(400), None];
++    assert_eq!(
++        lod_budget_errors("boulder_granite", t, 1_500, LOD2_MAX_RATIO),
++        Vec::<String>::new()
++    );
++    assert_eq!(
++        lod_budget_errors("boulder_granite_c", t, 1_500, LOD2_MAX_RATIO),
++        vec!["boulder_granite_c: mesh boulder_granite_c_lod2 missing".to_string()]
++    );
++    let e = lod_budget_errors(
++        "boulder_granite",
++        [Some(1_000), Some(400), Some(100)],
++        1_500,
++        LOD2_MAX_RATIO,
++    );
++    assert!(
++        e.iter().any(|m| m.contains("LOD2_ABSENT lists it")),
++        "{e:?}"
++    );
++    let k = kits().pop().unwrap();
++    for id in LOD2_ABSENT {
++        assert!(
++            k.manifest.pieces.iter().any(|p| p.id == *id),
++            "{id}: LOD2_ABSENT names a piece the kit does not hold"
++        );
++    }
++}
++
+ /// An animatable part's triangles count toward its LOD like a rotor's (the rowing boat's oars, PRD
+ /// §7.2), so a LOD0 ceiling the hull alone meets fails once the oars count, and a part missing from
+ /// one LOD fails.
+@@ -4013,6 +4082,16 @@ fn texel_density_is_checked_per_material() {
+         e,
+         vec!["t: t_bark median texel density 128.0 px/m < 256 (per material)".to_string()]
+     );
++    // The B1 boulders keep their own floor (owner A25), and only they do.
++    assert!(texel_errors("outcrop_granite", "outcrop_granite_rock", &low).is_empty());
++    let lower = face_densities(&pos, &uv, &idx, 0.375 * 1024.0);
++    assert_eq!(
++        texel_errors("boulder_granite", "boulder_granite_rock", &lower),
++        vec![
++            "boulder_granite: boulder_granite_rock median texel density 96.0 px/m < 100 (per material)"
++                .to_string()
++        ]
++    );
+     assert_eq!(median(&[3.0, 1.0, 2.0, 100.0]), 2.5);
+     // A UV0 slot without an albedo to measure against is an error, not a skip.
+     let (k, mut p) = fixture();
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 2b21a72..d9aabe6 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -234,6 +234,14 @@ pub fn kit_layout() -> Vec<Placement> {
+             ..place(piece, -1, 1, rot)
+         });
+     }
++    // The granite boulders and the whaleback outcrop (B1, owner A25) on their own meadow at (-2, 0).
++    v.push(place("meadow_base", -2, 0, 0));
++    for &(piece, at, yaw_deg, y) in BOULDERS {
++        v.push(Placement {
++            y,
++            ..hero(piece, -2, 0, at, yaw_deg)
++        });
++    }
+     // The windmill (P3, refs approved under A17) alone on a meadow at (3, -1), the one water-patch
+     // cell the layout left free (so `water_kit` keeps its 12 cells), its sails turned toward the
+     // overview camera. Its rotor turns (`spin_rotors`).
+@@ -680,6 +688,17 @@ const RIVER_BANK: &[(&str, [f32; 2], f32, f32)] = &[
+     ("river_reeds_b", [7.676, 2.496], 0.0, -0.462),
+ ];
+ 
++/// (piece, at, yaw, relief height) of the granite boulders and outcrop (B1, owner A25) on their own
++/// meadow at (-2, 0), rot 0, each lifted onto the meadow relief at its spot (`_terrain.meadow_relief`
++/// at Blender (x, -z)), every footprint at least 3.5 m inside the border and clear of the others.
++const BOULDERS: &[(&str, [f32; 2], f32, f32)] = &[
++    ("outcrop_granite", [3.0, 4.5], 25.0, 0.0),
++    ("boulder_granite_d", [-6.0, -3.5], 70.0, -0.008),
++    ("boulder_granite_c", [-5.5, 5.5], 200.0, -0.008),
++    ("boulder_granite_b", [5.0, -5.5], 120.0, -0.026),
++    ("boulder_granite", [-0.5, -9.0], 300.0, 0.0),
++];
++
+ /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
+ const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
+     ("rock_small", [-6.0, 5.0], 0, 0.0),
+@@ -908,7 +927,10 @@ pub fn finish_kit(
+         }
+         for lod in 0..3usize {
+             let Some(mh) = g.named_meshes.get(lod_mesh_name(p.piece, lod).as_str()) else {
+-                warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
++                // A piece may end at 400 m with no LOD2 (the small boulders, owner A25).
++                if lod < 2 {
++                    warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
++                }
+                 continue;
+             };
+             let Some(gm) = gltf_meshes.get(mh) else {
+@@ -1379,6 +1401,15 @@ mod tests {
+         for piece in ["seabed_rock", "seabed_pebbles"] {
+             assert!(on(piece, (1, 1)) && on("ocean_base", (1, 1)), "{piece}");
+         }
++        for piece in [
++            "boulder_granite",
++            "boulder_granite_b",
++            "boulder_granite_c",
++            "boulder_granite_d",
++            "outcrop_granite",
++        ] {
++            assert!(on(piece, (-2, 0)) && on("meadow_base", (-2, 0)), "{piece}");
++        }
+         for piece in [
+             "river_stones",
+             "river_stones_b",
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index f7c9ee5..64632dc 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -207,14 +207,14 @@ mod tests {
+         cells.dedup();
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here.
+-        assert_eq!(cells.len(), 36);
++        assert_eq!(cells.len(), 37);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 36);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 37);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }
+diff --git a/data/tiles/beach.ron b/data/tiles/beach.ron
+index 921c639..a5fceb1 100644
+--- a/data/tiles/beach.ron
++++ b/data/tiles/beach.ron
+@@ -19,6 +19,7 @@
+             (piece: "beach_driftwood", density: 0.452),
+             (piece: "beach_dunegrass", density: 1.805),
+             (piece: "beach_pebbles", density: 0.752),
++            (piece: "boulder_granite", density: 0.4),
+         ],
+     ),
+ )
+diff --git a/data/tiles/beach_inner.ron b/data/tiles/beach_inner.ron
+index 1cccc3a..ab32582 100644
+--- a/data/tiles/beach_inner.ron
++++ b/data/tiles/beach_inner.ron
+@@ -18,6 +18,7 @@
+             (piece: "beach_driftwood", density: 0.452),
+             (piece: "beach_dunegrass", density: 2.105),
+             (piece: "beach_pebbles", density: 0.752),
++            (piece: "boulder_granite", density: 0.4),
+         ],
+     ),
+ )
+diff --git a/data/tiles/forest.ron b/data/tiles/forest.ron
+index 37eb617..f4f47d7 100644
+--- a/data/tiles/forest.ron
++++ b/data/tiles/forest.ron
+@@ -1,7 +1,8 @@
+ // The pine forest: dense spruce scatter, rocks, drifts of ferns, now and then a fallen log, and an
+ // undergrowth of shrubs and saplings, no oak (owner U3). Each later rule comes after the earlier
+-// ones so those keep their spots. Its id stays "forest" so
+-// saves, scenarios and the perf worlds keep loading as pine forests.
++// ones so those keep their spots, except the granite outcrop and boulders (owner A25) and then the
++// fallen log, which lead: their 1.5-4.25 m reach does not fit between placed spruces. Its id stays
++// "forest" so saves, scenarios and the perf worlds keep loading as pine forests.
+ (
+     id: "forest",
+     biome: Forest,
+@@ -16,10 +17,12 @@
+     ),
+     props: (
+         scatter: [
++            (piece: "outcrop_granite", density: 0.2),
++            (piece: "boulder_granite", density: 0.4),
++            (piece: "log_fallen", density: 0.15),
+             (piece: "tree_forest", density: 3.0),
+             (piece: "rock_small", density: 0.2),
+             (piece: "fern_clump", density: 1.2, drift: true),
+-            (piece: "log_fallen", density: 0.15),
+             (piece: "shrub_forest", density: 0.4),
+             (piece: "sapling_spruce", density: 0.3),
+         ],
+diff --git a/data/tiles/meadow.ron b/data/tiles/meadow.ron
+index 4bf5371..d12aa7c 100644
+--- a/data/tiles/meadow.ron
++++ b/data/tiles/meadow.ron
+@@ -13,6 +13,8 @@
+     ),
+     props: (
+         scatter: [
++            (piece: "outcrop_granite", density: 0.15),
++            (piece: "boulder_granite", density: 0.4),
+             (piece: "wildflower_clump", density: 4.0, drift: true),
+             (piece: "rock_small", density: 0.3),
+             (piece: "wildflower_single", density: 6.0, vary: 0.8),
+diff --git a/data/tiles/oak.ron b/data/tiles/oak.ron
+index b8ada2f..fa59fb4 100644
+--- a/data/tiles/oak.ron
++++ b/data/tiles/oak.ron
+@@ -18,6 +18,7 @@
+             (piece: "rock_small", density: 0.5),
+             (piece: "wildflower_clump", density: 0.9),
+             (piece: "tree_oak", density: 0.3),
++            (piece: "boulder_granite", density: 0.3),
+         ],
+         hero: [
+             (piece: "tree_hero_oak", at: (0.0, 0.0)),
+diff --git a/docs/checkpoints/scatter/check.mjs b/docs/checkpoints/scatter/check.mjs
+index 3504e8c..60a0e59 100644
+--- a/docs/checkpoints/scatter/check.mjs
++++ b/docs/checkpoints/scatter/check.mjs
+@@ -6,7 +6,7 @@
+ // counts, and the 20-tile world's overview camera stays inside the 500-draw budget (owner A2 Q1,
+ // 2026-10-21: close cameras are tracked, not gated). The mixed world (scatter-mixed.json: the
+ // beach-dressing mouth world's rivers, mouths, beaches and ocean plus forest, oak, meadow and road,
+-// 31 tiles drawing all 48 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
++// 31 tiles drawing all 53 scatter pieces) is owner A24 Q5's 500-draw case: its overview census is
+ // printed as tracked, not gated, while it is over the budget (548 framing every tile, 2026-10-26;
+ // the fix is structural, shared scatter materials, not fewer props). Scatter (mesh, material)
+ // pairs are tracked, not gated (A24 Q5, replacing A2 Q2's 60 per LOD and 180 in all).
+@@ -22,9 +22,9 @@ const check = (ok, what, got) => {
+ };
+ const CAP = 1.5 * Math.sqrt(3) * 16 * 16;
+ const DENSITY = {
+-  forest: { tree_forest: 3.0, rock_small: 0.2 },
+-  oak: { rock_small: 0.5, wildflower_clump: 0.9 },
+-  meadow: { wildflower_clump: 4.0, rock_small: 0.3 },
++  forest: { tree_forest: 3.0, rock_small: 0.2, boulder_granite: 0.4, outcrop_granite: 0.2 },
++  oak: { rock_small: 0.5, wildflower_clump: 0.9, boulder_granite: 0.3 },
++  meadow: { wildflower_clump: 4.0, rock_small: 0.3, boulder_granite: 0.4, outcrop_granite: 0.15 },
+   road_straight: { wildflower_single: 3.0 },
+ };
+ // Capped tiles: a seeded 0 to cap of their placed pieces (scatter.rs RIVER_MAX), each drawn.
+@@ -107,6 +107,7 @@ const PIECES = [
+     "wildflower_clump", "bush_verge", "river_stones", "shrub_forest", "sapling_spruce"].flatMap((p) => [p, `${p}_b`, `${p}_c`]),
+   ..."abcde".split("").map((v) => (v === "a" ? "wildflower_single" : `wildflower_single_${v}`)),
+   "river_reeds", "river_reeds_b", "seabed_rock", "seabed_pebbles",
++  "boulder_granite", "boulder_granite_b", "boulder_granite_c", "boulder_granite_d", "outcrop_granite",
+ ];
+ const mixed = read("scatter-mixed-world");
+ const mixedTiles = [...new Set(mixed.play.tiles.map((t) => t.tile))].sort();
+diff --git a/web/ui/src/bridge-schema.json b/web/ui/src/bridge-schema.json
+index f7c181c..d77ba5a 100644
+--- a/web/ui/src/bridge-schema.json
++++ b/web/ui/src/bridge-schema.json
+@@ -232,6 +232,8 @@
+         "period": 1,
+         "rail": false,
+         "scatter": [
++          "outcrop_granite",
++          "boulder_granite",
+           "wildflower_clump",
+           "rock_small",
+           "wildflower_single"
+@@ -266,10 +268,12 @@
+         "period": 1,
+         "rail": false,
+         "scatter": [
++          "outcrop_granite",
++          "boulder_granite",
++          "log_fallen",
+           "tree_forest",
+           "rock_small",
+           "fern_clump",
+-          "log_fallen",
+           "shrub_forest",
+           "sapling_spruce"
+         ],
+@@ -305,7 +309,8 @@
+         "scatter": [
+           "rock_small",
+           "wildflower_clump",
+-          "tree_oak"
++          "tree_oak",
++          "boulder_granite"
+         ],
+         "stopped": [
+           false,
+@@ -1053,7 +1058,8 @@
+         "scatter": [
+           "beach_driftwood",
+           "beach_dunegrass",
+-          "beach_pebbles"
++          "beach_pebbles",
++          "boulder_granite"
+         ],
+         "stopped": [
+           false,
+@@ -1121,7 +1127,8 @@
+         "scatter": [
+           "beach_driftwood",
+           "beach_dunegrass",
+-          "beach_pebbles"
++          "beach_pebbles",
++          "boulder_granite"
+         ],
+         "stopped": [
+           false,

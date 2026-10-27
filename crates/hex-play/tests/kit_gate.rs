@@ -408,6 +408,34 @@ fn wind_errors(id: &str, lod: &str, v: &[WindVert]) -> Vec<String> {
 /// Minimum median texel density per textured material (D2: trees and props ≥ 256 px/m).
 const TEXEL_MIN_PX_PER_M: f32 = 256.0;
 
+/// The granite boulders and outcrop (B1, owner A25 2026-10-27: "a unique bake per piece at about
+/// 128 px/m"): 2.2 to 8 m across, so 256 px/m would need a 2048² albedo, far over the `piece` KTX2
+/// class. Their floor sits a little under the ruling's 128 for the outcrop's packing (about 110).
+const BOULDER_TEXEL_MIN_PX_PER_M: f32 = 100.0;
+const BOULDER_PIECES: &[&str] = &[
+    "boulder_granite",
+    "boulder_granite_b",
+    "boulder_granite_c",
+    "boulder_granite_d",
+    "outcrop_granite",
+];
+
+/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set, else
+/// `TEXEL_MIN_PX_PER_M`.
+fn texel_min(id: &str) -> f32 {
+    if BOULDER_PIECES.contains(&id) {
+        BOULDER_TEXEL_MIN_PX_PER_M
+    } else {
+        TEXEL_MIN_PX_PER_M
+    }
+}
+
+/// Pieces that ship no `<id>_lod2` at all (owner A25 2026-10-27: past 400 m only
+/// boulder_granite_c, _d and outcrop_granite are drawn). Each still names its one slot in the bake
+/// report's `lod2Drops` (`lod2_drop_errors`); the runtime ends a slot with no LOD2 mesh at 400 m
+/// (`lod_cover`).
+const LOD2_ABSENT: &[&str] = &["boulder_granite", "boulder_granite_b"];
+
 /// Per-triangle texel density in px/m: sqrt(uv_area · px² / world_area). `px` is the texture width
 /// times any UV0 scale (a tileable set's `tileUvScale`). Degenerate triangles are skipped.
 fn face_densities(pos: &[[f32; 3]], uv: &[[f32; 2]], idx: &[u32], px: f32) -> Vec<f32> {
@@ -452,9 +480,10 @@ fn median(v: &[f32]) -> f32 {
 /// the many leaf cards hide low bark density.
 fn texel_errors(id: &str, material: &str, densities: &[f32]) -> Vec<String> {
     let m = median(densities);
-    if m < TEXEL_MIN_PX_PER_M {
+    let min = texel_min(id);
+    if m < min {
         vec![format!(
-            "{id}: {material} median texel density {m:.1} px/m < {TEXEL_MIN_PX_PER_M} (per material)"
+            "{id}: {material} median texel density {m:.1} px/m < {min} (per material)"
         )]
     } else {
         vec![]
@@ -1054,7 +1083,11 @@ fn lod_budget_errors(
     }
     for (i, max) in [(1, LOD1_MAX_RATIO), (2, lod2_max_ratio)] {
         match lod_tris[i] {
+            None if i == 2 && LOD2_ABSENT.contains(&id) => {}
             None => e.push(format!("{id}: mesh {id}_lod{i} missing")),
+            Some(_) if i == 2 && LOD2_ABSENT.contains(&id) => e.push(format!(
+                "{id}: LOD2_ABSENT lists it, but it ships {id}_lod2: remove it from the list"
+            )),
             Some(t) if t as f32 > max * t0 as f32 => {
                 e.push(format!("{id}: LOD{i} {t} tris > {max} x LOD0 {t0}"))
             }
@@ -2387,11 +2420,15 @@ fn check_bevy(kit: &Kit) -> Vec<String> {
             format!("{id}_lod2"),
             format!("{id}_collider"),
         ] {
-            if !g.named_nodes.contains_key(want.as_str()) {
+            let absent = LOD2_ABSENT.contains(&id.as_str()) && want == format!("{id}_lod2");
+            if !absent && !g.named_nodes.contains_key(want.as_str()) {
                 e.push(format!("{id}: bevy node {want} missing"));
             }
         }
         for lod in 0..3 {
+            if lod == 2 && LOD2_ABSENT.contains(&id.as_str()) {
+                continue;
+            }
             if !g.named_meshes.contains_key(lod_mesh_name(id, lod).as_str()) {
                 e.push(format!(
                     "{id}: bevy mesh {id}_lod{lod} missing (runtime looks meshes up by name)"
@@ -3475,6 +3512,38 @@ fn rotor_tris_count_toward_the_lod_budget() {
     assert!(axle_offset(&[[0.0, 1.0, 0.0], [0.0, -0.9, 0.0]]) > ROTOR_AXLE_TOL);
 }
 
+/// Only the pieces `LOD2_ABSENT` lists (owner A25) may ship without `<id>_lod2`, and a listed piece
+/// that ships one fails, so the list cannot go stale.
+#[test]
+fn only_listed_pieces_ship_without_lod2() {
+    let t = [Some(1_000), Some(400), None];
+    assert_eq!(
+        lod_budget_errors("boulder_granite", t, 1_500, LOD2_MAX_RATIO),
+        Vec::<String>::new()
+    );
+    assert_eq!(
+        lod_budget_errors("boulder_granite_c", t, 1_500, LOD2_MAX_RATIO),
+        vec!["boulder_granite_c: mesh boulder_granite_c_lod2 missing".to_string()]
+    );
+    let e = lod_budget_errors(
+        "boulder_granite",
+        [Some(1_000), Some(400), Some(100)],
+        1_500,
+        LOD2_MAX_RATIO,
+    );
+    assert!(
+        e.iter().any(|m| m.contains("LOD2_ABSENT lists it")),
+        "{e:?}"
+    );
+    let k = kits().pop().unwrap();
+    for id in LOD2_ABSENT {
+        assert!(
+            k.manifest.pieces.iter().any(|p| p.id == *id),
+            "{id}: LOD2_ABSENT names a piece the kit does not hold"
+        );
+    }
+}
+
 /// An animatable part's triangles count toward its LOD like a rotor's (the rowing boat's oars, PRD
 /// §7.2), so a LOD0 ceiling the hull alone meets fails once the oars count, and a part missing from
 /// one LOD fails.
@@ -4013,6 +4082,16 @@ fn texel_density_is_checked_per_material() {
     assert_eq!(
         e,
         vec!["t: t_bark median texel density 128.0 px/m < 256 (per material)".to_string()]
+    );
+    // The B1 boulders keep their own floor (owner A25), and only they do.
+    assert!(texel_errors("outcrop_granite", "outcrop_granite_rock", &low).is_empty());
+    let lower = face_densities(&pos, &uv, &idx, 0.375 * 1024.0);
+    assert_eq!(
+        texel_errors("boulder_granite", "boulder_granite_rock", &lower),
+        vec![
+            "boulder_granite: boulder_granite_rock median texel density 96.0 px/m < 100 (per material)"
+                .to_string()
+        ]
     );
     assert_eq!(median(&[3.0, 1.0, 2.0, 100.0]), 2.5);
     // A UV0 slot without an albedo to measure against is an error, not a skip.

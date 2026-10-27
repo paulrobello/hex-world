@@ -39,7 +39,7 @@ const KEY: Color = Color::srgb(1.0, 0.0, 1.0);
 const PITCH_DEG: f32 = 58.0;
 const FOV_DEG: f32 = 20.0;
 const DISTANCE: f32 = 108.0;
-const LOOK_AT: Vec3 = Vec3::new(0.0, 3.5, 1.5);
+const LOOK_AT: Vec3 = Vec3::new(0.0, 5.5, 1.5);
 
 /// Frames before the first stage.
 const START_FRAME: u32 = 240;

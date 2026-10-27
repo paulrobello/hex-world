@@ -234,6 +234,14 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, -1, 1, rot)
         });
     }
+    // The granite boulders and the whaleback outcrop (B1, owner A25) on their own meadow at (-2, 0).
+    v.push(place("meadow_base", -2, 0, 0));
+    for &(piece, at, yaw_deg, y) in BOULDERS {
+        v.push(Placement {
+            y,
+            ..hero(piece, -2, 0, at, yaw_deg)
+        });
+    }
     // The windmill (P3, refs approved under A17) alone on a meadow at (3, -1), the one water-patch
     // cell the layout left free (so `water_kit` keeps its 12 cells), its sails turned toward the
     // overview camera. Its rotor turns (`spin_rotors`).
@@ -699,6 +707,17 @@ const WATER_PROPS: &[(&str, [f32; 2], f32, f32)] = &[
     ("reed_bed", [-4.608, -1.381], 240.0, -1.4),
 ];
 
+/// (piece, at, yaw, relief height) of the granite boulders and outcrop (B1, owner A25) on their own
+/// meadow at (-2, 0), rot 0, each lifted onto the meadow relief at its spot (`_terrain.meadow_relief`
+/// at Blender (x, -z)), every footprint at least 3.5 m inside the border and clear of the others.
+const BOULDERS: &[(&str, [f32; 2], f32, f32)] = &[
+    ("outcrop_granite", [3.0, 4.5], 25.0, 0.0),
+    ("boulder_granite_d", [-6.0, -3.5], 70.0, -0.008),
+    ("boulder_granite_c", [-5.5, 5.5], 200.0, -0.008),
+    ("boulder_granite_b", [5.0, -5.5], 120.0, -0.026),
+    ("boulder_granite", [-0.5, -9.0], 300.0, 0.0),
+];
+
 /// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
 const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
     ("rock_small", [-6.0, 5.0], 0, 0.0),
@@ -927,7 +946,10 @@ pub fn finish_kit(
         }
         for lod in 0..3usize {
             let Some(mh) = g.named_meshes.get(lod_mesh_name(p.piece, lod).as_str()) else {
-                warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
+                // A piece may end at 400 m with no LOD2 (the small boulders, owner A25).
+                if lod < 2 {
+                    warn!("kit: {} has no {}_lod{lod}", p.piece, p.piece);
+                }
                 continue;
             };
             let Some(gm) = gltf_meshes.get(mh) else {
@@ -1397,6 +1419,15 @@ mod tests {
         }
         for piece in ["seabed_rock", "seabed_pebbles"] {
             assert!(on(piece, (1, 1)) && on("ocean_base", (1, 1)), "{piece}");
+        }
+        for piece in [
+            "boulder_granite",
+            "boulder_granite_b",
+            "boulder_granite_c",
+            "boulder_granite_d",
+            "outcrop_granite",
+        ] {
+            assert!(on(piece, (-2, 0)) && on("meadow_base", (-2, 0)), "{piece}");
         }
         for piece in [
             "river_stones",

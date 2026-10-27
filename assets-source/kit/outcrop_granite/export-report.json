@@ -1,0 +1,31 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/outcrop_granite.py",
+    "sha256": "868a76d94592be0b9ff9edab8b02d8e3b6feeeb781e701c1b0a7af79f97f57d9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    }
+  ],
+  "lodTris": {
+    "outcrop_granite_lod0": 1371,
+    "outcrop_granite_lod1": 587,
+    "outcrop_granite_lod2": 176
+  },
+  "nodes": [
+    "outcrop_granite",
+    "outcrop_granite_collider",
+    "outcrop_granite_lod0",
+    "outcrop_granite_lod1",
+    "outcrop_granite_lod2"
+  ],
+  "pieceId": "outcrop_granite",
+  "sockets": []
+}

@@ -1,0 +1,431 @@
+{
+  "pieceId": "boulder_granite_d",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/boulder_granite_d.py",
+    "sha256": "369af6f52e94ccaa3a1b612fb767fdb00d2cbd65db9707a03fc198b8287a2c79"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.5,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.48378169536590576,
+        "min": 0.20444446802139282,
+        "p01": 0.2826143801212311,
+        "p05": 0.3042614459991455,
+        "texels": 601279
+      },
+      "ao": {
+        "mean": 0.9296663999557495,
+        "min": 0.1882353127002716,
+        "p01": 0.4078431725502014,
+        "p05": 0.5607843399047852,
+        "texels": 601279
+      },
+      "mossFraction": 0.025337655231597978,
+      "normalMissFraction": 0,
+      "roughness": {
+        "mean": 0.7564178705215454,
+        "min": 0.7215686440467834,
+        "p01": 0.7215686440467834,
+        "p05": 0.7215686440467834,
+        "texels": 601279
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.08,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "colliderReach": 2.291,
+    "device": "CPU",
+    "joints": [],
+    "lod2Drops": {},
+    "marginPx": 8,
+    "maxRayDistanceM": 0.25,
+    "receiverSignature": "fef546c8d660dd9bb6ba4a27ecd1fd0172677877cca66cc5517705344d490439",
+    "samples": 32,
+    "shape": {
+      "groundReach": 2.194,
+      "sizeAboveGround": [
+        4.506,
+        3.487,
+        2.409
+      ],
+      "z": [
+        -0.536,
+        2.409
+      ]
+    },
+    "skipped": false,
+    "stones": [
+      {
+        "centre": [
+          0,
+          0,
+          0.5
+        ],
+        "semi": [
+          2.22,
+          1.72,
+          1.9
+        ]
+      }
+    ],
+    "texelDensityPxPerM": {
+      "max": 144.8914218897234,
+      "median": 133.66413129031062,
+      "min": 108.30781690749922
+    },
+    "texelMinPxPerM": 104
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1371,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 588,
+      "ratio": 0.4288840262582057
+    },
+    {
+      "lod": 2,
+      "tris": 175,
+      "ratio": 0.1276440554339898
+    }
+  ],
+  "collider": {
+    "node": "boulder_granite_d_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 144.8914218897234,
+    "median": 133.66413129031062,
+    "min": 108.30781690749922
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1021652,
+        "astc": 1035327
+      },
+      "glbBytes": 92448
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 767300,
+        "sha256": "32ec3148e6438ac52ff3a5769755226c1729db3cec36135a8e325ee8ecf4367c"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 778716,
+        "sha256": "0845526f8ca063b0eda77f63f25fdf94b05acba256bb109d468a4c171dbed48c"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1401641,
+        "sha256": "e87791895a0f4994de14e828d4261c05bbebb4382075b01c90a7775420023945"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 17689,
+        "sha256": "cc88869313c80528f1415454a2b3b937edfbdc7cc230207575c854581f25060b"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 16936,
+        "sha256": "630579258317bd62240eefd7ec44de8435f957c8a5afd548b68862c0c833be88"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 23826,
+        "sha256": "a8d7c72c753d80277b7a2ead3b5098a0434178bf697592345644e53bb85fb346"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 109104,
+        "sha256": "aa5de3e5ffdb92013f4ef053a7ed7c56dd9015b924d4a1ce701eb10dcd2738d9"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 110636,
+        "sha256": "b644c7059b179c93badb9a43155399f5a8c1778598f38e0889262b398b4bc243"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 226492,
+        "sha256": "5e14aeece5b170790f1a41bf11d6400a56fd4160a39851718eb84c6a1f0a4711"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 127559,
+        "sha256": "b890703689e6235909d3af12c6fb901f88e72df286e3e23ba1410e42c8ce7e2b"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 129039,
+        "sha256": "8f82e26204821c1273de10bb5a83005d09e96fd45d549b92c3a050ac53105774"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 178861,
+        "sha256": "e1d1cbb8b3fca1a6215f283e44066443421fb788bd6eca05df616a80bd6c6283"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.glb",
+      "sha256": "dc98a48fb2f550d5e7880f363225f9cd3e4db33acfb024a2b4489fa0f607bb61",
+      "bytes": 92448
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.bc7.ktx2",
+      "sha256": "32ec3148e6438ac52ff3a5769755226c1729db3cec36135a8e325ee8ecf4367c",
+      "bytes": 767300
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.astc.ktx2",
+      "sha256": "0845526f8ca063b0eda77f63f25fdf94b05acba256bb109d468a4c171dbed48c",
+      "bytes": 778716
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.albedo.png",
+      "sha256": "e87791895a0f4994de14e828d4261c05bbebb4382075b01c90a7775420023945",
+      "bytes": 1401641
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.bc7.ktx2",
+      "sha256": "cc88869313c80528f1415454a2b3b937edfbdc7cc230207575c854581f25060b",
+      "bytes": 17689
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.astc.ktx2",
+      "sha256": "630579258317bd62240eefd7ec44de8435f957c8a5afd548b68862c0c833be88",
+      "bytes": 16936
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.masks.png",
+      "sha256": "a8d7c72c753d80277b7a2ead3b5098a0434178bf697592345644e53bb85fb346",
+      "bytes": 23826
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.bc7.ktx2",
+      "sha256": "aa5de3e5ffdb92013f4ef053a7ed7c56dd9015b924d4a1ce701eb10dcd2738d9",
+      "bytes": 109104
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.astc.ktx2",
+      "sha256": "b644c7059b179c93badb9a43155399f5a8c1778598f38e0889262b398b4bc243",
+      "bytes": 110636
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.normal.png",
+      "sha256": "5e14aeece5b170790f1a41bf11d6400a56fd4160a39851718eb84c6a1f0a4711",
+      "bytes": 226492
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.bc7.ktx2",
+      "sha256": "b890703689e6235909d3af12c6fb901f88e72df286e3e23ba1410e42c8ce7e2b",
+      "bytes": 127559
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.astc.ktx2",
+      "sha256": "8f82e26204821c1273de10bb5a83005d09e96fd45d549b92c3a050ac53105774",
+      "bytes": 129039
+    },
+    {
+      "path": "assets/kit/p1/boulder_granite_d/boulder_granite_d.orm.png",
+      "sha256": "e1d1cbb8b3fca1a6215f283e44066443421fb788bd6eca05df616a80bd6c6283",
+      "bytes": 178861
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/boulders/ref-1.jpg",
+      "sha256": "5390c095d62a3207f7c1337491a43aad2d527536fa612b1901484ebcb82304c5",
+      "sourceSha256": "4f5663d2834ccb503b030c1bda85dd441dd1399aea17b75075a3256ad30659ef",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d663ebed-b31e-40a2-a3b5-f4dcbac47f46",
+      "prompt": "Four separate weathered granite boulders of clearly different sizes stand apart in a loose group on the plain grey studio floor, each with a soft contact shadow: the biggest, at the back left, is a broad rounded block noticeably wider than it is tall; at the back right a tilted wedge-shaped block with one flat fractured face; at the front left a smaller rounded boulder; and at the front right the smallest, a low squat boulder. Each is weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, its underside flat where it would sit sunk into the ground, smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole group centred in frame and seen from the front-left from a high three-quarter angle. The picture shows only the four boulders on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/boulders/ref-2.jpg",
+      "sha256": "138b8bce9f7dbbc867d7d67e10ec91003f2bd86449a08260c00a4b3f373b13d9",
+      "sourceSha256": "1c01b83f3cdef730b6c9de7ec1c7902030c08083f60ff2ae58889479f7ea5453",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "bba05d00-e715-44ad-8435-4733784a68c5",
+      "prompt": "A single low granite outcrop: one broad low sheet of bare bedrock that barely rises out of the ground, like the back of a whale, about four times as long as it is tall and almost as wide as it is long, its top a smooth weathered gently domed surface of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, split by two or three long straight joints into broad flat slabs that step down once toward the front, rounded weathered edges, a few loose broken stones at its foot and small tufts of grass growing in the joints, its base flat on the plain grey studio floor with a soft contact shadow, smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole outcrop centred in frame and seen from the front-left from a high three-quarter angle. The picture shows only the outcrop on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/boulders/ref-3.jpg",
+      "sha256": "0317f5bbcea19976889cddad06371de1b40e37b8eefada0b818916b4b4cf24e8",
+      "sourceSha256": "c8e757f738def5d02e01069a4f75c00d867fb41fe520ea61bd7ba2f7e148a515",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "7462f20a-6c41-4660-ba23-0626703f7a79",
+      "prompt": "A single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. The back third of the tile is the edge of a mixed forest of tall spruce conifers and a few broad rounded oaks with ferns at their feet, and the front two thirds is open meadow grass with a few wildflowers. Along the forest edge and out into the meadow lie a few weathered granite boulders, each weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, half sunk into the turf with grass around its base: one big rounded boulder about 4 m long and 2.2 m tall, two medium boulders about 3 m across, two smaller boulders about 2 m across, and a low granite outcrop of flat stepped slabs about 8 m long and 1.2 m high breaking out of the grass near the trees. One small hiker figure about 1.7 m tall in a green jacket stands beside the big boulder, whose top is just above his head. The boulders cover only a small part of the tile, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/boulders/ref-4.jpg",
+      "sha256": "3f451c12eb1838cf005b100a74edee13c32e26f1795cace1f4abf93528c10486",
+      "sourceSha256": "5bf4d51e40293f28b00acb339a7f465e38cec197e58e9170fba07aadb6c9e0e2",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "7e186c06-e152-4646-9873-0dcb3f616706",
+      "prompt": "A single flat-sided hexagonal coast tile for a diorama, 32 m across. Ocean fills the side with two adjacent flat edges, lush meadow grass fills the two flat edges opposite them, and a curving sand shoreline runs across the tile from one flat edge to the opposite flat edge. Bands from land to sea: meadow grass, dry pale sand, a darker damp-sand band, a lacy white surf foam line, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Along the top of the beach where the grass meets the dry pale sand sit a few weathered granite boulders, each weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, half sunk in the turf and the sand: one big rounded boulder about 4 m long and 2 m tall, two medium boulders about 3 m across, one smaller boulder about 2 m across, and a low granite outcrop of flat stepped slabs about 8 m long and 1 m high breaking out of the grass at the head of the beach. The damp sand and the water stay clear of rocks. Under the land, the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. On the ocean side, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap, with the sand floor sloping down, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-27T04:31:54.680Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/boulders/ref-1.jpg",
+        "assets-source/refs/boulders/ref-2.jpg",
+        "assets-source/refs/boulders/ref-3.jpg",
+        "assets-source/refs/boulders/ref-4.jpg"
+      ],
+      "notes": "Approved in chat (\"All recommendations approved\", 2026-10-27, A25 on the open-questions page, sheet docs/checkpoints/boulders-refs/refs-sheet.jpg). ref-1 sets the four boulders and ref-2 the whaleback outcrop; ref-3 (meadow and forest edge) and ref-4 (coast) set placement and look only, since they read larger than the sizes. Sizes: boulder_granite 2.2 x 1.8 x 1.0, _b 2.6 x 2.2 x 1.4, _c 3.4 x 2.4 x 2.0, _d 4.5 x 3.5 x 2.4, outcrop_granite 8 x 5 x 1.2 m. Scatter: boulders meadow 0.4, forest 0.4, oak 0.3; outcrop meadow 0.15, forest 0.2; variant weights 3:3:2:1; none on farm, wheat or windmill. Coast: grass-to-sand band, inside the beach 0-6 cap (boulders 0.4, outcrop 0.2). LOD: all stay to 400 m; past 400 m only _c, _d and the outcrop. Texture: a unique bake per piece at about 128 px/m. Walker: the outcrop top is not walkable."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "B1 granite boulders and outcrop (owner A25, 2026-10-27)",
+      "requested": "2026-10-27",
+      "notes": "Pending owner review; not an approval. A runtime scatter prop of the B1 granite set (refs assets-source/refs/boulders, approved A25), in rock_small's granite family, with a unique bake at about 128 px/m. Review the six-view renders in assets-source/kit/boulder_granite_d/renders/ and the review sheet in docs/checkpoints/boulders/. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved\", 2026-10-27, A30 on the open-questions page, every recommended default): the piece; Q2 O1 the boulders and outcrop lead their tiles' scatter rules; Q3 the thumbnail shifts and the 2 m higher thumbnail look-at; Q4 O1 tiles added to the mixed world so every scatter piece draws; Q5 no outcrop on the coast band, no boulders on beach_outer, the outcrop's 109 px/m bake, small boulders ending at 400 m. Review sheets in docs/checkpoints/boulders/."
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/boulders/boulders-coast.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        148.39,
+        201.7,
+        219.68
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 9.0,
+      "load_after": [
+        136.31,
+        197.36,
+        217.93
+      ],
+      "frames": {
+        "b1-coast-overview": {
+          "mean": 0.4702,
+          "problem": null
+        },
+        "b1-coast-south": {
+          "mean": 0.4893,
+          "problem": null
+        },
+        "b1-coast-north": {
+          "mean": 0.4384,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

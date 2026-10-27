@@ -1,0 +1,370 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   30,
+   60,
+   62
+  ],
+  "look_at": [
+   14,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "rotate",
+  "dir": "cw"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_inner"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_inner"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach_outer"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "wait",
+  "frames": 600
+ },
+ {
+  "cmd": "dump_state",
+  "name": "b1-coast-state"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   0.0,
+   95.0,
+   45.0
+  ],
+  "look_at": [
+   0.0,
+   0.0,
+   4.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "b1-coast-overview"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   27.7,
+   26.0,
+   88.0
+  ],
+  "look_at": [
+   27.7,
+   -1.0,
+   48.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "b1-coast-south"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -30.0,
+   26.0,
+   -75.0
+  ],
+  "look_at": [
+   -14.0,
+   -1.0,
+   -30.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "screenshot",
+  "name": "b1-coast-north"
+ },
+ {
+  "cmd": "wait",
+  "frames": 10
+ },
+ {
+  "cmd": "exit"
+ }
+]

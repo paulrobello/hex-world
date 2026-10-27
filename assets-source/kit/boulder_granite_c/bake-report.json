@@ -1,0 +1,89 @@
+{
+  "aoDistanceM": 0.5,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.47997328639030457,
+      "min": 0.20444446802139282,
+      "p01": 0.28020915389060974,
+      "p05": 0.3006536066532135,
+      "texels": 577491
+    },
+    "ao": {
+      "mean": 0.9087164402008057,
+      "min": 0.0313725508749485,
+      "p01": 0.250980406999588,
+      "p05": 0.501960813999176,
+      "texels": 577491
+    },
+    "mossFraction": 0.01800028052385232,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.7576845288276672,
+      "min": 0.7215686440467834,
+      "p01": 0.7215686440467834,
+      "p05": 0.7215686440467834,
+      "texels": 577491
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.08,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderReach": 1.781,
+  "device": "CPU",
+  "joints": [],
+  "lod2Drops": {},
+  "marginPx": 8,
+  "maxRayDistanceM": 0.25,
+  "receiverSignature": "7046b59db243f0c6899b35f92160eea407fe0c17aa1ce5a58b0e1a66a618bc2b",
+  "samples": 32,
+  "shape": {
+    "groundReach": 1.743,
+    "sizeAboveGround": [
+      3.359,
+      2.391,
+      1.901
+    ],
+    "z": [
+      -0.512,
+      1.901
+    ]
+  },
+  "skipped": false,
+  "stones": [
+    {
+      "centre": [
+        0.0,
+        0.0,
+        0.72
+      ],
+      "semi": [
+        1.77,
+        1.3,
+        1.42
+      ]
+    }
+  ],
+  "texelDensityPxPerM": {
+    "max": 185.0464374098628,
+    "median": 171.57503807945608,
+    "min": 127.39220554238184
+  },
+  "texelMinPxPerM": 104.0
+}

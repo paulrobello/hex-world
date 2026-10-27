@@ -18,6 +18,7 @@
             (piece: "rock_small", density: 0.5),
             (piece: "wildflower_clump", density: 0.9),
             (piece: "tree_oak", density: 0.3),
+            (piece: "boulder_granite", density: 0.3),
         ],
         hero: [
             (piece: "tree_hero_oak", at: (0.0, 0.0)),
