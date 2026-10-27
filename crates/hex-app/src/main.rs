@@ -12,6 +12,7 @@ mod capture;
 mod control;
 #[cfg(not(target_arch = "wasm32"))]
 mod exit_guard;
+mod frame_cap;
 mod game;
 mod persist;
 mod photo;
@@ -123,6 +124,7 @@ fn main() {
                 })
                 .set(asset_plugin()),
         )
+        .add_plugins(frame_cap::FrameCapPlugin(flags.frame_cap))
         .add_plugins(HexRenderPlugin {
             scenario: flags.scenario,
             view: flags.view,
@@ -199,6 +201,14 @@ fn main() {
                 .after(sim::publish_cars)
                 .run_if(|d: Res<hex_play::debug::DebugOverlays>| d.networks),
         );
+
+    // Web: the engine keeps its continuous update while the canvas is blurred. Opening a HUD sheet
+    // focuses its control, and Bevy's default `WinitSettings::game()` would drop the engine to a
+    // 60 Hz reactive update for as long as the sheet is open (half rate on a 120 Hz display,
+    // docs/perf/frame-pacing/). The browser throttles hidden tabs itself. Native keeps `game()`:
+    // it has no overlay to take focus, so an unfocused native window is one the user left.
+    #[cfg(target_arch = "wasm32")]
+    app.insert_resource(bevy::winit::WinitSettings::continuous());
 
     #[cfg(not(target_arch = "wasm32"))]
     if app.world().resource::<RunFlags>().0.thumbs {

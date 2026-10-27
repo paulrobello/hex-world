@@ -89,3 +89,81 @@
   };
   console.info("frame-latency: limit " + n + " (" + source + ")");
 })();
+
+// Frame rate cap (owner A29: Off, 30, 60 or 120 fps, Settings > Graphics). The engine owns the
+// choice (`set_frame_cap`, `state().frame_cap`) and hands it here through `__frameCap.set(fps)`,
+// 0 for Off. While a cap is set, every animation-frame callback on the page (the engine's, the
+// HUD's, any probe's) is held until the interval since the last open frame has elapsed: one
+// decision per animation frame, so every callback in an open frame runs with the same timestamp.
+// It wraps the frame-latency limit above, so a held frame has not submitted and is not counted in
+// flight. Off passes every request straight through.
+(function () {
+  if (!window.requestAnimationFrame) return;
+  var raf = window.requestAnimationFrame.bind(window);
+  var caf = window.cancelAnimationFrame.bind(window);
+  var fps = 0, interval = 0, next = null, skipped = 0, opened = 0;
+  // Held callbacks in request order, by the id handed out (a range of their own below the
+  // limiter's negative ids, so either layer's cancel finds its own).
+  var pending = [], byId = new Map(), nextId = -0x40000000, ticking = false;
+  // A frame may open this early: rAF timestamps sit on the display's vsync grid, so a 60 cap on a
+  // 60 Hz display must not wait for a timestamp exactly one interval on.
+  function slack() { return Math.min(2, interval * 0.1); }
+  function open(ts) {
+    if (!interval) return true;
+    if (next !== null && ts < next - slack()) return false;
+    // The deadline moves by whole intervals; after a stall it restarts from now, with no burst.
+    next = next === null || ts - next >= interval ? ts + interval : next + interval;
+    return true;
+  }
+  function tick(ts) {
+    ticking = false;
+    if (!pending.length) return;
+    if (!open(ts)) {
+      skipped++;
+      ticking = true;
+      raf(tick);
+      return;
+    }
+    opened++;
+    var run = pending;
+    pending = [];
+    for (var i = 0; i < run.length; i++) {
+      byId.delete(run[i].id);
+      try {
+        run[i].cb(ts);
+      } catch (e) {
+        setTimeout(function () { throw e; });
+      }
+    }
+  }
+  window.requestAnimationFrame = function (cb) {
+    if (!interval && !pending.length) return raf(cb);
+    var e = { id: nextId--, cb: cb };
+    pending.push(e);
+    byId.set(e.id, e);
+    if (!ticking) {
+      ticking = true;
+      raf(tick);
+    }
+    return e.id;
+  };
+  window.cancelAnimationFrame = function (id) {
+    var e = byId.get(id);
+    if (!e) return caf(id);
+    byId.delete(id);
+    var i = pending.indexOf(e);
+    if (i >= 0) pending.splice(i, 1);
+  };
+  window.__frameCap = {
+    set: function (n) {
+      n = Math.floor(Number(n));
+      fps = n > 0 ? n : 0;
+      interval = fps ? 1000 / fps : 0;
+      next = null;
+      console.info("frame-cap: " + (fps ? fps + " fps" : "off"));
+    },
+    fps: function () { return fps; },
+    skipped: function () { return skipped; },
+    opened: function () { return opened; },
+  };
+})();

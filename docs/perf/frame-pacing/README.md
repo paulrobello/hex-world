@@ -110,7 +110,26 @@ At 60 Hz, when the GPU keeps up, the fix changes nothing measurable, so Q7's pre
 
 ## Separate finding: Settings throttles the engine to 60 Hz
 
-While any HUD control holds focus, the engine updates at 60 Hz reactive (Bevy `WinitSettings::game()` `unfocused_mode`). The Settings sheet, the Worlds sheet's fields and anything else that takes focus all do this. On a 60 Hz display it is close to invisible. On a 120 Hz display, opening Settings halves the frame rate. Not changed here (see the options in the card hand-back).
+While any HUD control held focus, the engine updated at 60 Hz reactive (Bevy `WinitSettings::game()` `unfocused_mode`). The Settings sheet, the Worlds sheet's fields and anything else that takes focus all did this. On a 60 Hz display it is close to invisible. On a 120 Hz display, opening Settings halved the frame rate.
+
+Fixed for owner A29 (2026-10-27): the web build runs `WinitSettings::continuous()`; native keeps `game()` (PRD §9.1). `focus-keep-a29.json` is the `default` arm with `PACING_FOCUS=keep` (macdaddy, uncapped, 2560x1440, load 157-174): with Settings open and focus on its tab button the engine drew 410 frames in 5 s, against 416 with the canvas focused and exactly 300 before the fix. Every later window kept focus on a HUD control and drew 345-364.
+
+## Frame rate cap (owner A29)
+
+`cap_off`, `cap_30`, `cap_60` and `cap_120` arms set `?frame_cap=` and run closed, open and unfocused windows. Engine frames per 5 s on macdaddy at 1280x720, radius-4 world (load 157-235):
+
+| Arm | Paced 60 Hz (`cap-paced-a29.json`) | Uncapped (`cap-uncapped-a29.json`) |
+|---|---|---|
+| Off | 299-301 | 732-748 |
+| 30 | 151 (even 33.3 ms) | 151 |
+| 60 | 300-301 | 299-301 |
+| 120 | 300-301 (above the display) | 209-210 |
+
+Uncapped headless Chrome delivers an animation frame that draws nothing 17-24 ms late, so each held frame costs that long there: the 60 cap alternates 6.5 and 24 ms intervals around the right mean, and the 120 cap reads 42 fps. With display pacing every frame arrives on vsync, and 30 and 60 hold exactly. A 120 Hz paced run (a real ProMotion display) is still to do.
+
+Off is unchanged on the web (`cap-off-ab-a29.json`): the same dist with `web/frame-latency.js` swapped by `PACING_SHIM_A` (the file before the gate) and `PACING_SHIM_B` (with it), ABBA, uncapped at the light setting, load 346-561. Engine frames per 5 s were 651-693 before and 674-694 after, and submit p95 was 7.6-8.9 ms before and 7.6-7.9 ms after.
+
+Native (`target/release/hex-world --scenario single --size 640x400 --present immediate --frame-cap N`, a script times 301 frames between two `dump_state` commands from the log; macdaddy, load 347-490, so rough): Off 126-140 fps, 30 cap 29.7, 60 cap 59.8, 120 cap 116.8-119.5. One Off run read 58.6 fps: its window opened without focus, and native keeps Bevy's 60 Hz unfocused update.
 
 ## MiniMac before/after recipe
 

@@ -8,12 +8,14 @@ import { Hud } from "./hud.ts";
 import { sprite } from "./icons.ts";
 import { Loading } from "./loading.ts";
 import { Persistence } from "./persist.ts";
-import { OS_REDUCE, loadGrade, loadGrass, loadGrassDistance, loadMotion } from "./settings.ts";
+import { OS_REDUCE, loadFrameCap, loadGrade, loadGrass, loadGrassDistance, loadMotion } from "./settings.ts";
 import {
   gradeCommand,
   grassCommand,
   grassDistanceCommand,
+  frameCapCommand,
   motionCommand,
+  startupFrameCap,
   startupGrade,
   startupGrass,
   startupGrassDistance,
@@ -97,6 +99,9 @@ function run(root: HTMLElement, hw: Bridge): void {
   // And its grass distance: a `grass_distance` key in the address wins for the visit.
   const grassDistance = startupGrassDistance(location.search, loadGrassDistance());
   if (grassDistance) hw.cmd(grassDistanceCommand(grassDistance));
+  // The viewer's frame rate cap: a `frame_cap` key in the address wins for the visit.
+  const frameCap = startupFrameCap(location.search, loadFrameCap());
+  if (frameCap) hw.cmd(frameCapCommand(frameCap));
   // The viewer's walk speed, sent only when one is stored (the engine starts at its default).
   const walkSpeed = loadWalkSpeed();
   if (walkSpeed != null) hw.cmd(walkSpeedCommand(walkSpeed));

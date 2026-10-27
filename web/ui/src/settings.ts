@@ -8,11 +8,14 @@
 // the world save. The Grass density slider reads `state().grass` and writes `set_grass` (at most every
 // 150 ms while dragging, and on release); the Grass distance slider (Near, Medium, Far, Very far)
 // reads `state().grass.distance` and writes `set_grass_distance`; grass draws on High and Ultra only.
+// The Frame rate control (owner A29: Off, 30, 60 or 120 fps) reads `state().frame_cap` and writes
+// `set_frame_cap`; the choice is kept per viewer in localStorage, outside the world save.
 // The World tab (settings-world.ts) holds the walk speed and Start over.
 import type { AudioApi } from "./audio.ts";
 import { DebugPanel } from "./debug.ts";
 import type {
   DebugState,
+  FrameCapState,
   GradeName,
   GradeState,
   GrassDistanceName,
@@ -33,6 +36,11 @@ import {
   autoTier,
   CHANNELS,
   type Channel,
+  FRAME_CAP_KEY,
+  FRAME_CAP_OPTIONS,
+  type FrameCapChoice,
+  frameCapCommand,
+  frameCapView,
   GRADE_KEY,
   GRASS_DISTANCE_KEY,
   GRASS_DISTANCE_STOPS,
@@ -73,6 +81,23 @@ function saveGrade(g: GradeName): void {
     localStorage.setItem(GRADE_KEY, g);
   } catch {
     /* Storage refused: the grade holds until the page closes. */
+  }
+}
+
+/** The viewer's stored frame rate cap, or null without one or without storage. */
+export function loadFrameCap(): string | null {
+  try {
+    return localStorage.getItem(FRAME_CAP_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveFrameCap(c: FrameCapChoice): void {
+  try {
+    localStorage.setItem(FRAME_CAP_KEY, c);
+  } catch {
+    /* Storage refused: the cap holds until the page closes. */
   }
 }
 
@@ -169,6 +194,9 @@ export class Settings {
   private readonly caution: HTMLElement;
   private readonly cautionTitle: HTMLElement;
   private readonly cautionBody: HTMLElement;
+  private readonly frameCap: ReturnType<typeof seg<FrameCapChoice>>;
+  private frameCapPick: { id: FrameCapChoice; until: number } | null = null;
+  private frameCapShown: FrameCapChoice | null = null;
   private readonly gradeHead: HTMLElement;
   private readonly gradeSelect: Select;
   private readonly toggle: HTMLButtonElement;
@@ -233,6 +261,15 @@ export class Settings {
       icon("alert"),
       h("div", {}, this.cautionTitle, this.cautionBody),
     );
+
+    // ---------- Graphics: Frame rate ----------
+    // Off is the default (owner A29). A pick applies at once and is kept for this viewer; it never
+    // queues an autosave.
+    this.frameCap = seg<FrameCapChoice>("Frame rate cap", [...FRAME_CAP_OPTIONS], (c) => {
+      this.frameCapPick = { id: c, until: performance.now() + PICK_HOLD_MS };
+      this.hw.cmd(frameCapCommand(c));
+      saveFrameCap(c);
+    });
 
     // ---------- Graphics: Tilt-shift ----------
     this.toggle = h("button", {
@@ -344,6 +381,18 @@ export class Settings {
       this.tierList,
       this.tierReason,
       this.caution,
+      h("h2", { class: "section-h" }, "Frame rate"),
+      h(
+        "div",
+        { class: "field field--force" },
+        h("span", { class: "field__label" }, "Frame rate cap"),
+        this.frameCap.el,
+        h(
+          "span",
+          { class: "field__hint" },
+          "Off draws as fast as your display allows. A cap keeps the fan and battery calmer.",
+        ),
+      ),
       h("h2", { class: "section-h" }, "Tilt-shift"),
       h(
         "div",
@@ -535,6 +584,7 @@ export class Settings {
     grass?: GrassState,
     walk?: WalkState,
     debug?: DebugState,
+    frameCap?: FrameCapState,
   ): void {
     if (!this.shown) return;
     if (this.tab === "debug") this.debug.render(debug);
@@ -543,6 +593,7 @@ export class Settings {
       this.world.renderWalk(walk);
     }
     this.renderTier(tier);
+    this.renderFrameCap(frameCap);
     this.renderGrade(grade);
     this.renderGrass(grass, tier);
     this.renderGrassDistance(grass, tier);
@@ -639,6 +690,15 @@ export class Settings {
     this.gradeSig = sig;
     this.gradeSelect.update(v.rows, v.selected);
     this.gradeHead.hidden = this.gradeSelect.el.hidden = v.rows.length === 0;
+  }
+
+  private renderFrameCap(s: FrameCapState | undefined): void {
+    const pick = this.frameCapPick;
+    if (pick && (frameCapView(s) === pick.id || performance.now() > pick.until)) this.frameCapPick = null;
+    const v = frameCapView(s, this.frameCapPick?.id ?? null);
+    if (v === this.frameCapShown) return;
+    this.frameCapShown = v;
+    this.frameCap.set(v);
   }
 
   /** A grade pick switches the look live and is kept for this viewer; it never queues an autosave. */

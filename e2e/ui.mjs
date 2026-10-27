@@ -1238,6 +1238,10 @@ try {
   await page.locator("#settings-tab-audio").click();
   await until(async () => !(await gradeOpen()), "changing tab closes the list");
   await page.locator("#settings-tab-graphics").click();
+  // The tab change scrolls the panel back to the top, which leaves the button at the sheet's foot;
+  // centre it so the open list has room and a click on an option does not scroll the sheet (a scroll
+  // that moves the button closes the list).
+  await gradeBtn.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await gradeBtn.click();
   await until(gradeOpen, "the list opens to pick Rich 2 again");
   await gradeOpt("rich-2").click();
@@ -1297,6 +1301,26 @@ try {
   await setRange("Walk speed", 6.5);
   await until(async () => (await walkSt()).walk_speed === 6.5, "the slider sets 6.5 m/s");
 
+  // Frame rate cap (Settings → Graphics, owner A29): Off by default; a pick sets state().frame_cap
+  // and the page's animation-frame gate through set_frame_cap and is kept per viewer in localStorage
+  // (hexWorld.frameCap), checked after the reload below.
+  const capSeg = ".sheet--settings .seg[aria-label='Frame rate cap']";
+  const capOpt = (v) => page.locator(`${capSeg} button[data-value='${v}']`);
+  const frameCap = async () => (await st()).frame_cap;
+  await page.locator("#settings-tab-graphics").click();
+  await until(async () => page.locator("#settings-tab-graphics[aria-selected=true]").count(), "the Graphics tab opens again");
+  check((await frameCap())?.fps === null && (await capOpt("off").getAttribute("aria-checked")) === "true", "the frame rate cap starts Off");
+  await capOpt("60").click();
+  await until(async () => (await frameCap())?.fps === 60, "picking 60 fps sets state().frame_cap");
+  check(await page.evaluate(() => window.__frameCap.fps()) === 60, "and the page's frame gate");
+  check((await capOpt("60").getAttribute("aria-checked")) === "true", "the 60 fps option is checked");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.frameCap")) === "60", "the cap is stored for this viewer");
+  await page.locator(capSeg).scrollIntoViewIfNeeded();
+  await page.mouse.move(700, 450);
+  await page.evaluate(() => document.activeElement?.blur());
+  await page.waitForTimeout(300);
+  await shot("s9-9-settings-frame-cap");
+
   // Reload: the stored grade is sent once the overlay starts, and the Colour grade button shows it.
   await page.reload({ waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
@@ -1309,6 +1333,11 @@ try {
   check((await gradeOpt("rich-2").getAttribute("aria-selected")) === "true", "Rich 2 is the marked option after the reload");
   await until(async () => (await walkSt())?.walk_speed === 6.5, "the stored walk speed holds over a reload", 15_000);
   check((await walkSt()).sprint_speed === 13, `sprint is ${(await walkSt()).sprint_speed} m/s after the reload`);
+  await until(async () => (await frameCap())?.fps === 60, "the stored frame rate cap holds over a reload", 15_000);
+  await until(async () => (await capOpt("60").getAttribute("aria-checked")) === "true", "the 60 fps option is checked after the reload");
+  await capOpt("off").click();
+  await until(async () => (await frameCap())?.fps === null && (await page.evaluate(() => window.__frameCap.fps())) === 0, "Off hands the frame loop back");
+  check(await page.evaluate(() => localStorage.getItem("hexWorld.frameCap")) === "off", "Off is stored");
   await page.locator("#settings-tab-world").click();
   await until(async () => (await text(speedOut)) === "6.5 m/s", "the Walk speed slider reads 6.5 m/s after the reload");
 

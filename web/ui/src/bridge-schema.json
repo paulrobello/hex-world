@@ -1325,6 +1325,9 @@
     "set_car_cap": [
       "cap"
     ],
+    "set_frame_cap": [
+      "fps"
+    ],
     "set_grade": [
       "grade"
     ],
@@ -1566,6 +1569,12 @@
     "cell": [
       "q",
       "r"
+    ],
+    "frame_cap": [
+      "fps",
+      "interval_ms",
+      "limiter",
+      "unfocused"
     ],
     "ghost": [
       "edges",

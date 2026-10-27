@@ -103,6 +103,8 @@ export type Command =
   | { cmd: "set_reduced_motion"; on: boolean }
   /** Test hook (e2e, scripts): hold the car cap at `cap` over the tier's; `null` hands it back. The HUD never sends it. */
   | { cmd: "set_car_cap"; cap: number | null }
+  /** Frame rate cap: `null` (or 0) is Off, else one of `FRAME_CAPS`; any other value is skipped. */
+  | { cmd: "set_frame_cap"; fps: FrameCapFps | null }
   | { cmd: "exit" }
   | { cmd: "select_tile"; id: string }
   | { cmd: "hover"; q: number; r: number }
@@ -482,6 +484,21 @@ export interface GradePreset {
   detail: string;
 }
 
+/** The frame rate caps the engine accepts (`crate::frame_cap::CHOICES`); Off is `null`. */
+export const FRAME_CAPS = [30, 60, 120] as const;
+export type FrameCapFps = (typeof FRAME_CAPS)[number];
+
+/** `state().frame_cap`: the cap in force and how it is applied (docs/agent-operability.md). */
+export interface FrameCapState {
+  /** `null` while Off. */
+  fps: FrameCapFps | null;
+  interval_ms: number | null;
+  /** `raf`: the page's animation-frame gate (web); `sleep`: the native main-thread limiter. */
+  limiter: "raf" | "sleep";
+  /** The engine's update while the canvas or window is unfocused. */
+  unfocused: "continuous" | "reactive_60hz";
+}
+
 /** `state().grade`: the look in force, the default look, and every preset in display order. */
 export interface GradeState {
   name: GradeName;
@@ -541,6 +558,7 @@ export interface State {
   tier?: TierState;
   grade?: GradeState;
   grass?: GrassState;
+  frame_cap?: FrameCapState;
   /** The game camera: position and unit forward vector in world metres. */
   camera?: { pos: Vec3; forward: Vec3 } | null;
   /** Placed tiles hidden until their kit packs arrive (they are not walkable ground yet). */
@@ -595,6 +613,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   set_grass_distance: keys<CommandOf<"set_grass_distance">>({ scale: true }),
   set_reduced_motion: keys<CommandOf<"set_reduced_motion">>({ on: true }),
   set_car_cap: keys<CommandOf<"set_car_cap">>({ cap: true }),
+  set_frame_cap: keys<CommandOf<"set_frame_cap">>({ fps: true }),
   exit: keys<CommandOf<"exit">>({}),
   select_tile: keys<CommandOf<"select_tile">>({ id: true }),
   hover: keys<CommandOf<"hover">>({ q: true, r: true }),
@@ -690,6 +709,7 @@ export const ENUMS = {
 };
 
 export const STATE_FIELDS = {
+  frame_cap: keys<FrameCapState>({ fps: true, interval_ms: true, limiter: true, unfocused: true }),
   play: keys<PlayState>({
     tool: true,
     selected: true,

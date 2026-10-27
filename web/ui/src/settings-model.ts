@@ -3,6 +3,9 @@
 // renderer today (hex_render: SSAO, the water variant, tilt-shift taps, boid caps), not the PRD §9.2
 // targets. The colour grade rows take their descriptions from the engine.
 import {
+  FRAME_CAPS,
+  type FrameCapFps,
+  type FrameCapState,
   GRADES,
   GRASS,
   GRASS_DISTANCE,
@@ -285,6 +288,40 @@ export const grassDistanceCommand = (id: GrassDistanceName): { cmd: "set_grass_d
 export function startupGrassDistance(search: string, stored: string | null): GrassDistanceName | null {
   if (new URLSearchParams(search).has("grass_distance")) return null;
   return isGrassDistance(stored) ? stored : null;
+}
+
+/** The viewer's frame rate cap in localStorage (`off`, `30`, `60`, `120`); it is not part of the world save. */
+export const FRAME_CAP_KEY = "hexWorld.frameCap";
+
+export type FrameCapChoice = "off" | `${FrameCapFps}`;
+
+/** The Frame rate segmented control's options, Off first (owner A29: Off is the default). */
+export const FRAME_CAP_OPTIONS: readonly { value: FrameCapChoice; text: string }[] = [
+  { value: "off", text: "Off" },
+  ...FRAME_CAPS.map((n) => ({ value: `${n}` as FrameCapChoice, text: `${n} fps` })),
+];
+
+export const isFrameCap = (v: string | null | undefined): v is FrameCapChoice =>
+  FRAME_CAP_OPTIONS.some((o) => o.value === v);
+
+/** The checked option: a pending pick until `state().frame_cap.fps` follows, else the engine's cap. */
+export function frameCapView(s: FrameCapState | undefined, pick: FrameCapChoice | null = null): FrameCapChoice {
+  return pick ?? (s?.fps ? (`${s.fps}` as FrameCapChoice) : "off");
+}
+
+/** `set_frame_cap` for an option: Off is `null`. */
+export const frameCapCommand = (c: FrameCapChoice): { cmd: "set_frame_cap"; fps: FrameCapFps | null } => ({
+  cmd: "set_frame_cap",
+  fps: c === "off" ? null : (Number(c) as FrameCapFps),
+});
+
+/**
+ * The cap to send at startup: the stored one, unless the page address names one (`?frame_cap=` is
+ * read by the engine itself and wins) or the stored value is not an option.
+ */
+export function startupFrameCap(search: string, stored: string | null): FrameCapChoice | null {
+  if (new URLSearchParams(search).has("frame_cap")) return null;
+  return isFrameCap(stored) ? stored : null;
 }
 
 /** Sends at most once per `ms` while a slider drags; `flush` sends the last value at once (on release). */

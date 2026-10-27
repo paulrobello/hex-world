@@ -102,6 +102,12 @@ pub enum Command {
     SetCarCap {
         cap: Option<usize>,
     },
+    /// Frame rate cap (owner A29; `crate::frame_cap`): `null` or 0 is Off, else 30, 60 or 120 fps;
+    /// any other value is skipped. The Settings sheet sends this; the overlay keeps the choice per
+    /// viewer, not in the world save.
+    SetFrameCap {
+        fps: Option<u32>,
+    },
     Exit,
     // Play-scenario commands: each enqueues the same `Action` its key or mouse binding does.
     SelectTile {
@@ -364,6 +370,7 @@ pub struct CommandSettings<'w> {
     walk: ResMut<'w, WalkSession>,
     debug: ResMut<'w, hex_play::debug::DebugOverlays>,
     car_cap: Option<ResMut<'w, crate::sim::CarCapOverride>>,
+    frame_cap: ResMut<'w, crate::frame_cap::FrameCap>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -402,6 +409,7 @@ pub fn run_commands(
         mut walk,
         mut debug,
         mut car_cap,
+        mut frame_cap,
     } = settings;
     queue
         .items
@@ -492,6 +500,12 @@ pub fn run_commands(
         Command::SetCarCap { cap } => match car_cap.as_mut() {
             Some(o) => o.0 = cap,
             None => warn!("set_car_cap command: no car simulation, skipped"),
+        },
+        Command::SetFrameCap { fps } => match crate::frame_cap::FrameCap::from_fps(fps) {
+            Some(c) => {
+                frame_cap.set_if_neq(c);
+            }
+            None => warn!("set_frame_cap command: {fps:?} fps is not off, 30, 60 or 120, skipped"),
         },
         Command::Photo {
             dof,
@@ -742,6 +756,7 @@ pub struct GameSnapshot<'w> {
     active: Res<'w, ActiveScenario>,
     queue: Res<'w, CommandQueue>,
     game: Res<'w, GameState>,
+    frame_cap: Res<'w, crate::frame_cap::FrameCap>,
 }
 
 #[derive(bevy::ecs::system::SystemParam)]
@@ -811,6 +826,7 @@ pub fn publish_state(
         active,
         queue,
         game,
+        frame_cap,
     } = game_snapshot;
     let AgentSnapshot {
         sim,
@@ -923,6 +939,7 @@ pub fn publish_state(
         "photo": photo_state,
         "walk": crate::walk::state_json(&walk, &walk_ground),
         "frames": frames.0,
+        "frame_cap": frame_cap.json(),
         "seed": flags.0.seed,
         "no_anim": flags.0.no_anim,
         "camera": camera,
@@ -1051,6 +1068,35 @@ mod tests {
         );
         assert_eq!(c[1], Command::Wait { frames: 30 });
         assert_eq!(c[5], Command::Exit);
+    }
+
+    #[test]
+    fn parses_set_frame_cap_and_maps_it_to_a_cap() {
+        use crate::frame_cap::FrameCap;
+        let c = parse_script(
+            r#"[{"cmd":"set_frame_cap","fps":60},{"cmd":"set_frame_cap","fps":null},
+                {"cmd":"set_frame_cap","fps":0},{"cmd":"set_frame_cap","fps":75}]"#,
+        )
+        .unwrap();
+        assert_eq!(c[0], Command::SetFrameCap { fps: Some(60) });
+        assert_eq!(c[0].action(), None);
+        let caps: Vec<_> = c
+            .iter()
+            .map(|c| match c {
+                Command::SetFrameCap { fps } => FrameCap::from_fps(*fps),
+                _ => unreachable!(),
+            })
+            .collect();
+        assert_eq!(
+            caps,
+            [
+                Some(FrameCap(Some(60))),
+                Some(FrameCap(None)),
+                Some(FrameCap(None)),
+                None
+            ]
+        );
+        assert!(parse_script(r#"[{"cmd":"set_frame_cap","fps":-1}]"#).is_err());
     }
 
     #[test]

@@ -55,6 +55,13 @@ const ARMS = {
   // limiter versions compare on one dist (for example `git show 8464de8:web/frame-latency.js`).
   shim_a: { keys: {}, shim: "PACING_SHIM_A", phases: ["closed", "open", "closed"] },
   shim_b: { keys: {}, shim: "PACING_SHIM_B", phases: ["closed", "open", "closed"] },
+  // Frame rate cap (owner A29, `?frame_cap=`): each window's engine_frames against the cap. The cap
+  // only shows below the uncapped rate, so run these at a light setting (for example
+  // PACING_SIZE=1280x720 PACING_RADIUS=4).
+  cap_off: { keys: { frame_cap: "off" }, phases: ["closed", "open", "unfocused"] },
+  cap_30: { keys: { frame_cap: "30" }, phases: ["closed", "open", "unfocused"] },
+  cap_60: { keys: { frame_cap: "60" }, phases: ["closed", "open", "unfocused"] },
+  cap_120: { keys: { frame_cap: "120" }, phases: ["closed", "open", "unfocused"] },
 };
 const pick = (process.env.PACING_ARMS ?? Object.keys(ARMS).join(",")).split(",");
 
@@ -170,9 +177,10 @@ async function setPhase(page, phase, hud) {
   if ((await settingsOpen(page)) !== wantSettings) await page.locator(".tool[data-action=settings]").click();
   if ((await tilesOpen(page)) !== wantTiles) await page.locator(".tool[data-action=inventory]").click();
 }
-// Bevy's default WinitSettings (game) update at 60 Hz reactive while the canvas is not focused, and
-// opening Settings moves focus into the sheet: every phase but `unfocused` puts focus back on the
-// canvas (PACING_FOCUS=keep leaves focus where the HUD put it).
+// Opening Settings moves focus into the sheet. Bevy's default WinitSettings (game) updated at 60 Hz
+// reactive while the canvas was not focused; since A29 the web build updates continuously either
+// way. Every phase but `unfocused` puts focus back on the canvas (PACING_FOCUS=keep leaves focus
+// where the HUD put it, which is how a player has it).
 async function setFocus(page, phase) {
   if (phase === "unfocused") return page.evaluate(() => document.querySelector("canvas#hex-world")?.blur());
   if (process.env.PACING_FOCUS === "keep") return;
@@ -262,10 +270,11 @@ async function run(name, arm) {
         `state ${JSON.stringify(state)}`);
     }
     const frame_latency = await page.evaluate(() => window.__frameLatency ? { limit: window.__frameLatency.limit, source: window.__frameLatency.source } : null);
+    const frame_cap = await page.evaluate(() => ({ state: window.hexWorld.state().frame_cap ?? null, gate: window.__frameCap?.fps() ?? null }));
     const build_id = await page.evaluate(() => window.__HEX_BUILD ?? null);
     const canvas = await page.evaluate(() => { const c = document.querySelector("canvas#hex-world"); return c ? [c.width, c.height] : null; });
     const gpu = await page.evaluate(() => { const g = window.hexWorld.diag().gpu; return g?.total ?? g ?? null; });
-    return { build_id, adapter, frame_latency, canvas, gpu, phases };
+    return { build_id, adapter, frame_latency, frame_cap, canvas, gpu, phases };
   } finally {
     await browser.close();
   }

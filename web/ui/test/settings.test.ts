@@ -7,6 +7,12 @@ import { test } from "node:test";
 import type { GradeState, GrassState, TierState } from "../src/bridge.ts";
 import {
   CHANNELS,
+  FRAME_CAP_KEY,
+  FRAME_CAP_OPTIONS,
+  frameCapCommand,
+  frameCapView,
+  isFrameCap,
+  startupFrameCap,
   GRADE_KEY,
   GRASS_DISTANCE_KEY,
   GRASS_DISTANCE_STOPS,
@@ -217,6 +223,44 @@ test("colour grade at startup: the stored choice, unless the address names one o
   assert.equal(GRADE_KEY, "hexWorld.grade");
   assert.equal(isGrade("rich-3"), true);
   assert.equal(isGrade(undefined), false);
+});
+
+test("frame rate cap: Off then 30, 60 and 120 fps, the engine's cap checked, a pick held until it follows", () => {
+  assert.deepEqual(
+    FRAME_CAP_OPTIONS.map((o) => [o.value, o.text]),
+    [
+      ["off", "Off"],
+      ["30", "30 fps"],
+      ["60", "60 fps"],
+      ["120", "120 fps"],
+    ],
+  );
+  const state = (fps: 30 | 60 | 120 | null) => ({
+    fps,
+    interval_ms: fps ? Math.round(100000 / fps) / 100 : null,
+    limiter: "raf" as const,
+    unfocused: "continuous" as const,
+  });
+  assert.equal(frameCapView(undefined), "off", "before the first state, Off (the engine's default)");
+  assert.equal(frameCapView(state(null)), "off");
+  assert.equal(frameCapView(state(60)), "60");
+  assert.equal(frameCapView(state(null), "120"), "120", "a pending pick shows until the engine follows");
+  assert.deepEqual(frameCapCommand("off"), { cmd: "set_frame_cap", fps: null });
+  assert.deepEqual(frameCapCommand("30"), { cmd: "set_frame_cap", fps: 30 });
+  assert.deepEqual(frameCapCommand("120"), { cmd: "set_frame_cap", fps: 120 });
+});
+
+test("frame rate cap persists per viewer: the stored choice at startup, unless the address names one", () => {
+  assert.equal(FRAME_CAP_KEY, "hexWorld.frameCap");
+  assert.equal(startupFrameCap("", "60"), "60");
+  assert.equal(startupFrameCap("?scenario=play", "off"), "off");
+  assert.equal(startupFrameCap("?frame_cap=30", "60"), null, "?frame_cap= wins");
+  assert.equal(startupFrameCap("", null), null, "nothing stored (or storage blocked)");
+  assert.equal(startupFrameCap("", "75"), null, "a value the engine refuses never reaches it");
+  assert.equal(isFrameCap("120"), true);
+  assert.equal(isFrameCap("144"), false);
+  // The stored value is the option's own value, so a reload reads back what a pick wrote.
+  for (const o of FRAME_CAP_OPTIONS) assert.equal(startupFrameCap("", o.value), o.value);
 });
 
 test("grass: a 0-150% slider in 5% steps, the engine's share shown, disabled below High", () => {

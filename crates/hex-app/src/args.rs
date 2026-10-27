@@ -74,6 +74,9 @@ pub struct Flags {
     /// Native only, review/debug: `water_look=trail=<x>,churn=<g>` overrides the drying-trail
     /// darkening and the river churn foam scale (`hex_render::water::WaterLook`).
     pub water_look: Option<hex_render::water::WaterLook>,
+    /// `frame_cap=off|30|60|120` (natively also `--frame-cap 60`): the start frame rate cap
+    /// (`crate::frame_cap`); the Settings sheet's stored choice follows as a command.
+    pub frame_cap: crate::frame_cap::FrameCap,
 }
 
 /// `"1280x800"` -> `Some((1280, 800))`; zero or malformed sizes are rejected.
@@ -378,6 +381,25 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
             &mut state.warnings,
         )
     }),
+    ("frame_cap", |state, k, v| {
+        set_or_warn(
+            &mut state.f.frame_cap,
+            crate::frame_cap::FrameCap::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
+    // The hyphenated spelling, natively (`--frame-cap 60`).
+    ("frame-cap", |state, k, v| {
+        set_or_warn(
+            &mut state.f.frame_cap,
+            crate::frame_cap::FrameCap::parse(v),
+            k,
+            v,
+            &mut state.warnings,
+        )
+    }),
     ("water_clock", |state, k, v| {
         set_or_warn(
             &mut state.f.gate.water_fixed,
@@ -492,6 +514,7 @@ pub fn web_pairs() -> Vec<(String, String)> {
         "clock",
         "grass",
         "grass_distance",
+        "frame_cap",
         "photo-export",
         "debug",
     ]
@@ -522,6 +545,22 @@ mod tests {
         let (f, w) = flags_from_pairs(&p(&[("fps", "maybe")]));
         assert!(!f.fps_on);
         assert_eq!(w.len(), 1);
+    }
+
+    #[test]
+    fn frame_cap_flag() {
+        use crate::frame_cap::FrameCap;
+        let (f, w) = flags_from_pairs(&[]);
+        assert_eq!(f.frame_cap, FrameCap(None), "off by default");
+        assert!(w.is_empty());
+        let (f, w) = flags_from_pairs(&p(&[("frame_cap", "60")]));
+        assert_eq!(f.frame_cap, FrameCap(Some(60)));
+        assert!(w.is_empty());
+        let (f, _) = flags_from_pairs(&p(&[("frame-cap", "120"), ("frame_cap", "off")]));
+        assert_eq!(f.frame_cap, FrameCap(None));
+        let (f, w) = flags_from_pairs(&p(&[("frame_cap", "75")]));
+        assert_eq!(f.frame_cap, FrameCap(None));
+        assert_eq!(w.len(), 1, "{w:?}");
     }
 
     #[test]

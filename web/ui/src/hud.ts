@@ -379,7 +379,7 @@ export class Hud {
     this.photo.render(st.photo_mode, state.photo);
     this.walk.render(st.walk_mode);
     this.root.classList.toggle("is-walking", st.walk_mode);
-    this.settings.render(state.tilt, state.tier, state.grade, state.grass, state.walk, state.debug);
+    this.settings.render(state.tilt, state.tier, state.grade, state.grass, state.walk, state.debug, state.frame_cap);
     this.debugHud.render(this.hw, state, st);
     this.root.classList.toggle("is-photo", st.photo_mode);
     const prev = this.st;

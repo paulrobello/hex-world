@@ -174,6 +174,33 @@ await withPage(gpuArgs, async (page) => {
   if (fl !== null) fail("?frame_latency=off still patched the frame loop: " + JSON.stringify(fl));
 });
 
+// 2b3. Frame rate cap (owner A29): `?frame_cap=` and `set_frame_cap` reach `state().frame_cap` and
+// the page's animation-frame gate (`window.__frameCap`), a 60 cap holds the engine at or under 60
+// frames a second, a refused value is skipped, and Off hands the frame loop back. Only the upper
+// bound is asserted: the lower one depends on host load (e2e/frame-pacing.mjs measures both).
+await withPage(gpuArgs, async (page) => {
+  await page.goto(base + "?scenario=single&frame_cap=30");
+  await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
+  const cap = () => page.evaluate(() => ({ state: window.hexWorld.state().frame_cap, gate: window.__frameCap?.fps() }));
+  const until = (fps) => page.waitForFunction((fps) => window.hexWorld.state().frame_cap?.fps === fps
+    && window.__frameCap?.fps() === (fps ?? 0), fps, { timeout: 10_000 }).then(() => true, () => false);
+  if (!(await until(30))) fail("?frame_cap=30 did not reach state and the gate: " + JSON.stringify(await cap()));
+  const send = (fps) => page.evaluate((fps) => window.hexWorld.cmd(JSON.stringify({ cmd: "set_frame_cap", fps })), fps);
+  await send(60);
+  if (!(await until(60))) fail("set_frame_cap 60: " + JSON.stringify(await cap()));
+  const rate = await page.evaluate(() => new Promise((resolve) => {
+    const f0 = window.hexWorld.state().frames, t0 = performance.now();
+    setTimeout(() => resolve((window.hexWorld.state().frames - f0) / ((performance.now() - t0) / 1000)), 2000);
+  }));
+  if (!(rate <= 66)) fail(`60 fps cap: the engine drew ${rate.toFixed(1)} frames a second`);
+  else console.log(`frame cap 60: ${rate.toFixed(1)} engine frames a second (upper bound asserted)`);
+  await send(75);
+  await page.waitForTimeout(500);
+  if ((await cap()).state?.fps !== 60) fail("set_frame_cap 75 was not skipped: " + JSON.stringify(await cap()));
+  await send(null);
+  if (!(await until(null))) fail("set_frame_cap null (Off): " + JSON.stringify(await cap()));
+});
+
 // 2c. Quality tier (PRD §9.2): with no `tier` key it is detected from the adapter's limits and
 // features plus the warm-up probe, and published with its reason; `set_tier` changes it at runtime.
 // The detected value depends on the machine and its load, so only the shape is asserted.

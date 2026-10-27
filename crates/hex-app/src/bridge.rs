@@ -396,6 +396,7 @@ mod schema {
         r#"{"cmd":"set_grass_distance","scale":2}"#,
         r#"{"cmd":"set_reduced_motion","on":true}"#,
         r#"{"cmd":"set_car_cap","cap":1}"#,
+        r#"{"cmd":"set_frame_cap","fps":60}"#,
         r#"{"cmd":"exit"}"#,
         r#"{"cmd":"select_tile","id":"meadow"}"#,
         r#"{"cmd":"hover","q":1,"r":0}"#,
@@ -437,6 +438,7 @@ mod schema {
             Command::SetGrassDistance { .. } => "set_grass_distance",
             Command::SetReducedMotion { .. } => "set_reduced_motion",
             Command::SetCarCap { .. } => "set_car_cap",
+            Command::SetFrameCap { .. } => "set_frame_cap",
             Command::Exit => "exit",
             Command::SelectTile { .. } => "select_tile",
             Command::Hover { .. } => "hover",
@@ -740,6 +742,7 @@ mod schema {
             &hex_play::walk::WalkGround::default(),
         );
         json!({
+            "frame_cap": keys(&crate::frame_cap::FrameCap(Some(60)).json()),
             "walk": keys(&walk),
             "grade": keys(&grade),
             "grass": keys(&grass),
