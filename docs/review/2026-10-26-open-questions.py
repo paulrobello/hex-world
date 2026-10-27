@@ -50,6 +50,51 @@ SECTIONS = [
         ("O2", "Play it on the world list (Worlds sheet) while it is open."),
         ("O3", "Keep it unshipped until a title or menu screen exists."),
     ], []),
+    ("A38", "P4: how a player sets a tile's height", [
+        ("Q1", "P4 adds height levels 0-3 (4 m a level). This answer shapes the data model, the save migration and "
+               "whether the per-rotation thumbnails stay valid, so it comes first."),
+    ], [
+        ("O1", "Auto, like auto-rotate: a tile takes the level its neighbours imply, and R/scroll cycles the legal "
+               "levels when more than one fits. Tiles store heights relative to their own level, so thumbnails stay "
+               "as they are. Recommended."),
+        ("O2", "A raise/lower tool: placed tiles are lifted or lowered with keys or a bar tool; placement checks "
+               "the edges."),
+        ("O3", "Height is part of the tile type: plateau, slope and cliff tiles in the inventory, no level choice."),
+    ], []),
+    ("A39", "P4: rail and road grade", [
+        ("Q1", "A one-tile ramp climbs 4 m over 27.7 m, about 14%. That reads fine for a stylised road but is far "
+               "too steep for a steam train (real lines stay under about 3%)."),
+    ], [
+        ("O1", "Roads ramp in one tile; rail never changes level and crosses height on viaducts and in tunnels. "
+               "Recommended."),
+        ("O2", "Rail ramps span several tiles, which needs half or quarter edge heights and breaks the "
+               "whole-level rule."),
+        ("O3", "Accept a stylised 14% rail ramp."),
+    ], []),
+    ("A40", "P4: mountains", [
+        ("Q1", "How big a mountain is."),
+    ], [
+        ("O1", "Single-tile hills and peaks that rise inside the hex and meet neighbours at their edge level. "
+               "Recommended for P4; bigger massifs come with the 7-hex mega-tile card."),
+        ("O2", "Mountains built by stacking levels (level-3 tiles with cliff and slope edges)."),
+        ("O3", "Wait for mega tiles and make mountains 7-hex pieces."),
+    ], []),
+    ("A41", "P4: rivers that flow downhill", [
+        ("Q1", "River lanes gain a flow direction, placement refuses a river that would run uphill, and waterfalls "
+               "form where a river meets a cliff edge. Today's rivers have no direction."),
+    ], [
+        ("O1", "Saves load with flow derived from the sea and height (flat rivers keep flowing as now); new placement "
+               "enforces downhill. Recommended."),
+        ("O2", "Rivers stay directionless on level ground; direction only matters on slopes and at waterfalls."),
+    ], []),
+    ("A42", "P4: how mountains and cliffs are modelled", [
+        ("Q1", "PRD §11 sends mountains, cliffs and the volcano through live Blender MCP sculpting, but your rule "
+               "since 2026-10-13 is headless Blender only."),
+    ], [
+        ("O1", "Headless procedural generators (displacement, erosion-style noise, baked like every piece so far). "
+               "Recommended; the PRD gets corrected."),
+        ("O2", "Lift the headless rule for these hero pieces and sculpt them live."),
+    ], []),
 ]
 
 CSS = """
@@ -71,7 +116,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A37 is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A37 to A42 are open (A38 to A42 are P4; nothing from P4 starts until they are answered).</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
