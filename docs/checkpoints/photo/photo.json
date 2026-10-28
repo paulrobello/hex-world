@@ -55,7 +55,7 @@
   {"cmd": "photo", "dof": "tilt", "focus": 150, "aperture": 1.4},
   {"cmd": "wait", "frames": 10},
   {"cmd": "screenshot", "name": "photo-08-tree-before"},
-  {"cmd": "photo", "focus_at": [0.5, 0.29]},
+  {"cmd": "photo", "focus_at": [0.58, 0.22]},
   {"cmd": "wait", "frames": 10},
   {"cmd": "screenshot", "name": "photo-09-tree-click"},
   {"cmd": "dump_state", "name": "photo-09-tree-click"},

@@ -554,9 +554,10 @@ shots-cars:
 # back to the orbit camera. Copies JPEG stills, the state dumps, the export's PNG size and mean, and
 # the DOF-vs-off RMSE (fails at or below 0.004, a lens that did nothing) to the folder, and fails
 # unless the far click focuses farther, higher on the screen, and changes the image. Then, level at
-# eye height 40 m south of a hero oak, focused at 150 m and after a click on the crown's middle
-# (photo-08/09): fails unless the click hits the tree within 2% of 36.1 m, the view depth of the
-# oak's LOD0 mesh along that ray (hex-play walk test `the_tree_click_shot_meets_the_oak_mesh_at_36_m`).
+# eye height 40 m south of the oak tile, whose hero slot draws the forked oak, focused at 150 m and
+# after a click at (0.58, 0.22) on its tall east lobe (photo-08/09): fails unless the click hits the
+# tree within 2% of 35.8 m, the view depth of the forked oak's LOD0 mesh along that ray (hex-play
+# walk test `the_tree_click_shot_meets_the_forked_oak_mesh_at_35_8_m`).
 # The full-size PNG stays in target/shots.
 PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-06-click-focus-near photo-07-click-focus-far photo-08-tree-before photo-09-tree-click photo-04-export-4x photo-05-exit-orbit
 PHOTO_DOCS = docs/checkpoints/photo
@@ -574,7 +575,7 @@ shots-photo:
 	  awk -v r="$$r" 'BEGIN { exit !(r > 0.004) }' || { echo "click focus near vs far changed nothing (RMSE $$r)"; exit 1; }; \
 	  echo "click focus near vs far: RMSE $$r"
 	@python3 -c 'import json,sys; n,f=(json.load(open(f"target/shots/photo-0{i}-click-focus-{w}.json"))["photo"] for i,w in ((6,"near"),(7,"far"))); ok=n["focus_picks"]==1 and f["focus_picks"]==2 and n["focus_row"]==0.85 and f["focus_row"]==0.22 and n["focus"]<f["focus"]; print("click focus near", n["focus"], "m at row", n["focus_row"], "far", f["focus"], "m at row", f["focus_row"]); sys.exit(0 if ok else 1)' || { echo "click focus state is wrong"; exit 1; }
-	@python3 -c 'import json,sys; t=json.load(open("target/shots/photo-09-tree-click.json"))["photo"]; ok=t["focus_hit"]=="tree" and abs(t["focus"]-36.1)<=0.02*36.1; print("tree click:", t["focus_hit"], t["focus"], "m (expected 36.1 m, the oak mesh)"); sys.exit(0 if ok else 1)' || { echo "the tree click missed the oak"; exit 1; }
+	@python3 -c 'import json,sys; t=json.load(open("target/shots/photo-09-tree-click.json"))["photo"]; ok=t["focus_hit"]=="tree" and abs(t["focus"]-35.8)<=0.02*35.8; print("tree click:", t["focus_hit"], t["focus"], "m (expected 35.8 m, the forked oak mesh)"); sys.exit(0 if ok else 1)' || { echo "the tree click missed the oak"; exit 1; }
 	cp target/shots/photo-*.json $(PHOTO_DOCS)/
 	@echo "wrote $(PHOTO_DOCS)/"
 

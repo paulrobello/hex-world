@@ -2809,20 +2809,39 @@ pub(crate) mod tests {
         }
     }
 
-    /// `make shots-photo`'s tree click (photo-09): level at eye height 40 m south of the oak's
-    /// trunk, a click 0.29 down a 45° frame meets the oak's LOD0 mesh at 36.1 m of view depth.
+    /// `make shots-photo`'s tree click (photo-09): level at eye height 40 m south of the oak tile
+    /// at (0, 3), whose hero slot draws the forked oak, a click at (0.58, 0.22) of a 45° 1280x800
+    /// frame meets the forked oak's LOD0 mesh (its tall east lobe) at 35.8 m of view depth. The
+    /// piece comes from the tile's variant pick, so a reshuffled variant fails here.
     #[test]
-    fn the_tree_click_shot_meets_the_oak_mesh_at_36_m() {
-        let tris = mesh_tris("tree_hero_oak", "lod0").unwrap();
-        let k = (0.5 - 0.29) * 2.0 * 22.5f32.to_radians().tan();
-        let r = ray(Vec3::new(0.0, 1.7, 40.0), Vec3::new(0.0, k, -1.0));
+    fn the_tree_click_shot_meets_the_forked_oak_mesh_at_35_8_m() {
+        let oak = catalog().get("oak").unwrap().clone();
+        let piece = hex_core::hero_piece(&oak, Axial::new(0, 3), 0);
+        assert_eq!(piece, "tree_hero_oak_b");
+        let tris = mesh_tris(piece, "lod0").unwrap();
+        let tan = 22.5f32.to_radians().tan();
+        let d = Vec3::new(
+            (0.58 - 0.5) * 2.0 * tan * 1280.0 / 800.0,
+            (0.5 - 0.22) * 2.0 * tan,
+            -1.0,
+        );
+        let r = ray(Vec3::new(0.0, 1.7, 40.0), d);
         let t = tris
             .iter()
             .filter_map(|(t, _)| ray_triangle(r, t))
             .reduce(f32::min)
             .unwrap();
-        let depth = t / (1.0 + k * k).sqrt();
-        assert!((depth - 36.1).abs() < 0.05, "{depth}");
+        let s = Arc::new(shape(piece));
+        let pick = PickProp::new(piece, &s, &Transform::IDENTITY)
+            .unwrap()
+            .hit(r)
+            .unwrap();
+        assert!(
+            (pick - t).abs() < 1e-3,
+            "the click lands on the mesh: {pick} vs {t}"
+        );
+        let depth = t / d.length();
+        assert!((depth - 35.8).abs() < 0.05, "{depth}");
     }
 
     #[test]
