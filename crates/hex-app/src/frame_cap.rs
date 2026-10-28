@@ -11,8 +11,8 @@ use std::time::Instant;
 use bevy::prelude::*;
 
 /// Natively, whether an unfocused window keeps the continuous update: set at start when the present
-/// mode is uncapped (`--present immediate|novsync`), else Bevy's `WinitSettings::game()` steps an
-/// unfocused window at 60 Hz.
+/// mode is uncapped (`--present immediate|novsync`) or the run is offscreen (`crate::offscreen`),
+/// else Bevy's `WinitSettings::game()` steps an unfocused window at 60 Hz.
 static UNFOCUSED_CONTINUOUS: AtomicBool = AtomicBool::new(cfg!(target_arch = "wasm32"));
 
 #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
