@@ -56,6 +56,7 @@ import {
   PHOTO_CUE,
   TITLE_CUE,
   type TitlePhase,
+  titleAfter,
   titleStep,
   oneShotDefs,
   oneShotDelay,
@@ -407,6 +408,70 @@ test("photo mode takes over from the title at once and gives it back while it is
   st = titled(st, "placed", meadow, 70, true);
   st = titled(st, "placed", meadow, 80);
   assert.equal(st.current, "meadow-day");
+});
+
+// ---------- The first-visit title (owner A43 O1) ----------
+
+/** One `GameAudio.updateMusic` step as it runs it: the pinned playlist step, then `titleAfter`. */
+const tick = (phase: TitlePhase, st: MusicState, mix: Mix, now: number, photo = false) => {
+  const next = titled(st, phase, mix, now, photo);
+  return { phase: titleAfter(phase, next), st: next };
+};
+
+test("a first visit arms the title at start-up, and it starts at the first gesture", () => {
+  const meadow = moodMix({ meadow: 1 });
+  // Persistence finds nothing stored and shows the start world fresh, before any gesture: no music runs yet.
+  let phase = titleStep("off", { kind: "world", fresh: true });
+  assert.equal(phase, "armed");
+  // The first click or key starts the audio; the first music step plays the title, not the meadow's mood.
+  let r = tick(phase, musicIdle(), meadow, 0.2);
+  assert.deepEqual([r.st.current, r.phase], [TITLE_CUE, "armed"]);
+  // It holds whatever the mix until the first tile, then hands over after its dwell, like New world.
+  r = tick(r.phase, r.st, meadow, 50);
+  assert.equal(r.st.current, TITLE_CUE, "an armed title outlasts the dwell");
+  phase = titleStep(r.phase, { kind: "placed", playing: r.st.current === TITLE_CUE });
+  assert.equal(phase, "placed");
+  r = tick(phase, r.st, meadow, 51);
+  assert.deepEqual(
+    [r.st.current, r.phase],
+    ["meadow-day", "off"],
+    "placed past the dwell: the mood takes over at once",
+  );
+});
+
+test("a returning player never hears the title: start-up resumes the autosave, which is not fresh", () => {
+  const town = moodMix({ town: 1 });
+  let phase = titleStep("off", { kind: "world", fresh: false });
+  let r = tick(phase, musicIdle(), town, 0.2);
+  assert.deepEqual([r.st.current, r.phase], ["hearth-town", "off"]);
+  for (const now of [5, 40, 200]) {
+    phase = titleStep(r.phase, { kind: "placed", playing: r.st.current === TITLE_CUE });
+    r = tick(phase, r.st, town, now);
+    assert.notEqual(r.st.current, TITLE_CUE, `no title at ${now} s`);
+    assert.equal(r.phase, "off");
+  }
+});
+
+test("a first gesture that places a tile still plays the title, holding its 30 s dwell from when it starts", () => {
+  const meadow = moodMix({ meadow: 1 });
+  const o = MUSIC_OPTS;
+  // The placement lands while the cues load: the title has not started, so it turns early, not placed.
+  const phase = titleStep("armed", { kind: "placed", playing: false });
+  assert.equal(phase, "early");
+  assert.equal(titleStep("early", { kind: "placed", playing: false }), "early", "a second tile changes nothing");
+  assert.equal(titleStep("early", { kind: "world", fresh: false }), "off", "a Load or resume still ends it");
+  // The cues are in 1.5 s after the gesture: the title starts then, and its dwell counts from there.
+  let r = tick(phase, musicIdle(), meadow, 1.5);
+  assert.deepEqual([r.st.current, r.phase, r.st.since], [TITLE_CUE, "placed", 1.5]);
+  r = tick(r.phase, r.st, meadow, 1.5 + o.dwell - 0.1);
+  assert.deepEqual([r.st.current, r.phase], [TITLE_CUE, "placed"], "inside the dwell");
+  r = tick(r.phase, r.st, meadow, 1.5 + o.dwell);
+  assert.deepEqual([r.st.current, r.st.previous, r.phase], ["meadow-day", TITLE_CUE, "off"], "then the mood's pick");
+  // Photo mode opened before the title ever played: it wins, and the title starts when it closes.
+  r = tick("early", musicIdle(), meadow, 2, true);
+  assert.deepEqual([r.st.current, r.phase], [PHOTO_CUE, "early"]);
+  r = tick(r.phase, r.st, meadow, 9);
+  assert.deepEqual([r.st.current, r.phase, r.st.since], [TITLE_CUE, "placed", 9]);
 });
 
 // ---------- Occasional one-shots (bees, forest birds and leaves) ----------

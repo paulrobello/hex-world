@@ -65,7 +65,11 @@ export interface PersistOptions extends PersistenceUiHost {
   removed?: (id: string) => void;
   /**
    * A world is on screen after the engine's `loaded`: `fresh` only for the player's New world, never the
-   * start-up resume, a Load, an import or Start over (the New world title cue, owner A37 O1).
+   * start-up resume, a Load, an import or Start over (the New world title cue, owner A37 O1). Also called
+   * fresh once at start-up on a first visit (owner A43 O1): storage lists no saved world (no autosave
+   * either, since the autosave is the current world's slot) or is unavailable, and the start world is
+   * still untouched. A start-up with any saved world never calls it fresh, even when that world fails to
+   * open.
    */
   shown?: (fresh: boolean) => void;
 }
@@ -212,19 +216,29 @@ export class Persistence {
     return mapOf(this.tiles);
   }
 
-  /** Resumes the most recent slot, or keeps the start world under a new name. */
+  /**
+   * Resumes the most recent slot, or keeps the start world under a new name. With nothing stored, or no
+   * storage at all, it is a first visit: the start world is shown fresh, for the title cue.
+   */
   async start(): Promise<void> {
     if (!this.store) {
       this.ready = true;
       this.ux.autosaveOff(false, () => this.exportCurrent());
+      this.firstVisit();
       this.changed();
       return;
     }
     await this.refresh();
     this.current = { id: newId(this.now()), name: this.ux.nextName(this.slots.map((s) => s.name)), stored: false };
     const last = this.slots[0];
+    if (!last) this.firstVisit();
     if (!last || !(await this.open(last, false))) this.ready = true;
     this.changed();
+  }
+
+  /** The start world counts as fresh only while no tile has been placed on it (it holds just the start tile). */
+  private firstVisit(): void {
+    if (this.tiles.length <= 1) this.opts.shown?.(true);
   }
 
   /** The latest play tiles, read every frame (for each save's summary). */

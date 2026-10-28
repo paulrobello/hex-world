@@ -962,8 +962,8 @@ export function bellStep(
 /**
  * The biomes each playlist cue scores on. The manifest carries no mood yet, so it lives here; cues not
  * listed (photo-mode, title-theme, discovery-stinger) never join the biome playlist. photo-mode plays as
- * the forced cue while photo mode is open, title-theme as the pinned cue of a New world (`musicPin`);
- * discovery-stinger has no hook yet.
+ * the forced cue while photo mode is open, title-theme as the pinned cue of a New world or a first visit
+ * (`musicPin`); discovery-stinger has no hook yet.
  */
 export const MUSIC_MOOD: Record<string, readonly Biome[]> = {
   "meadow-day": ["meadow", "forest", "river"],
@@ -1007,34 +1007,57 @@ export function bestCue(ids: readonly string[], mix: Mix): string | null {
 /** The cue photo mode (D7) plays in place of the biome playlist. */
 export const PHOTO_CUE = "photo-mode";
 
-/** The cue a New world (owner A37 O1) plays until its first tiles go down. */
+/** The cue a New world (owner A37 O1) or a first visit (owner A43 O1) plays until its first tiles go down. */
 export const TITLE_CUE = "title-theme";
 
 /**
- * The title cue's phase for the world on screen. `armed`: a New world came on screen and nothing has been
- * placed yet. `placed`: the first tile went down, and the title holds only until its dwell is out. `off`:
- * any other world (the start-up resume, a Load, an import, Start over), the title's end, or leaving play.
+ * The title cue's phase for the world on screen. `armed`: a New world, or a first visit's start world, came
+ * on screen and nothing has been placed yet. `early`: the first tile went down before the title had started
+ * (a first visit's first gesture placed it while the cues were still loading); the title still starts, and
+ * holds its dwell once it plays. `placed`: the first tile went down while the title played, and it holds
+ * only until its dwell is out. `off`: any other world (the start-up resume, a Load, an import, Start over),
+ * the title's end, or leaving play.
  */
-export type TitlePhase = "off" | "armed" | "placed";
+export type TitlePhase = "off" | "armed" | "early" | "placed";
 
-/** What moves the title phase: a world on screen (fresh when New world made it), a placement, the title's end. */
-export type TitleInput = { kind: "world"; fresh: boolean } | { kind: "placed" } | { kind: "ended" };
+/**
+ * What moves the title phase: a world on screen (fresh for New world or a first visit), a placement
+ * (`playing` false while the title has not started), the title becoming the music playing, its end.
+ */
+export type TitleInput =
+  | { kind: "world"; fresh: boolean }
+  | { kind: "placed"; playing?: boolean }
+  | { kind: "started" }
+  | { kind: "ended" };
 
 export function titleStep(phase: TitlePhase, input: TitleInput): TitlePhase {
   switch (input.kind) {
     case "world":
       return input.fresh ? "armed" : "off";
     case "placed":
-      return phase === "armed" ? "placed" : phase;
+      return phase === "armed" ? (input.playing === false ? "early" : "placed") : phase;
+    case "started":
+      return phase === "early" ? "placed" : phase;
     case "ended":
       return "off";
   }
 }
 
 /**
- * The cue `musicStep` pins this step. Photo mode's wins at once. An armed title holds whatever the mix.
- * Once the first tile is placed the title keeps the 30 s dwell any playlist cue gets, counted from when
- * it started, and then the mood's pick crossfades in through the playlist's own equal-power fade.
+ * The title phase after a playlist step: an early title now playing becomes `placed`, its dwell counted from
+ * the step it started (`st.since`), and a released title that no longer plays (handed over, or photo mode
+ * took over) has nothing left to hold.
+ */
+export function titleAfter(phase: TitlePhase, st: MusicState): TitlePhase {
+  if (st.current === TITLE_CUE) return titleStep(phase, { kind: "started" });
+  return phase === "placed" ? "off" : phase;
+}
+
+/**
+ * The cue `musicStep` pins this step. Photo mode's wins at once. An armed title holds whatever the mix, and
+ * an early one until it starts. Once the first tile is placed the title keeps the 30 s dwell any playlist
+ * cue gets, counted from when it started, and then the mood's pick crossfades in through the playlist's own
+ * equal-power fade.
  */
 export function musicPin(
   photo: boolean,
@@ -1044,7 +1067,7 @@ export function musicPin(
   o = MUSIC_OPTS,
 ): string | null {
   if (photo) return PHOTO_CUE;
-  if (title === "armed") return TITLE_CUE;
+  if (title === "armed" || title === "early") return TITLE_CUE;
   if (title === "placed" && st.current === TITLE_CUE && now - st.since < o.dwell) return TITLE_CUE;
   return null;
 }

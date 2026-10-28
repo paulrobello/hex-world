@@ -34,13 +34,18 @@ const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
 // --mute-audio keeps unattended runs quiet; the graph still renders, so the analyser still measures.
 const browser = await chromium.launch({ channel: "chromium", headless: true, args: [...gpuArgs, "--mute-audio"] });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
-page.on("pageerror", (e) => errors.push(String(e)));
-page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
 let audioRequests = [];
-// Paths only: fetches carry a content-hash query (?v=, scripts/web/version-dist.mjs).
-page.on("request", (r) => { const p = new URL(r.url()).pathname; if (p.includes("/assets/audio/")) audioRequests.push(p); });
+/** A page in a new browser context: a fresh profile with no IndexedDB data, so its start-up is a first visit. */
+async function freshPage() {
+  const p = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  p.on("pageerror", (e) => errors.push(String(e)));
+  p.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text()); });
+  // Paths only: fetches carry a content-hash query (?v=, scripts/web/version-dist.mjs).
+  p.on("request", (r) => { const u = new URL(r.url()).pathname; if (u.includes("/assets/audio/")) audioRequests.push(u); });
+  return p;
+}
+let page = await freshPage();
 
 const audio = () => page.evaluate(() => window.hexWorld.audio.state());
 const play = () => page.evaluate(() => window.hexWorld.state().play);
@@ -77,15 +82,22 @@ async function open() {
 const gesture = () => page.locator(".bar__world").click();
 
 try {
-  // Nothing loads before the first interaction.
+  // Nothing loads before the first interaction. This fresh profile has no saved world, so it is a first visit
+  // (owner A43 O1): the title is armed at start-up and waits for the first gesture.
   await open();
   let a = await audio();
   check(a.context === "none" && a.loading === "idle", `no AudioContext before a gesture (${a.context}, ${a.loading})`);
   check(audioRequests.length === 0, `no /assets/audio/ requests before the first interaction (${audioRequests.length})`);
+  await until(async () => (await audio()).music.title === "armed", "a first visit arms the title before any gesture");
 
   // After a gesture the context runs and the manifest's cues load within the budget.
   await gesture();
   await until(async () => (await audio()).context === "running", "a gesture starts the AudioContext");
+  // The first visit's first gesture (here one that changes nothing) starts title-theme, not the meadow's mood.
+  await until(async () => {
+    const m = (await audio()).music;
+    return m.current === "title-theme" && m.title === "armed";
+  }, "the first gesture of a first visit plays title-theme");
   await until(async () => (await audio()).loading === "done", "cues loaded", 20_000);
   a = await audio();
   save("loaded", a);
@@ -102,15 +114,23 @@ try {
     check(a.cues.frames[c.id] === c.loop.endSample,
       `${c.id} decodes to its loop length (${a.cues.frames[c.id]} frames, manifest ${c.loop.endSample})`);
   check(a.decodedBytes > 0 && a.decodedBytes <= a.decodedBudgetBytes, `decoded ${a.decodedBytes} B within ${a.decodedBudgetBytes} B`);
-  // Music streams through a media element. The start meadow picks meadow-day, which fades in after the gesture.
+  // Music streams through a media element.
   const streamed = manifest.cues.filter((c) => c.status === "mastered" && c.playback === "stream").map((c) => c.id);
-  check(a.music.tracks === streamed.length && ["meadow-day", "coast-breeze", "hearth-town", "photo-mode"].every((id) => streamed.includes(id)),
+  check(a.music.tracks === streamed.length && ["meadow-day", "coast-breeze", "hearth-town", "photo-mode", "title-theme"].every((id) => streamed.includes(id)),
     `${streamed.length} music cues stream (${a.cues.streams.join(", ")})`);
   const track = async (id) => (await audio()).music.gains.find((g) => g.id === id) ?? null;
   const streaming = (id) => until(async () => {
     const g = await track(id);
     return g && !g.paused && g.time > 0 ? g : null;
   }, `${id} streams: its media element plays`, 10_000);
+  const f0 = await streaming("title-theme");
+  check(audioRequests.some((u) => /\/assets\/audio\/music\/title-theme\.webm$/.test(u)), "title-theme.webm streams after the first visit's gesture");
+  check(!audioRequests.some((u) => /\/music\/meadow-day\./.test(u)), "the meadow's mood is not fetched while the title plays");
+  save("first-visit", { title: f0, state: await audio() });
+  // A raw new_world (a world on screen that is not the player's New world) ends the first-visit title at once,
+  // and the start meadow then picks meadow-day, which fades in.
+  await cmd({ cmd: "new_world" });
+  await until(async () => (await audio()).music.title === "off", "a raw new_world ends the first-visit title");
   await until(async () => (await audio()).music.current === "meadow-day", "the start meadow picks meadow-day");
   const m0 = await streaming("meadow-day");
   await page.waitForTimeout(1500);
@@ -118,7 +138,7 @@ try {
   check(m0 && m1 && m1.gain > m0.gain && m1.time > m0.time,
     `meadow-day's gain rises (${m0?.gain} -> ${m1?.gain}) while it plays (${m0?.time} -> ${m1?.time} s)`);
   check(audioRequests.some((u) => /\/assets\/audio\/music\/meadow-day\.webm$/.test(u)), "meadow-day.webm is fetched after the gesture");
-  check(!audioRequests.some((u) => /\/music\/(title-theme|photo-mode|coast-breeze|hearth-town)\./.test(u)),
+  check(!audioRequests.some((u) => /\/music\/(photo-mode|coast-breeze|hearth-town)\./.test(u)),
     "no music the mix does not ask for is fetched");
   // Photo mode (D7) switches to its own cue at once and back to the mood's pick when it closes.
   await cmd({ cmd: "toggle", what: "photo" });
@@ -337,7 +357,8 @@ try {
   // The New world title (owner A37 O1): the Worlds sheet's New world plays title-theme over the start meadow,
   // photo mode still takes over from it, and the first tile fades it into meadow-day after its 30 s dwell.
   // A raw new_world (the cars and trains worlds above) never played it.
-  check(!audioRequests.some((u) => /\/music\/title-theme\./.test(u)), "no title-theme fetched before New world");
+  a = await audio();
+  check(a.music.title === "off" && a.music.current !== "title-theme", `no title after a raw new_world (${a.music.title}, ${a.music.current})`);
   if (!(await page.locator(".sheet--worlds:not(.is-closed)").count())) await page.locator(".bar__world").click();
   await page.locator(".sheet--worlds [data-act=new]").click();
   await until(async () => (await tiles()) === 1, "New world from the Worlds sheet");
@@ -352,7 +373,6 @@ try {
   const t1Title = await track("title-theme");
   check(t0Title && t1Title && t1Title.gain > t0Title.gain && t1Title.time > t0Title.time,
     `title-theme's gain rises (${t0Title?.gain} -> ${t1Title?.gain}) while it plays (${t0Title?.time} -> ${t1Title?.time} s)`);
-  check(audioRequests.some((u) => /\/assets\/audio\/music\/title-theme\.webm$/.test(u)), "title-theme.webm streams on demand after New world");
   await cmd({ cmd: "toggle", what: "photo" });
   await until(async () => (await audio()).music.current === "photo-mode", "photo mode takes over from the title");
   await cmd({ cmd: "toggle", what: "photo" });
@@ -410,6 +430,45 @@ try {
   const back = await playCue("forest-birds");
   check(back.played !== null, `play after unmute ${JSON.stringify(back)}`);
   await until(async () => (await audio()).outputRms > 1e-4, "unmute brings the output back", 2000 - (Date.now() - t0));
+
+  // A first visit whose first gesture places a tile (owner A43 O1): a Shift+click quick-place on a fresh profile.
+  // The audio manifest is held until the tile is down, so the placement lands before the title can start; the
+  // title still starts once the cues are in and keeps the 30 s dwell from its start, then fades into meadow-day.
+  await page.context().close();
+  page = await freshPage();
+  let releaseManifest;
+  const manifestHeld = new Promise((r) => { releaseManifest = r; });
+  await page.route(/\/assets\/audio\/manifest\.json/, async (route) => { await manifestHeld; await route.continue(); });
+  await open();
+  await until(async () => (await audio()).music.title === "armed", "the second first visit arms the title");
+  await page.evaluate(() => window.hexWorld.selectTile("meadow"));
+  await pointAt(1, 0);
+  check((await audio()).context === "none", "no gesture yet before the placing click");
+  await page.keyboard.down("Shift");
+  await page.waitForTimeout(80);
+  await page.mouse.down();
+  await page.mouse.up();
+  await page.waitForTimeout(80);
+  await page.keyboard.up("Shift");
+  await until(async () => (await tiles()) === 2, "the first gesture places a meadow at (1, 0)");
+  a = await audio();
+  check(a.context === "running" && a.loading === "manifest" && a.music.title === "early" && a.music.current === null,
+    `the tile is down before the title started: early (${a.context}, ${a.loading}, ${a.music.title}, ${a.music.current})`);
+  releaseManifest();
+  const began = await until(async () => {
+    const s = await audio();
+    return s.music.current === "title-theme" && s.music.title === "placed" ? s : null;
+  }, "the title starts after the placing gesture and holds as placed");
+  const placedStart = began?.currentTime ?? 0;
+  await streaming("title-theme");
+  const placedHand = await until(async () => {
+    const s = await audio();
+    return s.music.current === "meadow-day" && s.music.previous === "title-theme" ? s : null;
+  }, "the first-visit title fades into meadow-day", 45_000);
+  check(placedHand && placedHand.currentTime - placedStart >= 30 - 0.5,
+    `the hand-over waits out the dwell from the title's start (${placedHand && (placedHand.currentTime - placedStart).toFixed(1)} s)`);
+  await until(async () => (await audio()).music.title === "off", "the first-visit title is done after its hand-over");
+  save("first-visit-placement", { began: began?.music, handed: placedHand?.music, state: await audio() });
 } catch (e) {
   fail(String(e?.stack ?? e));
 } finally {

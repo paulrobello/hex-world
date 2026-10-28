@@ -79,6 +79,7 @@ import {
   SHOP_BELL,
   TITLE_CUE,
   type TitlePhase,
+  titleAfter,
   titleStep,
   TRAIN_CUES,
   type TrainKind,
@@ -228,7 +229,7 @@ export interface AudioDebug {
     previous: string | null;
     /** Per streamed track: its playlist gain, and whether its media element plays and where it is (seconds). */
     gains: { id: string; gain: number; paused: boolean; time: number }[];
-    /** The New world title cue's phase (`TitlePhase` in audio-mix.ts). */
+    /** The title cue's phase, for a New world or a first visit (`TitlePhase` in audio-mix.ts). */
     title: TitlePhase;
   };
   lastCue: Fired | null;
@@ -412,8 +413,9 @@ export class GameAudio {
   private lastAt = 0;
 
   /**
-   * A world came on screen (persistence's `shown`): `fresh` when the player's New world made it. A fresh
-   * world arms the title from its start; any other world ends a title still playing.
+   * A world came on screen (persistence's `shown`): `fresh` when the player's New world made it, or a first
+   * visit's start world. A fresh world arms the title from its start (a first visit's plays from the first
+   * gesture, which starts the audio); any other world ends a title still playing.
    */
   worldShown(fresh: boolean): void {
     this.title = titleStep(this.title, { kind: "world", fresh });
@@ -573,9 +575,9 @@ export class GameAudio {
   // ---------- Events ----------
   onEvents(batch: readonly GameEvent[]): void {
     // The first tiles release the title even before the context runs, so a placement made while the
-    // cues load never leaves it armed.
+    // cues load never leaves it armed. One placed before the title started (`early`) still lets it start.
     if (batch.some((e) => e.type === "tilePlaced" || e.type === "tileReplaced"))
-      this.title = titleStep(this.title, { kind: "placed" });
+      this.title = titleStep(this.title, { kind: "placed", playing: this.music.current === TITLE_CUE });
     const ctx = this.ctx;
     if (ctx?.state !== "running" || !this.active) return;
     for (const e of batch) {
@@ -1194,8 +1196,7 @@ export class GameAudio {
     }
     const pin = musicPin(photo, this.title, this.music, now);
     this.music = musicStep(this.music, ids, this.mix, now, MUSIC_OPTS, pin);
-    // A released title that has handed over has nothing left to hold.
-    if (this.title === "placed" && this.music.current !== TITLE_CUE) this.title = "off";
+    this.title = titleAfter(this.title, this.music);
     const gains = musicGains(this.music, now);
     for (const [id, g] of gains) {
       let tr = this.tracks.get(id);

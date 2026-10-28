@@ -322,6 +322,41 @@ test("shown: only the player's New world is fresh (the title cue); resume, Load,
   assert.equal(shown.at(-1), false);
 });
 
+test("shown at start-up: a first visit (nothing stored, or no storage) is fresh; any saved world is not (owner A43 O1)", async () => {
+  const run = async (store: MemoryBackend | null, setupHost?: (h: FakeHost) => void, tiles = 1) => {
+    const host = new FakeHost();
+    setupHost?.(host);
+    const shown: boolean[] = [];
+    const p = new Persistence(host, store, { debounceMs: 30, notify: () => {}, shown: (fresh) => shown.push(fresh) });
+    p.observe(Array.from({ length: tiles }, (_, i) => tile(i, 0, "meadow")));
+    await p.start();
+    return { p, shown };
+  };
+  const first = await run(new MemoryBackend());
+  assert.deepEqual(first.shown, [true], "an empty worlds list: the start world is fresh");
+  assert.equal(first.p.ready, true);
+  const blocked = await run(null);
+  assert.deepEqual(blocked.shown, [true], "IndexedDB blocked: nothing can be resumed, so it is a first visit");
+  const placedFirst = await run(new MemoryBackend(), undefined, 2);
+  assert.deepEqual(placedFirst.shown, [], "a tile placed before storage answered: the start world is no longer fresh");
+
+  const saved = new MemoryBackend();
+  await saved.write(
+    { id: "w-a", name: "Autosaved", tiles: 3, updatedAt: 5, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([3]),
+  );
+  const back = await run(saved);
+  assert.deepEqual(back.shown, [], "a returning player's start-up is never fresh");
+  back.p.onEvents([{ type: "loaded", tiles: 3, version: 1, settings: null }]);
+  assert.deepEqual(back.shown, [false], "the resumed autosave ends any title");
+  // Saved worlds exist but the newest fails to open: the start world stays, and it is still a returning player.
+  const refused = await run(saved, (h) => {
+    h.result = { ok: false, code: "no_file", reason: "x", version: null };
+  });
+  assert.deepEqual(refused.shown, [], "a saved world that fails to open is not a first visit");
+  assert.equal(refused.p.ready, true);
+});
+
 test("start over clears the world in place: same name and slot, the cleared world autosaved there", async () => {
   const store = new MemoryBackend();
   await store.write(
