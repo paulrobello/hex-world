@@ -1,6 +1,6 @@
 # Elevation, first round (P4): design
 
-Status: **draft, not approved.** Written during the 2026-10-28 brainstorm with Paul. Items marked *(pending)* are my guesses from the first-round playback, still waiting for his answer. Nothing here is built until he approves this document.
+Status: **awaiting owner approval of this document.** Written during the 2026-10-28 brainstorm with Paul. Items marked *(owner: recommendation)* were my recommendations, which he accepted on 2026-10-28 ("go with all your recomendations"); items marked *My call* are mine for him to check while reading. Nothing here is built until he approves this document.
 
 ## Intent
 
@@ -11,7 +11,7 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 1. Tiles sit at a level. A raised Meadow is today's Meadow lifted, with its full flat top, grass, wildflowers and scatter.
 2. Ground changes level only through a **hillside tile** that slopes across its whole width, about 14% (one level over the 27.7 m flat-to-flat), the same grade as a road ramp (owner A39 O1).
 3. Hillsides handle **any outline** of raised ground, bays and notches included (owner, "C"): a hillside may sit against raised ground on one to five of its sides.
-4. Roads climb on hillsides (road ramps) and run on raised ground *(pending)*.
+4. Roads climb on hillsides (road ramps) and run on raised ground *(owner: recommendation)*.
 5. **Road tunnels**: an arched portal at each end, like a train tunnel, able to run underground beneath a raised area several tiles wide. Cars drive through and vanish inside.
 6. Saves, undo/redo, thumbnails, the UI rules mirror and the bridge all carry levels.
 
@@ -19,11 +19,11 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 
 - Raised versions of forest, oak, farm, wheat field, houses, bakery and windmill (later rounds, owner).
 - Anything other than raised Meadow above a tunnel (deferred, owner).
-- Raised rivers, river flow direction and waterfalls (A41) *(pending: deferred because no river starts on high ground yet)*.
-- Rail on raised ground, viaducts and rail tunnels (A39) *(pending)*.
+- Raised rivers, river flow direction and waterfalls (A41) *(owner: recommendation; no river starts on high ground yet)*.
+- Rail on raised ground, viaducts and rail tunnels (A39) *(owner: recommendation)*.
 - Tunnel lamps lighting up at night: they need the P5 day/night cycle, which is held. The portal carries an inert emissive hook (the `bush_verge_c` blossom pattern, `docs/kit/hooks-contract.md`).
 - Single-tile peaks and mountains (A40) beyond what a raised Meadow plateau gives, and massifs (mega-tile card).
-- Ocean and beaches above level 0 *(pending)*.
+- Ocean and beaches above level 0 *(owner: recommendation)*.
 
 ## Anti-goals
 
@@ -43,13 +43,13 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 
 ### Levels
 
-- Level `L` puts a tile's flat top `4 m × L` above level 0 *(pending: levels 0 to 3, up to 12 m)*. The save format already reserves a per-tile `level` byte (`crates/hex-core/src/save.rs`, `MAX_LEVEL = 0` today); this round raises `MAX_LEVEL` and does not bump `SAVE_FORMAT_VERSION`. Old saves load with every tile at level 0.
+- Level `L` puts a tile's flat top `4 m × L` above level 0 *(owner: recommendation, levels 0 to 3, up to 12 m)*. The save format already reserves a per-tile `level` byte (`crates/hex-core/src/save.rs`, `MAX_LEVEL = 0` today); this round raises `MAX_LEVEL` and does not bump `SAVE_FORMAT_VERSION`. Old saves load with every tile at level 0.
 - `EdgeSocket { height, profile }` already exists (`crates/hex-core/src/socket.rs`) with `Flat`, `Cliff` and `Ramp` profiles and `heights_compatible`. Heights in tile definitions stay relative; placement adds the placed level.
 
 ### Where a raised tile meets a lower one
 
 - Through a hillside: the normal case.
-- Directly *(pending)*: allowed at any difference, and the shared edge shows as a cliff, the existing column skirt (grass lip over dark topsoil, PRD §6 Bases) extended down to the lower tile's top. Cliffs stay possible because waterfalls (A41) will need them.
+- Directly *(owner: recommendation)*: allowed at any difference, and the shared edge shows as a cliff, the existing column skirt (grass lip over dark topsoil, PRD §6 Bases) extended down to the lower tile's top. Cliffs stay possible because waterfalls (A41) will need them.
 - *My call:* placement never picks a cliff by default. A tile's default level is the one that makes no cliff with its neighbours; R/scroll cycles to the others. A raised area starts either by cycling a Meadow up a level (cliff-edged until hillsides fill in) or by placing a hillside whose low side touches the world, with R/scroll cycling its shape while its high sides face empty cells.
 
 ### Hillside tile
@@ -58,16 +58,16 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 - *My call:* a hillside keeps its shape once placed, like every tile today. A later placement that contradicts it (raised ground against a side it committed as low) is refused like any socket mismatch; to change it, bulldoze and re-place. So each shape is stored as one tile definition with a rotation, and undo and the UI rules mirror stay one tile per action.
 - Its low sides sit at the hillside's own level, its high sides one level up. Sides that face neither (a hillside beside another hillside) slope along their length so neighbouring hillsides join without a seam.
 - Ground: Meadow grass and soil, with Meadow's runtime scatter and grass blades following the slope.
-- *(pending)* The hillside ground surface is generated at runtime from the shape (a deformed hex ground mesh using the Meadow ground material), not authored as 12 Blender pieces, so grass and scatter flow over it and new shapes cost no bake.
+- *(owner: recommendation, which narrows A42 O1: hillside ground is not a Blender piece)* The hillside ground surface is generated at runtime from the shape (a deformed hex ground mesh using the Meadow ground material), not authored as 12 Blender pieces, so grass and scatter flow over it and new shapes cost no bake.
 
 ### Road ramp and raised road
 
 - A road ramp is a hillside with a road on it: the road runs from a low side up to the opposite high side. *My call:* it is its own palette entry, **Road ramp**, using only the straight-bank shape (raised and low sides opposite), and placement picks its rotation from the road and the ground around it. Its surface follows the hillside slope at about 14%.
-- *(pending)* Straight road, bends and junctions get raised versions so a ramp leads somewhere.
+- *(owner: recommendation)* Straight road, bends and junctions get raised versions so a ramp leads somewhere.
 
 ### Road tunnel
 
-- *My call:* a **Tunnel portal** is its own palette entry: a straight-bank hillside with a road running into an arch in its raised face. A tunnel forms when two portals face each other across raised Meadow, *(pending: in a straight line)*, so the route is implied by the portals alone and the save format needs no new data. A lone portal may be placed while building; it shows as an unfinished tunnel and cars do not route into it.
+- *My call:* a **Tunnel portal** is its own palette entry: a straight-bank hillside with a road running into an arch in its raised face. A tunnel forms when two portals face each other across raised Meadow, *(owner: recommendation)* in a straight line, so the route is implied by the portals alone and the save format needs no new data. A lone portal may be placed while building; it shows as an unfinished tunnel and cars do not route into it.
 - *My call:* bulldozing a raised Meadow above a finished tunnel, or the ground behind a portal, is refused while the tunnel exists; bulldoze a portal first.
 - While placing, the hidden stretch shows as a faint dotted line. Cars enter the portal, are hidden underground, and come out the far portal on the route the road network already computes.
 - Clearance: the road runs at the lower level, so 4 m of ground sits over it. The portal arch must fit inside one level.
@@ -75,7 +75,7 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 ## Assets
 
 1. **Road-tunnel portal** (Blender, headless procedural per A42): a stone arch set into the hillside face, with a recessed dark interior, an inert emissive lamp hook, LODs, collider and sockets, through the `blender-kit-pieces` pipeline and owner approval. Rail can reuse its style later.
-2. **Hillside ground** *(pending: runtime-generated)* using the existing Meadow ground material.
+2. **Hillside ground** *(owner: recommendation, runtime-generated)* using the existing Meadow ground material.
 3. **Road on a slope**: the existing road surface laid on the hillside slope (runtime deformation of the road piece or a dedicated ramp piece; builder's call, below).
 4. **Cliff face**: the existing column skirt, extended.
 5. Thumbnails for Hillside shapes and raised road tiles (`make thumbs`). The data validator demands one per (tile, rotation).
