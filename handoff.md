@@ -4,11 +4,14 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds everything through the matte foliage (`0cad1f2`, pushed, CI green, deployed). `dist/` rebuilt.
+- `main` holds everything through the A46 question (`6242014`). Pushed through `d1b16b0` (CI green, deployed); `877c992`, `6a68dd0` and `6242014` are doc-only and ride with the next push. `dist/` rebuilt.
+- Later 2026-10-28: the shots-photo tree click moved to the forked oak at 35.84 m (`8dd98cb`/`683eb8c`, card closed), `e2e/persist.mjs` reads only a settled save state (`d1b16b0`, flake card closed), and the close-camera regression since c032d97 is noise (paired c032d97/4897f2e/main run, card closed; `docs/perf/close-camera-regression-2026-10-28/`).
+- A45 O1 (owner 2026-10-28): shared scatter is parked on branch `worktree-agent-abbcb3566f8fc0322` (it failed the no-camera-slower bar at 2,048, 1,536 and 1,024: the 2,066-tile overview is about 0.1 ms slower); 6235e5e is kept, the farms world stays tracked.
+- Grass cost on MiniMac web (`docs/perf/grass-cost-2026-10-28/`, 31.34 ms with grass off): Sparse +2.1, Normal +4.2, Lush +6.4 ms; sway +3.7 ms at the close camera. The base M4 is GPU-bound, so the p95 16.6 ms target cannot hold there. Queued as A46; the grass card 01a13c876aaf is blocked on it.
 - 2026-10-28 landed and pushed: offscreen native captures (capture runs render offscreen by default, so a covered or minimized window no longer captures black; card 01a17f7bb57b), B2 walls and hedges (`cb160f5`, card closed), large-world bounds (`d3f4673`: water meshes spawn with fixed bounds, calculate_bounds 6.1 -> 0.01 ms, main thread -6.0/-5.6 ms on MiniMac), the title theme on New world (A37, `0648d5d`), CI pruning test fixtures from the Pages artifact (`c7e4ff9`, live 404s checked), the scatter density test fix, and the A35 matte oaks/dune grass/ferns with the matte-foliage gate (12 pieces pending owner re-approval on docs/review/approvals.html).
 - P4 questions A38-A42 answered (recommended options, PRD §15 P4), but P4 stays on hold: owner 2026-10-28 "keep holding on p4 we need to give other projects some time on the system". Start no new waves; release host bookings the moment work finishes.
-- Owner 2026-10-28: A43 O1 built (a first visit with no saved worlds hears the title theme from the first gesture). A44 Q1 O1: shared scatter (branch worktree-agent-abbcb3566f8fc0322) lands only if the 1,024-vertex merge threshold leaves no camera slower on MiniMac; Q2 O3 PNG draws tracked. Open for the owner: the 12 matte-foliage re-approvals.
-- New cards: flaky e2e/persist.mjs double read (01a17fdd3457, high), stale shots-photo tree-click expectation (01a17fea7061, high), possible close-camera regression since c032d97 (01a17fdd3a02), kanban upstream schedule release/shorten (01a17fb3c7b7).
+- Owner 2026-10-28: A43 O1 built (a first visit with no saved worlds hears the title theme from the first gesture). A44 Q1 O1 / Q2 O3 are settled by A45 above.
+- Open upstream card: kanban schedule release/shorten (01a17fb3c7b7).
 - Batch 39 landed: the large-world O4/O5 regressions (card 01a1786dc9c5, closed). O4's p95 cost was frame pacing under the old web frame limiter and is gone with `e88b1bd`. O5's overview cost was GPU time lost to overlap between shadow cascades and is gone on main (fix inferred, likely `f1aff3e`). On main, `kit_ablate=cascade_clip|coalesce` turns either cut off in one build, and neither is slower than its absence while the draw cuts hold. Evidence: `docs/perf/large-world-o4o5/`.
 - Batch 40 landed (`11372a4`, card 01a17d942ec1 closed): `finish_kit` marked `PlayKit` changed every frame (an `as_deref_mut()` before its early return, since `a672056`), so scatter re-laid every tile and rebuilt its report each frame; the runtime river and coast scatter made that bigger. Main thread on the 2,066-tile world 29.1 -> 16.1 ms close, 25.8 -> 15.3 ms overview; both cameras are GPU-bound on MiniMac. Follow-up card 01a17df74e2d: Bevy `calculate_bounds` at about 4.6 ms. Evidence `docs/perf/large-world-cpu/`.
 - 2026-10-27 owner: A30-A32 and all of P2 approved; P3 boats and bridges were already built (PRD checked); recipe system deferred until more game assets. In flight: B2 walls and hedges (card 01a17a6d6983), P2 audio town murmur and stingers (card 01a17e0c506a), tier-change stall (card 01a13ce72708, MiniMac 17:05-18:35Z); next B1 landing, then the grass p95 re-measure (card 01a13c876aaf criterion 4).
@@ -66,8 +69,9 @@ No Blender agents are running (2026-10-27 06:30Z): B1 and B3 are built, B2's ref
 
 ## Waiting on Paul
 
-- Nothing on the open-questions page: A30, A31 and A32 approved 2026-10-27 ("all approved"); A27 was approved in the second round (`c84d670`).
-- Whether hex-world yields its macdaddy windows to par-term's package-update work (a peer relayed an owner priority directive; not verified).
+- A46 on the open-questions page (http://127.0.0.1:8095/docs/review/2026-10-26-open-questions.html): accept the grass and sway frame cost as the P2 result.
+- Whether "non-P4" work includes P5-P8 asset work such as the lighthouse (that would restart the Blender agents).
+- Re-approval of the 12 matte-foliage pieces on docs/review/approvals.html.
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
