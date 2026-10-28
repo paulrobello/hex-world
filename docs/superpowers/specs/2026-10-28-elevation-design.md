@@ -49,23 +49,26 @@ Paul wants height in the world: "hills with roadways around and through them (tu
 ### Where a raised tile meets a lower one
 
 - Through a hillside: the normal case.
-- Directly *(pending)*: allowed, and the shared edge shows as a cliff, the existing column skirt (grass lip over dark topsoil, PRD §6 Bases) extended down to the lower tile's top. Cliffs stay possible because waterfalls (A41) will need them.
+- Directly *(pending)*: allowed at any difference, and the shared edge shows as a cliff, the existing column skirt (grass lip over dark topsoil, PRD §6 Bases) extended down to the lower tile's top. Cliffs stay possible because waterfalls (A41) will need them.
+- *My call:* placement never picks a cliff by default. A tile's default level is the one that makes no cliff with its neighbours; R/scroll cycles to the others. A raised area starts either by cycling a Meadow up a level (cliff-edged until hillsides fill in) or by placing a hillside whose low side touches the world, with R/scroll cycling its shape while its high sides face empty cells.
 
 ### Hillside tile
 
 - One **Hillside** entry in the palette. On placement it takes its shape from its neighbours: which of its six sides face ground one level up. There are about 12 shapes up to rotation (every non-empty, non-full set of raised sides); placement picks shape and rotation together, the way it already picks a rotation.
+- *My call:* a hillside keeps its shape once placed, like every tile today. A later placement that contradicts it (raised ground against a side it committed as low) is refused like any socket mismatch; to change it, bulldoze and re-place. So each shape is stored as one tile definition with a rotation, and undo and the UI rules mirror stay one tile per action.
 - Its low sides sit at the hillside's own level, its high sides one level up. Sides that face neither (a hillside beside another hillside) slope along their length so neighbouring hillsides join without a seam.
 - Ground: Meadow grass and soil, with Meadow's runtime scatter and grass blades following the slope.
 - *(pending)* The hillside ground surface is generated at runtime from the shape (a deformed hex ground mesh using the Meadow ground material), not authored as 12 Blender pieces, so grass and scatter flow over it and new shapes cost no bake.
 
 ### Road ramp and raised road
 
-- A road ramp is a hillside with a road on it: the road runs from a low side up to the opposite high side. Its surface follows the hillside slope at about 14%.
+- A road ramp is a hillside with a road on it: the road runs from a low side up to the opposite high side. *My call:* it is its own palette entry, **Road ramp**, using only the straight-bank shape (raised and low sides opposite), and placement picks its rotation from the road and the ground around it. Its surface follows the hillside slope at about 14%.
 - *(pending)* Straight road, bends and junctions get raised versions so a ramp leads somewhere.
 
 ### Road tunnel
 
-- Laying a road into the face of a hillside, where raised ground continues behind it, makes that end an arched **portal**. The road continues hidden one level below the raised ground, under raised Meadow only, and comes out at a second portal on another hillside face. A tunnel with only one portal is refused.
+- *My call:* a **Tunnel portal** is its own palette entry: a straight-bank hillside with a road running into an arch in its raised face. A tunnel forms when two portals face each other across raised Meadow, *(pending: in a straight line)*, so the route is implied by the portals alone and the save format needs no new data. A lone portal may be placed while building; it shows as an unfinished tunnel and cars do not route into it.
+- *My call:* bulldozing a raised Meadow above a finished tunnel, or the ground behind a portal, is refused while the tunnel exists; bulldoze a portal first.
 - While placing, the hidden stretch shows as a faint dotted line. Cars enter the portal, are hidden underground, and come out the far portal on the route the road network already computes.
 - Clearance: the road runs at the lower level, so 4 m of ground sits over it. The portal arch must fit inside one level.
 
