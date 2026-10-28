@@ -3,7 +3,7 @@
     "gate": "piece",
     "status": "pending",
     "requested": "2026-10-20",
-    "notes": "Pending owner review; not an approval. Variant of fern_clump (PRD \u00a76 Variety), against assets-source/refs/forest ref-1 (the sprawling clumps around the log): a wide, low clump of three crowns grown together, 30 fronds leaning out low with tips arching down to the litter, 0.48 m tall and about 1.9 m across, with fern_clump's frond tiles, palette, fold, sink, wind and 0.3 m collider core. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside fern_clump, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
+    "notes": "Pending owner review; not an approval. Variant of fern_clump (PRD §6 Variety), against assets-source/refs/forest ref-1 (the sprawling clumps around the log): a wide, low clump of three crowns grown together, 30 fronds leaning out low with tips arching down to the litter, 0.48 m tall and about 1.9 m across, with fern_clump's frond tiles, palette, fold, sink, wind and 0.3 m collider core. Review sheet: docs/checkpoints/forest_floor_variants/sheet.jpg (refs, EEVEE beside fern_clump, in engine on the forest at (-3, 1): play distance, sun and shade close-ups, eye level). The controller records the owner's decision."
   },
   {
     "who": "Paul Robello (owner)",
@@ -20,5 +20,12 @@
     "revision": "matte-foliage",
     "requested": "2026-10-27",
     "notes": "Pending owner review; not an approval. Rebuilt for owner A35 O1 (2026-10-27, \"go with O1 for foliage\"): the fronds' roughness (ORM G: pinnae 0.62-0.69) now goes through _verge_bush.matte; the 0.70-0.72 pinna rims, stipes and background keep theirs, mapping texels under 0.7 linearly onto 0.76-0.86 as the verge bushes and woodland shrubs were matted. Median roughness over the opaque texels (kit_gate print_foliage_roughness, LOD0): fern_clump_c_foliage 0.671 -> 0.859. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the other KTX2 maps re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/foliage-matte/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-28",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"Foliage approved\", 2026-10-28, from docs/review/approvals.html): the A35 O1 matte-foliage rebuild, review images docs/checkpoints/foliage-matte/."
   }
 ]

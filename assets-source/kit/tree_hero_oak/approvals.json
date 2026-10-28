@@ -37,5 +37,12 @@
     "revision": "matte-foliage",
     "requested": "2026-10-27",
     "notes": "Pending owner review; not an approval. Rebuilt for owner A35 O1 (2026-10-27, \"go with O1 for foliage\"): the leaf cards' and canopy shell's roughness (ORM G: the shell's 0.62 fill and the leaf strip's 0.50-0.66) now goes through _verge_bush.matte before the canopy gaps ramp toward 1.0, mapping texels under 0.7 linearly onto 0.76-0.86 as the verge bushes and woodland shrubs were matted. Median roughness over the opaque texels (kit_gate print_foliage_roughness, LOD0): tree_hero_oak_canopy 0.620 -> 0.847; tree_hero_oak_leaves 0.580 -> 0.816. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the other KTX2 maps re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/foliage-matte/. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-28",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"Foliage approved\", 2026-10-28, from docs/review/approvals.html): the A35 O1 matte-foliage rebuild, review images docs/checkpoints/foliage-matte/."
   }
 ]

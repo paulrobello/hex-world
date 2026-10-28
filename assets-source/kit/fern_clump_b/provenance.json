@@ -426,6 +426,13 @@
       "revision": "matte-foliage",
       "requested": "2026-10-27",
       "notes": "Pending owner review; not an approval. Rebuilt for owner A35 O1 (2026-10-27, \"go with O1 for foliage\"): the fronds' roughness (ORM G: pinnae 0.62-0.69) now goes through _verge_bush.matte; the 0.70-0.72 pinna rims, stipes and background keep theirs, mapping texels under 0.7 linearly onto 0.76-0.86 as the verge bushes and woodland shrubs were matted. Median roughness over the opaque texels (kit_gate print_foliage_roughness, LOD0): fern_clump_b_foliage 0.671 -> 0.859. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the other KTX2 maps re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/foliage-matte/. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-28",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"Foliage approved\", 2026-10-28, from docs/review/approvals.html): the A35 O1 matte-foliage rebuild, review images docs/checkpoints/foliage-matte/."
     }
   ]
 }

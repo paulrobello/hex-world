@@ -38,22 +38,7 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-SECTIONS = [
-    ("A46", "Grass and sway frame cost: the last P2 box", [
-        ("Q1", "Measured on MiniMac (base M4, 2,066-tile world on High, 2560x1440, loads 3-6). Grass adds +2.1 ms "
-               "(Sparse), +4.2 ms (Normal) and +6.4 ms (Lush) to the web mean (31.3 ms with grass off; native +3.3, "
-               "+6.1, +9.1 ms on 36.5). Foliage sway adds +3.7 ms at the close camera and +1.3 ms at the overview "
-               "(web, GPU time; draws and main thread unchanged). The P2 target, p95 at or under 16.6 ms on a "
-               "2,000-tile world, cannot hold on this GPU: with grass off every frame is already over 25 ms, and the "
-               "frame is GPU-bound (main thread 16.9 of 31.5 ms). The M4 Max was not measured."),
-    ], [
-        ("O1", "Accept the measured cost as the P2 result and check the box; restate the target as a cost budget "
-               "(grass at Normal and sway each under about 5 ms on a base M4), and file a card to cut the sway cost, "
-               "which at 3.7 ms is more than half of Normal grass. Recommended."),
-        ("O2", "Keep the 16.6 ms target and measure on the M4 Max (macdaddy) in a quiet window before deciding."),
-        ("O3", "Keep P2 open until the sway and grass costs are cut."),
-    ], []),
-]
+SECTIONS = []
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -74,7 +59,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A45 are answered (A45 O1 on 2026-10-28). A46 is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). Nothing is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
