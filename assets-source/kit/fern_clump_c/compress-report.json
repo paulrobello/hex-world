@@ -1,6 +1,6 @@
 {
   "name": "fern_clump_c",
-  "date": "2026-10-20T08:03:53.481Z",
+  "date": "2026-10-27T21:24:50.319Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 11,
-      "bytes": 413406,
-      "sha256": "4988310925f6ea81a4bc5a72847df5a626ef66006c6a0e2c9d5212c81081f59a"
+      "bytes": 413141,
+      "sha256": "165b050681695c1fd3caec9dd8eed1b7cfc42c503b8fc064b98a42782a41d111"
     },
     {
       "channel": "albedo",
@@ -59,8 +60,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 11,
-      "bytes": 415527,
-      "sha256": "8ffb0b0d6a1b23fb1148d05c9e1202416f32a7b015abe7e10e4e1b1e3173e2fe"
+      "bytes": 415009,
+      "sha256": "27e78de4b4a53975ef60501a241ff494fc853b1cd575eb07cd4246ae9f31b2a5"
     },
     {
       "channel": "albedo",
@@ -110,8 +111,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 112060,
-      "sha256": "ec3adcdd31535ed552304011cc7bef6fec38eee4393b74bb40c1e58ad4acd2b2"
+      "bytes": 111877,
+      "sha256": "82e4914ddfaf3434c8ffd8115bca95ba62ab6e67a3f06faf1c153d03a6723fda"
     },
     {
       "channel": "normal",
@@ -121,8 +122,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 111880,
-      "sha256": "082eb2b7520d5559ecfb5d089298e29e54c365bf6cdcff1022f0771a7a1c9e3b"
+      "bytes": 111676,
+      "sha256": "8e45f139fff7506f91ff633948979166730f799fbd1fa37efa9b8ccf2e2625b5"
     },
     {
       "channel": "normal",
@@ -141,8 +142,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 216931,
-      "sha256": "d2f71ded3fa2c771da0c534500484ca0c4a39a1818913797ffa911c952936084"
+      "bytes": 228693,
+      "sha256": "9c8fa6d1b0155c237d3638a1f450eac483eadd1401371a94ed437405e6444ed1"
     },
     {
       "channel": "orm",
@@ -152,8 +153,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 221834,
-      "sha256": "1feb1f74b477825a62c8e8f8c46e47e4be7ae2ed484dece8f101214bc5262624"
+      "bytes": 237529,
+      "sha256": "7613a1178c3a85bd237b78c038b415f67a7bbf202217806f1f02e06f478d274d"
     },
     {
       "channel": "orm",
@@ -161,16 +162,16 @@
       "path": "assets/kit/p1/fern_clump_c/fern_clump_c.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 319185,
-      "sha256": "9251f3ebf9d25a62579828fe2cb10fa24fbd66baa58f7c395e4436f0dd2ff56e"
+      "bytes": 279596,
+      "sha256": "3a1f251c2473932b6ecf20029d65f2b36cdf2203b2d4d16fa255144af20fed7d"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 742980,
-      "astc": 749824
+      "bc7": 754294,
+      "astc": 764797
     },
     "glbBytes": 114240
   },

@@ -16,7 +16,11 @@ Differences from the hero:
   leaves and palette), 360 leaves per sector (the hero's 1440 in all).
 - The fringe cards are `_oak.leaf_cards` scaled about their centres to CARD_SCALE (the 256 px leaf
   tiles hold 256 px/m on cards up to ~0.97 m); the leaf tiles are the hero's (`_leaves`, hero seed).
-- masks at 512 (bark AO ~16 px/m), and no live .blend: every high poly is built here."""
+- masks at 512 (bark AO ~16 px/m), and no live .blend: every high poly is built here.
+
+Leaf roughness is matte (owner A35 O1, 2026-10-27): the shell's 0.62 and the leaf strip's
+0.50-0.66 go through `_verge_bush.matte` (texels under 0.7 map linearly onto 0.76-0.86) before
+the canopy gaps blend toward 1.0, as the verge bushes and woodland shrubs were matted."""
 from __future__ import annotations
 
 import math
@@ -33,6 +37,7 @@ from lib import bake, budgets, collider, export, geom, lod, materials, scene, uv
 import _leaves
 import _oak
 import _tree
+import _verge_bush
 from _shared import island_texels
 
 HERO = "tree_hero_oak"  # the leaf tiles' and canopy master's seed: every oak shows the hero's leaves
@@ -461,6 +466,7 @@ def build(piece: str, out: pathlib.Path, generator: str, *, tiers: tuple, shape:
                                        / (GAP_RAMP[1] - GAP_RAMP[0]), 0.0, 1.0), 0.0).astype(np.float32)
     gap_lin = srgb_to_lin(albedo[..., :3]) - (gap_w * (1.0 - GAP_ALBEDO))[..., None] * srgb_to_lin(GAP_TONE)
     albedo[..., :3] = np.where(gap_w[..., None] > 0, lin_to_srgb(np.clip(gap_lin, 0.0, 1.0)), albedo[..., :3])
+    orm[..., 1] = _verge_bush.matte(orm[..., 1])
     orm[..., 1] += gap_w * (GAP_ROUGH - orm[..., 1])
     if not skip_bake:
         gap_texels = canopy_isl_atlas & (gap_w > 0.5)
@@ -469,7 +475,7 @@ def build(piece: str, out: pathlib.Path, generator: str, *, tiers: tuple, shape:
     albedo[-strip_px:] = leaf_alb
     normal[-strip_px:, :, :3] = leaf_nrm
     orm[-strip_px:, :, 0] = 1.0
-    orm[-strip_px:, :, 1] = leaf_rough
+    orm[-strip_px:, :, 1] = _verge_bush.matte(leaf_rough)
     bake.write_png(ATLAS, albedo.reshape(-1, 4), str(out / f"{piece}.albedo.png"), non_color=False)
     bake.write_png(ATLAS, normal.reshape(-1, 4), str(out / f"{piece}.normal.png"))
     fo = ATLAS // ORM_SIZE

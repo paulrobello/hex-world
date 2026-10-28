@@ -15,7 +15,11 @@ the leaf tiles keep the hero's seed, so every dome and card shows the hero's lea
 helpers come from `_oak_scatter` (imported, never configured here); only the monolithic steps of
 `tree_hero_oak.py` (pack, bakes, masks, gaps, LOD joins, scale) are copied. No live .blend: every high
 poly is built here, so the route is scripted. Built and baked at 1x; every LOD and the collider ship at
-SCALE (the hero's 1.2x)."""
+SCALE (the hero's 1.2x).
+
+Leaf roughness is matte (owner A35 O1, 2026-10-27): the shell's 0.62 and the leaf strip's
+0.50-0.66 go through `_verge_bush.matte` (texels under 0.7 map linearly onto 0.76-0.86) before
+the canopy gaps blend toward 1.0, as the verge bushes and woodland shrubs were matted."""
 from __future__ import annotations
 
 import math
@@ -32,6 +36,7 @@ from lib import bake, budgets, collider, export, geom, lod, materials, scene, uv
 import _leaves
 import _oak
 import _tree
+import _verge_bush
 from _oak_scatter import (card_subset, copy_of, dilate, lin_to_srgb, pack_below_strip, radial_max, srgb_to_lin,
                           stats, uv_area)
 from _shared import island_texels
@@ -317,6 +322,7 @@ def build(piece: str, out: pathlib.Path, generator: str, *, clumps: list[tuple],
                                        / (GAP_RAMP[1] - GAP_RAMP[0]), 0.0, 1.0), 0.0).astype(np.float32)
     gap_lin = srgb_to_lin(albedo[..., :3]) - (gap_w * (1.0 - GAP_ALBEDO))[..., None] * srgb_to_lin(GAP_TONE)
     albedo[..., :3] = np.where(gap_w[..., None] > 0, lin_to_srgb(np.clip(gap_lin, 0.0, 1.0)), albedo[..., :3])
+    orm[..., 1] = _verge_bush.matte(orm[..., 1])
     orm[..., 1] += gap_w * (GAP_ROUGH - orm[..., 1])
     if not skip_bake:
         gap_texels = canopy_isl_atlas & (gap_w > 0.5)
@@ -326,7 +332,7 @@ def build(piece: str, out: pathlib.Path, generator: str, *, clumps: list[tuple],
     albedo[-strip_px:] = leaf_alb
     normal[-strip_px:, :, :3] = leaf_nrm
     orm[-strip_px:, :, 0] = 1.0
-    orm[-strip_px:, :, 1] = leaf_rough
+    orm[-strip_px:, :, 1] = _verge_bush.matte(leaf_rough)
     bake.write_png(ATLAS, albedo.reshape(-1, 4), str(out / f"{piece}.albedo.png"), non_color=False)
     bake.write_png(ATLAS, normal.reshape(-1, 4), str(out / f"{piece}.normal.png"))
     bake.write_png(ATLAS, orm.reshape(-1, 4), str(out / f"{piece}.orm.png"))

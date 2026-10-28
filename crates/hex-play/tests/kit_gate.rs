@@ -4770,3 +4770,352 @@ fn gate_catches_a_slot_missing_from_lod1_or_leaving_lod2_without_a_reason() {
     let e = lod2_drop_errors("p", &full, &stale, &[("p", "b")]);
     assert!(e.iter().any(|m| m.contains("lod2Drops names a")), "{e:?}");
 }
+
+// ---------------------------------------------------------------------------------------------
+// Matte foliage (card "Bushes render too shiny in play", 2026-10-27).
+
+/// Floor on the median perceptual roughness of every foliage slot over its opaque texels. Leaves
+/// at 0.50-0.64 caught the sun as a sheen in play; the matted verge bushes, hazel and bramble
+/// measure a median of 0.80-0.81 (texels 0.72-0.85), the grass set 0.855.
+const FOLIAGE_ROUGHNESS_MIN: f32 = 0.7;
+
+/// (piece, slot) foliage slots allowed under [`FOLIAGE_ROUGHNESS_MIN`]. Shrink only: a slot that
+/// now passes, or no longer exists, is an error (`foliage_roughness_errors`). When the rule landed
+/// (2026-10-27) it held 21 slots; the owner's A35 O1 (2026-10-27, "go with O1 for foliage") matted
+/// the oaks, dune grass and ferns and kept the holly glossy. Medians from `print_foliage_roughness`.
+const GLOSSY_FOLIAGE_BEFORE_RULE: &[(&str, &str)] = &[
+    // Holly, glossy by owner decision (A35 O1, 2026-10-27): a holly's leaves are glossy, and its
+    // generator draws a "dark, glossy blue-green evergreen". 0.369.
+    ("shrub_forest_b", "shrub_forest_b_leaves"),
+];
+
+/// Foliage slots (`hooks::is_foliage`) that are flower parts, not leaves: the matte rule does not
+/// measure them (owner A35 O1, 2026-10-27: flowers are not leaves). The white water lily's petals
+/// (`lily_cluster_b`) and the pink bud (`lily_cluster_c`) keep their roughness factor 0.6. Matched
+/// by slot name, in every piece; a name no manifest piece draws as a foliage slot is stale
+/// (`flower_slot_errors`).
+const FOLIAGE_FLOWER_SLOTS: &[&str] = &["water_lily_petal", "water_lily_bud"];
+
+/// One foliage slot's roughness as the runtime shades it, in one LOD (`None`: the same in every
+/// LOD, a tileable set or a factor).
+struct FoliageRoughness {
+    piece: String,
+    slot: String,
+    lod: Option<usize>,
+    /// Where the value comes from: `orm` (the piece's ORM G), `set <id>` or `factor`.
+    source: String,
+    /// Sorted ascending.
+    values: Vec<f32>,
+}
+
+impl FoliageRoughness {
+    fn quantile(&self, q: f32) -> f32 {
+        let n = self.values.len();
+        if n == 0 {
+            return 0.0;
+        }
+        self.values[((n - 1) as f32 * q).round() as usize]
+    }
+}
+
+/// Texel indices (row-major, deduplicated) whose centres lie inside any of `tris` (UV0) on a
+/// `w` × `h` map.
+fn texels_inside(tris: &[[[f32; 2]; 3]], w: u32, h: u32) -> Vec<usize> {
+    let mut hit = vec![false; (w * h) as usize];
+    for t in tris {
+        let p = t.map(|v| [v[0] * w as f32, v[1] * h as f32]);
+        let lo = |k: usize| p.iter().map(|v| v[k]).fold(f32::MAX, f32::min).max(0.0) as u32;
+        let hi = |k: usize, n: u32| {
+            (p.iter()
+                .map(|v| v[k])
+                .fold(f32::MIN, f32::max)
+                .ceil()
+                .max(0.0) as u32)
+                .min(n)
+        };
+        let edge = |a: [f32; 2], b: [f32; 2], q: [f32; 2]| {
+            (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0])
+        };
+        let area = edge(p[0], p[1], p[2]);
+        if area == 0.0 {
+            continue;
+        }
+        for y in lo(1)..hi(1, h) {
+            for x in lo(0)..hi(0, w) {
+                let q = [x as f32 + 0.5, y as f32 + 0.5];
+                let e = [
+                    edge(p[1], p[2], q),
+                    edge(p[2], p[0], q),
+                    edge(p[0], p[1], q),
+                ];
+                if e.iter().all(|&v| v * area >= 0.0) {
+                    hit[(y * w + x) as usize] = true;
+                }
+            }
+        }
+    }
+    hit.iter()
+        .enumerate()
+        .filter_map(|(i, &b)| b.then_some(i))
+        .collect()
+}
+
+/// The roughness each foliage slot of `p` is shaded with (`hooks::is_foliage`: alpha-tested, a
+/// non-bark tree slot, or `"foliage": true`; not the [`FOLIAGE_FLOWER_SLOTS`]), read where the
+/// runtime reads it
+/// (`kit_material::build_material`): a unique slot with the piece's ORM takes ORM G (factor 1.0)
+/// over the texels inside its UV0 triangles in each LOD that draws it, only those with albedo A
+/// above its `alphaCutoff` when it has one; a tileable slot takes its set's ORM G (every texel); an
+/// untextured slot takes its `roughness` factor (default 1.0).
+fn foliage_roughness(kit: &hooks::Kit, p: &PieceEntry) -> Result<Vec<FoliageRoughness>, String> {
+    let png = |stem: &str| hooks::decode_masks(&kit.root.join(map_file(stem, TextureFamily::Png)));
+    let mut out = vec![];
+    let foliage: Vec<(&String, &Slot)> = p
+        .slots
+        .iter()
+        .filter(|(n, s)| {
+            hex_render::hooks::is_foliage(p, s) && !FOLIAGE_FLOWER_SLOTS.contains(&n.as_str())
+        })
+        .collect();
+    if foliage.is_empty() {
+        return Ok(out);
+    }
+    let row = |slot: &str, lod, source: String, mut values: Vec<f32>| {
+        values.sort_by(f32::total_cmp);
+        FoliageRoughness {
+            piece: p.id.clone(),
+            slot: slot.to_string(),
+            lod,
+            source,
+            values,
+        }
+    };
+    let piece_maps = match (p.maps.get(&Channel::Orm), p.maps.get(&Channel::Albedo)) {
+        (Some(o), Some(a)) if foliage.iter().any(|(_, s)| s.unique) => Some((png(o)?, png(a)?)),
+        _ => None,
+    };
+    let lod_tris = (0..3)
+        .map(|lod| hooks::slot_triangles(kit, p, lod))
+        .collect::<Result<Vec<_>, _>>()?;
+    for (name, slot) in foliage {
+        if let (true, Some(((ow, oh, orm), (aw, ah, alb)))) = (slot.unique, &piece_maps) {
+            for (lod, tris) in lod_tris.iter().enumerate() {
+                let Some((_, t)) = tris.iter().find(|(n, _)| n == name) else {
+                    if lod == 0 {
+                        return Err(format!("{}: LOD0 does not draw {name}", p.id));
+                    }
+                    continue;
+                };
+                let values = texels_inside(t, *ow, *oh)
+                    .into_iter()
+                    .filter(|&i| {
+                        let Some(cut) = slot.alpha_cutoff else {
+                            return true;
+                        };
+                        let (x, y) = (i as u32 % ow, i as u32 / ow);
+                        let ax = (((x as f32 + 0.5) / *ow as f32 * *aw as f32) as u32).min(aw - 1);
+                        let ay = (((y as f32 + 0.5) / *oh as f32 * *ah as f32) as u32).min(ah - 1);
+                        alb[((ay * aw + ax) * 4 + 3) as usize] as f32 / 255.0 > cut
+                    })
+                    .map(|i| orm[i * 4 + 1] as f32 / 255.0)
+                    .collect();
+                out.push(row(name, Some(lod), "orm".into(), values));
+            }
+        } else if let Some(set) = &slot.tileable {
+            let stem = kit
+                .manifest
+                .materials
+                .get(set)
+                .and_then(|s| s.maps.get(&Channel::Orm))
+                .ok_or_else(|| format!("{}: {name} set {set} has no ORM", p.id))?;
+            let (_, _, orm) = png(stem)?;
+            let values = orm
+                .as_chunks::<4>()
+                .0
+                .iter()
+                .map(|t| t[1] as f32 / 255.0)
+                .collect();
+            out.push(row(name, None, format!("set {set}"), values));
+        } else {
+            let values = vec![slot.roughness.unwrap_or(1.0)];
+            out.push(row(name, None, "factor".into(), values));
+        }
+    }
+    Ok(out)
+}
+
+/// Every measured foliage slot keeps its median roughness at or above [`FOLIAGE_ROUGHNESS_MIN`]
+/// in every LOD unless `allow` lists it; a slot with no opaque texel cannot be measured; an `allow`
+/// entry whose slot passes everywhere, or is not measured at all, is stale.
+fn foliage_roughness_errors(rows: &[FoliageRoughness], allow: &[(&str, &str)]) -> Vec<String> {
+    let mut e = vec![];
+    let mut glossy = BTreeSet::new();
+    for r in rows {
+        let at = r.lod.map_or(String::new(), |l| format!(" lod{l}"));
+        if r.values.is_empty() {
+            e.push(format!(
+                "{}{at}: {} has no opaque texel to measure roughness on",
+                r.piece, r.slot
+            ));
+            continue;
+        }
+        let m = median(&r.values);
+        if m >= FOLIAGE_ROUGHNESS_MIN {
+            continue;
+        }
+        glossy.insert((r.piece.as_str(), r.slot.as_str()));
+        if !allow.contains(&(r.piece.as_str(), r.slot.as_str())) {
+            e.push(format!(
+                "{}{at}: {} median roughness {m:.3} < {FOLIAGE_ROUGHNESS_MIN} ({}, p10 {:.3}, p90 {:.3}): foliage reads glossy in play",
+                r.piece,
+                r.slot,
+                r.source,
+                r.quantile(0.1),
+                r.quantile(0.9)
+            ));
+        }
+    }
+    for (id, s) in allow {
+        if !glossy.contains(&(*id, *s)) {
+            e.push(format!(
+                "{id}: GLOSSY_FOLIAGE_BEFORE_RULE lists {s}, which is not glossy foliage now: remove it"
+            ));
+        }
+    }
+    e
+}
+
+/// Every [`FOLIAGE_FLOWER_SLOTS`] entry must name a foliage slot some piece draws (`present`).
+fn flower_slot_errors(present: &BTreeSet<String>, flowers: &[&str]) -> Vec<String> {
+    flowers
+        .iter()
+        .filter(|f| !present.contains(**f))
+        .map(|f| {
+            format!(
+                "FOLIAGE_FLOWER_SLOTS lists {f}, which no piece draws as a foliage slot: remove it"
+            )
+        })
+        .collect()
+}
+
+/// The names of every foliage slot (`hooks::is_foliage`) in every manifest piece.
+fn foliage_slot_names() -> BTreeSet<String> {
+    let mut names = BTreeSet::new();
+    for kit in hooks::kits() {
+        for p in &kit.manifest.pieces {
+            names.extend(
+                p.slots
+                    .iter()
+                    .filter(|(_, s)| hex_render::hooks::is_foliage(p, s))
+                    .map(|(n, _)| n.clone()),
+            );
+        }
+    }
+    names
+}
+
+fn all_foliage_roughness(e: &mut Vec<String>) -> Vec<FoliageRoughness> {
+    let mut rows = vec![];
+    for kit in hooks::kits() {
+        for p in &kit.manifest.pieces {
+            match foliage_roughness(&kit, p) {
+                Ok(r) => rows.extend(r),
+                Err(err) => e.push(err),
+            }
+        }
+    }
+    rows
+}
+
+#[test]
+fn foliage_stays_matte() {
+    let mut e = vec![];
+    let rows = all_foliage_roughness(&mut e);
+    e.extend(foliage_roughness_errors(&rows, GLOSSY_FOLIAGE_BEFORE_RULE));
+    e.extend(flower_slot_errors(
+        &foliage_slot_names(),
+        FOLIAGE_FLOWER_SLOTS,
+    ));
+    fail(e);
+}
+
+#[test]
+fn gate_catches_glossy_foliage_and_stale_allow_list() {
+    let r = |piece: &str, slot: &str, values: &[f32]| FoliageRoughness {
+        piece: piece.into(),
+        slot: slot.into(),
+        lod: Some(0),
+        source: "orm".into(),
+        values: values.to_vec(),
+    };
+    let rows = [
+        r("bush", "bush_leaves", &[0.5, 0.55, 0.6, 0.9]),
+        r("tree", "tree_leaves", &[0.75, 0.8, 0.85]),
+        r("fern", "fern_foliage", &[]),
+    ];
+    let e = foliage_roughness_errors(&rows, &[]);
+    assert!(
+        e.iter()
+            .any(|m| m.contains("bush lod0: bush_leaves median roughness 0.575")),
+        "{e:?}"
+    );
+    assert!(
+        e.iter()
+            .any(|m| m.contains("fern_foliage has no opaque texel")),
+        "{e:?}"
+    );
+    assert_eq!(e.len(), 2, "{e:?}");
+    // A listed glossy slot passes; an entry for a matte or unknown slot is stale.
+    let e = foliage_roughness_errors(&rows[..2], &[("bush", "bush_leaves")]);
+    assert_eq!(e, Vec::<String>::new());
+    let e = foliage_roughness_errors(
+        &rows[..2],
+        &[
+            ("bush", "bush_leaves"),
+            ("tree", "tree_leaves"),
+            ("gone", "gone_leaves"),
+        ],
+    );
+    assert!(e.iter().any(|m| m.contains("lists tree_leaves")), "{e:?}");
+    assert!(e.iter().any(|m| m.contains("lists gone_leaves")), "{e:?}");
+    assert_eq!(e.len(), 2, "{e:?}");
+    // A flower exclusion must name a foliage slot that exists.
+    let present = BTreeSet::from(["lily_petal".to_string()]);
+    assert_eq!(
+        flower_slot_errors(&present, &["lily_petal"]),
+        Vec::<String>::new()
+    );
+    let e = flower_slot_errors(&present, &["lily_petal", "gone_bud"]);
+    assert_eq!(e.len(), 1, "{e:?}");
+    assert!(e[0].contains("lists gone_bud"), "{e:?}");
+    // Only texel centres inside a triangle count, each once.
+    let tri = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]];
+    assert_eq!(texels_inside(&[tri, tri], 2, 2), vec![0, 1, 2]);
+}
+
+/// The foliage roughness table for review, lowest median first: `cargo test -p hex-play --test
+/// kit_gate print_foliage_roughness -- --ignored --nocapture`.
+#[test]
+#[ignore]
+fn print_foliage_roughness() {
+    let mut e = vec![];
+    let mut rows = all_foliage_roughness(&mut e);
+    rows.sort_by(|a, b| median(&a.values).total_cmp(&median(&b.values)));
+    println!("piece | slot | lod | source | texels | p10 | median | p90");
+    for r in &rows {
+        println!(
+            "{} | {} | {} | {} | {} | {:.3} | {:.3} | {:.3}",
+            r.piece,
+            r.slot,
+            r.lod.map_or("-".into(), |l| l.to_string()),
+            r.source,
+            r.values.len(),
+            r.quantile(0.1),
+            median(&r.values),
+            r.quantile(0.9)
+        );
+    }
+    for err in e {
+        println!("error: {err}");
+    }
+}

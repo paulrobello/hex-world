@@ -1,6 +1,6 @@
 {
   "name": "tree_hero_oak",
-  "date": "2026-10-15T01:11:03.214Z",
+  "date": "2026-10-27T21:18:20.081Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 12,
-      "bytes": 949427,
-      "sha256": "e692e381f96bc36b61292a63e00a3733b0b1bda2d0d2fbfd3d7c2dd950f6feed"
+      "bytes": 949926,
+      "sha256": "7aa1c5b5049a97279ac71fd100a8f8c0e6f0028e3f28c094b6e65fe3f92e95d3"
     },
     {
       "channel": "albedo",
@@ -59,8 +60,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 12,
-      "bytes": 950861,
-      "sha256": "8b86f730e1fc0aae64b32c311bbb6acdbdebfcabf5dea192b4ef3d69212b1f44"
+      "bytes": 951541,
+      "sha256": "c439a252fc1cfbf779087fbe241cf5acea24ef2b6238188f4135a33bd868ec08"
     },
     {
       "channel": "albedo",
@@ -79,8 +80,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 12,
-      "bytes": 1388896,
-      "sha256": "637354db30b7b997da91b3ab782171d26e422edc83a8a7628c1bb9b5dbd982c6"
+      "bytes": 1388960,
+      "sha256": "f5c219d4c33dfde728ad9c92bb516f92d4a98274e982b46ef3c0683121e26f95"
     },
     {
       "channel": "masks",
@@ -90,8 +91,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 12,
-      "bytes": 1374495,
-      "sha256": "87a303a72411ef199122987de5f238989079c7cdf4c56850eeb36ee56737d32a"
+      "bytes": 1374584,
+      "sha256": "c124afb92001495619aaebdf615e0eb287c4a89418ce2e88cb1141792809850a"
     },
     {
       "channel": "masks",
@@ -110,8 +111,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 12,
-      "bytes": 1958441,
-      "sha256": "6d0f0321c7329c6a8ce9a628480423f1b656eae841cac9faef07bdf626cdefb9"
+      "bytes": 1957363,
+      "sha256": "6141bcb2947be23ffee7384f4d0868c620e92b7ca4a1b6580d610be917f540d6"
     },
     {
       "channel": "normal",
@@ -121,8 +122,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 12,
-      "bytes": 1971474,
-      "sha256": "8c4d407d4e4301e22d8854d150a6098997c1cb93d802e94712b717d83ee75e15"
+      "bytes": 1970353,
+      "sha256": "eac531255754ec606f0e18e956df95e730842a64879db516b7f2aa3a4d97c8c2"
     },
     {
       "channel": "normal",
@@ -141,8 +142,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 12,
-      "bytes": 1723798,
-      "sha256": "1675fcaa41c4720c260009d9252295c870d3088f454fa60e6b3847f4bdfda520"
+      "bytes": 1703989,
+      "sha256": "1c8dda14a141b123ca6646bb79c48993e1cc09117a2daef54f1c31df0dafcf5b"
     },
     {
       "channel": "orm",
@@ -152,8 +153,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 12,
-      "bytes": 1777154,
-      "sha256": "6055b301c56c717195a9f435f90b3722ee5bb28c9942498c75fa708f9bcf67b0"
+      "bytes": 1714250,
+      "sha256": "b17bccb1a4bbd3310ae971bf288625e11525d42e4de20149711258e9caa777f1"
     },
     {
       "channel": "orm",
@@ -161,16 +162,16 @@
       "path": "assets/kit/p1/tree_hero_oak/tree_hero_oak.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 2305010,
-      "sha256": "1a58ae4eb83b02d5c1085e6a1d572c7a577f0037ac79c76cfa6205e7e33d5c8c"
+      "bytes": 2306600,
+      "sha256": "8de83bdb087b61986ef1894396116be004bbe51b8be2b83fabe7225b6fcfdc43"
     }
   ],
   "budgets": {
     "class": "hero",
     "ktxMax": 11500000,
     "ktxBytes": {
-      "bc7": 6020562,
-      "astc": 6073984
+      "bc7": 6000238,
+      "astc": 6010728
     },
     "glbBytes": 202768
   },

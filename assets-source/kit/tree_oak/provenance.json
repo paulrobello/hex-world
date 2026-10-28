@@ -17,15 +17,27 @@
     },
     {
       "path": "scripts/blender/kit/_oak_scatter.py",
-      "sha256": "d3a3ecac015df8b35fb11aa41c991db8716300847cda0f9b3e725800710143c9"
+      "sha256": "81fa3b8973d78e9f73fc378497b83d4077df07f534b99bafabbe50a25bd39fd8"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
     },
     {
       "path": "scripts/blender/kit/_shared.py",
       "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
     },
     {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
       "path": "scripts/blender/kit/_tree.py",
       "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "authoringAgent": {
@@ -291,8 +303,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 1184089,
-        "astc": 1178493
+        "bc7": 1180028,
+        "astc": 1173864
       },
       "glbBytes": 191296
     },
@@ -305,8 +317,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 340308,
-        "sha256": "c931d66bdb4e87d7e4d48834f591a59a926500944daf391d2142f7d588e7f7ae"
+        "bytes": 340302,
+        "sha256": "b4508acd213aa1de42b4da2caeb6c5b29ef4174ef08a777f27681c949a16b30a"
       },
       {
         "channel": "albedo",
@@ -316,8 +328,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 337072,
-        "sha256": "d0114a32067ab91a0411b2837fcd8913f0c10c5675ffbddee591ba170f9ee149"
+        "bytes": 337088,
+        "sha256": "b00bd5322a961795ea74155cf50490c7ecbb77f5e33cf6e100394dae9b994846"
       },
       {
         "channel": "albedo",
@@ -336,8 +348,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 101305,
-        "sha256": "ee59e2861b06d767b6c5880745aaac2757b850ebeb941b357fceb8e3ca1ce3b8"
+        "bytes": 101250,
+        "sha256": "9648940059d5f7014380808bb98b605ed1d11dd7d8f7ef286be24ee7da63b979"
       },
       {
         "channel": "masks",
@@ -347,8 +359,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 102208,
-        "sha256": "23369f5da6e5cff1c52d98320d89ac46988e526aef76ca17db5544f739345e2e"
+        "bytes": 102144,
+        "sha256": "3cebbc461163792af4452b60c75105a7beb7dc522974fa223744b784414de0c1"
       },
       {
         "channel": "masks",
@@ -367,8 +379,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 598471,
-        "sha256": "55f331acf42dfec41b73724d4502a2db4f42f116653d95f6dafca8cca1708771"
+        "bytes": 598357,
+        "sha256": "80b76113686700dced732d44584e4027d75d4d90a1ba8a7d19e1d48f220e2ae9"
       },
       {
         "channel": "normal",
@@ -378,8 +390,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 590759,
-        "sha256": "18729c719841854dd2654d6f5e1b7befb99c338e704449cd0ed377e571d1763c"
+        "bytes": 590629,
+        "sha256": "5062c40f852dc2cc91724741d17798fb2cb7d04ab1898306e0d2ad303087c1b7"
       },
       {
         "channel": "normal",
@@ -398,8 +410,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 144005,
-        "sha256": "66724f379957b7d966c455fc78f9cb25eec2dd0670e6d4afc9369be375b488ee"
+        "bytes": 140119,
+        "sha256": "02da09c505a37dc755aa1b3c5c706d5ca29e7b5be341cbb9233ba05a0659d8e2"
       },
       {
         "channel": "orm",
@@ -409,8 +421,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 148454,
-        "sha256": "6d4b520dc73451fd9ec1354994351d00d30732cbc3fa54ca4af16bf4fb4934af"
+        "bytes": 144003,
+        "sha256": "dd10a32829191207dcef94c75550e6ed5daed3270368b0533100c50c8f325cb8"
       },
       {
         "channel": "orm",
@@ -418,8 +430,8 @@
         "path": "assets/kit/p1/tree_oak/tree_oak.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 201593,
-        "sha256": "568a2a81a08ee692e11002a2a4e7c89d64af50a033fec9c930031c41a1cd190d"
+        "bytes": 198686,
+        "sha256": "d7f9aecced10f8bafc6fe94bc1a407d984f4e6d1a731272d6a602e62e68318a4"
       }
     ]
   },
@@ -431,13 +443,13 @@
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.albedo.bc7.ktx2",
-      "sha256": "c931d66bdb4e87d7e4d48834f591a59a926500944daf391d2142f7d588e7f7ae",
-      "bytes": 340308
+      "sha256": "b4508acd213aa1de42b4da2caeb6c5b29ef4174ef08a777f27681c949a16b30a",
+      "bytes": 340302
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.albedo.astc.ktx2",
-      "sha256": "d0114a32067ab91a0411b2837fcd8913f0c10c5675ffbddee591ba170f9ee149",
-      "bytes": 337072
+      "sha256": "b00bd5322a961795ea74155cf50490c7ecbb77f5e33cf6e100394dae9b994846",
+      "bytes": 337088
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.albedo.png",
@@ -446,13 +458,13 @@
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.masks.bc7.ktx2",
-      "sha256": "ee59e2861b06d767b6c5880745aaac2757b850ebeb941b357fceb8e3ca1ce3b8",
-      "bytes": 101305
+      "sha256": "9648940059d5f7014380808bb98b605ed1d11dd7d8f7ef286be24ee7da63b979",
+      "bytes": 101250
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.masks.astc.ktx2",
-      "sha256": "23369f5da6e5cff1c52d98320d89ac46988e526aef76ca17db5544f739345e2e",
-      "bytes": 102208
+      "sha256": "3cebbc461163792af4452b60c75105a7beb7dc522974fa223744b784414de0c1",
+      "bytes": 102144
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.masks.png",
@@ -461,13 +473,13 @@
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.normal.bc7.ktx2",
-      "sha256": "55f331acf42dfec41b73724d4502a2db4f42f116653d95f6dafca8cca1708771",
-      "bytes": 598471
+      "sha256": "80b76113686700dced732d44584e4027d75d4d90a1ba8a7d19e1d48f220e2ae9",
+      "bytes": 598357
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.normal.astc.ktx2",
-      "sha256": "18729c719841854dd2654d6f5e1b7befb99c338e704449cd0ed377e571d1763c",
-      "bytes": 590759
+      "sha256": "5062c40f852dc2cc91724741d17798fb2cb7d04ab1898306e0d2ad303087c1b7",
+      "bytes": 590629
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.normal.png",
@@ -476,18 +488,18 @@
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.orm.bc7.ktx2",
-      "sha256": "66724f379957b7d966c455fc78f9cb25eec2dd0670e6d4afc9369be375b488ee",
-      "bytes": 144005
+      "sha256": "02da09c505a37dc755aa1b3c5c706d5ca29e7b5be341cbb9233ba05a0659d8e2",
+      "bytes": 140119
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.orm.astc.ktx2",
-      "sha256": "6d4b520dc73451fd9ec1354994351d00d30732cbc3fa54ca4af16bf4fb4934af",
-      "bytes": 148454
+      "sha256": "dd10a32829191207dcef94c75550e6ed5daed3270368b0533100c50c8f325cb8",
+      "bytes": 144003
     },
     {
       "path": "assets/kit/p1/tree_oak/tree_oak.orm.png",
-      "sha256": "568a2a81a08ee692e11002a2a4e7c89d64af50a033fec9c930031c41a1cd190d",
-      "bytes": 201593
+      "sha256": "d7f9aecced10f8bafc6fe94bc1a407d984f4e6d1a731272d6a602e62e68318a4",
+      "bytes": 198686
     }
   ],
   "references": [
@@ -513,7 +525,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T07:04:40.009Z",
+    "date": "2026-10-27T22:40:08.958Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -545,6 +557,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "matte-foliage",
+      "requested": "2026-10-27",
+      "notes": "Pending owner review; not an approval. Rebuilt for owner A35 O1 (2026-10-27, \"go with O1 for foliage\"): the leaf cards' and canopy shell's roughness (ORM G: the shell's 0.62 fill and the leaf strip's 0.50-0.66) now goes through _verge_bush.matte before the canopy gaps ramp toward 1.0, mapping texels under 0.7 linearly onto 0.76-0.86 as the verge bushes and woodland shrubs were matted. Median roughness over the opaque texels (kit_gate print_foliage_roughness, LOD0): tree_oak_canopy 0.620 -> 0.847; tree_oak_leaves 0.580 -> 0.816. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the other KTX2 maps re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/foliage-matte/. The controller records the owner's decision."
     }
   ]
 }

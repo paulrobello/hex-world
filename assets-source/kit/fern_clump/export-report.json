@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/fern_clump.py",
-    "sha256": "8ab24dce8be606a08a8b306b68f031078facb8620c35547c73303d213720c4df"
+    "sha256": "2bcf363561aca3beb2565a1037dd71357076b12168d02aa92a0546fd1b1a398a"
   },
   "generatorDeps": [
     {
@@ -12,6 +12,14 @@
     {
       "path": "scripts/blender/kit/_props.py",
       "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "lodTris": {

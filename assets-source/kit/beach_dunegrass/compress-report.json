@@ -1,6 +1,6 @@
 {
   "name": "beach_dunegrass",
-  "date": "2026-10-20T23:41:43.242Z",
+  "date": "2026-10-27T21:21:47.152Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -10,6 +10,7 @@
   "settings": {
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
+    "uastcThreads": 1,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -48,8 +49,8 @@
       "transfer": "srgb",
       "vkFormat": 146,
       "levels": 11,
-      "bytes": 741112,
-      "sha256": "291360ca907a239899d634015f8d8485fdaa23cf54b0f2e3e9299300f7b6ed5e"
+      "bytes": 740992,
+      "sha256": "948d6aa9640beef475afdecc003339e985ea2524e979ec626e48262b3b4cce97"
     },
     {
       "channel": "albedo",
@@ -59,8 +60,8 @@
       "transfer": "srgb",
       "vkFormat": 158,
       "levels": 11,
-      "bytes": 720807,
-      "sha256": "82b9bbc29a172532fbd747943a4769661cd4d55947d274a60be30439ff47d011"
+      "bytes": 720721,
+      "sha256": "326377d51369c5e6a24ad382f5f595e91f4b52daa832aa30446da5dcd7eebb36"
     },
     {
       "channel": "albedo",
@@ -110,8 +111,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 162288,
-      "sha256": "d72d79badef5df59dca478360754dfab6351424b9ac4a0184ce040ac8812ec7b"
+      "bytes": 162151,
+      "sha256": "400820e1cb85d2799c46efbe07b249cd0494d2c272031710773d5d792991ef8a"
     },
     {
       "channel": "normal",
@@ -121,8 +122,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 168166,
-      "sha256": "953319cd7036ac13fa078d0f2c0925381b289f94a8f385ee8be54678287263ee"
+      "bytes": 168058,
+      "sha256": "a55f0d4ef3c8a168005f7bf74daa9354bf2459c08098cc60e2c3fba1724ba47c"
     },
     {
       "channel": "normal",
@@ -141,8 +142,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 11,
-      "bytes": 167700,
-      "sha256": "90a8666d953ab6a2f260f8b8b88afcd003a6d8f882576000da01880c1faf344b"
+      "bytes": 132800,
+      "sha256": "b777eaa98b87f538d02587eac6b4f2cef0fe6267ee411e0ca4b6018920a1d65e"
     },
     {
       "channel": "orm",
@@ -152,8 +153,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 11,
-      "bytes": 173154,
-      "sha256": "409ec990a7ec441376af3f8ce4ae98c686c8a1621c0598c7c4f877c6b4d2c3e6"
+      "bytes": 142083,
+      "sha256": "0e5e0e3314ab144f829054f0a08709f5e304531a931dee43564204605ee2110f"
     },
     {
       "channel": "orm",
@@ -161,16 +162,16 @@
       "path": "assets/kit/p1/beach_dunegrass/beach_dunegrass.orm.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 129989,
-      "sha256": "1370bca54e7f187f961c64e482a7f7a1455cefb1c31bdd1fa77e23a85f1d0c0d"
+      "bytes": 129347,
+      "sha256": "4f6f208387abf51bb6c9b21dc2e17233287c25f9974303b01d48515899e4e475"
     }
   ],
   "budgets": {
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 1071875,
-      "astc": 1062869
+      "bc7": 1036718,
+      "astc": 1031604
     },
     "glbBytes": 28228
   },

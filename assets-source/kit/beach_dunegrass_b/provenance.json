@@ -9,11 +9,19 @@
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_dunegrass.py",
-      "sha256": "29c517d444972709b1ff6f150a9e77c543d1e543e8cf957e8bd023ed5a4cd5a2"
+      "sha256": "554e88388c54a3f0153e316df35091ac9873add53db18c0a1191f057542a15f2"
     },
     {
       "path": "scripts/blender/kit/_props.py",
       "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "authoringAgent": {
@@ -159,8 +167,8 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 1028990,
-        "astc": 1024476
+        "bc7": 993965,
+        "astc": 993569
       },
       "glbBytes": 26572
     },
@@ -173,8 +181,8 @@
         "transfer": "srgb",
         "vkFormat": 146,
         "levels": 11,
-        "bytes": 705135,
-        "sha256": "a623f43823d6d0357e41ca1717829262287fd77cb963291040eb0f4aae189e7a"
+        "bytes": 705134,
+        "sha256": "23c2f57923483e29f46af74fec7e8f2f58412a84bf8ae75fdae50bf65fddf424"
       },
       {
         "channel": "albedo",
@@ -184,8 +192,8 @@
         "transfer": "srgb",
         "vkFormat": 158,
         "levels": 11,
-        "bytes": 689804,
-        "sha256": "60896f593f7e9dcd49a52299877508fb6f0eb2fdb30dceaef0625f34533c2402"
+        "bytes": 689715,
+        "sha256": "8d55df4196540944d59ca62950a7a6bd5cde8e22dd3e16b3090e457b6ec7ca78"
       },
       {
         "channel": "albedo",
@@ -235,8 +243,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 155944,
-        "sha256": "5cc40edd76d084d373bfef48e1c8be5306f1f8c7eef0ec23bac4d6ebcc121938"
+        "bytes": 155818,
+        "sha256": "f56f7344d2866ee8cd3e5dabf16ad1da109fcb202d197937285e89b2978b5737"
       },
       {
         "channel": "normal",
@@ -246,8 +254,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 161437,
-        "sha256": "355fea81150428bde572d18b0775de70f491f55e75da55c22b5befc394af234f"
+        "bytes": 161324,
+        "sha256": "758328df8ee1b31e52aaac832ebffee7110580252ede750fe65df1457809b116"
       },
       {
         "channel": "normal",
@@ -266,8 +274,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 11,
-        "bytes": 167136,
-        "sha256": "c1570c7b3c02cef25cbf655f64ac4d505bda4240237cd6624656bc849fc49fe3"
+        "bytes": 132238,
+        "sha256": "a1860f7c460b85121101bb52f5fec1099c0ef6a060b6179c33b4946289214789"
       },
       {
         "channel": "orm",
@@ -277,8 +285,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 11,
-        "bytes": 172493,
-        "sha256": "44458c38533dab1d48b63ecf1bb3ee4d09204997c5b38df9d484f83402191bee"
+        "bytes": 141788,
+        "sha256": "c6130c3ba208a87404e5221ec48a8da219661a532ef6c940c212f358f23214df"
       },
       {
         "channel": "orm",
@@ -286,8 +294,8 @@
         "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 132114,
-        "sha256": "f5f324dad52ebfba9cddf74e726ead78e55e77f685622c320b081b17fd9918b3"
+        "bytes": 130952,
+        "sha256": "21771fcc9a35733f3676b801ce96df85d5040565776562be3311cdb61e26f698"
       }
     ]
   },
@@ -299,13 +307,13 @@
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.bc7.ktx2",
-      "sha256": "a623f43823d6d0357e41ca1717829262287fd77cb963291040eb0f4aae189e7a",
-      "bytes": 705135
+      "sha256": "23c2f57923483e29f46af74fec7e8f2f58412a84bf8ae75fdae50bf65fddf424",
+      "bytes": 705134
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.astc.ktx2",
-      "sha256": "60896f593f7e9dcd49a52299877508fb6f0eb2fdb30dceaef0625f34533c2402",
-      "bytes": 689804
+      "sha256": "8d55df4196540944d59ca62950a7a6bd5cde8e22dd3e16b3090e457b6ec7ca78",
+      "bytes": 689715
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.albedo.png",
@@ -329,13 +337,13 @@
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.bc7.ktx2",
-      "sha256": "5cc40edd76d084d373bfef48e1c8be5306f1f8c7eef0ec23bac4d6ebcc121938",
-      "bytes": 155944
+      "sha256": "f56f7344d2866ee8cd3e5dabf16ad1da109fcb202d197937285e89b2978b5737",
+      "bytes": 155818
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.astc.ktx2",
-      "sha256": "355fea81150428bde572d18b0775de70f491f55e75da55c22b5befc394af234f",
-      "bytes": 161437
+      "sha256": "758328df8ee1b31e52aaac832ebffee7110580252ede750fe65df1457809b116",
+      "bytes": 161324
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.normal.png",
@@ -344,18 +352,18 @@
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.bc7.ktx2",
-      "sha256": "c1570c7b3c02cef25cbf655f64ac4d505bda4240237cd6624656bc849fc49fe3",
-      "bytes": 167136
+      "sha256": "a1860f7c460b85121101bb52f5fec1099c0ef6a060b6179c33b4946289214789",
+      "bytes": 132238
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.astc.ktx2",
-      "sha256": "44458c38533dab1d48b63ecf1bb3ee4d09204997c5b38df9d484f83402191bee",
-      "bytes": 172493
+      "sha256": "c6130c3ba208a87404e5221ec48a8da219661a532ef6c940c212f358f23214df",
+      "bytes": 141788
     },
     {
       "path": "assets/kit/p1/beach_dunegrass_b/beach_dunegrass_b.orm.png",
-      "sha256": "f5f324dad52ebfba9cddf74e726ead78e55e77f685622c320b081b17fd9918b3",
-      "bytes": 132114
+      "sha256": "21771fcc9a35733f3676b801ce96df85d5040565776562be3311cdb61e26f698",
+      "bytes": 130952
     }
   ],
   "references": [
@@ -381,7 +389,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-20T23:45:28.446Z",
+    "date": "2026-10-27T22:41:35.168Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -416,6 +424,15 @@
       "gate": "piece",
       "status": "approved",
       "notes": "Approved in chat (\"all models approved\") from docs/review/approvals.html, generated 2026-10-20."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "matte-foliage",
+      "requested": "2026-10-27",
+      "notes": "Pending owner review; not an approval. Rebuilt for owner A35 O1 (2026-10-27, \"go with O1 for foliage\"): the blades' roughness (ORM G 0.66) now goes through _verge_bush.matte (0.86), mapping texels under 0.7 linearly onto 0.76-0.86 as the verge bushes and woodland shrubs were matted. Median roughness over the opaque texels (kit_gate print_foliage_roughness, LOD0): beach_dunegrass_b_foliage 0.659 -> 0.859. Only the ORM's G changed: the albedo, normal and masks PNGs and the compressed GLB (mesh, LODs, collider, sockets) are byte-identical to the approved build (the other KTX2 maps re-encode under the current UASTC settings). Before and after in engine: docs/checkpoints/foliage-matte/. The controller records the owner's decision."
     }
   ]
 }

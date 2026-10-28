@@ -1,0 +1,72 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/foliage-matte/foliage-matte-kit.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        120.6,
+        153.19,
+        187.43
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 14.0,
+      "load_after": [
+        131.24,
+        153.96,
+        187.11
+      ],
+      "frames": {
+        "fm-oak-play": {
+          "mean": 0.2307,
+          "problem": null
+        },
+        "fm-oak-close": {
+          "mean": 0.1989,
+          "problem": null
+        },
+        "fm-hero-oak-play": {
+          "mean": 0.2806,
+          "problem": null
+        },
+        "fm-hero-oak-close": {
+          "mean": 0.2342,
+          "problem": null
+        },
+        "fm-fern-play": {
+          "mean": 0.2505,
+          "problem": null
+        },
+        "fm-fern-close": {
+          "mean": 0.1864,
+          "problem": null
+        },
+        "fm-dune-play": {
+          "mean": 0.464,
+          "problem": null
+        },
+        "fm-dune-close": {
+          "mean": 0.4728,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

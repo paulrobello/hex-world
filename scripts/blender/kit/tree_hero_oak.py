@@ -12,7 +12,11 @@ Three materials on one UV0 (owner: solid-dome canopy; P2 polish in `_oak`):
   masks.A, on the same UV0, never overlapping the canopy islands.
 - Fringe leaves: alpha cards on the unique strip v >= LEAF_V0 (`_leaves`), masks.A = 1 there.
 
-Built and baked at 1x; every LOD and the collider ship at SCALE (1.2x, owner 2026-10-14)."""
+Built and baked at 1x; every LOD and the collider ship at SCALE (1.2x, owner 2026-10-14).
+
+Leaf roughness is matte (owner A35 O1, 2026-10-27): the shell's 0.62 and the leaf strip's
+0.50-0.66 go through `_verge_bush.matte` (texels under 0.7 map linearly onto 0.76-0.86) before
+the canopy gaps blend toward 1.0, as the verge bushes and woodland shrubs were matted."""
 import math
 import os
 import pathlib
@@ -30,6 +34,7 @@ from lib import bake, collider, export, geom, lod, paths, scene, uv  # noqa: E40
 import _leaves  # noqa: E402
 import _oak  # noqa: E402
 import _tree  # noqa: E402
+import _verge_bush  # noqa: E402
 
 PIECE, ATLAS, MASK_SIZE = "tree_hero_oak", 2048, 2048
 BARK_SET_PX, BARK_TILE_M = 1024, 2.0  # the `bark` tileable set (scripts/blender/kit/mat_bark.py)
@@ -350,6 +355,7 @@ gap_w = np.where(gap_zone, np.clip((GAP_RAMP[1] - np.abs(albedo[..., :3] - GAP_T
                                    / (GAP_RAMP[1] - GAP_RAMP[0]), 0.0, 1.0), 0.0).astype(np.float32)
 gap_lin = srgb_to_lin(albedo[..., :3]) - (gap_w * (1.0 - GAP_ALBEDO))[..., None] * srgb_to_lin(GAP_TONE)
 albedo[..., :3] = np.where(gap_w[..., None] > 0, lin_to_srgb(np.clip(gap_lin, 0.0, 1.0)), albedo[..., :3])
+orm[..., 1] = _verge_bush.matte(orm[..., 1])
 orm[..., 1] += gap_w * (GAP_ROUGH - orm[..., 1])
 if not skip_bake:
     gap_texels = canopy_isl_atlas & (gap_w > 0.5)
@@ -359,7 +365,7 @@ if not skip_bake:
 albedo[-strip_px:] = leaf_alb
 normal[-strip_px:, :, :3] = leaf_nrm
 orm[-strip_px:, :, 0] = 1.0
-orm[-strip_px:, :, 1] = leaf_rough
+orm[-strip_px:, :, 1] = _verge_bush.matte(leaf_rough)
 bake._write(ATLAS, albedo.reshape(-1, 4), str(out / f"{PIECE}.albedo.png"), non_color=False)
 bake._write(ATLAS, normal.reshape(-1, 4), str(out / f"{PIECE}.normal.png"))
 bake._write(ATLAS, orm.reshape(-1, 4), str(out / f"{PIECE}.orm.png"))

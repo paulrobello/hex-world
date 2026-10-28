@@ -42,12 +42,12 @@ fn repo() -> PathBuf {
         .unwrap()
 }
 
-struct Kit {
-    root: PathBuf,
-    manifest: KitManifest,
+pub(super) struct Kit {
+    pub(super) root: PathBuf,
+    pub(super) manifest: KitManifest,
 }
 
-fn kits() -> Vec<Kit> {
+pub(super) fn kits() -> Vec<Kit> {
     [
         repo().join("crates/hex-render/tests/fixtures/kit"),
         repo().join("assets/kit"),
@@ -230,7 +230,7 @@ fn channel_errors(id: &str, slot: &str, samples: &[[f32; 4]], lod_b_max: f32) ->
     e
 }
 
-fn decode_masks(path: &Path) -> Result<(u32, u32, Vec<u8>), String> {
+pub(super) fn decode_masks(path: &Path) -> Result<(u32, u32, Vec<u8>), String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let img = Image::from_buffer(
         &bytes,
@@ -284,7 +284,7 @@ fn slot_samples(
 }
 
 /// The UV0 triangles of each material in LOD `lod` (and its rotor, if any).
-fn slot_triangles(
+pub(super) fn slot_triangles(
     kit: &Kit,
     p: &PieceEntry,
     lod: usize,

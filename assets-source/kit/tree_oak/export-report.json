@@ -16,15 +16,27 @@
     },
     {
       "path": "scripts/blender/kit/_oak_scatter.py",
-      "sha256": "d3a3ecac015df8b35fb11aa41c991db8716300847cda0f9b3e725800710143c9"
+      "sha256": "81fa3b8973d78e9f73fc378497b83d4077df07f534b99bafabbe50a25bd39fd8"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
     },
     {
       "path": "scripts/blender/kit/_shared.py",
       "sha256": "cd1151d9d0284f3e9bee6553d9dc62724ef69bc3ad6c4b4e3d8d8c16373d05af"
     },
     {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
       "path": "scripts/blender/kit/_tree.py",
       "sha256": "037e8be778813c929864130240aa65e05042c153b8c386d3920566b6867d81ce"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
     }
   ],
   "lodTris": {

@@ -13,7 +13,11 @@ Wind (TEXCOORD_1 `wind`, project.md "Tree wind data", the wildflower convention)
 the ground, rising along each frond to about 1 at its tip; V = a seeded phase per frond.
 LOD1/LOD2 are regenerated from the same frond list (fewer fronds, wider cards, fewer segments),
 never decimated. The collider is the crown's core (CORE_R): ferns are walk-through, and the core lets
-them tuck in against spruce trunks as in ref-2."""
+them tuck in against spruce trunks as in ref-2.
+
+Frond roughness is matte (owner A35 O1, 2026-10-27): `_ferns.frond_atlas`'s roughness goes through
+`_verge_bush.matte` in the ORM (texels under 0.7, the pinnae's 0.62-0.69, map linearly onto
+0.76-0.86; the 0.70-0.72 pinna rims, stipes and background keep theirs). `_ferns` stays bpy-free."""
 import math
 import os
 import pathlib
@@ -30,6 +34,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
 import _ferns  # noqa: E402
 import _props  # noqa: E402
+import _verge_bush  # noqa: E402
 
 PIECE, MASK_SIZE = "fern_clump", 64
 ATLAS = _ferns.ATLAS
@@ -162,7 +167,7 @@ alb, nrm, rough, ao = _ferns.frond_atlas(PIECE)
 n2 = nrm.reshape(NORMAL_SIZE, 2, NORMAL_SIZE, 2, 3).mean(axis=(1, 3)) * 2.0 - 1.0
 n2 /= np.linalg.norm(n2, axis=-1, keepdims=True)
 normal = np.concatenate([n2 * 0.5 + 0.5, np.ones((NORMAL_SIZE, NORMAL_SIZE, 1))], -1).astype(np.float32)
-orm = np.stack([ao, rough, np.zeros_like(ao), np.ones_like(ao)], -1)
+orm = np.stack([ao, _verge_bush.matte(rough), np.zeros_like(ao), np.ones_like(ao)], -1)
 bake.write_png(ATLAS, alb.reshape(-1, 4), str(out / f"{PIECE}.albedo.png"), non_color=False)
 bake.write_png(NORMAL_SIZE, normal.reshape(-1, 4), str(out / f"{PIECE}.normal.png"))
 bake.write_png(ATLAS, orm.reshape(-1, 4), str(out / f"{PIECE}.orm.png"))

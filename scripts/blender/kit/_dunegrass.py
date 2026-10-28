@@ -23,7 +23,11 @@ take R 0.5 (blades shed snow) and G 0.6.
 
 Wind (TEXCOORD_1 `wind`, project.md "Tree wind data", the wildflower convention): U = 0 at and
 below the ground and on the mound, rising along each card to about 1 at its top; V = a seeded phase
-per card."""
+per card.
+
+Blade roughness is matte (owner A35 O1, 2026-10-27): the blades' 0.66 goes through
+`_verge_bush.matte` (texels under 0.7 map linearly onto 0.76-0.86, so 0.86) in the ORM; the rest keeps
+its 0.8."""
 from __future__ import annotations
 
 import hashlib
@@ -41,6 +45,7 @@ from mathutils import Vector
 from lib import bake, budgets, collider, export, geom, materials, scene, uv
 
 import _props
+import _verge_bush
 
 ATLAS, TILE, NORMAL_SIZE, MASK_SIZE = 1024, 512, 512, 64
 SINK = 0.05  # card roots below the mound surface
@@ -332,7 +337,7 @@ def build_piece(piece: str, out: pathlib.Path, generator: str, c: Clump, height_
     n2 = nrm.reshape(NORMAL_SIZE, 2, NORMAL_SIZE, 2, 3).mean(axis=(1, 3)) * 2.0 - 1.0
     n2 /= np.linalg.norm(n2, axis=-1, keepdims=True)
     normal = np.concatenate([n2 * 0.5 + 0.5, np.ones((NORMAL_SIZE, NORMAL_SIZE, 1))], -1).astype(np.float32)
-    orm = np.stack([ao, rough, np.zeros_like(ao), np.ones_like(ao)], -1)
+    orm = np.stack([ao, _verge_bush.matte(rough), np.zeros_like(ao), np.ones_like(ao)], -1)
     bake.write_png(ATLAS, alb.reshape(-1, 4), str(out / f"{piece}.albedo.png"), non_color=False)
     bake.write_png(NORMAL_SIZE, normal.reshape(-1, 4), str(out / f"{piece}.normal.png"))
     bake.write_png(ATLAS, orm.reshape(-1, 4), str(out / f"{piece}.orm.png"))

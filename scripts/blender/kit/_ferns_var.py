@@ -13,7 +13,11 @@ wherever the floor dips (fern_clump: 0.08 m).
 Wind (TEXCOORD_1 `wind`) is fern_clump's: U = 0 at and below the ground, sway x min(1, s^1.5 x 1.05)
 along the frond (s = fraction of its length), V = a seeded phase per frond. LOD1/LOD2 are regenerated
 from the same frond list (fewer fronds, wider cards, fewer segments), never decimated. The collider
-is a crown core prism: ferns are walk-through, and the core is the footprint scatter keeps clear."""
+is a crown core prism: ferns are walk-through, and the core is the footprint scatter keeps clear.
+
+Frond roughness is matte (owner A35 O1, 2026-10-27): `_ferns.frond_atlas`'s roughness goes through
+`_verge_bush.matte` in the ORM (texels under 0.7, the pinnae's 0.62-0.69, map linearly onto
+0.76-0.86; the 0.70-0.72 pinna rims, stipes and background keep theirs). `_ferns` stays bpy-free."""
 from __future__ import annotations
 
 import math
@@ -28,6 +32,7 @@ from mathutils import Vector
 from lib import bake, budgets, collider, export, geom, materials, scene, uv
 
 import _ferns
+import _verge_bush
 
 # What the card code below relies on in the approved tile helper.
 assert _ferns.ATLAS == 1024 and _ferns.TILES == 3 and _ferns.TILE_H == 336, (_ferns.ATLAS, _ferns.TILES, _ferns.TILE_H)
@@ -154,7 +159,7 @@ def build(piece: str, out: pathlib.Path, generator: str, *, fronds: list[dict], 
     n2 = nrm.reshape(NORMAL_SIZE, 2, NORMAL_SIZE, 2, 3).mean(axis=(1, 3)) * 2.0 - 1.0
     n2 /= np.linalg.norm(n2, axis=-1, keepdims=True)
     normal = np.concatenate([n2 * 0.5 + 0.5, np.ones((NORMAL_SIZE, NORMAL_SIZE, 1))], -1).astype(np.float32)
-    orm = np.stack([ao, rough, np.zeros_like(ao), np.ones_like(ao)], -1)
+    orm = np.stack([ao, _verge_bush.matte(rough), np.zeros_like(ao), np.ones_like(ao)], -1)
     bake.write_png(ATLAS, alb.reshape(-1, 4), str(out / f"{piece}.albedo.png"), non_color=False)
     bake.write_png(NORMAL_SIZE, normal.reshape(-1, 4), str(out / f"{piece}.normal.png"))
     bake.write_png(ATLAS, orm.reshape(-1, 4), str(out / f"{piece}.orm.png"))
