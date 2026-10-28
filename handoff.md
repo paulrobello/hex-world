@@ -51,7 +51,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## Next asset work
 
-No Blender agents are running (2026-10-27 06:30Z): B1 and B3 are built, B2's refs wait on A31. The next modelling wave is B2 after A31, then B1's follow-ups after A30. Recipes are deferred and nothing past P3 starts until Paul says so.
+No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. P4 is on hold to leave host time for other projects; whether P5-P8 asset work (the lighthouse) may start is an open question to Paul. Recipes are deferred.
 
 ## Standing rules from the owner (still in force)
 
