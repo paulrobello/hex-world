@@ -683,6 +683,12 @@ P4 decisions (owner, 2026-10-27, open questions A38–A42, recommended options):
 - A40 O1, mountains: single-tile hills and peaks that rise inside the hex and meet their neighbours at the edge level. Bigger massifs come with the 7-hex mega-tile card.
 - A41 O1, rivers: river lanes carry a flow direction. Saves load with flow derived from the sea and height (flat rivers keep flowing as now), new placement refuses a river that would run uphill, and waterfalls form where a river meets a cliff edge.
 - A42 O1, modelling: mountains, cliffs and the other organic P4 pieces are headless procedural Blender generators (displacement and erosion-style noise, baked like every piece so far), not live sculpting (§11.1).
+- Slopes between levels (owner, 2026-10-28, elevation brainstorm, "hillside tile"): ground changes level through a dedicated hillside tile that slopes across its whole width, about 14% like the A39 road ramp, so raised and lower tiles keep full flat tops and every level change costs a tile. The owner wants hills with roads around and through them (tunnels, extending A39 beyond rail) and raised versions of existing tiles such as Meadow.
+- Hillside shapes (owner, 2026-10-28, "C"): hillsides handle any outline of raised ground, including bays and notches where a hillside sits between three or more raised neighbours, not just straight banks or bulging hilltops.
+- Road tunnels (owner, 2026-10-28): like a train tunnel, an arched opening at both ends, lit at night for cars. The night lighting needs the P5 day/night cycle, so the portal pieces carry an emissive lamp hook that stays inert until P5 drives it (the `bush_verge_c` blossom pattern).
+- Tunnel length (owner, 2026-10-28, "support several tiles"): a road tunnel can run underground beneath a raised area several tiles wide and come out at a portal on the far side, not only through a single hill tile.
+- Ground over a tunnel (owner, 2026-10-28, "meadow now and other types deferred"): in the first round only raised Meadow may sit above a tunnel; forest, village, road and other tiles over a tunnel are deferred.
+- Raised tiles (owner, 2026-10-28, "start with meadow add others later"): the first round gives Meadow a raised version; forest, oak, farm, wheat field, houses, bakery and windmill get theirs later.
 
 ### P5 — Atmosphere
 
