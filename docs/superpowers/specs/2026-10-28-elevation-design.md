@@ -1,6 +1,6 @@
 # Elevation, first round (P4): design
 
-Status: **awaiting owner approval of this document.** Written during the 2026-10-28 brainstorm with Paul. Items marked *(owner: recommendation)* were my recommendations, which he accepted on 2026-10-28 ("go with all your recomendations"); items marked *My call* are mine for him to check while reading. Nothing here is built until he approves this document.
+Status: **approved by the owner, 2026-10-28 ("approved").** Written during the 2026-10-28 brainstorm with Paul. Items marked *(owner: recommendation)* were my recommendations, which he accepted on 2026-10-28 ("go with all your recomendations"); items marked *My call* are mine for him to check while reading.
 
 ## Intent
 
