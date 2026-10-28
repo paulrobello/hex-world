@@ -12,6 +12,7 @@
 
 ## Global Constraints
 
+- Corner convention (pinned for Rust and the Task 10 Python generator): world corner `k` is at angle 30° + 60°·k at radius `HEX_RADIUS` (`prism.rs::corner`), where angle 0 is +x and 90° is +z. Edge `e` faces axial direction `DIRS[e]` (edge 0 east, `axial.rs`) and runs clockwise viewed from +Y from corner `(e + 5) % 6` to corner `e`: `pub fn edge_corners(e: u8) -> (u8, u8)` in `tile.rs`.
 - `LEVEL_STEP = 4.0` m (`crates/hex-core/src/axial.rs:7`), `HEX_RADIUS = 16.0` m corner radius (27.71 m flat-to-flat). Levels 0 to 3: `pub const MAX_LEVEL: u8 = 3` in `crates/hex-core/src/world.rs`, and a tile's `level + def.top()` never exceeds it.
 - `SAVE_FORMAT_VERSION` stays 3. The v1 wire `Tile.level` byte now carries the level. Every existing save and fixture loads with all tiles at level 0, unchanged.
 - Raisable defs (`raisable: true`): `meadow`, `road_straight`, `road_bend_60`, `road_bend_120`, `road_junction`, the 12 `hillside_*`, `road_ramp`, `road_tunnel_portal`. Every other def (ocean, beaches, rivers, rail, forest, oak, farm, wheat, houses, bakery, windmill, bridges) is placeable at level 0 only.
@@ -23,6 +24,7 @@
 - Scatter and grass are never baked into a piece (owner 2026-10-26).
 - Flat worlds are unchanged: `make thumbs` dirties only the new tiles' thumbnails plus the contact sheet.
 - New pipelines stay within WebGPU's 16 sampled textures per stage.
+- The HUD rules mirror (`web/ui/src/rules.ts`, parity-tested) must agree with Rust after every task, so each task that changes placement updates `rules.ts` and runs `make ui-schema` in the same commit.
 - Every task ends green on `make checkall` (redirect to a file and read the real exit code, never pipe). The last task runs `make checkall-ci`. Any bridge or catalog change runs `make ui-schema`.
 - Sub-agents run no `kanban` command. GPU captures and perf runs happen only inside windows the orchestrator books.
 
@@ -54,7 +56,8 @@
   - `impl EdgeSocket { pub fn corners(&self) -> (u8, u8) }` returns (start, end) relative heights in clockwise order.
   - `pub enum HeightMeet { Seamless, Cliff, Refused }` and `pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet`. Seamless means a's absolute (start, end) equals b's absolute (end, start). Cliff means both are Flat, both have no lane, and their absolute heights differ. Everything else is Refused.
   - `SocketTable::edges_compatible(&self, a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> bool`, and `heights_meet != Refused`.
-  - `TileDef.raisable: bool` (`#[serde(default)]`). `TileDef::corners(&self, rotation: u8) -> [u8; 6]` gives relative corner heights in world corner order, where world corner `k` is the clockwise-start corner of world edge `k`. `TileDef::top(&self) -> u8` is the maximum corner. `TileDef::is_sloped(&self) -> bool` is true when any corner differs.
+  - `pub fn edge_corners(e: u8) -> (u8, u8)` returns `((e + 5) % 6, e)`, the (start, end) corner indices of edge `e`.
+  - `TileDef.raisable: bool` (`#[serde(default)]`). `TileDef::corners(&self, rotation: u8) -> [u8; 6]` gives relative corner heights in world corner order, with edge `e`'s `corners()` = (corner `(e+5)%6`, corner `e`). `TileDef::top(&self) -> u8` is the maximum corner. `TileDef::is_sloped(&self) -> bool` is true when any corner differs.
   - `TileCatalog::placement_meets(&self, def, rotation, level, w, neighbour, nrot, nlevel) -> bool` and `edges_meet(&self, a, ra, la, w, b, rb, lb) -> bool`, which return the old answer when both levels are 0 and all edges are Flat at height 0.
   - `TileCatalog::meet_kind(&self, a, ra, la, w, b, rb, lb) -> HeightMeet`, used by Task 2 to rank cliffs.
 
@@ -66,6 +69,7 @@
   - `slope_against_flat_refused`: Rise against Flat gives `Refused` at every level pair 0..=2.
   - In `tile.rs`, `validate_rejects_broken_corner_chain`: a def whose edge 0 ends at 1 while edge 1 starts at 0 gets a validate error naming the edge.
   - Also `corners_rotate_with_the_tile`: `corners(1)` is `corners(0)` rotated by one.
+  - `edge_corners_match_geometry`: for every `e`, the midpoint of `prism::corner(16, start)` and `prism::corner(16, end)` points along `Axial::ORIGIN.neighbor(e).to_world(16)`, and start→end is clockwise viewed from +Y.
 
 - [ ] **Step 2: Run** `cargo test -p hex-core socket tile`. Expected: compile errors or FAIL on the new names.
 
@@ -74,6 +78,7 @@
   - Thread levels through `edges_compatible`, `placement_meets`, `edges_meet` and `stop_closes`. `stop_closes` copies `height`/`profile` as today.
   - Add the corner chain check to `TileDef::validate`: edge `e`'s end corner equals edge `e+1`'s start corner, corners lie in 0..=1, and `raisable` defs whose edges are not all Flat must be hillside-family ids.
   - Update every caller of the changed signatures (`world.rs`, `save.rs`, `bridge.rs` schema, tests) to pass level 0. This keeps the build green with behavior unchanged.
+  - Edit PRD §5.2: `EdgeProfile` becomes `Flat | Rise | Fall` (Rise/Fall: the edge's height climbs or drops one level along it, clockwise), and the height rule becomes the `heights_meet` rule above (owner rule: PRD tracks decisions).
 
 - [ ] **Step 4: Run** `cargo test -p hex-core`, then `make checkall > /tmp/elev-t1.log 2>&1; echo EXIT=$?`. Expected: PASS and `EXIT=0`. `data_validator::every_mvp_edge_is_flat_at_height_zero` still passes, because no data changed.
 
@@ -86,7 +91,8 @@
 - Modify: `crates/hex-core/src/save.rs` (`MAX_LEVEL` :37 moves to world.rs, `into_runtime` :612, `Tile::new` :601, `validate_tiles` :410)
 - Modify: `crates/hex-app/src/game.rs` (`rotate` :525, `snap_at` :307, `resnap` :331, `ghost` :349, `place_with` :781, `view` :932), `crates/hex-play-state/src/lib.rs` (`PlayTile` :11, `PlayGhost` :18)
 - Modify: `data/tiles/meadow.ron`, `road_straight.ron`, `road_bend_60.ron`, `road_bend_120.ron`, `road_junction.ron` (`raisable: true`)
-- Test: `world.rs` and `save.rs` test modules, `crates/hex-core/tests/save_fixtures.rs`
+- Modify: `crates/hex-app/src/bridge.rs` (`schema::catalog` :771, `parity_of` :861), `web/ui/src/rules.ts`, `web/ui/test/rules.test.ts`; regenerate `web/ui/src/bridge-schema.json` and `web/ui/test/rules-parity.json` with `make ui-schema`
+- Test: `world.rs` and `save.rs` test modules, `crates/hex-core/tests/save_fixtures.rs`, `web/ui/test/rules.test.ts`
 
 **Interfaces:**
 - Consumes: Task 1 `placement_meets`/`edges_meet`/`meet_kind` with levels, `TileDef::top`, `raisable`.
@@ -106,6 +112,7 @@
   - The old rotation-only methods (`legal_rotations`, `auto_rotate`, `cycle_rotation`, `distinct_legal_rotations`) are replaced by the orientation forms. Callers are updated, and no wrappers are kept.
   - `PlaceError::LevelOutOfRange` covers a non-raisable def above 0, or `level + top > MAX_LEVEL`.
   - `PlayTile { cell, tile, rotation, level }` and `PlayGhost { ..., level }`. `GameState` holds `chosen: Orientation` in place of `rotation`/`chosen_rotation`.
+  - HUD mirror: the schema catalog exports per tile `heights: [[start, end] ×6]` (relative corners per edge, world order at rotation 0), `lanes: [bool ×6]`, `raisable` and `top`. `parity_of` records `legal_orientations` as `[[rotation, level], ...]` per (tile, slot). `rules.ts` gains `heightsMeet` (mirrors Task 1) and `legalOrientations(def, needs): {rotation, level}[]`, ordered exactly like Rust, and `needsAt` carries neighbour levels and absolute corner heights.
 
 - [ ] **Step 1: Write the failing tests** in `world.rs`:
   - `meadow_beside_meadow_defaults_to_level_zero`: `legal_orientations(...)[0].level == 0`, and level 1 is also legal, as a cliff.
@@ -117,6 +124,7 @@
     - `levels_round_trip`: a world with tiles at levels 0..=3 encodes, then decodes equal, including undo/redo history.
     - `level_above_max_is_rejected`: level 4 gives `WorldIssue::LevelOutOfRange`. This replaces `reserved_levels_other_than_zero_are_rejected`.
   - In `save_fixtures.rs`, `fixtures_load_at_level_zero`: every fixture decodes with all levels 0, and `encode(decode(bytes)) == bytes`.
+  - Run `make ui-schema`, then update `rules.test.ts` to assert `legalOrientations` against the regenerated parity file.
 
 - [ ] **Step 2: Run** `cargo test -p hex-core world save`. Expected: FAIL or compile errors.
 
@@ -124,6 +132,7 @@
   - Levels flow through the save wire (`Tile::new` writes `tile.level`, and `into_runtime` keeps it). `validate_tiles` passes each tile's level to `edges_meet` and checks raisability.
   - In hex-app, `GameState` uses `Orientation`, and `rotate` cycles orientations, so R/Shift+R and Ctrl+wheel now also step levels. `view()` copies `level`.
   - Mark the five defs `raisable: true`.
+  - Mirror the rules in `rules.ts` until `make ui-check` passes.
 
 - [ ] **Step 4: Run** `cargo test --workspace`, then `make checkall > /tmp/elev-t2.log 2>&1; echo EXIT=$?`. Expected: PASS and `EXIT=0`. Render is still at y = 0, which Task 7 lifts.
 
@@ -141,14 +150,15 @@
 - Consumes: Task 1 `EdgeProfile::{Rise, Fall}` and `corners`, Task 2 `raisable`.
 - Produces:
   - **Hillside patterns.** The 12 binary corner necklaces of length 6, excluding all-0 and all-1, each named by its lexicographically smallest rotation read as corners c0..c5, for example `hillside_000001` and `hillside_000111`.
-    - Edge `e` runs from corner `e` to corner `e+1`: (0,0) is Flat h0, (1,1) is Flat h1, (0,1) is Rise h0, (1,0) is Fall h0.
+    - Edge `e`'s (start, end) corners are `edge_corners(e)`: (0,0) is Flat h0, (1,1) is Flat h1, (0,1) is Rise h0, (1,0) is Fall h0.
     - All edges are `kind: Grass`, `base: "meadow_base"`, and `raisable: true`.
     - The scatter copies meadow's scatter list. No edge pieces.
-  - **`road_ramp`:** corners `[1,1,1,0,0,0]`, so edge 0 is Flat h1 and edge 3 is Flat h0, both `Road` with lane `(0.0, 6.0)`. The other edges are Grass with the pattern's profiles. `center: Some("road_straight_center")` and `networks: [(kind: Road, from: Edge(3), to: Edge(0))]`, `raisable: true`.
-  - **`road_tunnel_portal`:** the same corners.
+  - **`road_ramp`:** corners `[1,1,0,0,0,1]` (the straight bank `000111` rotated). Edges 0 and 1 are Flat h1, edge 2 is Fall h0, edges 3 and 4 are Flat h0, and edge 5 is Rise h0. Edges 0 and 3 are `Road` with lane `(0.0, 6.0)`, and the rest are Grass. `center: Some("road_straight_center")`, `networks: [(kind: Road, from: Edge(3), to: Edge(0))]`, `ground: RoadRamp`, `raisable: true`.
+  - `TileDef.ground: Ground` (`#[serde(default)] pub enum Ground { #[default] Plain, RoadRamp }`) selects the height field in Task 4.
+  - **`road_tunnel_portal`:** the same corners and `ground: RoadRamp`.
     - Edge 3 is a Road lane at h0, and edge 0 is Grass Flat h1.
     - `center: Some("road_tunnel_portal")`, which is pending until Task 10.
-    - `nodes: [(id: "arch", at: [0.0, -2.0])]` and `networks: [(kind: Road, from: Edge(3), to: Node("arch"))]`.
+    - `nodes: [(id: "arch", at: [4.0, 0.0])]` and `networks: [(kind: Road, from: Edge(3), to: Node("arch"))]`.
     - `tunnel: Some((node: "arch", edge: 0))`.
   - `TileDef.tunnel: Option<TunnelEnd>` with `#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] pub struct TunnelEnd { pub node: String, pub edge: u8 }`. `edge` is the local edge the tunnel runs out of.
   - `PICKER_GROUPS` gains `("hillside", &[...12 ids in pattern order...])`. `road_ramp` and `road_tunnel_portal` are lone entries.
@@ -159,13 +169,13 @@
     - Extend `F1` with the 14 new ids.
     - Replace `every_mvp_edge_is_flat_at_height_zero` with `only_hillside_family_edges_leave_flat_zero`: non-Flat or h>0 edges appear only on `hillside_*`, `road_ramp` and `road_tunnel_portal`.
     - `hillside_patterns_are_the_twelve_necklaces`: the set of corner patterns at rotation 0 equals the 12 necklaces, and no two are rotations of each other.
-  - In `catalog.rs`, `portal_and_ramp_share_the_straight_bank`: both have `corners(0) == [1,1,1,0,0,0]`, and the portal's `tunnel.edge == 0`.
+  - In `catalog.rs`, `portal_and_ramp_share_the_straight_bank`: both have `corners(0) == [1,1,0,0,0,1]` and `ground == Ground::RoadRamp`, and the portal's `tunnel.edge == 0`.
 
 - [ ] **Step 2: Run** `cargo test -p hex-core --test data_validator`. Expected: FAIL.
 
 - [ ] **Step 3: Implement.** Write `scripts/tiles/hillsides.py` and run it to produce the RON files. Hand-write the two road tiles. Register them in `BUILTIN_TILES` and `PICKER_GROUPS`, and add `road_tunnel_portal` to `pending-pieces.ron`. `every_tile_rotation_has_a_thumbnail` will fail on the new ids: mark it `#[ignore = "P4 thumbs land in Task 11"]` in this commit only, and Task 11 removes the ignore.
 
-- [ ] **Step 4: Run** `cargo test -p hex-core`, then `make checkall > /tmp/elev-t3.log 2>&1; echo EXIT=$?`. Expected: PASS and `EXIT=0`. If `make ui-schema` changes the committed schema and parity files, commit them.
+- [ ] **Step 4: Run** `make ui-schema`, `cargo test -p hex-core`, then `make checkall > /tmp/elev-t3.log 2>&1; echo EXIT=$?`. Expected: PASS and `EXIT=0`, and the regenerated schema and parity files (now including the new tiles at every frontier slot) are committed. `rules.ts` already handles Rise/Fall from Task 2.
 
 - [ ] **Step 5: Commit** `feat(data): hillside group, road ramp and tunnel portal tiles (P4)`.
 
@@ -179,19 +189,22 @@
 - Consumes: Task 1 corner order (world corner `k` is at angle 30° + 60°·k at radius `HEX_RADIUS`, the same as `prism.rs::corner`).
 - Produces:
   - `pub fn height_at(corners: [u8; 6], x: f32, z: f32) -> f32`: metres above the tile's level, tile-local and unrotated (corners in local order). It is the **Wachspress interpolation** of the corner heights × `LEVEL_STEP` over the regular hexagon: `w_i = A(c_{i-1}, c_i, c_{i+1}) / (A(p, c_{i-1}, c_i) · A(p, c_i, c_{i+1}))`, normalised. Outside the hexagon it clamps to the nearest boundary point. This is pinned so the Task 10 portal generator can match it in Python.
-  - `pub fn ground_mesh(corners: [u8; 6], rings: u32) -> SlopeMesh`:
+  - `pub fn road_ramp_height_at(corners: [u8; 6], x: f32, z: f32) -> f32`: for `Ground::RoadRamp` tiles (local frame, road along +x from edge 3 at x = −13.86 to edge 0 at x = +13.86). Inside the road corridor `|z| <= 4` it is the linear `4.0 * (x + 13.86) / 27.71`. It blends to `height_at` with smoothstep over `4 < |z| < 8`, and outside that it is `height_at`. Edges 0 and 3 are constant in both fields, so the blend joins neighbours exactly.
+  - `pub fn field_at(ground: Ground, corners: [u8; 6], x: f32, z: f32) -> f32` dispatches the two. Everything downstream (meshes, drape, scatter, walk, the portal generator) calls `field_at`, never `height_at` directly.
+  - `pub fn ground_mesh(ground: Ground, corners: [u8; 6], rings: u32) -> SlopeMesh`:
     - A cap subdivided in `rings` concentric hex rings (use 12), with y from `height_at` and smooth normals from the analytic gradient.
     - Plus a skirt: one wall per edge from the cap boundary down to y = −`LEVEL_STEP`.
     - Cap UVs use meadow's planar cap mapping: `u = (x + 16) / 32`, `v = (16 − z) / 32`. Skirt UVs are the constant (0.005, 0.005).
     - The cap and skirt are separate meshes: `pub struct SlopeMesh { pub cap: PrismMesh, pub skirt: PrismMesh }`.
-  - `pub fn cap_tris(corners: [u8; 6], rings: u32) -> Vec<[[f32; 3]; 3]>`: the cap triangles, for scatter and walkers.
+  - `pub fn cap_tris(ground: Ground, corners: [u8; 6], rings: u32) -> Vec<[[f32; 3]; 3]>`: the cap triangles, for scatter and walkers.
 
 - [ ] **Step 1: Write the failing tests:**
   - `exact_at_corners`: `height_at` at each corner equals `corners[k] * 4.0` within 1e-4.
-  - `linear_along_edges`: at t ∈ {0.25, 0.5, 0.75} along edge 0 of `[1,0,0,0,0,0]`, `height_at == 4.0 * (1 - t)` within 1e-3.
+  - `linear_along_edges`: at t ∈ {0.25, 0.5, 0.75} along edge 1 (corner 0 to corner 1) of `[1,0,0,0,0,0]`, `height_at == 4.0 * (1 - t)` within 1e-3.
   - `flat_is_flat`: all corners equal gives every sampled point exact.
   - `neighbours_join`: for every pair of hillside patterns that meet seamlessly across world edge 0 (Task 1 `heights_meet`), samples along the shared edge agree within 1e-3 after rotating into each tile's frame.
-  - `straight_bank_grade`: for `[1,1,1,0,0,0]`, the grade between the midpoints of edges 0 and 3 is 4 / 27.71 within 0.01, and the maximum grade over a 64×64 interior sample is below 0.25.
+  - `ramp_grade`: `road_ramp_height_at` for `[1,1,0,0,0,1]` along z = 0 has grade 4 / 27.71 within 0.005 everywhere, the cross slope `|dh/dz|` is below 0.01 for `|z| <= 3`, and along edges 0 and 3 it equals `height_at`.
+  - `bank_grade_is_bounded`: the maximum grade of `height_at` over a 64×64 interior sample is below 0.3 for every hillside pattern.
   - `mesh_has_no_cracks`: cap boundary vertices lie on the hexagon and match `height_at`, and skirt tops equal cap boundary heights.
 
 - [ ] **Step 2: Run** `cargo test -p hex-core slope`. Expected: FAIL.
@@ -277,16 +290,16 @@
 - Produces:
   - The tile root is at y = `level as f32 * LEVEL_STEP`, and so is the ghost root. Rise dust is offset by the same amount.
   - `pub fn column_mesh(depth: f32) -> Mesh`: a hex wall below the baked skirt, from y = −`LEVEL_STEP` to −`LEVEL_STEP` − `depth`, tile-local, outward normals, constant UV. It is spawned under every root with `level > 0` (depth = `level * LEVEL_STEP`) with the `meadow_base_skirt` slot's `KitMaterial`, so every cliff and outer face reaches the level-0 floor.
-  - For `def.is_sloped()`, the base piece is replaced by two runtime parts built from `ground_mesh(def.corners(0), 12)`. The cap uses the `meadow_base_cap` slot material, with masks UVs per Task 4, and the skirt uses the `meadow_base_skirt` slot material. They take the same `Lod`/instancing components as other kit parts.
-  - `pub fn drape(mesh: &Mesh, corners: [u8; 6]) -> Mesh`: adds `height_at(corners, x, z)` to every vertex y and recomputes normals. It is applied to the centre and lane-edge pieces of sloped defs (the road ramp's `road_straight_center`), and is cached per (piece, corners).
+  - For `def.is_sloped()`, the base piece is replaced by two runtime parts built from `ground_mesh(def.ground, def.corners(0), 12)`. The cap uses the `meadow_base_cap` slot material, with masks UVs per Task 4, and the skirt uses the `meadow_base_skirt` slot material. Pre-check first: confirm `chunks.rs::settle` and `gpu_meta` (:553) accept an uncompressed runtime mesh (`final_aabb`, `final_uv_ranges`). If they do, give the parts the same `Lod`/instancing components as other kit parts. If not, spawn them without `Lod` on the per-entity path, and say so in the report.
+  - `pub fn drape(mesh: &Mesh, ground: Ground, corners: [u8; 6]) -> Mesh`: adds `field_at(ground, corners, x, z)` to every vertex y and recomputes normals. It is applied to the centre and lane-edge pieces of sloped defs (the road ramp's `road_straight_center`), and is cached per (piece, corners).
   - The portal ghost draws its `tunnel::preview` cells as a faint dotted line at the road's height, hidden under the cover (the spec's placement preview).
-  - `ground_tris` for a sloped def returns `cap_tris(def.corners(0), 12)` plus the draped road triangles, so scatter, grass and walkers see the slope.
+  - `ground_tris` for a sloped def returns `cap_tris(def.ground, def.corners(0), 12)` plus the draped road triangles, so scatter, grass and walkers see the slope.
 
 - [ ] **Step 1: Write the failing tests:**
   - `root_sits_at_level`: spawn a `PlayTile` at level 2 in a minimal app, and its root `Transform.translation.y == 8.0`.
   - `column_reaches_the_floor`: `column_mesh(8.0)` has min y = −12.0 and max y = −4.0.
-  - `drape_follows_the_field`: drape a flat 3×3 grid with `[1,1,1,0,0,0]`, and each vertex y equals `height_at` within 1e-4.
-  - `sloped_ground_tris_match_the_field`: `PlayScatter::ground` for `hillside_000111` gives `Surface::top(x, z) ≈ height_at` at 16 interior points.
+  - `drape_follows_the_field`: drape a flat 3×3 grid with `Ground::RoadRamp` and `[1,1,0,0,0,1]`, and each vertex y equals `field_at` within 1e-4.
+  - `sloped_ground_tris_match_the_field`: `PlayScatter::ground` for `hillside_000111` gives `Surface::top(x, z) ≈ field_at` at 16 interior points.
 
 - [ ] **Step 2: Run** `cargo test -p hex-play`. Expected: FAIL.
 
@@ -338,13 +351,12 @@
 - Consumes: Task 2 orientations and levels, Task 5 tunnels.
 - Produces:
   - Bridge JSON: `PlayTile` and `Ghost` gain `level`. `tilePlaced`, `placementRefused` and `tileReplaced` gain `level`. `ghostRotated` becomes `{rotation, level, valid}`. `cell_rect` uses `CELL_TOP + level * 4`.
-  - The schema catalog exports per tile `heights: [[start, end] ×6]` (relative corners per edge), `lanes: [bool ×6]`, `raisable` and `top`.
-  - `parity_of` records `legal_orientations` as `[[rotation, level], ...]` per (tile, slot). `parity_worlds` adds the elevation world.
-  - In `rules.ts`, `legalOrientations(def, needs): {rotation, level}[]` is ordered exactly like Rust. `needsAt` carries neighbour levels and absolute corner heights. `heightsMeet` mirrors Task 1.
+  - `parity_worlds` adds the elevation world (the schema and the `rules.ts` mirror already came in Task 2).
+  - `rules.ts` `cutOff` mirrors the Task 5 tunnel-cover bulldoze refusal.
   - The HUD readout shows "Level N" beside the rotation readout when N > 0.
   - Script command `place` takes an optional `level` (defaulting to the first legal orientation), documented in `docs/agent-operability.md`.
 
-- [ ] **Step 1: Write the failing tests.** Update `rules.test.ts` to assert `legalOrientations` against the regenerated parity file for every world including elevation. Run `make ui-schema` first so the Rust side writes the expected files.
+- [ ] **Step 1: Write the failing tests.** Add the elevation world to `parity_worlds`, run `make ui-schema`, and add a `bridge-sync.test.ts` assertion for the new `level` fields.
 
 - [ ] **Step 2: Run** `node --test web/ui/test/rules.test.ts`. Expected: FAIL until `rules.ts` mirrors Rust.
 
@@ -361,7 +373,7 @@
 - Return: `docs/checkpoints/road_tunnel_portal/integration.patch` (walk `OBSTACLES`, `CAR_GROUND` for the road into the arch, scatter `FOOTPRINTS`/`NOT_GROUND`, removal from `pending-pieces.ron`, the `arch` node position in `road_tunnel_portal.ron` if it moves)
 
 **Interfaces:**
-- Consumes: the Task 4 height function, re-implemented in the generator for the straight bank `[1,1,1,0,0,0]` (Wachspress, pinned above). Task 3 tile layout: road lane `(0.0, 6.0)` entering from local edge 3 and running to the arch near `[0.0, -2.0]`, with the raised face toward local edge 0.
+- Consumes: the Task 4 field `road_ramp_height_at` for corners `[1,1,0,0,0,1]`, re-implemented in the generator from the pinned definition (Wachspress, the corner convention in Global Constraints, the corridor blend). Task 3 tile layout: road lane `(0.0, 6.0)` along local x, entering from edge 3 (x = −13.86) and running up to the arch, with the raised face toward edge 0 (+x). Confirm the `arch` node position against the piece. Blender's y axis is −runtime z (`meadow_base.py:85-87`).
 - Produces: piece `road_tunnel_portal` (centre piece, pack `core`).
   - A stone arched portal and retaining wall set into the straight-bank slope, whose base follows `height_at`.
   - The arch opening fits within one level (crown ≤ 3.6 m above the road).
