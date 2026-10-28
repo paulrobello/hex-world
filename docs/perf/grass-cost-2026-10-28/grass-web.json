@@ -1,0 +1,1744 @@
+{
+  "date": "2026-10-28T06:31:54.268Z",
+  "viewport": "2560x1440",
+  "device_scale_factor": 1,
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "fps": "off",
+    "seed": "1",
+    "tilt": "off"
+  },
+  "camera": {
+    "cmd": "camera",
+    "pos": [
+      10,
+      12,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "world": {
+    "generator": "e2e/water-world.mjs waterWorldScript(26)",
+    "tiles": 2066,
+    "counts": {
+      "meadow": 271,
+      "river_straight": 347,
+      "forest": 142,
+      "beach": 200,
+      "river_bend": 21,
+      "beach_inner": 15,
+      "beach_outer": 28,
+      "house_cluster": 81,
+      "road_straight": 123,
+      "ocean": 838
+    }
+  },
+  "budget_p95_ms": 16.6,
+  "load_limit": 15,
+  "rounds": 3,
+  "arms": [
+    "off",
+    "sparse",
+    "normal",
+    "lush"
+  ],
+  "load_rule": "1-min load average <= load_limit immediately before and after every run; over-limit samples discarded and re-run",
+  "web": {
+    "browser": "chromium-headless-gpu-uncapped",
+    "channel": "chromium",
+    "args": "--use-angle=metal --enable-gpu --ignore-gpu-blocklist --enable-unsafe-webgpu --disable-gpu-vsync --disable-frame-rate-limit --enable-webgpu-developer-features"
+  },
+  "rows": [
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "off",
+        "distance": 1,
+        "groups": 0,
+        "blades": 0,
+        "instances": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 31.1,
+      "p95": 32.6,
+      "p99": 33.6,
+      "mean": 31.09,
+      "max": 35.7,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1523122176,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            589
+          ],
+          [
+            "<50",
+            11
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          32.3,
+          30.8,
+          31.4,
+          31.2,
+          31.5,
+          32.5,
+          31.5,
+          29.9,
+          31.8,
+          31.2,
+          30.1,
+          32.1,
+          32.4,
+          30.8,
+          31.4,
+          31.1,
+          31.9,
+          32,
+          31.6,
+          30.4,
+          31.7,
+          30.8,
+          31.5,
+          32.8,
+          30.4,
+          31.8,
+          30.8,
+          31.6,
+          31.9,
+          31.9,
+          30.5,
+          32.2
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.52294921875,
+      "load_after": 3.96044921875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "sparse",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 89069,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 33.4,
+      "p95": 35.2,
+      "p99": 36,
+      "mean": 33.38,
+      "max": 37.9,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1585446912,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            272
+          ],
+          [
+            "<50",
+            328
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          33.5,
+          34.2,
+          34.8,
+          31.8,
+          32.6,
+          33.2,
+          33.4,
+          33.8,
+          35,
+          32,
+          35,
+          33.4,
+          33.5,
+          33.5,
+          32.3,
+          33.1,
+          34.6,
+          32.8,
+          32.7,
+          35.8,
+          32.1,
+          32.8,
+          35,
+          33.2,
+          32.4,
+          34.1,
+          34.2,
+          32.4,
+          35.1,
+          33.7,
+          33.4,
+          33.5
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.96044921875,
+      "load_after": 4.287109375,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "normal",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 178190,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 35.4,
+      "p95": 37.3,
+      "p99": 37.9,
+      "mean": 35.48,
+      "max": 38.4,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1531117568,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            5
+          ],
+          [
+            "<50",
+            595
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          35.6,
+          35,
+          37.5,
+          35.5,
+          35.1,
+          33.8,
+          37.2,
+          34.2,
+          35.3,
+          35.6,
+          36.5,
+          34.8,
+          33.9,
+          35.4,
+          36.3,
+          35,
+          36.3,
+          35.5,
+          36,
+          35.8,
+          35.1,
+          34.1,
+          36.5,
+          36.3,
+          35,
+          35,
+          37.7,
+          34.8,
+          34.7,
+          34.4,
+          37.7,
+          34.2
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 4.287109375,
+      "load_after": 3.51904296875,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "platform": "web",
+      "arm": "lush",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 267037,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 37.6,
+      "p95": 39.1,
+      "p99": 39.8,
+      "mean": 37.68,
+      "max": 44.7,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1590427648,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            1
+          ],
+          [
+            "<50",
+            599
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          37.6,
+          38.7,
+          37.4,
+          37.1,
+          37.2,
+          39,
+          36.3,
+          37.8,
+          36.8,
+          38.7,
+          36.4,
+          39.4,
+          37.3,
+          38.6,
+          36.4,
+          38.8,
+          36.4,
+          38.7,
+          37.3,
+          37.1,
+          37.7,
+          37.2,
+          37.7,
+          37.2,
+          39.4,
+          37.3,
+          37.1,
+          37.8,
+          37.4,
+          37.5,
+          37.5,
+          38.3
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.51904296875,
+      "load_after": 3.8828125,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "lush",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 267037,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 37.6,
+      "p95": 39.1,
+      "p99": 39.9,
+      "mean": 37.7,
+      "max": 44.1,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1545404416,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            600
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          37.2,
+          38.4,
+          38.8,
+          35.4,
+          38.3,
+          38.8,
+          37.4,
+          36.4,
+          38.9,
+          36.8,
+          37.8,
+          37.7,
+          37.7,
+          38.9,
+          37.2,
+          36.3,
+          38.2,
+          38.5,
+          37.3,
+          36.8,
+          37.9,
+          38.3,
+          37.2,
+          38.1,
+          38,
+          38.5,
+          37,
+          36.9,
+          38.3,
+          37.6,
+          37,
+          37
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.8828125,
+      "load_after": 3.85498046875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "normal",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 178190,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 35.5,
+      "p95": 37.1,
+      "p99": 38.3,
+      "mean": 35.56,
+      "max": 75.9,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1519058944,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            9
+          ],
+          [
+            "<50",
+            590
+          ],
+          [
+            "<100",
+            1
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          36.9,
+          35.6,
+          34.5,
+          35.4,
+          36.9,
+          35.5,
+          34,
+          36.2,
+          35.3,
+          35.7,
+          36.1,
+          32.8,
+          38.1,
+          37,
+          34.8,
+          34.9,
+          35.1,
+          35.2,
+          36.9,
+          34.7,
+          35.5,
+          35.8,
+          34.8,
+          36.4,
+          34.5,
+          35.9,
+          34.7,
+          36.6,
+          36.2,
+          35.9,
+          33.3,
+          37.1
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.85498046875,
+      "load_after": 4.25341796875,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "sparse",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 89069,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 33.5,
+      "p95": 35,
+      "p99": 35.6,
+      "mean": 33.43,
+      "max": 37.2,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1527382016,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            260
+          ],
+          [
+            "<50",
+            340
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          33,
+          33.4,
+          32.5,
+          33.8,
+          34.2,
+          31.6,
+          34.5,
+          33.9,
+          31.5,
+          34.5,
+          33,
+          34.2,
+          33.7,
+          33.6,
+          31.7,
+          35.2,
+          32.7,
+          32.5,
+          34.5,
+          34,
+          31.5,
+          34.1,
+          33.2,
+          32.2,
+          34.1,
+          33.6,
+          32,
+          34.4,
+          33.7,
+          32.6,
+          34.7,
+          32.2
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 4.25341796875,
+      "load_after": 3.8603515625,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 90,
+      "grass": {
+        "status": "off",
+        "distance": 1,
+        "groups": 0,
+        "blades": 0,
+        "instances": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 31.4,
+      "p95": 32.7,
+      "p99": 33.3,
+      "mean": 31.34,
+      "max": 35,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 810,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1577582592,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            591
+          ],
+          [
+            "<50",
+            9
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          30.6,
+          32.1,
+          32.1,
+          29.9,
+          33.2,
+          30.6,
+          31,
+          32.1,
+          31.3,
+          30.4,
+          32.8,
+          30.4,
+          32.5,
+          31.5,
+          29.5,
+          31.7,
+          32.8,
+          29.2,
+          32,
+          31.5,
+          30.7,
+          32.6,
+          29.5,
+          32.7,
+          31.1,
+          32.1,
+          31.2,
+          31,
+          32.1,
+          30.9,
+          29.6,
+          32.6
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.8603515625,
+      "load_after": 4.0478515625,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "arm": "off",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "off",
+        "distance": 1,
+        "groups": 0,
+        "blades": 0,
+        "instances": 0,
+        "mesh_bytes": 0
+      },
+      "p50": 31.4,
+      "p95": 32.9,
+      "p99": 33.4,
+      "mean": 31.42,
+      "max": 34.9,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1495728128,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            590
+          ],
+          [
+            "<50",
+            10
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          31.1,
+          32.1,
+          32.4,
+          30,
+          30.4,
+          31,
+          30.1,
+          32.4,
+          32.7,
+          30.4,
+          32.1,
+          30.5,
+          32.1,
+          31.8,
+          31.5,
+          30.5,
+          32,
+          31.7,
+          30.6,
+          33.4,
+          28.8,
+          31.5,
+          31.8,
+          30,
+          32.4,
+          30.8,
+          31.1,
+          33,
+          30.1,
+          32.5,
+          31,
+          31.5
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 4.0478515625,
+      "load_after": 3.9658203125,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "arm": "sparse",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 90,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 89069,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 33.3,
+      "p95": 35.2,
+      "p99": 36.4,
+      "mean": 33.29,
+      "max": 37,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 810,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1584988160,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            292
+          ],
+          [
+            "<50",
+            308
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          32.8,
+          32.1,
+          35.3,
+          32.8,
+          33.1,
+          33.8,
+          33.6,
+          33.6,
+          32,
+          33.5,
+          33.2,
+          33.5,
+          33.8,
+          33.9,
+          32.1,
+          33.2,
+          35,
+          32.9,
+          33.2,
+          32.4,
+          33.5,
+          32.3,
+          35.7,
+          34.3,
+          33.2,
+          34.1,
+          33.2,
+          32.9,
+          31.9,
+          34.3,
+          32.8,
+          34.1
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.9658203125,
+      "load_after": 3.5888671875,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "arm": "normal",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 178190,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 35.3,
+      "p95": 37.6,
+      "p99": 38.2,
+      "mean": 35.39,
+      "max": 40,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1532559360,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            18
+          ],
+          [
+            "<50",
+            582
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          36.3,
+          34.9,
+          36.1,
+          34.1,
+          35.8,
+          35.2,
+          37,
+          33.5,
+          37,
+          34.5,
+          34.9,
+          33.7,
+          38.2,
+          35.3,
+          33.3,
+          38.1,
+          34.2,
+          34.4,
+          36.7,
+          34.8,
+          36.9,
+          33.9,
+          37.1,
+          37.1,
+          32.7,
+          37,
+          34.4,
+          35.7,
+          36.4,
+          35,
+          35.3,
+          34.7
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 3.5888671875,
+      "load_after": 4.259765625,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "platform": "web",
+      "arm": "lush",
+      "exclusivity": null,
+      "build_id": "3598d98135",
+      "browser_version": "153.0.8010.12",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "trace": null,
+      "webgpu_adapter": "apple | metal-3 | Apple M4",
+      "tiles": 2066,
+      "world_source": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "camera": {
+        "forward": [
+          -0.23287321627140045,
+          -0.27944788336753845,
+          -0.931492805480957
+        ],
+        "pos": [
+          10,
+          12,
+          40
+        ]
+      },
+      "rising": 0,
+      "settled_at_frame": 120,
+      "grass": {
+        "status": "on",
+        "distance": 1,
+        "groups": 25,
+        "blades": 267037,
+        "instances": 267037,
+        "mesh_bytes": 8545340
+      },
+      "p50": 37.8,
+      "p95": 39.3,
+      "p99": 40.3,
+      "mean": 37.82,
+      "max": 40.7,
+      "dropped_over_25ms": 600,
+      "samples": 600,
+      "frames": 840,
+      "window_start_frame": 121,
+      "ssao": true,
+      "post": [
+        "taa",
+        "ssao",
+        "bloom"
+      ],
+      "adapter": "Apple M4 | BrowserWebGpu | Other | ",
+      "wasm_memory_bytes": 1577910272,
+      "visible_tris": 0,
+      "stall": {
+        "histogram": [
+          [
+            "<8.33",
+            0
+          ],
+          [
+            "<16.7",
+            0
+          ],
+          [
+            "<20",
+            0
+          ],
+          [
+            "<25",
+            0
+          ],
+          [
+            "<33.3",
+            0
+          ],
+          [
+            "<50",
+            600
+          ],
+          [
+            "<100",
+            0
+          ],
+          [
+            ">=100",
+            0
+          ]
+        ],
+        "over_25ms": 600,
+        "tail_ms": [
+          37.5,
+          38.4,
+          38.1,
+          36.3,
+          38.6,
+          37.2,
+          37.3,
+          39.7,
+          37.8,
+          37.3,
+          37.5,
+          38,
+          37.1,
+          38.2,
+          38.3,
+          39.1,
+          36.4,
+          37.7,
+          37.5,
+          38,
+          37.7,
+          38.1,
+          37.9,
+          38.6,
+          38,
+          36.6,
+          37.7,
+          38.5,
+          37.9,
+          38.5,
+          37.6,
+          36.2
+        ]
+      },
+      "gpu": {
+        "enabled": false,
+        "frames": 0,
+        "passes": null,
+        "reason": "off (gpu_timing=on enables it)",
+        "rejected_no_target": 0,
+        "supported": null,
+        "tail_over_25ms": [],
+        "total": null
+      },
+      "console_errors": [],
+      "load_before": 4.259765625,
+      "load_after": 3.9951171875,
+      "load_discarded": 0
+    }
+  ],
+  "summary": {
+    "web_grass_off": {
+      "p95_median": 32.7,
+      "mean_median": 31.34,
+      "over_25ms_median": 600,
+      "pass": false,
+      "runs": 3
+    },
+    "web_grass_sparse": {
+      "p95_median": 35.2,
+      "mean_median": 33.38,
+      "over_25ms_median": 600,
+      "pass": false,
+      "runs": 3
+    },
+    "web_grass_normal": {
+      "p95_median": 37.3,
+      "mean_median": 35.48,
+      "over_25ms_median": 600,
+      "pass": false,
+      "runs": 3
+    },
+    "web_grass_lush": {
+      "p95_median": 39.1,
+      "mean_median": 37.7,
+      "over_25ms_median": 600,
+      "pass": false,
+      "runs": 3
+    }
+  }
+}

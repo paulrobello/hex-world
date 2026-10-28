@@ -1,0 +1,14 @@
+native grass=off round 0: p50 36.22 p95 40.63 mean 36.51 max 44.74 draws 1398 blades 0 packs_not_ready 0 (load 3.85 -> 5.18)
+native grass=sparse round 0: p50 37.48 p95 44.32 mean 39.51 max 47.72 draws 1418 blades 89069 packs_not_ready 0 (load 5.18 -> 4.62)
+native grass=normal round 0: p50 43.74 p95 47.04 mean 42.59 max 49.55 draws 1420 blades 178190 packs_not_ready 0 (load 4.62 -> 4.74)
+native grass=lush round 0: p50 46.9 p95 50.35 mean 45.63 max 54.96 draws 1420 blades 267037 packs_not_ready 0 (load 4.74 -> 3.72)
+native grass=sparse round 1: p50 40.27 p95 44.19 mean 39.8 max 46.97 draws 1420 blades 89069 packs_not_ready 0 (load 3.72 -> 3.61)
+native grass=normal round 1: p50 43.85 p95 45.92 mean 42.57 max 51.3 draws 1420 blades 178190 packs_not_ready 0 (load 3.61 -> 4.05)
+native grass=lush round 1: p50 46.52 p95 50.39 mean 45.48 max 53.99 draws 1420 blades 267037 packs_not_ready 0 (load 4.05 -> 4.54)
+native grass=off round 1: p50 36.16 p95 40.9 mean 36.54 max 45.14 draws 1398 blades 0 packs_not_ready 0 (load 4.54 -> 3.63)
+native grass=normal round 2: p50 43.85 p95 45.82 mean 42.46 max 48.95 draws 1420 blades 178190 packs_not_ready 0 (load 3.63 -> 3.62)
+native grass=lush round 2: p50 46.72 p95 50.26 mean 45.41 max 53.89 draws 1420 blades 267037 packs_not_ready 0 (load 3.62 -> 3.82)
+native grass=off round 2: p50 35.57 p95 40.65 mean 35.96 max 43.73 draws 1398 blades 0 packs_not_ready 0 (load 3.82 -> 4.31)
+native grass=sparse round 2: p50 39.29 p95 44.3 mean 39.63 max 47.32 draws 1420 blades 89069 packs_not_ready 0 (load 4.31 -> 3.75)
+wrote results/grass-native.json
+EXIT=0
