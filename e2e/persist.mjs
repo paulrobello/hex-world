@@ -63,7 +63,22 @@ function helpers(page) {
     await until(async () => !(await page.locator(".load").count()), "loading layer gone");
   }
   const tileSet = (p) => p.tiles.map((t) => `${t.q},${t.r},${t.tile},${t.rotation}`).sort().join(" ");
-  return { shot, play, text, until, boot, tileSet };
+  // The bar's words and its save state in one read. The save words crossfade (120 ms): in the read that
+  // first sees a new `data-state`, innerText still holds only the old word, and for the fade after it
+  // holds both. So a state counts as settled only when `data-state` names it and innerText shows its
+  // word alone. `has` names text the bar must show too (a tile count), so a wait right after an edit
+  // cannot pass on the state from before the HUD saw it.
+  const bar = () => page.evaluate(() => ({
+    title: (document.querySelector(".bar__world")?.innerText ?? "").replace(/\s+/g, " "),
+    state: document.querySelector(".save-state")?.dataset.state ?? "none",
+  }));
+  const WORDS = { saved: "Saved", saving: "Saving…", off: "Autosave off" };
+  const saveIs = async (state, has = "") => {
+    const b = await bar();
+    const shown = Object.entries(WORDS).filter(([, w]) => b.title.includes(w)).map(([s]) => s);
+    return b.state === state && shown.length === 1 && shown[0] === state && b.title.includes(has) ? b : null;
+  };
+  return { shot, play, text, until, boot, tileSet, bar, saveIs };
 }
 
 const worldsOpen = (page) => page.locator(".sheet--worlds:not(.is-closed)").count();
@@ -72,7 +87,7 @@ try {
   // ---------- Storage on: autosave, resume, rename, export, new world, import, load, delete ----------
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
   const page = await open(ctx);
-  const { shot, play, text, until, boot, tileSet } = helpers(page);
+  const { shot, play, text, until, boot, tileSet, saveIs } = helpers(page);
   await boot();
   await until(async () => (await text(".bar__world")).includes("World 1"), "start world named World 1");
   check((await text(".bar__world")).includes("1 tile"), "bar counts 1 tile");
@@ -87,12 +102,12 @@ try {
     h.selectTile("meadow"); h.placeTile(2, 0);
   });
   await until(async () => (await play()).tiles.length === 5, "four tiles placed");
-  await until(async () => (await text(".bar__world")).includes("Saving…"), "bar shows Saving… while the autosave is pending", 3_000);
+  await until(() => saveIs("saving", "5 tiles"), "bar shows Saving… while the autosave is pending", 3_000);
   await shot("autosave-saving");
   await page.evaluate(() => window.hexWorld.undo());
   await until(async () => (await play()).tiles.length === 4, "undo");
-  await until(async () => (await text(".bar__world")).includes("Saved"), "bar shows Saved after the debounced autosave");
-  const title = (await text(".bar__world")).replace(/\s+/g, " ");
+  const settled = await until(() => saveIs("saved", "4 tiles"), "bar shows Saved after the undo's debounced autosave");
+  const title = settled?.title ?? "";
   check(/World 1 4 tiles · Saved/.test(title), `bar title: name, tile count, Saved ("${title}")`);
   await page.waitForTimeout(300);
   await shot("autosave-saved");
@@ -121,14 +136,14 @@ try {
   await until(async () => (await text(".bar__world")).includes("World 1"), "bar keeps the world's name after the reload");
   await page.evaluate(() => window.hexWorld.redo());
   await until(async () => (await play()).tiles.length === 5, "redo after the reload restores the undone tile");
-  await until(async () => (await text(".bar__world")).includes("Saved"), "redo autosaves");
+  await until(() => saveIs("saved", "5 tiles"), "redo autosaves");
   await page.waitForTimeout(1200);
   await shot("resumed-after-reload");
 
   // A reload inside the autosave debounce keeps the edit: page hide writes it at once.
   await page.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(3, 0); });
   await until(async () => (await play()).tiles.length === 6, "a sixth tile placed");
-  await until(async () => (await text(".bar__world")).includes("Saving…"), "its autosave is still pending", 2_000);
+  await until(() => saveIs("saving", "6 tiles"), "its autosave is still pending", 2_000);
   await page.reload();
   await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
   await until(async () => (await play()).tiles.length === 6, "the edit made inside the debounce survives the reload (page hide flush)");
@@ -148,7 +163,7 @@ try {
     // A quality change holds the input under its layer until the engine reports the new tier drawn.
     const drawn = (what) => until(async () => !(await st()).tier.rebuilding
       && (await page.locator(".rebuild:not([hidden])").count()) === 0, `${what}: drawn and the layer clears`, 30_000);
-    await until(async () => (await text(".bar__world")).includes("Saved"), "settled before the settings change");
+    await until(() => saveIs("saved"), "settled before the settings change");
     await page.locator(".tool[data-action=settings]").click();
     await until(async () => page.locator(".sheet--settings:not(.is-closed)").count(), "Settings opens");
     const detected = (await st()).tier;
@@ -163,7 +178,7 @@ try {
     await setRange("Master volume", 30);
     await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
     await until(async () => { const a = await audio(); return a.muted && a.volumes.master === 0.3; }, "master 0.3, muted");
-    await until(async () => (await text(".bar__world")).includes("Saved"), "the settings change is autosaved");
+    await until(() => saveIs("saved"), "the settings change is autosaved");
     await page.reload();
     await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
     await until(async () => (await play()).tiles.length === 6, "the world resumes after the reload");
@@ -196,7 +211,7 @@ try {
     await until(async () => !(await st()).tilt.enabled, "tilt-shift off");
     await page.keyboard.press("Escape");
     await until(async () => page.locator(".sheet--settings.is-closed").count(), "Esc closes Settings");
-    await until(async () => (await text(".bar__world")).includes("Saved"), "the restored settings are saved");
+    await until(() => saveIs("saved"), "the restored settings are saved");
   }
 
   // Worlds sheet: rename the current world.
@@ -235,7 +250,7 @@ try {
   check(tileSet(await play()) === tileSet(exportedWorld), "imported tiles match the exported world");
   await until(async () => (await text(".bar__world")).includes("Riverside 2"), "the import opens as a new world, Riverside 2");
   await until(async () => (await text(".toast.is-shown")).includes("Imported Riverside 2"), "import toast");
-  await until(async () => (await text(".bar__world")).includes("Saved"), "the imported world is saved at once");
+  await until(() => saveIs("saved"), "the imported world is saved at once");
   await page.waitForTimeout(250);
   await shot("import-done");
 
@@ -336,7 +351,7 @@ try {
     await until(async () => (await play()).tiles.length === n0 + 3, "three more tiles placed before Start over");
     const held = await play();
     await until(async () => (await slotsInDb()).find((m) => m.name === "Riverside")?.tiles === held.tiles.length, `Riverside's slot is autosaved with ${held.tiles.length} tiles`);
-    await until(async () => (await text(".bar__world")).includes("Saved"), "settled before Start over");
+    await until(() => saveIs("saved"), "settled before Start over");
     const slots0 = await slotsInDb();
     const slot = slots0.find((m) => m.name === "Riverside");
     check(!!slot && held.can_undo, `Riverside's slot holds ${held.tiles.length} tiles, with history`);
@@ -385,7 +400,7 @@ try {
     check(!(await confirmShown()), "the confirm closes");
     await until(async () => (await text(".toast.is-shown")).includes("Started Riverside over"), "a toast says the world started over");
     await until(async () => { const b = (await text(".bar__world")).replace(/\s+/g, " "); return b.includes("Riverside") && b.includes("1 tile"); }, "the bar keeps the name, now 1 tile");
-    await until(async () => (await text(".bar__world")).includes("Saved"), "the cleared world is autosaved");
+    await until(() => saveIs("saved", "1 tile"), "the cleared world is autosaved");
     await until(async () => (await slotsInDb()).find((m) => m.id === slot?.id)?.tiles === 1, "the same slot now holds the cleared world");
     const slots1 = await slotsInDb();
     check(slots1.length === slots0.length, `no new slot (${slots0.length} before, ${slots1.length} after)`);
@@ -480,7 +495,7 @@ try {
     await cp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
     await c.until(async () => (await c.play()).tiles.length === 2, "camera: a tile placed so World 1 has a slot");
     await c.until(async () => (await slotStamps())["World 1"], "camera: World 1's slot is written");
-    await c.until(async () => (await c.text(".bar__world")).includes("Saved"), "camera: World 1 is autosaved");
+    await c.until(() => c.saveIs("saved", "2 tiles"), "camera: World 1 is autosaved");
     const hist = await c.play();
     const stamps = await slotStamps();
 
@@ -489,7 +504,7 @@ try {
     await cp.waitForTimeout(3000);
     const after = await c.play();
     check(after.can_undo === hist.can_undo && after.can_redo === hist.can_redo, "a camera move adds no undo or redo entry");
-    check((await c.text(".bar__world")).includes("Saved"), "a camera move starts no autosave");
+    check((await c.bar()).state === "saved", "a camera move starts no autosave");
     check(JSON.stringify(await slotStamps()) === JSON.stringify(stamps), "a camera move writes no world save");
     const stored = Object.values(await poses());
     check(stored.length === 1 && sameOrbit(stored[0].orbit, a) && stored[0].walk === null, `the pose is stored per viewer within 3 s (${fmt(stored[0]?.orbit)})`);
@@ -541,7 +556,7 @@ try {
     await cp.keyboard.press("Escape");
     await c.until(async () => !(await worldsOpen(cp)), "camera: Esc closes the Worlds sheet");
     await cp.evaluate(() => { const h = window.hexWorld; h.selectTile("forest"); h.placeTile(0, 1); });
-    await c.until(async () => (await c.text(".bar__world")).replace(/\s+/g, " ").includes("World 2 2 tiles · Saved"), "camera: World 2 is autosaved");
+    await c.until(() => c.saveIs("saved", "World 2 2 tiles"), "camera: World 2 is autosaved");
     const two = await fly([25, 0, 30], -0.4, 0.35, 60);
     await cp.waitForTimeout(2500);
     check(Object.keys(await poses()).length === 2, "one stored pose per world");
@@ -592,7 +607,7 @@ try {
     const l = helpers(lp);
     await l.boot();
     await lp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
-    await l.until(async () => (await l.text(".bar__world")).includes("Saved"), "localStorage blocked: the world autosaves");
+    await l.until(() => l.saveIs("saved", "2 tiles"), "localStorage blocked: the world autosaves");
     await lp.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [60, 80, 60], look_at: [10, 0, 0] }));
     await lp.waitForTimeout(2500);
     await lp.reload();
