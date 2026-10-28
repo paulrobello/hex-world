@@ -1,10 +1,14 @@
-# Hex World handoff (2026-10-27)
+# Hex World handoff (2026-10-28)
 
 Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
-- `main` holds batches 27-40 (`11372a4`). `dist/` rebuilt.
+- `main` holds everything through the matte foliage (`0cad1f2`, pushed, CI green, deployed). `dist/` rebuilt.
+- 2026-10-28 landed and pushed: offscreen native captures (capture runs render offscreen by default, so a covered or minimized window no longer captures black; card 01a17f7bb57b), B2 walls and hedges (`cb160f5`, card closed), large-world bounds (`d3f4673`: water meshes spawn with fixed bounds, calculate_bounds 6.1 -> 0.01 ms, main thread -6.0/-5.6 ms on MiniMac), the title theme on New world (A37, `0648d5d`), CI pruning test fixtures from the Pages artifact (`c7e4ff9`, live 404s checked), the scatter density test fix, and the A35 matte oaks/dune grass/ferns with the matte-foliage gate (12 pieces pending owner re-approval on docs/review/approvals.html).
+- P4 questions A38-A42 answered (recommended options, PRD §15 P4), but P4 stays on hold: owner 2026-10-28 "keep holding on p4 we need to give other projects some time on the system". Start no new waves; release host bookings the moment work finishes.
+- Open for the owner: A43 (title theme on a first visit), A44 (shared scatter materials: branch worktree-agent-abbcb3566f8fc0322 head 8def463 is gated but the 2,066-tile overview is 0.24 ms slower on MiniMac; tune the merge threshold first or land), and the 12 matte-foliage re-approvals.
+- New cards: flaky e2e/persist.mjs double read (01a17fdd3457, high), stale shots-photo tree-click expectation (01a17fea7061, high), possible close-camera regression since c032d97 (01a17fdd3a02), kanban upstream schedule release/shorten (01a17fb3c7b7).
 - Batch 39 landed: the large-world O4/O5 regressions (card 01a1786dc9c5, closed). O4's p95 cost was frame pacing under the old web frame limiter and is gone with `e88b1bd`. O5's overview cost was GPU time lost to overlap between shadow cascades and is gone on main (fix inferred, likely `f1aff3e`). On main, `kit_ablate=cascade_clip|coalesce` turns either cut off in one build, and neither is slower than its absence while the draw cuts hold. Evidence: `docs/perf/large-world-o4o5/`.
 - Batch 40 landed (`11372a4`, card 01a17d942ec1 closed): `finish_kit` marked `PlayKit` changed every frame (an `as_deref_mut()` before its early return, since `a672056`), so scatter re-laid every tile and rebuilt its report each frame; the runtime river and coast scatter made that bigger. Main thread on the 2,066-tile world 29.1 -> 16.1 ms close, 25.8 -> 15.3 ms overview; both cameras are GPU-bound on MiniMac. Follow-up card 01a17df74e2d: Bevy `calculate_bounds` at about 4.6 ms. Evidence `docs/perf/large-world-cpu/`.
 - 2026-10-27 owner: A30-A32 and all of P2 approved; P3 boats and bridges were already built (PRD checked); recipe system deferred until more game assets. In flight: B2 walls and hedges (card 01a17a6d6983), P2 audio town murmur and stingers (card 01a17e0c506a), tier-change stall (card 01a13ce72708, MiniMac 17:05-18:35Z); next B1 landing, then the grass p95 re-measure (card 01a13c876aaf criterion 4).
