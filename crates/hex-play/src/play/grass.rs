@@ -675,6 +675,31 @@ pub fn exclusions(
     out
 }
 
+/// Hedge foliage reaches the ground, so blades may grow in under its outer leaves: a hedge clears
+/// only this far (m) either side of its line; a wall clears its whole foot plus [`WALL_GAP`].
+pub const HEDGE_CORE: f32 = 0.45;
+
+/// The field boundaries' footprints (B2, `scatter::TileScatter::fences`, tile frame) as boxes no
+/// blade roots in: a wall's whole foot, a hedge's dense core.
+pub fn boundary_clears(fences: &[hex_core::boundary::Seg]) -> Vec<Clear> {
+    fences
+        .iter()
+        .map(|s| {
+            let (a, b) = (Vec2::from(s.a), Vec2::from(s.b));
+            let wall = s.half < hex_core::boundary::HEDGE_HALF - 0.1;
+            let side = if wall { s.half + WALL_GAP } else { HEDGE_CORE };
+            Clear::Box {
+                centre: (a + b) / 2.0,
+                half: Vec2::new(
+                    (b - a).length() / 2.0 + if wall { WALL_GAP } else { 0.0 },
+                    side,
+                ),
+                axis: (b - a).normalize_or(Vec2::X),
+            }
+        })
+        .collect()
+}
+
 fn lerp(r: [f32; 2], t: f32) -> f32 {
     r[0] + (r[1] - r[0]) * t
 }
@@ -915,6 +940,8 @@ pub struct GrassGroup {
 struct Key {
     tile: String,
     seed: u64,
+    /// The field boundaries on the tile's edges (`scatter::TileScatter::cut`).
+    cut: u64,
 }
 
 struct Built {
@@ -1129,6 +1156,7 @@ pub fn sync(
             let key = Key {
                 tile: t.tile.clone(),
                 seed: cell_seed(view.world_seed, *c),
+                cut: layouts.tiles.get(c).map_or(0, |s| s.cut),
             };
             (*root, (*c, key))
         })
@@ -1202,20 +1230,25 @@ pub fn sync(
             continue;
         };
         // Scatter publishes its layout in the same frame its ground is ready.
-        let (instances, pieces) = if def.props.scatter.is_empty() {
-            (vec![], vec![])
+        let (instances, pieces, fences) = if def.props.scatter.is_empty() {
+            (vec![], vec![], vec![])
         } else {
             let Some(s) = layouts.tiles.get(&cell).filter(|s| s.seed == key.seed) else {
                 continue;
             };
-            (s.layout.instances.clone(), s.pieces.clone())
+            (
+                s.layout.instances.clone(),
+                s.pieces.clone(),
+                s.fences.to_vec(),
+            )
         };
         let slots = state
             .slots
             .entry(def.id.clone())
             .or_insert_with(|| Arc::new(grass_slots(&packs.manifest, def, &catalog.0)))
             .clone();
-        let excluded = exclusions(def, cell, &instances, &pieces);
+        let mut excluded = exclusions(def, cell, &instances, &pieces);
+        excluded.extend(boundary_clears(&fences));
         let started = bevy::platform::time::Instant::now();
         let l = Arc::new(layout(key.seed, &prepared.surface, &slots, &excluded));
         let (group, blades) = spawn_group(&mut commands, root, &l, density);

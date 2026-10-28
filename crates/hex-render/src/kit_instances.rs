@@ -519,16 +519,20 @@ pub struct KitAblate {
     pub cascade_clip: bool,
     /// O4 off: no runtime slot coalescing; every slot draws its own mesh and material.
     pub coalesce: bool,
+    /// B2 off: play derives no field boundaries (walls, hedges, their hedgerow oaks), so a draw
+    /// census can be taken with and without them on one build.
+    pub boundaries: bool,
 }
 
 impl KitAblate {
-    /// A comma list of `cascade_clip` and `coalesce`, or `none`.
+    /// A comma list of `cascade_clip`, `coalesce` and `boundaries`, or `none`.
     pub fn parse(s: &str) -> Option<KitAblate> {
         let mut a = KitAblate::default();
         for w in s.split(',').map(str::trim).filter(|w| !w.is_empty()) {
             match w {
                 "cascade_clip" => a.cascade_clip = true,
                 "coalesce" => a.coalesce = true,
+                "boundaries" => a.boundaries = true,
                 "none" => {}
                 _ => return None,
             }

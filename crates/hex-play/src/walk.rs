@@ -141,6 +141,20 @@ pub const OBSTACLES: &[&str] = &[
     "rail_buffer_stop",
     "well_stone",
     "well_stone_b",
+    // The field boundaries (B2, `hex_core::boundary`): a wall or hedge blocks by its per-arm boxes,
+    // a gap between pieces lets the walker through, and the gateway's box covers its shut gate.
+    "wall_run",
+    "wall_run_b",
+    "wall_end",
+    "wall_bend",
+    "wall_junction",
+    "wall_gate",
+    "hedge_run",
+    "hedge_run_b",
+    "hedge_end",
+    "hedge_bend",
+    "hedge_junction",
+    "hedge_oak",
 ];
 
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
@@ -730,14 +744,15 @@ pub fn prop_kind(piece: &str) -> &'static str {
         p if p.starts_with("tree")
             || p.starts_with("sapling_")
             || p.starts_with("shrub_")
-            || p.starts_with("bush_") =>
+            || p.starts_with("bush_")
+            || p.starts_with("hedge_") =>
         {
             "tree"
         }
         p if p.starts_with("hay_") => "hay",
         p if p.starts_with("animal_") => "animal",
         p if p.starts_with("log_") || p.starts_with("beach_driftwood") => "log",
-        p if p.starts_with("fence") => "fence",
+        p if p.starts_with("fence") || p.starts_with("wall_") => "fence",
         "rail_lever" => "lever",
         "rail_buffer_stop" => "buffer_stop",
         p if p.starts_with("boat_") => "boat",
@@ -927,6 +942,7 @@ impl WalkGround {
     pub fn build(
         tiles: &[PlayTile],
         catalog: &TileCatalog,
+        world_seed: u64,
         hidden: &[Axial],
         surface_of: &mut dyn FnMut(&TileDef) -> Option<(Arc<Surface>, f32)>,
         shape_of: &mut dyn FnMut(&str) -> PieceShape,
@@ -1028,6 +1044,15 @@ impl WalkGround {
             for s in rail_end::open_stops(def, t.cell, t.rotation, |c| tile_at.get(&c).copied()) {
                 let local = crate::play::buffer_stop_local(&s);
                 place(BUFFER_STOP, &shape(BUFFER_STOP), &(root * local));
+            }
+            // The field boundaries this tile owns (`play::respawn_pairs` draws them), and the
+            // hedgerow oaks they carry.
+            let at = |c: Axial| tile_at.get(&c).copied();
+            for f in crate::play::boundaries::placements(world_seed, t.cell, &at) {
+                if OBSTACLES.contains(&f.piece) {
+                    let local = crate::play::boundaries::transform(&f);
+                    place(f.piece, &shape(f.piece), &(root * local));
+                }
             }
             for (centre, part, corners) in CENTRE_OBSTACLES {
                 if def.center.as_ref().is_some_and(|c| c.as_str() == *centre) {
@@ -1360,6 +1385,7 @@ pub struct WalkCache {
 #[derive(Clone, PartialEq)]
 struct BuiltFrom {
     tiles: Vec<PlayTile>,
+    world_seed: u64,
     hidden: Vec<Axial>,
     scatter: u64,
     kit_pieces: usize,
@@ -1391,6 +1417,7 @@ pub fn sync(
     let hidden: Vec<Axial> = waiting.map(|w| w.0.clone()).unwrap_or_default();
     let from = BuiltFrom {
         tiles: view.tiles.clone(),
+        world_seed: view.world_seed,
         hidden,
         scatter: layouts.revision,
         kit_pieces: kit.len(),
@@ -1450,6 +1477,7 @@ pub fn sync(
     *ground = WalkGround::build(
         &from.tiles,
         &catalog.0,
+        from.world_seed,
         &from.hidden,
         &mut surface_of,
         &mut shape_of,
@@ -1600,6 +1628,19 @@ pub(crate) mod tests {
                         "{foot}..{top}"
                     );
                 }
+            } else if piece.ends_with("_bend") || piece.ends_with("_junction") {
+                // A field boundary's corner: one box per arm (B2), so the walker is not stopped in
+                // the wedge between two arms.
+                let n = if piece.ends_with("_bend") { 2 } else { 3 };
+                assert_eq!(s.parts.len(), n, "{piece}: one part per arm");
+                for p in &s.parts {
+                    assert_eq!(p.hull.len(), 4, "{piece}: an arm box {:?}", p.hull);
+                    let (foot, top) = p.body.unwrap();
+                    assert!(
+                        foot.abs() < 1e-3 && (1.05..1.7).contains(&top),
+                        "{piece}: {foot}..{top}"
+                    );
+                }
             } else {
                 assert!(s.parts.is_empty(), "{piece}: {} parts", s.parts.len());
                 assert_eq!(s.footprints(), vec![(s.hull.as_slice(), None)], "{piece}");
@@ -1655,6 +1696,99 @@ pub(crate) mod tests {
         let (t, piece) = g.pick_prop(ray(eye, Vec3::Z), 1000.0).unwrap();
         assert_eq!(piece, "fence_paddock");
         assert!((11.9..12.3).contains(&t), "hit {t} m out: through the gate");
+    }
+
+    /// Owner A31 Q4: field boundaries block the walker, a closed gate blocks, and an edge with no
+    /// boundary (the farm's edge to the wheat field) lets it through. The review world at seed 1
+    /// (`play::boundaries::tests::REVIEW`, the farm at rotation 0, so its frame is the world's
+    /// turned by nothing): every run on the yard side (z < 2, clear of the paddock) stops a walker
+    /// coming at it square from 3.5 m inside the farm, by the run's own piece.
+    #[test]
+    fn walls_hedges_and_the_closed_gate_block_and_an_open_edge_passes() {
+        let mut tiles = vec![(0, 0, "meadow", 0)];
+        tiles.extend(crate::play::boundaries::tests::REVIEW);
+        let g = world(&tiles);
+        let c = catalog();
+        let defs: HashMap<Axial, (&TileDef, u8)> = tiles
+            .iter()
+            .map(|&(q, r, id, rot)| (Axial::new(q, r), (c.get(id).unwrap(), rot)))
+            .collect();
+        let at = |x: Axial| defs.get(&x).copied();
+        let farm = centre(1, 0);
+        let runs: Vec<_> = crate::play::boundaries::placements(1, Axial::new(1, 0), &at)
+            .into_iter()
+            .filter(|p| {
+                p.piece.contains("_run") || p.piece == "wall_gate" || p.piece == "hedge_oak"
+            })
+            .filter(|p| p.at[1] < 2.0)
+            .collect();
+        let mut seen = std::collections::BTreeSet::new();
+        for p in &runs {
+            let spot = farm + Vec2::from(p.at);
+            let inward = (farm - spot).normalize();
+            let s = walk(&g, spot + inward * 3.5, -inward, 5.0);
+            let piece = match &s.blocked {
+                Some(Blocked::Obstacle(x)) => x.as_str(),
+                other => panic!("{} at {:?}: {other:?}", p.piece, p.at),
+            };
+            assert_eq!(piece, p.piece, "the walker meets the run it walks at");
+            let half = if p.piece.starts_with("wall") {
+                0.35
+            } else {
+                0.62
+            };
+            let gap = (s.pos.xz() - spot).dot(inward);
+            assert!(
+                (half..half + BODY_RADIUS + 0.12).contains(&gap),
+                "{}: stopped {gap} m short",
+                p.piece
+            );
+            seen.insert(
+                p.piece.split('_').next().unwrap().to_owned()
+                    + if p.piece == "wall_gate" { "_gate" } else { "" },
+            );
+        }
+        // The yard side holds the gate (its approach clear of the paddock and barn) and walls at seed 1.
+        assert_eq!(
+            seen.into_iter().collect::<Vec<_>>(),
+            ["wall", "wall_gate"],
+            "{runs:#?}"
+        );
+        // From the land side, every hedge run stops a walker coming at it square from 1.8 m out
+        // (one standing clear of the neighbour's trees).
+        let mut hedges = 0;
+        for p in crate::play::boundaries::placements(1, Axial::new(1, 0), &at)
+            .iter()
+            .filter(|p| p.piece.starts_with("hedge_") && p.piece != "hedge_end")
+        {
+            let spot = farm + Vec2::from(p.at);
+            let out = (spot - farm).normalize();
+            let start = spot + out * 1.8;
+            if g.stand(start).is_err() {
+                continue;
+            }
+            let s = walk(&g, start, -out, 3.0);
+            match &s.blocked {
+                Some(Blocked::Obstacle(x)) if x.starts_with("hedge_") => hedges += 1,
+                Some(Blocked::Obstacle(x)) if !x.starts_with("wall_") => {}
+                other => panic!("{} at {:?}: {other:?}", p.piece, p.at),
+            }
+        }
+        assert!(hedges >= 1, "no hedge run checked");
+        assert_eq!(prop_kind("wall_gate"), "fence");
+        assert_eq!(prop_kind("hedge_run"), "tree");
+        // Edge 0 has no boundary (farm and wheat are both fields): the walker crosses it.
+        let s = walk(&g, farm + Vec2::new(6.0, 1.5), Vec2::X, 12.0);
+        assert!(
+            !matches!(&s.blocked, Some(Blocked::Obstacle(p)) if p.starts_with("wall_") || p.starts_with("hedge_")),
+            "{:?}",
+            s.blocked
+        );
+        assert!(
+            s.pos.x - farm.x > 13.86,
+            "crossed into the wheat field: {}",
+            s.pos
+        );
     }
 
     /// A placed windmill tile stops the walker at its tower, from every side and through its turn.
@@ -2113,6 +2247,8 @@ pub(crate) mod tests {
                     tile: t.tile.clone(),
                     seed,
                     layout: Arc::new(layout(def, seed, &prepared)),
+                    fences: Arc::new(vec![]),
+                    cut: 0,
                     drawn: vec![true; def.props.scatter.len()],
                     pieces: def
                         .props
@@ -2126,6 +2262,7 @@ pub(crate) mod tests {
         WalkGround::build(
             &play,
             c,
+            1,
             &[],
             &mut |d| surface(d).map(|s| (s.clone(), ride_max(d, &s))),
             &mut |p| shape(p),

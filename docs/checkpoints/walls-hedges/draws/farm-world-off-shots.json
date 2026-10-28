@@ -1,0 +1,48 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/walls-hedges/farm-world-off.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed",
+    "--kit_ablate",
+    "boundaries"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        86.7,
+        79.47,
+        138.14
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 11.7,
+      "load_after": [
+        91.64,
+        80.77,
+        137.91
+      ],
+      "frames": {
+        "wh-farm-overview-off": {
+          "mean": 0.138,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

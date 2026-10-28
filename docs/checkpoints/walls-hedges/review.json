@@ -1,0 +1,374 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   28,
+   70,
+   75
+  ],
+  "look_at": [
+   28,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": true
+ },
+ {
+  "cmd": "wait",
+  "frames": 400
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wh-review-state"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   28,
+   70,
+   75
+  ],
+  "look_at": [
+   28,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-play"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   28,
+   150,
+   140
+  ],
+  "look_at": [
+   28,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-overview"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   20.5,
+   3.2,
+   -3.5
+  ],
+  "look_at": [
+   13.86,
+   0.7,
+   0.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-gate"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   20.0,
+   4.5,
+   -2.0
+  ],
+  "look_at": [
+   13.86,
+   0.6,
+   -8.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-bend"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   35.5,
+   4.0,
+   1.0
+  ],
+  "look_at": [
+   41.57,
+   0.9,
+   8.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-mixed-corner"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   31.0,
+   2.8,
+   6.0
+  ],
+  "look_at": [
+   34.64,
+   1.0,
+   12.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-hedge-shade"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   40.0,
+   2.8,
+   20.0
+  ],
+  "look_at": [
+   34.64,
+   1.0,
+   12.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-hedge-sun"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   6.0,
+   3.0,
+   -6.0
+  ],
+  "look_at": [
+   13.86,
+   0.8,
+   0.0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-gate-outside"
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "walk",
+  "on": true,
+  "pointer_lock": null
+ },
+ {
+  "cmd": "walk_to",
+  "x": 36.14,
+  "z": 14.6,
+  "heading": 330,
+  "pitch": 0
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-eye-hedge"
+ },
+ {
+  "cmd": "walk_to",
+  "x": 22.28,
+  "z": -9.4,
+  "heading": 330,
+  "pitch": -4
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-eye-wall"
+ },
+ {
+  "cmd": "walk_to",
+  "x": 17.36,
+  "z": 0.0,
+  "heading": 270,
+  "pitch": -3
+ },
+ {
+  "cmd": "wait",
+  "frames": 40
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-eye-gate"
+ },
+ {
+  "cmd": "walk_step",
+  "forward": 1,
+  "right": 0,
+  "seconds": 3,
+  "sprint": false
+ },
+ {
+  "cmd": "wait",
+  "frames": 200
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wh-walk-gate-state"
+ },
+ {
+  "cmd": "walk",
+  "on": false,
+  "pointer_lock": null
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "exit"
+ }
+]

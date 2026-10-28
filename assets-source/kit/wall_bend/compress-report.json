@@ -1,0 +1,182 @@
+{
+  "name": "wall_bend",
+  "date": "2026-10-27T16:47:38.640Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/wall_bend/wall_bend.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 697945,
+      "sha256": "b674818dbf2ec19d56b9e905331c202bd5df5e027b8586235307ea0f076abe8f"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/wall_bend/wall_bend.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 656020,
+      "sha256": "e8c1cab58fe9e7235cbc926ac7d5e1ae1c11fd7c18885f362264cf3b41134d8f"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/wall_bend/wall_bend.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1011476,
+      "sha256": "e34f74ac7acf54afc4093cc1328607e3936b77cc1b516a19d62850d32dbff4fe"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/wall_bend/wall_bend.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 2123,
+      "sha256": "c3896d810528f56d67081b70277e4a9a6fc67fd61a94e6f5cf1e595bc39adbf6"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/wall_bend/wall_bend.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 2175,
+      "sha256": "2861ea12d65054f23158be5347a36801300154af2c4c94d7a64368a8230605b1"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/wall_bend/wall_bend.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 2354,
+      "sha256": "4cb0e9d1d6e4c0cb78b4d7fe0e89bdb34ab17c5774f75aaa6621aacb8a6237c2"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/wall_bend/wall_bend.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 235613,
+      "sha256": "51c675087050096876f5feab15108019144ead50ace66b9248bf3ec744d9467f"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/wall_bend/wall_bend.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 229840,
+      "sha256": "2cb9b1948c261dd167f595bb7d99d803440a99382a1f8e4ebff02f670c57dd68"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/wall_bend/wall_bend.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 458193,
+      "sha256": "a7af17f666a3026fd6ecdecd448d3fdd5a5e933badbbfff6535fea9fd455f648"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/wall_bend/wall_bend.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 141015,
+      "sha256": "74d767529436157158dd352bb6faafe84b01766285a98f6562b604580d768616"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/wall_bend/wall_bend.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 144184,
+      "sha256": "3228189f732faee31eeaf26eb3b65c04838725aba1ee8e90c0137d4cd05b4c81"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/wall_bend/wall_bend.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 196792,
+      "sha256": "68411f3174679543b29806803ca9044df81d9317ba34dc43c3d7492db9cea5f0"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1076696,
+      "astc": 1032219
+    },
+    "glbBytes": 64344
+  },
+  "glb": {
+    "bytes": 64344,
+    "sha256": "4a235810d1ee176f33d25cbc944ca6c9f0d3927ce9be150780b00028288b097e"
+  }
+}

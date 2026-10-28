@@ -1,0 +1,120 @@
+{
+  "bakeStats": {
+    "alphaCoverageByMip": {
+      "tile_0": [
+        0.5329,
+        0.5305,
+        0.5318,
+        0.5328,
+        0.53,
+        0.5378,
+        0.6122,
+        0.7778,
+        1.0
+      ],
+      "tile_1": [
+        0.5546,
+        0.5522,
+        0.5533,
+        0.5539,
+        0.5644,
+        0.5644,
+        0.6327,
+        0.8889,
+        1.0
+      ],
+      "tile_2": [
+        0.5263,
+        0.5238,
+        0.5251,
+        0.5267,
+        0.5278,
+        0.5467,
+        0.5714,
+        0.8889,
+        1.0
+      ],
+      "tile_3": [
+        0.5388,
+        0.5364,
+        0.5374,
+        0.54,
+        0.54,
+        0.5333,
+        0.6531,
+        0.6667,
+        1.0
+      ],
+      "tiles": [
+        0.5381,
+        0.5357,
+        0.5369,
+        0.5383,
+        0.5406,
+        0.5456,
+        0.5378,
+        0.5918,
+        0.6667,
+        0.0
+      ]
+    },
+    "alphaCutoff": 0.5
+  },
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 1024
+    }
+  },
+  "device": "none (numpy-drawn tiles, no Cycles bake)",
+  "extentZ": [
+    -0.25,
+    2.136569023132324
+  ],
+  "hedge": {
+    "armM": 2.0,
+    "arms": [
+      0.0,
+      120.0,
+      240.0
+    ],
+    "colliderHalfWidthM": 0.62,
+    "colliderHeightM": 1.6,
+    "halfWidthM": 0.75,
+    "heightM": 1.9,
+    "kind": "corner"
+  },
+  "marginPx": 0,
+  "receiverSignature": "e45ab3e03ee3e67192ef788170fd4790a9d2140673a28a0dcdee956fa535d322",
+  "samples": 0,
+  "shape": {
+    "card": 0.46,
+    "inner_per_m": 12,
+    "ragged": 0.14,
+    "rows": 13,
+    "spacing": 0.28,
+    "sprigs": 6,
+    "tilt": 0.55
+  },
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "hedge_junction_leaves": {
+      "max": 1691.020785732863,
+      "median": 1041.0869950214344,
+      "min": 828.5388066784086
+    }
+  }
+}

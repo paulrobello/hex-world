@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wall_run_b.py",
+    "sha256": "e3f98a110a961760b77c85859809810bf23fb69e8b041dbe540ea747a0c153bc"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_drystone.py",
+      "sha256": "058915f052994202e6b3a28a1e8159fcd279ddac18e63eafeb394a03ff56b466"
+    }
+  ],
+  "lodTris": {
+    "wall_run_b_lod0": 696,
+    "wall_run_b_lod1": 290,
+    "wall_run_b_lod2": 66
+  },
+  "nodes": [
+    "wall_run_b",
+    "wall_run_b_collider",
+    "wall_run_b_lod0",
+    "wall_run_b_lod1",
+    "wall_run_b_lod2"
+  ],
+  "pieceId": "wall_run_b",
+  "sockets": []
+}

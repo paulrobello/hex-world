@@ -1,0 +1,53 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none (numpy-drawn stone faces, no Cycles bake)",
+  "extentZ": [
+    -0.30000001192092896,
+    1.106175422668457
+  ],
+  "marginPx": 8,
+  "receiverSignature": "2d6bda79711e4f788934e6c68e637f6a0c9606599c2f0cc18921bcb37d959649",
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "wall_junction_stone": {
+      "max": 259.12689185179863,
+      "median": 257.99997618700934,
+      "min": 62.90387971904156
+    }
+  },
+  "wall": {
+    "armM": 2.0,
+    "arms": [
+      0.0,
+      120.0,
+      240.0
+    ],
+    "bodyHeightM": 0.84,
+    "buryM": 0.3,
+    "footHalfWidthM": 0.35,
+    "gateHalfM": null,
+    "heightM": 1.1,
+    "kind": "corner",
+    "postX": null,
+    "topHalfWidthM": 0.235
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/walls-hedges/review.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        398.22,
+        346.5,
+        285.88
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 12.6,
+      "load_after": [
+        371.07,
+        342.38,
+        285.13
+      ],
+      "frames": {
+        "wh-play": {
+          "mean": 0.1336,
+          "problem": null
+        },
+        "wh-overview": {
+          "mean": 0.0765,
+          "problem": null
+        },
+        "wh-gate": {
+          "mean": 0.3223,
+          "problem": null
+        },
+        "wh-bend": {
+          "mean": 0.3805,
+          "problem": null
+        },
+        "wh-mixed-corner": {
+          "mean": 0.1882,
+          "problem": null
+        },
+        "wh-hedge-shade": {
+          "mean": 0.1147,
+          "problem": null
+        },
+        "wh-hedge-sun": {
+          "mean": 0.1578,
+          "problem": null
+        },
+        "wh-gate-outside": {
+          "mean": 0.2077,
+          "problem": null
+        },
+        "wh-eye-hedge": {
+          "mean": 0.1843,
+          "problem": null
+        },
+        "wh-eye-wall": {
+          "mean": 0.3216,
+          "problem": null
+        },
+        "wh-eye-gate": {
+          "mean": 0.289,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

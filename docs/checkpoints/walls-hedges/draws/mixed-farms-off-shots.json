@@ -1,0 +1,48 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/walls-hedges/mixed-farms-off.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed",
+    "--kit_ablate",
+    "boundaries"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        60.08,
+        75.08,
+        138.42
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 11.9,
+      "load_after": [
+        57.52,
+        74.04,
+        137.31
+      ],
+      "frames": {
+        "wh-mixed-farms-overview-off": {
+          "mean": 0.1581,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

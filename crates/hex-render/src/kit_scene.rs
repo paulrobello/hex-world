@@ -464,6 +464,26 @@ pub fn kit_layout() -> Vec<Placement> {
     // downstream (no water is drawn there: the posts show against the bed); on the ocean tiles of
     // the water patch the sailing boat on (2, 0) and a second rowing boat on (1, 1), on the
     // look-dev water at y = 0 that `water_kit` draws there.
+    // The field boundaries (B2, `hex_core::boundary`) on two meadows east of the hay variants: the
+    // six wall pieces on (2, 5) and the six hedge pieces on (3, 5), 4 m apart, each turned so its
+    // runs lie along z, at y = 0 as play places them (their feet sink below the relief), with
+    // tree_oak_b at hedge_oak's pivot as the runtime stands it there.
+    for (q, pieces) in [
+        (2, &hex_core::boundary::PIECES[..6]),
+        (3, &hex_core::boundary::PIECES[6..]),
+    ] {
+        v.push(place("meadow_base", q, 5, 0));
+        for (i, &piece) in pieces.iter().enumerate() {
+            v.push(hero(piece, q, 5, [-10.0 + 4.0 * i as f32, 0.0], 90.0));
+        }
+    }
+    v.push(hero(
+        hex_core::boundary::HEDGEROW_OAK,
+        3,
+        5,
+        [10.0, 0.0],
+        0.0,
+    ));
     for &(piece, q, r, at, yaw_deg, y) in BOATS {
         v.push(Placement {
             y,

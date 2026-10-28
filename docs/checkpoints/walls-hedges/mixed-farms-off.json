@@ -1,0 +1,564 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   12,
+   172,
+   165
+  ],
+  "look_at": [
+   12,
+   0,
+   -2
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 4,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth_l"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": -4,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "hover",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": 6,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 6,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "hover",
+  "q": -4,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": false
+ },
+ {
+  "cmd": "wait",
+  "frames": 700
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wh-mixed-farms-off"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-mixed-farms-overview-off"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   20,
+   160,
+   150
+  ],
+  "look_at": [
+   20,
+   0,
+   -5
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 90
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wh-mixed-farms-pose-off"
+ },
+ {
+  "cmd": "exit"
+ }
+]

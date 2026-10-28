@@ -1,0 +1,556 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   0,
+   172,
+   165
+  ],
+  "look_at": [
+   0,
+   0,
+   -2
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 3
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "hover",
+  "q": -2,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "hover",
+  "q": -1,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 0,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "windmill"
+ },
+ {
+  "cmd": "hover",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": -3
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": -2
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "hover",
+  "q": 3,
+  "r": -1
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -1
+ },
+ {
+  "cmd": "hover",
+  "q": 9,
+  "r": -9
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": false
+ },
+ {
+  "cmd": "wait",
+  "frames": 700
+ },
+ {
+  "cmd": "dump_state",
+  "name": "wh-farm-world-off"
+ },
+ {
+  "cmd": "screenshot",
+  "name": "wh-farm-overview-off"
+ },
+ {
+  "cmd": "wait",
+  "frames": 5
+ },
+ {
+  "cmd": "exit"
+ }
+]

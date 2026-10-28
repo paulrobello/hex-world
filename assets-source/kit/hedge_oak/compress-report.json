@@ -1,0 +1,182 @@
+{
+  "name": "hedge_oak",
+  "date": "2026-10-27T16:30:30.672Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 469051,
+      "sha256": "87b611517a7270931856964ef9f736a7f76f7452836e5fe441227f49daec9e76"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 477372,
+      "sha256": "e297b1ea77e7d49f10122b2925dc22d2e801934bb685fbfac2118af7d2a1c65f"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 726366,
+      "sha256": "c49adb116cf618ce35cae7916c5f46b1b720dcafcddcfe00876520c16be480a7"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 983,
+      "sha256": "41d38a776bd4dbc0b5141ee2aca3768063c3910abca1b398c92df0b825c2df06"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 948,
+      "sha256": "3e16338d2b15b99fff816de879fe4c5cabdf60137ea007f233ea5ca836412e44"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 1890,
+      "sha256": "81e9b7d265ed67e63a91edde6c4fa46db253abe5408b2f6873e2673175796c5e"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 149431,
+      "sha256": "dea598039994ccc7de0efd5132ec4f667697120a45efec3adbcae4419b36425a"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 148388,
+      "sha256": "c31f103748fb180dfc4fab7f0c3d9e632d64b66b8cf3438062792d98b57e1892"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 266693,
+      "sha256": "6b6ed4bb00f3d591b157a78b7b3e85b9b7872948995083980a01835278c56a90"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 205509,
+      "sha256": "f476b3fbf98bd0fecb042fb11f23eeeb8c6a4e0246c1de094575c7da29daaf07"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 200725,
+      "sha256": "a6efbed9dda3eda9269457ab57931cf36d7a0fa2aceb95abf5471c790148275f"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_oak/hedge_oak.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 126568,
+      "sha256": "8b7ccfa9758e3d355af4560c19e2d35614ab49be2f08928acd5a11ef07c3ddda"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 824974,
+      "astc": 827433
+    },
+    "glbBytes": 106584
+  },
+  "glb": {
+    "bytes": 106584,
+    "sha256": "5280f02f900ec28f2397ba4268005598680f300cbc51d2f30e3c76a644a8947c"
+  }
+}

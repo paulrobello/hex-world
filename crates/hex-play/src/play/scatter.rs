@@ -2350,14 +2350,22 @@ struct Key {
     tile: String,
     seed: u64,
     drawn: Vec<bool>,
+    /// The field boundaries on the tile's edges ([`super::boundaries::fingerprint`]).
+    cut: u64,
 }
 
 /// Prepared grounds by tile id, layouts by cell, and the group drawn under each tile root.
 #[derive(Resource, Default)]
 pub struct PlayScatter {
     prepared: HashMap<String, Arc<Prepared>>,
-    layouts: HashMap<Axial, (String, u64, Arc<Layout>)>,
+    layouts: HashMap<Axial, (String, u64, u64, Arc<Layout>)>,
     roots: HashMap<Entity, (Key, Option<Entity>)>,
+    /// The field boundaries' footprints per tile (tile frame), with the fingerprint of the world
+    /// seed and placed tiles they were derived from: rebuilt only when those change, not on every
+    /// view change (a hovered cell).
+    fences: (u64, Arc<HashMap<Axial, Vec<hex_core::boundary::Seg>>>),
+    /// How many times `fences` was derived (tests).
+    pub(crate) fence_builds: u64,
 }
 
 impl PlayScatter {
@@ -2393,6 +2401,11 @@ pub struct TileScatter {
     pub tile: String,
     pub seed: u64,
     pub layout: Arc<Layout>,
+    /// The field boundaries on the tile's edges in its frame (`hex_core::boundary`, B2): the
+    /// layout has none of its instances over them, and grass keeps off them.
+    pub fences: Arc<Vec<hex_core::boundary::Seg>>,
+    /// Their fingerprint ([`super::boundaries::fingerprint`], 0 for none).
+    pub cut: u64,
     /// Per rule: its piece is in the kit and its instances are drawn.
     pub drawn: Vec<bool>,
     /// Per rule: its piece.
@@ -2625,6 +2638,46 @@ pub fn sync(
     let mut waiting = vec![];
     let mut cells: Vec<_> = spawned.tiles.iter().collect();
     cells.sort_by_key(|(c, _)| (c.q, c.r));
+    let tile_at = |c: Axial| {
+        spawned
+            .tiles
+            .get(&c)
+            .and_then(|(t, _)| Some((catalog.0.get(&t.tile)?, t.rotation)))
+    };
+    let tiles_sig = {
+        let mut h: u64 = 0xCBF2_9CE4_8422_2325 ^ view.world_seed;
+        for (c, (t, _)) in &cells {
+            for b in t
+                .tile
+                .bytes()
+                .chain(c.q.to_le_bytes())
+                .chain(c.r.to_le_bytes())
+                .chain([t.rotation])
+            {
+                h = (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01B3);
+            }
+        }
+        h
+    };
+    if state.fences.0 != tiles_sig || state.fence_builds == 0 {
+        let all = super::boundaries::all_placements(
+            view.world_seed,
+            cells.iter().map(|(c, _)| **c),
+            &tile_at,
+        );
+        let near: std::collections::BTreeSet<Axial> = all
+            .keys()
+            .flat_map(|c| hex_core::boundary::within(*c, 1))
+            .collect();
+        let map: HashMap<Axial, Vec<hex_core::boundary::Seg>> = near
+            .into_iter()
+            .map(|c| (c, super::boundaries::local_segments_from(&all, c, &tile_at)))
+            .filter(|(_, s)| !s.is_empty())
+            .collect();
+        state.fences = (tiles_sig, Arc::new(map));
+        state.fence_builds += 1;
+    }
+    let fence_map = state.fences.1.clone();
     for (&cell, (t, root)) in cells {
         let Some(def) = catalog
             .0
@@ -2640,9 +2693,28 @@ pub fn sync(
             continue;
         };
         let seed = cell_seed(view.world_seed, cell);
+        // The field boundaries on its edges (B2): instances over them are left out, after the darts,
+        // so the rest of the layout stays where it was.
+        let fences = fence_map.get(&cell).cloned().unwrap_or_default();
+        let cut = super::boundaries::fingerprint(&fences);
         let layout = match state.layouts.get(&cell) {
-            Some((id, s, l)) if *id == def.id && *s == seed => l.clone(),
-            _ => Arc::new(layout(def, seed, &prepared)),
+            Some((id, s, k, l)) if *id == def.id && *s == seed && *k == cut => l.clone(),
+            _ => {
+                let mut l = layout(def, seed, &prepared);
+                if !fences.is_empty() {
+                    let pieces: Vec<&str> =
+                        def.props.scatter.iter().map(|r| r.piece.as_str()).collect();
+                    l.instances.retain(|i| {
+                        let piece = i.piece(pieces[i.rule as usize]);
+                        super::boundaries::clear_of(
+                            &fences,
+                            i.pos.xz(),
+                            footprint(piece).ground * i.scale,
+                        )
+                    });
+                }
+                Arc::new(l)
+            }
         };
         let drawn: Vec<bool> = def
             .props
@@ -2654,6 +2726,7 @@ pub fn sync(
             tile: def.id.clone(),
             seed,
             drawn: drawn.clone(),
+            cut,
         };
         let group = match state.roots.get(root) {
             Some((k, g)) if *k == key && g.is_none_or(|g| groups.contains(g)) => *g,
@@ -2665,13 +2738,15 @@ pub fn sync(
             }
         };
         roots.insert(*root, (key, group));
-        next_layouts.insert(cell, (def.id.clone(), seed, layout.clone()));
+        next_layouts.insert(cell, (def.id.clone(), seed, cut, layout.clone()));
         tiles.insert(
             cell,
             TileScatter {
                 tile: def.id.clone(),
                 seed,
                 layout,
+                fences: Arc::new(fences),
+                cut,
                 drawn,
                 pieces: def
                     .props
@@ -2684,9 +2759,9 @@ pub fn sync(
     }
     state.roots = roots;
     state.layouts = next_layouts;
-    let sig = |m: &BTreeMap<Axial, TileScatter>| -> Vec<(Axial, String, u64, Vec<bool>)> {
+    let sig = |m: &BTreeMap<Axial, TileScatter>| -> Vec<(Axial, String, u64, Vec<bool>, u64)> {
         m.iter()
-            .map(|(c, t)| (*c, t.tile.clone(), t.seed, t.drawn.clone()))
+            .map(|(c, t)| (*c, t.tile.clone(), t.seed, t.drawn.clone(), t.cut))
             .collect()
     };
     if sig(&layouts.tiles) != sig(&tiles) {

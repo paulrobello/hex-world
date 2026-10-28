@@ -1,0 +1,182 @@
+{
+  "name": "hedge_end",
+  "date": "2026-10-27T16:26:32.070Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_end/hedge_end.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 471920,
+      "sha256": "23f40baee8b64848939c5a8f476350fafbb7701a37ad890f891ee2ab3b35ec17"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_end/hedge_end.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 479979,
+      "sha256": "0febba13146c3dc968160d7dc43d54265dcea1e1353e105aba2f9593bfd62d9c"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_end/hedge_end.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 729995,
+      "sha256": "6dc0eb7b4305bea66955099d9cc5f1861e6bae7b62059e083e152cb78e7fdb05"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_end/hedge_end.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 983,
+      "sha256": "41d38a776bd4dbc0b5141ee2aca3768063c3910abca1b398c92df0b825c2df06"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_end/hedge_end.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 948,
+      "sha256": "3e16338d2b15b99fff816de879fe4c5cabdf60137ea007f233ea5ca836412e44"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_end/hedge_end.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 1890,
+      "sha256": "81e9b7d265ed67e63a91edde6c4fa46db253abe5408b2f6873e2673175796c5e"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_end/hedge_end.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 151010,
+      "sha256": "3a97da3309d116b1d79929f4167aee8d6bb692a07ca96f583e6bf0eef69d4cce"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_end/hedge_end.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 149908,
+      "sha256": "b74fd6a1aaafe7211089d51b727225f473e3dc39425f46bfb9a4e19bac21a495"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_end/hedge_end.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 269632,
+      "sha256": "2493d3126a4db263d078c924d103fd25417b530a229a98e728b82761509e168b"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/hedge_end/hedge_end.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 207359,
+      "sha256": "ce6b3654191d279abb25b89ae886e7cd8c5b754f09ed8901b6dfb718d3f7080c"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/hedge_end/hedge_end.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 202249,
+      "sha256": "c023216a41c1224de5ceeb988db044b01105056a8a83cf901e2e5ed1a381a915"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/hedge_end/hedge_end.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 127508,
+      "sha256": "b858a816b44f7a9fdded61336a5f245cf174186be403108fb3f45010942c9bf6"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 831272,
+      "astc": 833084
+    },
+    "glbBytes": 81188
+  },
+  "glb": {
+    "bytes": 81188,
+    "sha256": "e0884de80d422addc6e8365630aab3d9db57bb694277f6449cf0a98a8417304c"
+  }
+}

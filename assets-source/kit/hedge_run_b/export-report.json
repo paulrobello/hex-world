@@ -1,0 +1,39 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/hedge_run_b.py",
+    "sha256": "ea3d847b9931433f0a4310679f91774e9a353bc3dd63439bfa991747340c6e49"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_hedge.py",
+      "sha256": "5791c3c4a9741d6baa835c2e5c49afe64441a06e5ea059e93ddc498e9e8c30be"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_shrub.py",
+      "sha256": "3341c8f954d7845267b0814115e563f59f1b408863b81dcd2c866062b3b1e6b6"
+    },
+    {
+      "path": "scripts/blender/kit/_verge_bush.py",
+      "sha256": "b0564b4ad39ef1d92060097ed193458f847d04fad782c2606562edc4bd425c96"
+    }
+  ],
+  "lodTris": {
+    "hedge_run_b_lod0": 948,
+    "hedge_run_b_lod1": 462,
+    "hedge_run_b_lod2": 140
+  },
+  "nodes": [
+    "hedge_run_b",
+    "hedge_run_b_collider",
+    "hedge_run_b_lod0",
+    "hedge_run_b_lod1",
+    "hedge_run_b_lod2"
+  ],
+  "pieceId": "hedge_run_b",
+  "sockets": []
+}

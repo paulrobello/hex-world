@@ -1,0 +1,389 @@
+{
+  "pieceId": "wall_run_b",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/wall_run_b.py",
+    "sha256": "e3f98a110a961760b77c85859809810bf23fb69e8b041dbe540ea747a0c153bc"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_drystone.py",
+      "sha256": "058915f052994202e6b3a28a1e8159fcd279ddac18e63eafeb394a03ff56b466"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "blender": "5.2.2 LTS",
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "none (numpy-drawn stone faces, no Cycles bake)",
+    "extentZ": [
+      -0.30000001192092896,
+      1.1041605472564697
+    ],
+    "marginPx": 8,
+    "receiverSignature": "55a879331bdab69efffabf45e45574aa381dfc05ede47ec66275c1756f9472e2",
+    "samples": 0,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "wall_run_b_stone": {
+        "max": 271.1820567651332,
+        "median": 269.9999699961569,
+        "min": 54.08818653193914
+      }
+    },
+    "wall": {
+      "armM": 2,
+      "arms": [],
+      "bodyHeightM": 0.84,
+      "buryM": 0.3,
+      "footHalfWidthM": 0.35,
+      "gateHalfM": null,
+      "heightM": 1.1,
+      "kind": "run",
+      "postX": null,
+      "topHalfWidthM": 0.235
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 696,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 290,
+      "ratio": 0.4166666666666667
+    },
+    {
+      "lod": 2,
+      "tris": 66,
+      "ratio": 0.09482758620689655
+    }
+  ],
+  "collider": {
+    "node": "wall_run_b_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "wall_run_b_stone": {
+      "max": 271.1820567651332,
+      "median": 269.9999699961569,
+      "min": 54.08818653193914
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1054587,
+        "astc": 1010079
+      },
+      "glbBytes": 62772
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 687207,
+        "sha256": "47769297c3c521ed228157e926bdf9cdf3d44b60670778eaf342cf3658ad0329"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 645100,
+        "sha256": "5bcbef9cc52e1f8674ce3a7a03e0adfa9593230ce682bf0d366b51c7d58b0857"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 995306,
+        "sha256": "1b1b168b8c3468be856bcd99c8b3d6f6eec8ac55e9ff5952c5b3e66a7edefd51"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 2123,
+        "sha256": "c3896d810528f56d67081b70277e4a9a6fc67fd61a94e6f5cf1e595bc39adbf6"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 2175,
+        "sha256": "2861ea12d65054f23158be5347a36801300154af2c4c94d7a64368a8230605b1"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 2354,
+        "sha256": "4cb0e9d1d6e4c0cb78b4d7fe0e89bdb34ab17c5774f75aaa6621aacb8a6237c2"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 227652,
+        "sha256": "b0feb2290021b35e26b93e7c737874a10577ceec1458451ea464ba280cd17497"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 221689,
+        "sha256": "95104a37d04b68c6268e35419fb34bd330dc370a18bd36c4d13e841437eef5ba"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 443116,
+        "sha256": "b3d650a386b2a5db15e257636057ac9e43ec8d9389e7043c2d12fc9b253ec035"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 137605,
+        "sha256": "74f69b9accffb7e8466e4d3e137c985a8a69291d0425a831b833e52f3f68f676"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 141115,
+        "sha256": "0fc5ad3bca409e4f4bcc5cca463764b992426b71d0da0ffa26dd2646970422fc"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 194431,
+        "sha256": "906873ebc86313e9bc756ad6742adc75f0f5b8af2aed8ff64028d9277aba7225"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.glb",
+      "sha256": "1e76a151f1bf7544b20439032ca52dc06fae7cc647a52435aa4a8c1c33c5b8bf",
+      "bytes": 62772
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.bc7.ktx2",
+      "sha256": "47769297c3c521ed228157e926bdf9cdf3d44b60670778eaf342cf3658ad0329",
+      "bytes": 687207
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.astc.ktx2",
+      "sha256": "5bcbef9cc52e1f8674ce3a7a03e0adfa9593230ce682bf0d366b51c7d58b0857",
+      "bytes": 645100
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.albedo.png",
+      "sha256": "1b1b168b8c3468be856bcd99c8b3d6f6eec8ac55e9ff5952c5b3e66a7edefd51",
+      "bytes": 995306
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.bc7.ktx2",
+      "sha256": "c3896d810528f56d67081b70277e4a9a6fc67fd61a94e6f5cf1e595bc39adbf6",
+      "bytes": 2123
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.astc.ktx2",
+      "sha256": "2861ea12d65054f23158be5347a36801300154af2c4c94d7a64368a8230605b1",
+      "bytes": 2175
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.masks.png",
+      "sha256": "4cb0e9d1d6e4c0cb78b4d7fe0e89bdb34ab17c5774f75aaa6621aacb8a6237c2",
+      "bytes": 2354
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.bc7.ktx2",
+      "sha256": "b0feb2290021b35e26b93e7c737874a10577ceec1458451ea464ba280cd17497",
+      "bytes": 227652
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.astc.ktx2",
+      "sha256": "95104a37d04b68c6268e35419fb34bd330dc370a18bd36c4d13e841437eef5ba",
+      "bytes": 221689
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.normal.png",
+      "sha256": "b3d650a386b2a5db15e257636057ac9e43ec8d9389e7043c2d12fc9b253ec035",
+      "bytes": 443116
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.bc7.ktx2",
+      "sha256": "74f69b9accffb7e8466e4d3e137c985a8a69291d0425a831b833e52f3f68f676",
+      "bytes": 137605
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.astc.ktx2",
+      "sha256": "0fc5ad3bca409e4f4bcc5cca463764b992426b71d0da0ffa26dd2646970422fc",
+      "bytes": 141115
+    },
+    {
+      "path": "assets/kit/p1/wall_run_b/wall_run_b.orm.png",
+      "sha256": "906873ebc86313e9bc756ad6742adc75f0f5b8af2aed8ff64028d9277aba7225",
+      "bytes": 194431
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/walls_hedges/ref-1.jpg",
+      "sha256": "4affd7f12a76d0dca14ca0df6d4e5fdedf077119043cf223ab27153e4ec514a3",
+      "sourceSha256": "f576f01f9d6549ed995c7cb9aaa30203115527042a850e8c44487b7a02a71433",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f6f5abed-9bee-4082-88f1-b3c5ba3d1ccd",
+      "prompt": "Four separate short sections of dry-stone field wall stand apart in a loose group on the plain grey studio floor, each with a soft contact shadow, each built of weathered pale grey granite fieldstones speckled with darker grey flecks, rough and irregular, laid dry with no mortar in rough courses, the wall slightly wider at its foot than at its top with gently battered faces, long through-stones jutting a little from both faces partway up, and a cope of flat stones set upright on edge in a row along the top, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the joints on the shaded side, the stone reading as a matte surface: at the back left a straight length of wall; at the back right a bent length of wall, one wall with a single kink in its middle where it changes direction a little, so its two straight halves meet at a wide shallow angle like a very open letter V seen from above, far wider than a right angle; at the front left a straight length that ends in a neat squared-off upright end built of larger stones; and at the front right a gateway where two short stubs of wall end at a simple weathered timber five-bar field gate of grey-brown planks with one diagonal brace, hung between two tall upright granite gateposts, the gate closed. Smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole group centred in frame and seen from the front-left from a high three-quarter angle. The picture shows only the four wall sections on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/walls_hedges/ref-2.jpg",
+      "sha256": "6532c3d8f0aeb6b1a312167838af546d2d301eaddf6657378c402759d3232d29",
+      "sourceSha256": "2eedd0bd4f7e4b60e70d81d8efff18cefdc89094f58c2430413ad4694d9720b6",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "00af33b7-1d75-43e4-bbf6-13ef37cad7a5",
+      "prompt": "Five separate short sections of hedgerow stand apart in a loose group on the plain grey studio floor, each growing from a narrow strip of grass turf with a soft contact shadow, each an untrimmed countryside hedgerow of mixed hawthorn and hazel, loose and shaggy with an uneven top and a few sprigs sticking out, never a clipped garden hedge, one continuous unbroken line of growth, its small leaves in dense clusters forming one thick bushy mass of dark green and mid green, slightly rounded on top and with gently sloping sides, a few bramble tangles at its foot, the leaves reading as a matte surface with no gloss: at the back left a straight length of hedge; at the back centre a straight length of hedge with one hedgerow oak rising out of its middle, a proper small tree with a sturdy trunk and a broad rounded leafy crown standing well above the hedge, about three times the hedge's height; at the back right a corner where the hedge bends only a little, its two straight arms opening out at a wide shallow angle like two neighbouring sides of a hexagon seen from above, clearly not a right angle and not an L shape; at the front left a single straight length of hedge, not a corner, with one neatly rounded end; and at the front right a gap, two short lengths of hedge with rounded ends facing each other across an open strip of grass. Smooth sculpted forms like a quality scale model with a bold readable silhouette, the whole group centred in frame and seen from the front-left from a high three-quarter angle. The picture shows only the five hedge sections on the plain backdrop, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    },
+    {
+      "path": "assets-source/refs/walls_hedges/ref-3.jpg",
+      "sha256": "c4140282c828da160b655f05e439ab35a9a8de66d1b0297ce02ab3608e971c6b",
+      "sourceSha256": "fc18ee5cc76bc004bdc845fd35165ff4dfc1bd0890a232997f08ec992866fbc4",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "a5df27ab-2580-4d25-b8e0-cfc69c998edf",
+      "prompt": "A single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. The tile's top is flat and its three back edges are as straight as its three front edges, meeting at sharp corners, and three earth side faces show along the front: the lower-left, the bottom and the lower-right. The tile is a sheep pasture bounded along its edges: a low dry-stone wall about 1.1 m tall and 0.7 m wide runs in two dead straight lines along the upper-left and top flat edges just inside the rim, bending at the sharp tile corner where they meet, built of weathered pale grey granite fieldstones speckled with darker grey flecks, rough and irregular, laid dry with no mortar in rough courses, the wall slightly wider at its foot than at its top with gently battered faces, long through-stones jutting a little from both faces partway up, and a cope of flat stones set upright on edge in a row along the top, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the joints on the shaded side, the stone reading as a matte surface, with a gateway in the middle of the top edge where a simple weathered timber five-bar field gate of grey-brown planks with one diagonal brace, hung between two tall upright granite gateposts stands closed; a hedgerow about 2 m tall and 1.5 m wide runs along the upper-right flat edge just inside the rim, an untrimmed countryside hedgerow of mixed hawthorn and hazel, loose and shaggy with an uneven top and a few sprigs sticking out, never a clipped garden hedge, one continuous unbroken line of growth, its small leaves in dense clusters forming one thick bushy mass of dark green and mid green, slightly rounded on top and with gently sloping sides, a few bramble tangles at its foot, the leaves reading as a matte surface with no gloss, with one young oak tree about 8 m tall rising out of it. The three front edges are open grass with no boundary. Five sheep with creamy-white fleeces graze inside. One small farmer figure about 1.7 m tall in a green jacket stands beside the gate, the top of the wall level with his waist. The walls and hedge stay thin lines along the tile edges and most of the tile is open grass. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/walls_hedges/ref-4.jpg",
+      "sha256": "7e9771522fcbe7ce0baafcf27ee03b4eb560859e100eb982db62c575a6c83cdb",
+      "sourceSha256": "9ade778b61144666b9699b968804bf2d2c4fda395a0eb5cbe4cc6c331365ca27",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "eaa35faa-49a8-40a9-8ebe-fb65d8c2f6da",
+      "prompt": "A single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. Three straight field boundaries run out from the centre of the tile to three alternating corners of the hexagon, splitting the tile into three equal diamond-shaped fields: one of neat parallel ploughed furrows of dark brown earth, one of rows of young green crops, and one of grass pasture with two black-and-white dairy cows. Two of the boundaries are low dry-stone walls about 1.1 m tall and 0.7 m wide, built of weathered pale grey granite fieldstones speckled with darker grey flecks, rough and irregular, laid dry with no mortar in rough courses, the wall slightly wider at its foot than at its top with gently battered faces, long through-stones jutting a little from both faces partway up, and a cope of flat stones set upright on edge in a row along the top, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the joints on the shaded side, the stone reading as a matte surface, and one is a hedgerow about 2 m tall and 1.5 m wide, an untrimmed countryside hedgerow of mixed hawthorn and hazel, loose and shaggy with an uneven top and a few sprigs sticking out, never a clipped garden hedge, one continuous unbroken line of growth, its small leaves in dense clusters forming one thick bushy mass of dark green and mid green, slightly rounded on top and with gently sloping sides, a few bramble tangles at its foot, the leaves reading as a matte surface with no gloss, all three meeting at the centre of the tile. One wall has a gateway near the centre where a simple weathered timber five-bar field gate of grey-brown planks with one diagonal brace, hung between two tall upright granite gateposts stands open. One small farmer figure about 1.7 m tall in a green jacket stands by the open gate, the top of the wall level with his waist. The boundaries are thin lines and the fields fill the tile. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-27T17:27:52.808Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/walls_hedges/ref-1.jpg",
+        "assets-source/refs/walls_hedges/ref-2.jpg",
+        "assets-source/refs/walls_hedges/ref-3.jpg",
+        "assets-source/refs/walls_hedges/ref-4.jpg"
+      ],
+      "notes": "Approved in chat (\"all approved\", 2026-10-27, A31 on the open-questions page, every recommended default). Q1 refs 1-4 as look and scale: dry granite walls with an upright cope in the boulders' granite, a timber five-bar gate between granite posts, untrimmed hawthorn and hazel hedges in the matte verge-bush green, one with a hedgerow oak; corners built at the hex's 120 degrees, not copied from the refs. Q2 sizes: wall 1.1 m tall and 0.7 m at the foot, hedge 1.9 m tall and 1.5 m wide; pieces are 4 m straight runs (two variants each), a 2 m end, a 120 degree bend, a three-way junction, a 4 m gateway (wall) and a 4 m run with an 8 m oak (hedge), so a 16 m edge is 2+4+4+4+2 m. Q3 O1: automatic field boundaries on shared tile edges where a farm or wheat tile meets a grass land tile, wall or hedge per edge from the world seed, one gate edge per farm; roads, rivers, rail and coast break them (O3, short meadow runs, later). Q4 walls and hedges block the walker, gaps pass, a closed gate blocks. Q5 build, measure the overview draws against 500, and bring the numbers back."
+    },
+    {
+      "who": "pending (owner)",
+      "when": null,
+      "gate": "piece",
+      "status": "pending",
+      "revision": "B2 dry-stone walls and hedgerows (2026-10-27)",
+      "requested": "2026-10-27",
+      "notes": "Pending owner review; not an approval. New field-boundary piece: the second 4 m straight wall run (its own stones and cope) (B2, refs approved as A31 on 2026-10-27; placed by the runtime on farm and wheat edges, hex_core::boundary). Review assets-source/kit/wall_run_b/renders/ and docs/checkpoints/walls-hedges/ (review sheet)."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-27",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"all approved\", 2026-10-27, A34 on the open-questions page): the piece and its placement as built (field boundaries where farm or wheat_field meets meadow, forest, oak or windmill). Review sheet docs/checkpoints/walls-hedges/sheet.jpg."
+    }
+  ]
+}

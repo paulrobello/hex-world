@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wall_end.py",
+    "sha256": "1faf5d75b5137bfc4dbfaee82f8901daa3f43c72903c0179e8bf76ac0f5036a3"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_drystone.py",
+      "sha256": "058915f052994202e6b3a28a1e8159fcd279ddac18e63eafeb394a03ff56b466"
+    }
+  ],
+  "lodTris": {
+    "wall_end_lod0": 334,
+    "wall_end_lod1": 142,
+    "wall_end_lod2": 32
+  },
+  "nodes": [
+    "wall_end",
+    "wall_end_collider",
+    "wall_end_lod0",
+    "wall_end_lod1",
+    "wall_end_lod2"
+  ],
+  "pieceId": "wall_end",
+  "sockets": []
+}

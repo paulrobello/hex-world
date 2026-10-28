@@ -1,0 +1,18 @@
+[
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "B2 dry-stone walls and hedgerows (2026-10-27)",
+    "requested": "2026-10-27",
+    "notes": "Pending owner review; not an approval. New field-boundary piece: the three-way wall junction at a hex corner (three 2 m arms; never placed under the O1 field/land rule, built for the set) (B2, refs approved as A31 on 2026-10-27; placed by the runtime on farm and wheat edges, hex_core::boundary). Review assets-source/kit/wall_junction/renders/ and docs/checkpoints/walls-hedges/ (review sheet)."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-10-27",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"all approved\", 2026-10-27, A34 on the open-questions page): the piece and its placement as built (field boundaries where farm or wheat_field meets meadow, forest, oak or windmill). Review sheet docs/checkpoints/walls-hedges/sheet.jpg."
+  }
+]

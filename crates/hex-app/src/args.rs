@@ -85,8 +85,9 @@ pub struct Flags {
     pub offscreen: bool,
     /// An `offscreen` key was given: it wins over the capture-run default.
     pub offscreen_explicit: bool,
-    /// Perf ablation, `kit_ablate=cascade_clip,coalesce`: turns off the named close-camera draw
-    /// cuts (O5, O4) to time each against the same build (`hex_render::kit_instances::KitAblate`).
+    /// Perf ablation, `kit_ablate=cascade_clip,coalesce,boundaries`: turns off the named
+    /// close-camera draw cuts (O5, O4) to time each against the same build, or the field
+    /// boundaries (B2) for a draw census without them (`hex_render::kit_instances::KitAblate`).
     pub kit_ablate: hex_render::kit_instances::KitAblate,
 }
 

@@ -22,6 +22,7 @@ use hex_core::{
 };
 
 pub mod affordances;
+pub mod boundaries;
 mod chunks;
 mod coalesce;
 pub mod ghost;
@@ -499,6 +500,12 @@ fn spawn_kit_parts(
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct NoBufferStops;
 
+/// Leaves the field boundaries out of play (`hex_core::boundary`): they span two tiles, so the
+/// thumbnail renderer, which draws each tile alone, keeps them out of its images (as it does the
+/// buffer stops and boats). A lone tile has no neighbour to fence anyway.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct NoBoundaries;
+
 /// A buffer stop's transform under its tile root ([`rail_end`]): at the cap height, its +X along
 /// the stop's heading toward the edge.
 pub(crate) fn buffer_stop_local(s: &BufferStop) -> Transform {
@@ -513,7 +520,7 @@ fn respawn_pairs(
     commands: &mut Commands,
     spawned: &mut PlaySpawned,
     kit: &HashMap<String, Vec<KitPart>>,
-    (catalog, draw_stops): (&TileCatalog, bool),
+    (catalog, draw_stops, bounds): (&TileCatalog, bool, Option<u64>),
     cells: &BTreeSet<Axial>,
     rising: &BTreeSet<Axial>,
 ) {
@@ -537,6 +544,9 @@ fn respawn_pairs(
             .map_or(vec![], |(def, rot)| {
                 rail_end::open_stops(def, cell, rot, tile_at)
             });
+        // The field boundaries this tile owns (B2), from the world seed (`bounds`, None when
+        // they are left out).
+        let fences = bounds.map_or(vec![], |seed| boundaries::placements(seed, cell, &tile_at));
         let mut ids = vec![];
         commands.entity(*root).with_children(|p| {
             for (e, piece) in pieces.iter().enumerate() {
@@ -550,6 +560,20 @@ fn respawn_pairs(
             for s in &stops {
                 ids.extend(
                     spawn_kit_parts(p, kit, BUFFER_STOP, buffer_stop_local(s), rise)
+                        .unwrap_or_default(),
+                );
+            }
+            for f in &fences {
+                // A boundary rises with its own tile, or with the neighbour it stands on when that
+                // one is the tile placed now (a meadow set down beside a farm).
+                let rise = rise.or_else(|| {
+                    f.cells
+                        .iter()
+                        .find(|c| rising.contains(c))
+                        .map(|c| (*c, RiseRole::Edge))
+                });
+                ids.extend(
+                    spawn_kit_parts(p, kit, f.piece, boundaries::transform(f), rise)
                         .unwrap_or_default(),
                 );
             }
@@ -796,11 +820,12 @@ pub fn sync(
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
-    (packs, waiting_out, children, no_stops): (
+    (packs, waiting_out, children, no_stops, no_bounds): (
         Option<Res<PlayPacks>>,
         Option<ResMut<PlayWaiting>>,
         Query<&Children>,
         Option<Res<NoBufferStops>>,
+        Option<Res<NoBoundaries>>,
     ),
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
@@ -809,6 +834,13 @@ pub fn sync(
     let stops = no_stops.is_none();
     // The buffer stop piece built since the last sync: every rail tile draws its stops now.
     let stops_arrived = spawned.refresh.contains(BUFFER_STOP);
+    // A boundary piece (or the hedgerow oak, in the forest pack) built since the last sync: every
+    // field tile redraws its boundaries.
+    let bounds_arrived = hex_core::boundary::PIECES
+        .iter()
+        .chain([&hex_core::boundary::HEDGEROW_OAK])
+        .any(|p| spawned.refresh.contains(*p));
+    let bounds = no_bounds.is_none().then_some(view.world_seed);
     let waits = |t: &PlayTile| {
         packs.as_deref().is_some_and(|p| {
             catalog
@@ -958,7 +990,23 @@ pub fn sync(
         .iter()
         .flat_map(|c| (0..6).map(move |e| c.neighbor(e)))
         .collect();
+    // A field tile's boundaries read the tiles up to two cells away (a farm's gate reads all its
+    // edges): an edit within that radius redraws them.
+    let field_tile = |c: &Axial| {
+        at(*c).is_some_and(|(def, _)| hex_core::boundary::FIELD_TILES.contains(&def.id.as_str()))
+    };
+    let near_fields: BTreeSet<Axial> = changed
+        .iter()
+        .flat_map(|c| hex_core::boundary::within(*c, 2))
+        .filter(field_tile)
+        .collect();
     let mut redraw = spawned.pairs.update(&catalog.0, changed, at);
+    if bounds.is_some() {
+        redraw.extend(near_fields);
+        if bounds_arrived {
+            redraw.extend(want.keys().copied().filter(field_tile));
+        }
+    }
     let rail_tile =
         |c: &Axial| at(*c).is_some_and(|(def, _)| (0..6).any(|e| rail_end::rail_edge(def, e)));
     redraw.extend(near.into_iter().filter(rail_tile));
@@ -980,7 +1028,7 @@ pub fn sync(
         &mut commands,
         &mut spawned,
         kit,
-        (&catalog.0, stops),
+        (&catalog.0, stops, bounds),
         &redraw,
         &rising,
     );

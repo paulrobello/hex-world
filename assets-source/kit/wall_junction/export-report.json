@@ -1,0 +1,27 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/wall_junction.py",
+    "sha256": "ead1c6976899e8cff3d77463da88764bc11b3a23d0b0b9f915c74c6a45f22701"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_drystone.py",
+      "sha256": "058915f052994202e6b3a28a1e8159fcd279ddac18e63eafeb394a03ff56b466"
+    }
+  ],
+  "lodTris": {
+    "wall_junction_lod0": 917,
+    "wall_junction_lod1": 389,
+    "wall_junction_lod2": 113
+  },
+  "nodes": [
+    "wall_junction",
+    "wall_junction_collider",
+    "wall_junction_lod0",
+    "wall_junction_lod1",
+    "wall_junction_lod2"
+  ],
+  "pieceId": "wall_junction",
+  "sockets": []
+}

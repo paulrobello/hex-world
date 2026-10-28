@@ -1,0 +1,49 @@
+{
+  "blender": "5.2.2 LTS",
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none (numpy-drawn stone faces, no Cycles bake)",
+  "extentZ": [
+    -0.30000001192092896,
+    1.4600000381469727
+  ],
+  "marginPx": 8,
+  "receiverSignature": "a5303b77434ec9aeda7753689d2f36f54e14236f8c260645334569fbe22508b1",
+  "samples": 0,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "wall_gate_stone": {
+      "max": 282.48268155381,
+      "median": 269.9967182248113,
+      "min": 65.82990172801466
+    }
+  },
+  "wall": {
+    "armM": 2.0,
+    "arms": [],
+    "bodyHeightM": 0.84,
+    "buryM": 0.3,
+    "footHalfWidthM": 0.35,
+    "gateHalfM": 1.29,
+    "heightM": 1.1,
+    "kind": "gate",
+    "postX": 1.5,
+    "topHalfWidthM": 0.235
+  }
+}

@@ -1,6 +1,7 @@
 //! Hex World core: hex grid math, mesh data, tile rules and the world model. No engine dependencies.
 
 pub mod axial;
+pub mod boundary;
 pub mod catalog;
 pub mod path;
 pub mod prism;
