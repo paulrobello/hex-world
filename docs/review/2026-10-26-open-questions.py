@@ -49,6 +49,24 @@ SECTIONS = [
                "player meets the game."),
         ("O2", "Keep it to New world only, as built."),
     ], []),
+    ("A44", "Shared scatter materials: draws met, one camera slightly slower", [
+        ("Q1", "Shared materials are built and gated (branch not landed). Draws: the mixed world's overview 485 to 389, "
+               "the mixed world with farms and B2 walls 547 to 445, all inside 500; thumbnails unchanged and no piece "
+               "thinned. Frame time on MiniMac (4 rounds, load 2.9-5.6): every view within noise except the "
+               "2,066-tile overview, which is 0.24 ms slower (45.11 against 44.84 ms, about 0.5%) in every round: that "
+               "frame is GPU-bound, so fewer draws do not help and the merged draws fetch 0.7% more vertices. Lowering "
+               "the merge threshold (1,024 vertices per saved draw instead of 2,048) should remove most of that, "
+               "but needs another hour on MiniMac."),
+        ("Q2", "The PNG fallback (GPUs with neither BC7 nor ASTC, which build no texture arrays by the GPU-memory "
+               "decision) draws 528 for the mixed world with farms, over 500."),
+    ], [
+        ("O1", "Q1: tune the threshold first in the next quiet MiniMac slot, and land only if no camera is slower "
+               "(your A28 bar). Recommended."),
+        ("O2", "Q1: land now as built; the 0.24 ms overview cost is accepted and the threshold tuning follows later."),
+        ("O3", "Q2: track the PNG fallback's draws (report only, like its initial download) rather than gate them. "
+               "Recommended: arrays on PNG would cost 908 MiB of GPU memory."),
+        ("O4", "Q2: gate PNG at 500 too, which needs another way to cut its draws."),
+    ], []),
 ]
 
 CSS = """
@@ -70,7 +88,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A43 is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A43 and A44 are open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
