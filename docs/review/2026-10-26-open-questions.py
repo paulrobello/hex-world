@@ -39,22 +39,19 @@ B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
 SECTIONS = [
-    ("A45", "Shared scatter materials did not pass the no-camera-slower bar", [
-        ("Q1", "Per A44 O1 the merge threshold was tuned and timed on MiniMac (one build, four arms, 4 rounds, load "
-               "3.0-5.7). At every threshold (2,048, 1,536, 1,024) the 2,066-tile overview is about 0.1 ms slower than "
-               "sharing off in every round (39.72 ms off; +0.12, +0.12, +0.09), and the mixed world with farms +0.08. "
-               "Close and mixed views are within noise. The cost hardly changes with the threshold, so it is a fixed "
-               "cost per merged draw (the member test, array sampling or larger draws), not wasted vertices; lowering "
-               "the threshold cannot pass, and at 1,024 the farms world reads 501 draws on the web. On main today the "
-               "gated mixed world draws 485 (under 500); the B2 farms world measures 547 natively without sharing "
-               "(445 with it) and is not gated on main."),
+    ("A46", "Grass and sway frame cost: the last P2 box", [
+        ("Q1", "Measured on MiniMac (base M4, 2,066-tile world on High, 2560x1440, loads 3-6). Grass adds +2.1 ms "
+               "(Sparse), +4.2 ms (Normal) and +6.4 ms (Lush) to the web mean (31.3 ms with grass off; native +3.3, "
+               "+6.1, +9.1 ms on 36.5). Foliage sway adds +3.7 ms at the close camera and +1.3 ms at the overview "
+               "(web, GPU time; draws and main thread unchanged). The P2 target, p95 at or under 16.6 ms on a "
+               "2,000-tile world, cannot hold on this GPU: with grass off every frame is already over 25 ms, and the "
+               "frame is GPU-bound (main thread 16.9 of 31.5 ms). The M4 Max was not measured."),
     ], [
-        ("O1", "Park the branch: main keeps per-piece scatter, the mixed world stays gated at 500 (485 today), the "
-               "farms world is tracked, not gated. Revisit with a per-pass Metal trace when scatter grows again or "
-               "for P7 mobile, where fewer draws may matter more. Recommended: players feel frame time, not draws."),
-        ("O2", "Land it at the 2,048 threshold, accepting about 0.1 ms (0.3%) on the two slower views for "
-               "100-140 fewer draws."),
-        ("O3", "Spend another MiniMac hour now on a per-pass Metal trace of the merged draws before deciding."),
+        ("O1", "Accept the measured cost as the P2 result and check the box; restate the target as a cost budget "
+               "(grass at Normal and sway each under about 5 ms on a base M4), and file a card to cut the sway cost, "
+               "which at 3.7 ms is more than half of Normal grass. Recommended."),
+        ("O2", "Keep the 16.6 ms target and measure on the M4 Max (macdaddy) in a quiet window before deciding."),
+        ("O3", "Keep P2 open until the sway and grass costs are cut."),
     ], []),
 ]
 
@@ -77,7 +74,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A45 answered 2026-10-28 (O1, park). Nothing is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A45 are answered (A45 O1 on 2026-10-28). A46 is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
