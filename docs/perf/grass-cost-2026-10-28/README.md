@@ -62,7 +62,7 @@ Medians over 3 rounds. Deltas against `off` are paired within a round, median [m
 
 ### Notes
 
-- MiniMac's desktop Google Chrome (the owner's session, not automated) had one renderer process at about 100% CPU through the whole window. It ran under every arm alike, so it does not bias the paired deltas. `PERF_EXCLUSIVE` was left off because its 20% threshold would have held the run for up to an hour.
+- MiniMac's desktop Google Chrome (the owner's session, not automated) had one renderer process (pid 16157, running since 2026-10-27 20:59Z) at about 100% of one CPU core through the whole window, and with none of this run's processes alive MiniMac's GPU sat at 5-6% utilization (`ioreg`, 12 samples at 07:07Z). The paired deltas are not biased by it, but the absolute frame times may be a few percent above an idle host's. It ran under every arm alike, so it does not bias the paired deltas. `PERF_EXCLUSIVE` was left off because its 20% threshold would have held the run for up to an hour.
 
 ### Sway, web (`sway-web.json`, `sway-web.log`, `sway-web-summary.json`; 06:52-07:04Z, loads 3.02-5.95)
 
