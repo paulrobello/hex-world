@@ -11,7 +11,9 @@
 //! paces the loop, and frame-counted waits (thumbs warm-up, script `wait`s, pack holds) would
 //! shrink in wall time against pipeline compiles and pack loads. An explicit `--offscreen on`
 //! (perf runs on a host whose screen is locked) runs unpaced, so frame times are the render
-//! loop's own.
+//! loop's own. Either way the update stays continuous while the window is unfocused (`main`):
+//! Bevy's default unfocused update waits on a timer, which macOS App Nap stretches for an occluded
+//! or minimized app until the run stalls.
 use std::time::{Duration, Instant};
 
 use bevy::camera::{ImageRenderTarget, RenderTarget};

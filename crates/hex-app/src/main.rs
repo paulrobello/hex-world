@@ -225,8 +225,13 @@ fn main() {
     app.insert_resource(bevy::winit::WinitSettings::continuous());
     // Native with an uncapped present mode (perf runs) keeps it too: `game()` steps an unfocused
     // window at exactly 60 Hz, and a window opened over SSH or behind another app never gets focus.
+    // So does an offscreen run (capture runs by default): its 60 Hz wait is a timer, and macOS
+    // App Nap stretches the timers of an occluded or minimized app until a capture run stalls
+    // (2026-10-28: `make thumbs` with its window minimized stopped at 0.3% CPU for minutes).
     #[cfg(not(target_arch = "wasm32"))]
-    if app.world().resource::<RunFlags>().0.present != args::Present::Fifo {
+    if app.world().resource::<RunFlags>().0.present != args::Present::Fifo
+        || app.world().resource::<RunFlags>().0.offscreen
+    {
         app.insert_resource(bevy::winit::WinitSettings::continuous());
         frame_cap::set_unfocused_continuous(true);
     }
