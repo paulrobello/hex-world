@@ -4,12 +4,12 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds everything through the A46 question (`6242014`). Pushed through `d1b16b0` (CI green, deployed); `877c992`, `6a68dd0` and `6242014` are doc-only and ride with the next push. `dist/` rebuilt.
+- `main` holds everything through the P4 brainstorm decisions (`c51f3e8`). Pushed through `d1b16b0` (CI green, deployed); the commits since are doc-only and ride with the next push. `dist/` rebuilt.
 - Later 2026-10-28: the shots-photo tree click moved to the forked oak at 35.84 m (`8dd98cb`/`683eb8c`, card closed), `e2e/persist.mjs` reads only a settled save state (`d1b16b0`, flake card closed), and the close-camera regression since c032d97 is noise (paired c032d97/4897f2e/main run, card closed; `docs/perf/close-camera-regression-2026-10-28/`).
 - A45 O1 (owner 2026-10-28): shared scatter is parked on branch `worktree-agent-abbcb3566f8fc0322` (it failed the no-camera-slower bar at 2,048, 1,536 and 1,024: the 2,066-tile overview is about 0.1 ms slower); 6235e5e is kept, the farms world stays tracked.
-- Grass cost on MiniMac web (`docs/perf/grass-cost-2026-10-28/`, 31.34 ms with grass off): Sparse +2.1, Normal +4.2, Lush +6.4 ms; sway +3.7 ms at the close camera. The base M4 is GPU-bound, so the p95 16.6 ms target cannot hold there. Queued as A46; the grass card 01a13c876aaf is blocked on it.
+- Grass cost on MiniMac web (`docs/perf/grass-cost-2026-10-28/`, 31.34 ms with grass off): Sparse +2.1, Normal +4.2, Lush +6.4 ms; sway +3.7 ms at the close camera. The base M4 is GPU-bound, so the p95 16.6 ms target cannot hold there. Owner A46 O1 accepted it as the P2 result (grass box checked, card 01a13c876aaf closed); the sway cut has its own card 01a183f767ec. The 12 matte-foliage pieces are owner-approved, so the approvals and open-questions pages are empty.
 - 2026-10-28 landed and pushed: offscreen native captures (capture runs render offscreen by default, so a covered or minimized window no longer captures black; card 01a17f7bb57b), B2 walls and hedges (`cb160f5`, card closed), large-world bounds (`d3f4673`: water meshes spawn with fixed bounds, calculate_bounds 6.1 -> 0.01 ms, main thread -6.0/-5.6 ms on MiniMac), the title theme on New world (A37, `0648d5d`), CI pruning test fixtures from the Pages artifact (`c7e4ff9`, live 404s checked), the scatter density test fix, and the A35 matte oaks/dune grass/ferns with the matte-foliage gate (12 pieces pending owner re-approval on docs/review/approvals.html).
-- P4 questions A38-A42 answered (recommended options, PRD §15 P4), but P4 stays on hold: owner 2026-10-28 "keep holding on p4 we need to give other projects some time on the system". Start no new waves; release host bookings the moment work finishes.
+- P4 is lifted (owner 2026-10-28: "i want to work on the tile height element and resources it requires"); P5-P8 stay held. Elevation is in a superpowers brainstorm: decisions so far are in PRD §15 P4 (A38-A42 plus 2026-10-28: hillside tiles that slope across a whole tile, any outline of raised ground, road tunnels several tiles long with arched portals lit at night once P5 lands, raised Meadow first and only Meadow over a tunnel). The first-round scope playback is with Paul; next is the spec at `docs/superpowers/specs/2026-10-28-elevation-design.md`, the builder check, owner approval, then writing-plans. Nothing is built until the spec is approved.
 - Owner 2026-10-28: A43 O1 built (a first visit with no saved worlds hears the title theme from the first gesture). A44 Q1 O1 / Q2 O3 are settled by A45 above.
 - Open upstream card: kanban schedule release/shorten (01a17fb3c7b7).
 - Batch 39 landed: the large-world O4/O5 regressions (card 01a1786dc9c5, closed). O4's p95 cost was frame pacing under the old web frame limiter and is gone with `e88b1bd`. O5's overview cost was GPU time lost to overlap between shadow cascades and is gone on main (fix inferred, likely `f1aff3e`). On main, `kit_ablate=cascade_clip|coalesce` turns either cut off in one build, and neither is slower than its absence while the draw cuts hold. Evidence: `docs/perf/large-world-o4o5/`.
@@ -51,7 +51,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## Next asset work
 
-No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. P4 is on hold to leave host time for other projects; whether P5-P8 asset work (the lighthouse) may start is an open question to Paul. Recipes are deferred.
+No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. The next wave is the P4 first-round pieces (tunnel portal and whatever the approved elevation spec needs); it starts after the spec is approved. P5-P8 asset work (the lighthouse) stays held. Recipes are deferred.
 
 ## Standing rules from the owner (still in force)
 
@@ -63,15 +63,13 @@ No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. 
 - Every asset brief carries the integration section (`.claude/skills/blender-asset/references/dispatch.md` part 11).
 - When asset work is active: at least 2 and at most 3 Blender agents at once, on Opus 5.5 at xhigh effort, in `isolation: "worktree"`. Each new piece reuses approved helpers through module globals from a new family file (never edit an approved helper), and its runtime changes come back as a verified `integration.patch` for the orchestrator to land.
 - The P3 recipe system (recipe book, hints, discovery moment, creative mode, the 6 recipes) is deferred until Paul says to start it (2026-10-20). P3 content keeps landing ahead of it.
-- No work past P3: nothing from P4 (elevation) onward (P5 atmosphere, P6 content breadth, P7 mobile, P8 first-person) starts until Paul says so (2026-10-20). Owner-requested items that fit P2 or P3 still go ahead.
+- No work past P4: P4 elevation was lifted 2026-10-28; nothing from P5 onward (P5 atmosphere, P6 content breadth, P7 mobile, P8 first-person) starts until Paul says so (2026-10-20). Owner-requested items that fit P2-P4 still go ahead.
 - Book shared-host windows on the kanban scheduler before load-sensitive or GPU work (global rule, 2026-10-25): `kanban schedule book --resource macdaddy|minimac ...`, check in, heartbeat, cancel when done. Sub-agents may not run kanban, so the orchestrator books the window for each agent wave (GPU shots, thumbs, e2e, kit bakes) and for every MiniMac perf run before dispatching it. Every agent brief says which hosts are booked for it and that it must run nothing on a host without a hex-world booking (2026-10-26: a sub-agent ran a 40 s benchmark on MiniMac after the orchestrator had released it to another project).
 - Blender headless only. Never record an owner approval yourself (pending entries only). Tool bugs and flaky tests are high priority. Perf numbers need host load ≤ 15 before and after.
 
 ## Waiting on Paul
 
-- A46 on the open-questions page (http://127.0.0.1:8095/docs/review/2026-10-26-open-questions.html): accept the grass and sway frame cost as the P2 result.
-- Whether "non-P4" work includes P5-P8 asset work such as the lighthouse (that would restart the Blender agents).
-- Re-approval of the 12 matte-foliage pieces on docs/review/approvals.html.
+- The P4 elevation brainstorm: the first-round scope playback (my guesses: road ramps and flat roads on raised ground, levels 0-3, direct raised-lower contact shows a soil cliff, raised rivers/waterfalls and rail deferred, hillside ground built at runtime rather than as Blender pieces).
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
