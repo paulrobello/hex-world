@@ -154,11 +154,11 @@
     - All edges are `kind: Grass`, `base: "meadow_base"`, and `raisable: true`.
     - The scatter copies meadow's scatter list. No edge pieces.
   - **`road_ramp`:** corners `[1,1,0,0,0,1]` (the straight bank `000111` rotated). Edges 0 and 1 are Flat h1, edge 2 is Fall h0, edges 3 and 4 are Flat h0, and edge 5 is Rise h0. Edges 0 and 3 are `Road` with lane `(0.0, 6.0)`, and the rest are Grass. `center: Some("road_straight_center")`, `networks: [(kind: Road, from: Edge(3), to: Edge(0))]`, `ground: RoadRamp`, `raisable: true`.
-  - `TileDef.ground: Ground` (`#[serde(default)] pub enum Ground { #[default] Plain, RoadRamp }`) selects the height field in Task 4.
-  - **`road_tunnel_portal`:** the same corners and `ground: RoadRamp`.
+  - `TileDef.ground: Ground` (`#[serde(default)] pub enum Ground { #[default] Plain, RoadRamp, Cutting }`) selects the height field in Task 4.
+  - **`road_tunnel_portal`:** the same corners and `ground: Cutting` (ruling 2026-10-29: a car-height arch cannot fit under 4 m of cover on the ramp field, so the portal's road stays at the tile's level through a cutting).
     - Edge 3 is a Road lane at h0, and edge 0 is Grass Flat h1.
-    - `center: Some("road_tunnel_portal")`, which is pending until Task 10.
-    - `nodes: [(id: "arch", at: [4.0, 0.0])]` and `networks: [(kind: Road, from: Edge(3), to: Node("arch"))]`.
+    - Wiring W1 (ruling 2026-10-29): `center: Some("road_straight_center")` with `road_straight_edge` placed explicitly at edges 0 and 3, and the portal piece `road_tunnel_portal` as a ground hero at the origin (the rail station platform pattern). Take the exact hero/edge-piece RON shape and the `GROUND_BOXES`/`GROUND_PROPS` rows from Task 10's `docs/checkpoints/road_tunnel_portal/integration.patch` (branch `worktree-agent-a97b4ddc8f0f8ddd0`). The portal piece is never draped.
+    - `nodes: [(id: "arch", at: [13.3, 0.0])]` and `networks: [(kind: Road, from: Edge(3), to: Node("arch"))]`.
     - `tunnel: Some((node: "arch", edge: 0))`.
   - `TileDef.tunnel: Option<TunnelEnd>` with `#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)] pub struct TunnelEnd { pub node: String, pub edge: u8 }`. `edge` is the local edge the tunnel runs out of.
   - `PICKER_GROUPS` gains `("hillside", &[...12 ids in pattern order...])`. `road_ramp` and `road_tunnel_portal` are lone entries.
@@ -169,7 +169,7 @@
     - Extend `F1` with the 14 new ids.
     - Replace `every_mvp_edge_is_flat_at_height_zero` with `only_hillside_family_edges_leave_flat_zero`: non-Flat or h>0 edges appear only on `hillside_*`, `road_ramp` and `road_tunnel_portal`.
     - `hillside_patterns_are_the_twelve_necklaces`: the set of corner patterns at rotation 0 equals the 12 necklaces, and no two are rotations of each other.
-  - In `catalog.rs`, `portal_and_ramp_share_the_straight_bank`: both have `corners(0) == [1,1,0,0,0,1]` and `ground == Ground::RoadRamp`, and the portal's `tunnel.edge == 0`.
+  - In `catalog.rs`, `portal_and_ramp_share_the_straight_bank`: both have `corners(0) == [1,1,0,0,0,1]`, the ramp has `ground == Ground::RoadRamp`, the portal `ground == Ground::Cutting`, and the portal's `tunnel.edge == 0`.
 
 - [ ] **Step 2: Run** `cargo test -p hex-core --test data_validator`. Expected: FAIL.
 
@@ -190,7 +190,8 @@
 - Produces:
   - `pub fn height_at(corners: [u8; 6], x: f32, z: f32) -> f32`: metres above the tile's level, tile-local and unrotated (corners in local order). It is the **Wachspress interpolation** of the corner heights × `LEVEL_STEP` over the regular hexagon: `w_i = A(c_{i-1}, c_i, c_{i+1}) / (A(p, c_{i-1}, c_i) · A(p, c_i, c_{i+1}))`, normalised. Outside the hexagon it clamps to the nearest boundary point. This is pinned so the Task 10 portal generator can match it in Python.
   - `pub fn road_ramp_height_at(corners: [u8; 6], x: f32, z: f32) -> f32`: for `Ground::RoadRamp` tiles (local frame, road along +x from edge 3 at x = −13.86 to edge 0 at x = +13.86). Inside the road corridor `|z| <= 4` it is the linear `4.0 * (x + 13.86) / 27.71`. It blends to `height_at` with smoothstep over `4 < |z| < 8`, and outside that it is `height_at`. Edges 0 and 3 are constant in both fields, so the blend joins neighbours exactly.
-  - `pub fn field_at(ground: Ground, corners: [u8; 6], x: f32, z: f32) -> f32` dispatches the two. Everything downstream (meshes, drape, scatter, walk, the portal generator) calls `field_at`, never `height_at` directly.
+  - `pub fn cutting_height_at(corners: [u8; 6], x: f32, z: f32) -> f32`: for `Ground::Cutting` (the tunnel portal). Inside `|z| <= 4` it is 0 (the road at the tile's level); it blends to `height_at` with smoothstep over `4 < |z| < 8`; outside that it is `height_at`. Must equal the Task 10 generator's `cut_height_at` (branch `worktree-agent-a97b4ddc8f0f8ddd0`, `scripts/blender/kit/_tunnel_portal.py`): add a test sampling both at the same points if a Python fixture is practical, otherwise copy 8 sample values from the generator into a Rust test.
+  - `pub fn field_at(ground: Ground, corners: [u8; 6], x: f32, z: f32) -> f32` dispatches the three. Everything downstream (meshes, drape, scatter, walk, the portal generator) calls `field_at`, never `height_at` directly.
   - `pub fn ground_mesh(ground: Ground, corners: [u8; 6], rings: u32) -> SlopeMesh`:
     - A cap subdivided in `rings` concentric hex rings (use 12), with y from `height_at` and smooth normals from the analytic gradient.
     - Plus a skirt: one wall per edge from the cap boundary down to y = −`LEVEL_STEP`.
