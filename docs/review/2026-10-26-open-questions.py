@@ -38,7 +38,29 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-SECTIONS = []
+SECTIONS = [
+    ("A52", "Mega tiles: a 7-hex piece (centre plus ring)", [
+        ("Q1", "Height: how does the massif meet the world? The scoping (card 01a13bcc6f8d notes) found every seam, cliff and ground rule is built per cell."),
+        ("Q2", "Networks: may roads and rivers cross the massif or end at it?"),
+        ("Q3", "Tunnels: may a road tunnel run under a mega tile?"),
+        ("Q4", "Placement and picker: how is it offered and placed?"),
+        ("Q5", "Replace and bulldoze: what happens when a mega tile is replaced or removed?"),
+        ("Q6", "Rules: the HUD mirrors the engine's placement rules in TypeScript, the biggest drift risk the scoping found. Mirror the 7-cell rules too, or have the HUD ask the engine?"),
+    ], [
+        ("Q1 O1", "Its 12 outer edges sit flat at the tile's own level, like a raised Meadow, and the peak rises inside the footprint (recommended: neighbours keep today's seam rules; only the interior is new ground)."),
+        ("Q1 O2", "A height field across the 7 cells, with outer edges at several levels."),
+        ("Q2 O1", "No roads or rivers in the first round: every outer edge is plain ground (recommended: road and river stitching stay per cell)."),
+        ("Q2 O2", "Roads may cross on a pass or end at the foot."),
+        ("Q3 O1", "Refused under a mega tile in the first round (recommended)."),
+        ("Q3 O2", "Allowed, with the massif as cover."),
+        ("Q4 O1", "Its own inventory entry; the ghost shows the whole footprint; it needs all 7 cells empty and at least one placed neighbour outside it; R turns it about the centre (recommended)."),
+        ("Q4 O2", "Built from smaller pieces that merge when the ring is complete."),
+        ("Q5 O1", "Removed and undone as one tile; replacing a mega tile with a single tile, or the reverse, is refused (recommended)."),
+        ("Q5 O2", "Replace swaps the whole footprint for single tiles."),
+        ("Q6 O1", "The HUD asks the engine through the bridge for mega-tile legality instead of mirroring it (recommended: one source of truth for the new rules)."),
+        ("Q6 O2", "Mirror the rules in rules.ts with parity tests, as for single tiles."),
+    ], []),
+]
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -59,7 +81,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). Nothing is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A52 (mega tiles) is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
