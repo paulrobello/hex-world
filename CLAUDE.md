@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Hex World is a browser world-building game on hexagon tiles: Rust workspace compiled to WASM, Bevy 0.20 (pinned `=0.20.0`, `default-features = false`) rendering through WebGPU, served by Trunk, deployed to GitHub Pages at hex-world.pardev.net. A native desktop build of `hex-app` is kept working for fast iteration, screenshots and profiling.
+Hex World is a browser world-building game on hexagon tiles: Rust workspace compiled to WASM, Bevy 0.20 (pinned `=0.20.1`, `default-features = false`) rendering through WebGPU, served by Trunk, deployed to GitHub Pages at hex-world.pardev.net. A native desktop build of `hex-app` is kept working for fast iteration, screenshots and profiling.
 
 ## Authoritative docs (read before the relevant work)
 

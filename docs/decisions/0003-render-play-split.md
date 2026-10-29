@@ -34,4 +34,4 @@ The old `lookdev` module is production lighting, not capture tooling: play uses 
 
 The compiler enforces an acyclic crate graph. Renderer-only clients no longer compile play, boids, walking, diagnostics or benchmark pipelines. Default play clients omit diagnostic tooling. The app retains its complete development interface. Shared spawn state exposes fields to its presentation owner across the crate boundary. This is data ownership, not a new gameplay API.
 
-Bevy remains pinned through the workspace to `=0.20.0`, with default features disabled. Both native and wasm32 compilation remain required. The new play and state crates retain the renderer's release optimization level for wasm builds.
+Bevy remains pinned through the workspace to `=0.20.1` (0.20.0 until 2026-10-29), with default features disabled. Both native and wasm32 compilation remain required. The new play and state crates retain the renderer's release optimization level for wasm builds.

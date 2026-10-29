@@ -9,7 +9,7 @@ license = "MIT"
 publish = false
 
 [workspace.dependencies]
-bevy = { version = "=0.20.0", default-features = false }
+bevy = { version = "=0.20.1", default-features = false }
 
 [workspace.lints.clippy]
 type_complexity = "warn"
