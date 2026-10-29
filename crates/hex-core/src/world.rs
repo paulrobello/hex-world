@@ -356,6 +356,21 @@ impl World {
         def: &TileDef,
         test: impl Fn(Orientation) -> bool,
     ) -> Vec<Orientation> {
+        self.ordered_with_cliff(catalog, cell, def, test)
+            .into_iter()
+            .map(|(_, o)| o)
+            .collect()
+    }
+
+    /// [`World::ordered_orientations`] with each orientation's "has a cliff edge" flag, computed
+    /// once per orientation.
+    fn ordered_with_cliff(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        test: impl Fn(Orientation) -> bool,
+    ) -> Vec<(bool, Orientation)> {
         let mut out: Vec<(bool, Orientation)> = (0..=MAX_LEVEL)
             .filter(|&l| level_allowed(def, l))
             .flat_map(|l| (0..6).map(move |k| Orientation::new(k, l)))
@@ -363,7 +378,7 @@ impl World {
             .map(|o| (self.cliff_edges(catalog, cell, def, o).contains(&true), o))
             .collect();
         out.sort_by_key(|&(cliff, o)| (cliff, o.level, o.rotation));
-        out.into_iter().map(|(_, o)| o).collect()
+        out
     }
 
     /// Orientations in which `def` fits at `cell`: cliff-free first, then by level, then by
@@ -416,17 +431,21 @@ impl World {
         let mut seq: Vec<(&'a TileDef, Orientation)> = vec![];
         let mut keys: Vec<(bool, u8, usize, u8)> = vec![];
         for (i, &d) in members.iter().enumerate() {
-            let mut reps: Vec<Orientation> = vec![];
-            for o in self.legal_orientations(catalog, cell, d) {
+            let mut reps: Vec<(bool, Orientation)> = vec![];
+            let legal = if self.is_slot(cell) {
+                self.ordered_with_cliff(catalog, cell, d, |o| self.fits(catalog, cell, d, o))
+            } else {
+                vec![]
+            };
+            for (cliff, o) in legal {
                 if !reps
                     .iter()
-                    .any(|r| r.level == o.level && d.same_orientation(r.rotation, o.rotation))
+                    .any(|(_, r)| r.level == o.level && d.same_orientation(r.rotation, o.rotation))
                 {
-                    reps.push(o);
+                    reps.push((cliff, o));
                 }
             }
-            for o in reps {
-                let cliff = self.cliff_edges(catalog, cell, d, o).contains(&true);
+            for (cliff, o) in reps {
                 seq.push((d, o));
                 keys.push((cliff, o.level, i, o.rotation));
             }
@@ -471,20 +490,24 @@ impl World {
                 (cliff, o.level, o.rotation)
             };
             let at = key(o);
-            let mine: Vec<(&'a TileDef, Orientation)> =
-                seq.iter().copied().filter(|(m, _)| m.id == id).collect();
+            let mine: Vec<_> = seq
+                .iter()
+                .copied()
+                .filter(|(m, _)| m.id == id)
+                .map(|e| (key(e.1), e))
+                .collect();
             match dir {
                 RotateDir::Forward => mine
                     .iter()
-                    .find(|(_, r)| key(*r) > at)
+                    .find(|(k, _)| *k > at)
                     .or(mine.first())
-                    .copied(),
+                    .map(|&(_, e)| e),
                 RotateDir::Back => mine
                     .iter()
                     .rev()
-                    .find(|(_, r)| key(*r) < at)
+                    .find(|(k, _)| *k < at)
                     .or(mine.last())
-                    .copied(),
+                    .map(|&(_, e)| e),
             }
         });
         own.or(Some(match dir {
@@ -818,7 +841,7 @@ pub fn cell_seed(world_seed: u64, cell: Axial) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::socket::{Side, SocketKind};
+    use crate::socket::{EdgeProfile, Side, SocketKind};
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap_or_else(|e| panic!("{e}"))
@@ -1104,9 +1127,13 @@ mod tests {
             .tiles()
             .iter()
             .map(|d| d.id.clone())
-            .filter(|id| id != "ocean" && id != "hillside_010101")
+            .filter(|id| id != "ocean")
+            .filter(|id| {
+                c.get(id)
+                    .is_some_and(|d| d.edges.iter().any(|e| e.profile == EdgeProfile::Flat))
+            })
             .collect();
-        // Hillside 010101 has no flat edge to face the level meadow, so it never fits beside it.
+        // A tile with no Flat edge (hillside 010101) cannot face the level meadow, so it never fits beside it.
         assert_eq!(ids(&w, EAST), all_but_ocean);
 
         // A road end now points at EAST's world edge 4, next to the meadow on its edge 3: only

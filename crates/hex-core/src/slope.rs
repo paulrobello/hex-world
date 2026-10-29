@@ -383,8 +383,9 @@ fn unit_normal(g: [f64; 2]) -> [f32; 3] {
 
 /// The ground mesh of a tile: the cap subdivided in `rings` concentric hex rings (12 in play) with
 /// y from [`field_at`] and smooth normals from its analytic shading gradient ([`shade_gradient`],
-/// the baked meadow cap's shading), UVs on meadow's planar cap mapping `u = (x + 16) / 32`, `v = (16 - z) / 32`, and a skirt wall per edge from the cap
-/// boundary down to `-LEVEL_STEP`, sharing the cap's boundary positions exactly.
+/// the baked meadow cap's shading), UVs on meadow's planar cap mapping `u = (x + 16) / 32`,
+/// `v = (16 - z) / 32`, and a skirt wall per edge from the cap boundary down to `-LEVEL_STEP`,
+/// sharing the cap's boundary positions exactly.
 pub fn ground_mesh(ground: Ground, corners: [u8; 6], rings: u32) -> SlopeMesh {
     let rings = rings.max(1);
     let mut cap = PrismMesh {
@@ -810,13 +811,13 @@ mod tests {
         }
     }
 
+    /// Measured maximum with the meadow relief over the same sample, plus 0.02.
+    const RELIEF_BOUND: f32 = 0.445;
+
     /// Measured maximum plus 0.02 over a 64×64 interior sample. Every pattern peaks at the eased
     /// edge ramp's own steepest slope, 1.5 × 4 / 16 = 0.375: 0.378 for the three with no lone
     /// corner (one differing from both neighbours) and 0.377 for the other nine, so one bound
     /// covers both classes.
-    /// Measured maximum with the meadow relief over the same sample, plus 0.02.
-    const RELIEF_BOUND: f32 = 0.445;
-
     #[test]
     fn bank_grade_is_bounded() {
         let c = catalog();
@@ -855,7 +856,6 @@ mod tests {
                     drawn = drawn.max((gx * gx + gz * gz).sqrt());
                 }
             }
-            println!("{}: max grade {worst:.3}, with relief {drawn:.3}", def.id);
             assert!(
                 drawn < RELIEF_BOUND,
                 "{}: max grade with relief {drawn}",

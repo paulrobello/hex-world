@@ -593,6 +593,28 @@ mod tests {
         assert_eq!(c.siblings("hillside_000111").len(), 12);
     }
 
+    /// A stopped rail end closes against a no-rail tile at any pair of levels (the stop is a
+    /// lane-free ground, a cliff where the levels differ), while rail continues only at equal
+    /// absolute height.
+    #[test]
+    fn placement_meets_and_stop_closes_at_nonzero_levels() {
+        let c = TileCatalog::builtin().unwrap();
+        let straight = c.get("rail_straight").unwrap();
+        let meadow = c.get("meadow").unwrap();
+        for (rail_level, meadow_level) in [(0, 0), (2, 2), (0, 1), (2, 0), (1, 3)] {
+            assert!(
+                c.placement_meets(meadow, 0, meadow_level, 3, straight, 0, rail_level),
+                "meadow {meadow_level} beside a stopped end at {rail_level}"
+            );
+            assert!(c.edges_meet(straight, 0, rail_level, 0, meadow, 0, meadow_level));
+        }
+        // A rail tile never turns its end toward a raised meadow.
+        assert!(!c.placement_meets(straight, 0, 0, 0, meadow, 0, 1));
+        assert!(c.placement_meets(straight, 0, 2, 0, straight, 0, 2));
+        assert!(!c.placement_meets(straight, 0, 1, 0, straight, 0, 2));
+        assert!(!c.placement_meets(straight, 0, 2, 0, straight, 0, 1));
+    }
+
     #[test]
     fn builtin_pending_list_parses() {
         // Empty once every tile's pieces are in the kit (the beach family closed the list).

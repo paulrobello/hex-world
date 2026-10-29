@@ -169,6 +169,83 @@ pub(crate) mod tests {
         World::from_parts(1, tiles, VecDeque::new(), vec![])
     }
 
+    /// Portals facing each other along world edge `dir` from `from`, with `n` level-1 meadows
+    /// between them.
+    fn line(from: Axial, dir: u8, n: usize) -> BTreeMap<Axial, PlacedTile> {
+        let mut tiles = BTreeMap::new();
+        tiles.insert(from, tile("road_tunnel_portal", dir, 0, from));
+        let mut at = from;
+        for _ in 0..n {
+            at = at.neighbor(dir);
+            tiles.insert(at, tile("meadow", 0, 1, at));
+        }
+        let b = at.neighbor(dir);
+        tiles.insert(b, tile("road_tunnel_portal", (dir + 3) % 6, 0, b));
+        tiles
+    }
+
+    #[test]
+    fn tunnels_form_along_every_world_edge() {
+        let c = catalog();
+        for dir in 0..6u8 {
+            let w = World::from_parts(1, line(Axial::ORIGIN, dir, 2), VecDeque::new(), vec![]);
+            let t = tunnels(&w, &c);
+            assert_eq!(t.len(), 1, "dir {dir}");
+            let t = &t[0];
+            assert!(t.a < t.b, "dir {dir}");
+            let mut cover = vec![t.a.neighbor(t.dir)];
+            cover.push(cover[0].neighbor(t.dir));
+            assert_eq!(t.cover, cover, "dir {dir}");
+            assert_eq!(cover[1].neighbor(t.dir), t.b, "dir {dir}");
+            assert_eq!(
+                t.dir,
+                if t.a == Axial::ORIGIN {
+                    dir
+                } else {
+                    (dir + 3) % 6
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn a_nonzero_local_tunnel_edge_turns_with_the_rotation() {
+        let c = catalog();
+        let mut def = c.get("road_tunnel_portal").unwrap().clone();
+        def.tunnel.as_mut().unwrap().edge = 2;
+        // Local edge 2 under rotation 1 is world edge 3.
+        assert_eq!(mouth(&def, 1), Some(3));
+        let far = Axial::ORIGIN.neighbor(3).neighbor(3).neighbor(3);
+        let mut tiles = BTreeMap::new();
+        for cell in [
+            Axial::ORIGIN.neighbor(3),
+            Axial::ORIGIN.neighbor(3).neighbor(3),
+        ] {
+            tiles.insert(cell, tile("meadow", 0, 1, cell));
+        }
+        tiles.insert(far, tile("road_tunnel_portal", 0, 0, far));
+        let w = World::from_parts(1, tiles, VecDeque::new(), vec![]);
+        let p = preview(&w, &c, Axial::ORIGIN, &def, Orientation::new(1, 0));
+        assert_eq!(p.cells.len(), 2);
+        assert!(p.completes);
+        // Rotation 0 points the same tunnel at world edge 2: no cover there.
+        let p = preview(&w, &c, Axial::ORIGIN, &def, Orientation::new(0, 0));
+        assert!(p.cells.is_empty() && !p.completes);
+    }
+
+    #[test]
+    fn two_tunnels_come_out_sorted_by_first_portal() {
+        let c = catalog();
+        let mut tiles = line(Axial::new(0, 3), 0, 1);
+        tiles.extend(line(Axial::new(0, 0), 0, 2));
+        let w = World::from_parts(1, tiles, VecDeque::new(), vec![]);
+        let t = tunnels(&w, &c);
+        assert_eq!(t.len(), 2);
+        assert_eq!((t[0].a, t[0].cover.len()), (Axial::new(0, 0), 2));
+        assert_eq!((t[1].a, t[1].cover.len()), (Axial::new(0, 3), 1));
+        assert!(is_cover(&w, &c, t[1].cover[0]) && is_cover(&w, &c, t[0].cover[1]));
+    }
+
     #[test]
     fn two_facing_portals_over_meadow_make_a_tunnel() {
         let c = catalog();

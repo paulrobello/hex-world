@@ -15,6 +15,7 @@ import {
   tunnelCover,
   heightsMeet,
   isSlot,
+  laneMeets,
   legalOrientations,
   legalRotations,
   meets,
@@ -26,6 +27,8 @@ import {
   tileDef,
   tileMap,
   turnAngle,
+  turnHint,
+  placementMeets,
 } from "../src/rules.ts";
 import { TILE_NAMES, actionText, bulldozeRefusal, coord } from "../src/words.ts";
 import parity from "./rules-parity.json" with { type: "json" };
@@ -350,4 +353,33 @@ test("the R hint holds across levels: a meadow over a flat slot has more than on
   const f = fitEntry(entryOf("meadow")!, needsAt({ q: 1, r: 0 }, start));
   assert.ok(f.seq.length > 1, "R has levels to step through");
   for (const level of [0, 1]) assert.equal(entryReadout(f, "meadow", 0, level).count, 1, `level ${level}`);
+});
+
+test("lanes meet like hex-core LaneSpec::meets: equal width, mirrored offset, or both absent", () => {
+  assert.equal(laneMeets(null, null), true);
+  assert.equal(laneMeets([0, 6], [0, 6]), true);
+  assert.equal(laneMeets([1.5, 6], [-1.5, 6]), true);
+  assert.equal(laneMeets([1.5, 6], [1.5, 6]), false, "offsets mirror across a seam");
+  assert.equal(laneMeets([0, 6], [0, 8]), false, "widths differ");
+  assert.equal(laneMeets([0, 6], null), false);
+  assert.equal(laneMeets(null, [0, 6]), false);
+  const road = (lane: readonly [number, number] | null) => ({
+    kind: "Road" as const,
+    land: null,
+    stopped: false,
+    rail: false,
+    heights: [0, 0] as [number, number],
+    lane,
+  });
+  assert.equal(placementMeets(road([0, 6]), road([0, 6])), true);
+  assert.equal(placementMeets(road([0, 6]), road([0, 5])), false, "a lane of another width is refused");
+  assert.equal(placementMeets(road([0, 6]), road(null)), false);
+});
+
+test("the R hint shows while any rotation or orientation is left to turn to", () => {
+  assert.equal(turnHint(1, 1), false, "a lone orientation has nowhere to go");
+  assert.equal(turnHint(1, 0), false);
+  assert.equal(turnHint(2, 0), true, "several rotations");
+  assert.equal(turnHint(1, 2), true, "one rotation but another level or group member");
+  assert.equal(turnHint(3, 5), true);
 });

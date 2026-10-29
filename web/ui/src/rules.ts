@@ -4,6 +4,16 @@
 import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 
+/** A network crossing at an edge, in metres (hex-core `LaneSpec`): `[offset, width]`. */
+export type Lane = readonly [offset: number, width: number];
+
+/**
+ * Whether two lanes line up across a seam (hex-core `LaneSpec::meets`, as `edges_compatible`
+ * uses it): both absent, or both present with equal width and mirrored offset.
+ */
+export const laneMeets = (a: Lane | null, b: Lane | null): boolean =>
+  a === null || b === null ? a === b : a[1] === b[1] && a[0] === -b[0];
+
 /**
  * Which side of a directional (beach) edge the land is on, looking out across the edge from its own
  * tile: `Right` is the corner shared with edge e + 1 (hex-core `Side`). Across a seam the two tiles
@@ -33,8 +43,11 @@ export interface TileDef {
    * `EdgeSocket::corners`). Equal heights are a flat edge; a slope differs by one.
    */
   heights: [number, number][];
-  /** Which local edges carry a lane (road, river, rail): those never meet across a cliff. */
-  lanes: boolean[];
+  /**
+   * Each local edge's lane `[offset, width]` in metres, null where it has none (hex-core
+   * `EdgeSocket::lane`): edges with a lane never meet across a cliff.
+   */
+  lanes: (Lane | null)[];
   /** Whether the tile may stand on a level above 0 (hex-core `TileDef::raisable`). */
   raisable: boolean;
   /** Its highest relative corner (hex-core `TileDef::top`): `level + top` stays within MAX_LEVEL. */
@@ -51,7 +64,7 @@ export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   rail: t.rail,
   period: t.period,
   heights: t.heights as [number, number][],
-  lanes: t.lanes,
+  lanes: t.lanes as (Lane | null)[],
   raisable: t.raisable,
   top: t.top,
   tunnel: t.tunnel,
@@ -128,8 +141,8 @@ export function rotatedHeights(def: TileDef, k: number, level: number): [number,
   });
 }
 
-/** Which world edges of a tile turned by k carry a lane. */
-export function rotatedLanes(def: TileDef, k: number): boolean[] {
+/** Which lane, if any, each world edge of a tile turned by k carries. */
+export function rotatedLanes(def: TileDef, k: number): (Lane | null)[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.lanes[(w - k + 12) % 6]!);
 }
 
@@ -176,7 +189,7 @@ export const meets = (theirs: SocketKind, theirLand: Side | null, mine: SocketKi
 
 /**
  * One side of a seam: the edge's kind, land side and whether it is a stopped rail end, whether its
- * tile carries rail, the edge's absolute corner heights `[start, end]` and whether it has a lane.
+ * tile carries rail, the edge's absolute corner heights `[start, end]` and its lane.
  */
 export interface Facing {
   kind: SocketKind;
@@ -184,7 +197,7 @@ export interface Facing {
   stopped: boolean;
   rail: boolean;
   heights: readonly [number, number];
-  lane: boolean;
+  lane: Lane | null;
 }
 
 /**
@@ -196,9 +209,9 @@ const stopCloses = (end: Facing, other: Facing): boolean =>
   end.stopped &&
   !other.rail &&
   other.land === null &&
-  !other.lane &&
+  other.lane === null &&
   compatible(STOPPED_END_GROUND, other.kind) &&
-  absoluteMeet(end.heights, false, other.heights, other.lane) !== "Refused";
+  absoluteMeet(end.heights, false, other.heights, false) !== "Refused";
 
 /**
  * Whether my edge may be placed against the placed edge it faces (hex-core
@@ -208,8 +221,8 @@ const stopCloses = (end: Facing, other: Facing): boolean =>
  */
 export const placementMeets = (theirs: Facing, mine: Facing): boolean =>
   (meets(theirs.kind, theirs.land, mine.kind, mine.land) &&
-    theirs.lane === mine.lane &&
-    absoluteMeet(mine.heights, mine.lane, theirs.heights, theirs.lane) !== "Refused") ||
+    laneMeets(theirs.lane, mine.lane) &&
+    absoluteMeet(mine.heights, mine.lane !== null, theirs.heights, theirs.lane !== null) !== "Refused") ||
   stopCloses(theirs, mine);
 
 export type TileMap = Map<string, PlayTile>;
@@ -231,7 +244,7 @@ export interface Needs {
   rail: boolean[];
   levels: number[];
   heights: ([number, number] | null)[];
-  lanes: boolean[];
+  lanes: (Lane | null)[];
 }
 
 export function needsAt(slot: Cell, tiles: TileMap): Needs {
@@ -259,7 +272,7 @@ export function needsAt(slot: Cell, tiles: TileMap): Needs {
     rail: facing.map((f) => f?.rail ?? false),
     levels: facing.map((f) => f?.level ?? 0),
     heights: facing.map((f) => f?.heights ?? null),
-    lanes: facing.map((f) => f?.lane ?? false),
+    lanes: facing.map((f) => f?.lane ?? null),
   };
 }
 
@@ -282,7 +295,7 @@ function seam(
     stopped: needs.stopped[w] ?? false,
     rail: needs.rail[w] ?? false,
     heights: needs.heights[w] ?? [0, 0],
-    lane: needs.lanes[w] ?? false,
+    lane: needs.lanes[w] ?? null,
   };
   const mine: Facing = {
     kind: rotated(def, k)[w]!,
@@ -310,7 +323,10 @@ function clashes(def: TileDef, k: number, needs: Needs, level = 0): number[] {
 function hasCliff(def: TileDef, k: number, needs: Needs, level: number): boolean {
   return [0, 1, 2, 3, 4, 5].some((w) => {
     const s = seam(def, k, level, needs, w);
-    return s !== null && absoluteMeet(s.mine.heights, s.mine.lane, s.theirs.heights, s.theirs.lane) !== "Seamless";
+    return (
+      s !== null &&
+      absoluteMeet(s.mine.heights, s.mine.lane !== null, s.theirs.heights, s.theirs.lane !== null) !== "Seamless"
+    );
   });
 }
 
@@ -663,3 +679,9 @@ export function turnAngle(current: number, k: number): number {
   const d = ((((k * 60 - current) % 360) + 540) % 360) - 180;
   return current + d;
 }
+
+/**
+ * Whether the ghost tag shows the R hint: its readout counts more than one rotation, or R's walk
+ * (`seqLength` orientations across every level and group member) has somewhere else to go.
+ */
+export const turnHint = (count: number, seqLength: number): boolean => count > 1 || seqLength > 1;

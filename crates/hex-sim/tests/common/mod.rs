@@ -243,8 +243,8 @@ pub fn random_edit(world: &World, cat: &TileCatalog, rng: &mut TestRng) -> Optio
     }
     let frontier = world.frontier();
     let cell = frontier[rng.below(frontier.len())];
-    // The hillside family fits only raised levels, which these level-0 walks never place; leaving
-    // it out keeps every seeded walk as it was.
+    // These level-0 walks never place the hillside family, the road ramp or the portal; leaving
+    // them out keeps every seeded walk as it was.
     let fits: Vec<&hex_core::TileDef> = world
         .inventory(cat, cell)
         .into_iter()

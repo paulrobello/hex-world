@@ -22,6 +22,7 @@ import {
   tileDef,
   tileRise,
   tileMap,
+  turnHint,
 } from "./rules.ts";
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
@@ -580,7 +581,7 @@ export class Hud {
             ? entryReadout(entryFit, g.tile, g.rotation, g.level)
             : rotationReadout(def!, g.legal_rotations, g.rotation);
         // R steps every level too, so the hint shows while any orientation is left to turn to.
-        const canTurn = count > 1 || (entryFit?.seq.length ?? 0) > 1;
+        const canTurn = turnHint(count, entryFit?.seq.length ?? 0);
         const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
         const pinned = sameCell(st.pinned, g);
         sig = `ok|${cellKey(g)}|${g.tile}|${text}|${g.level}|${canTurn}|${pinned}`;
@@ -727,7 +728,8 @@ export class Hud {
 
   /** Centre of a cell on screen, for callouts. */
   cellCentre(c: Cell): [number, number] | null {
-    const r = this.hw.cellRect(c.q, c.r, this.map.get(cellKey(c))?.level ?? 0);
+    const t = this.map.get(cellKey(c));
+    const r = this.hw.cellRect(c.q, c.r, t?.level ?? 0, tileRise(t?.tile ?? ""));
     return r ? [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2] : null;
   }
 

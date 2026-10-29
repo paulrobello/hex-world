@@ -116,8 +116,8 @@ impl EdgeSocket {
     pub fn corners(&self) -> (u8, u8) {
         match self.profile {
             EdgeProfile::Flat => (self.height, self.height),
-            EdgeProfile::Rise => (self.height, self.height + 1),
-            EdgeProfile::Fall => (self.height + 1, self.height),
+            EdgeProfile::Rise => (self.height, self.height.saturating_add(1)),
+            EdgeProfile::Fall => (self.height.saturating_add(1), self.height),
         }
     }
 }
@@ -140,8 +140,9 @@ pub enum HeightMeet {
 pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet {
     let (a_start, a_end) = a.corners();
     let (b_start, b_end) = b.corners();
-    let (a_start, a_end) = (a_start + a_level, a_end + a_level);
-    let (b_start, b_end) = (b_start + b_level, b_end + b_level);
+    let abs = |c: u8, level: u8| u16::from(c) + u16::from(level);
+    let (a_start, a_end) = (abs(a_start, a_level), abs(a_end, a_level));
+    let (b_start, b_end) = (abs(b_start, b_level), abs(b_end, b_level));
     if (a_start, a_end) == (b_end, b_start) {
         HeightMeet::Seamless
     } else if a.profile == EdgeProfile::Flat
@@ -694,6 +695,19 @@ mod tests {
         let e: EdgeSocket = ron::from_str("(kind: Beach, land: Some(Right))").unwrap();
         assert_eq!(e, beach(Side::Right));
         assert_eq!(Side::Right.opposite(), Side::Left);
+    }
+
+    #[test]
+    fn heights_do_not_overflow_at_the_top_of_u8() {
+        let mut rise = EdgeSocket::new(Grass);
+        rise.height = 255;
+        rise.profile = EdgeProfile::Rise;
+        assert_eq!(rise.corners(), (255, 255));
+        let (flat, low) = (EdgeSocket::new(Grass), EdgeSocket::new(Grass));
+        let mut high = flat.clone();
+        high.height = 255;
+        assert_eq!(heights_meet(&high, 255, &high, 255), HeightMeet::Seamless);
+        assert_eq!(heights_meet(&high, 255, &low, 255), HeightMeet::Cliff);
     }
 
     #[test]

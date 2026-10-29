@@ -792,7 +792,7 @@ mod schema {
                     "scatter": t.props.scatter.iter().map(|s| s.piece.0.as_str()).collect::<Vec<_>>(),
                     "period": t.orientation_period(),
                     "heights": t.edges.iter().map(|e| { let (s, f) = e.corners(); [s, f] }).collect::<Vec<_>>(),
-                    "lanes": t.edges.iter().map(|e| e.lane.is_some()).collect::<Vec<_>>(),
+                    "lanes": t.edges.iter().map(|e| e.lane.map(|l| [l.offset, l.width])).collect::<Vec<_>>(),
                     "raisable": t.raisable,
                     "top": t.top(),
                     "tunnel": t.tunnel.as_ref().map(|m| m.edge),

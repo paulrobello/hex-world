@@ -83,14 +83,18 @@ impl PlayView {
 
     /// The placed tile at `cell`.
     pub fn tile_at(&self, cell: Axial) -> Option<&PlayTile> {
-        if self.tile_index.len() == self.tiles.len() {
-            self.tile_index
+        // A verified index hit is O(1). A miss or a stale hit (a same-length index built for other
+        // tiles) falls back to the scan, so a hand-built view never answers None for a placed cell.
+        if self.tile_index.len() == self.tiles.len()
+            && let Some(t) = self
+                .tile_index
                 .get(&cell)
                 .and_then(|&i| self.tiles.get(i))
                 .filter(|t| t.cell == cell)
-        } else {
-            self.tiles.iter().find(|t| t.cell == cell)
+        {
+            return Some(t);
         }
+        self.tiles.iter().find(|t| t.cell == cell)
     }
 }
 
@@ -329,5 +333,38 @@ pub struct RisePart {
 impl RisePart {
     pub fn new(cell: Axial, role: RiseRole, rest: Transform) -> Self {
         Self { cell, role, rest }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tile(q: i32, r: i32) -> PlayTile {
+        PlayTile {
+            cell: Axial::new(q, r),
+            tile: "meadow".into(),
+            rotation: 0,
+            level: 0,
+        }
+    }
+
+    #[test]
+    fn tile_at_survives_a_same_length_stale_index() {
+        let mut v = PlayView {
+            tiles: vec![tile(0, 0), tile(1, 0)],
+            ..Default::default()
+        };
+        v.index_tiles();
+        v.tiles = vec![tile(5, 5), tile(1, 0)];
+        assert_eq!(
+            v.tile_at(Axial::new(5, 5)).map(|t| t.cell),
+            Some(Axial::new(5, 5))
+        );
+        assert_eq!(
+            v.tile_at(Axial::new(1, 0)).map(|t| t.cell),
+            Some(Axial::new(1, 0))
+        );
+        assert!(v.tile_at(Axial::new(0, 0)).is_none());
     }
 }

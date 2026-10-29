@@ -183,3 +183,44 @@ fn undo_of_cover_breaks_the_route() {
     scene.redo();
     assert_eq!(hidden_links(scene.roads()).len(), 1);
 }
+
+/// A car driving the tunnel from portal B to portal A fades in travel order too: the hidden span
+/// runs from the arch it enters by (B's) to the one it leaves by (A's), and the fade ramps ahead
+/// of the first and after the second.
+#[test]
+fn a_reverse_direction_car_fades_in_travel_order() {
+    let mut found = false;
+    'seeds: for seed in 1..=6 {
+        let mut scene = Scene::with(seed, SimConfig::default(), &tunnel_layout());
+        let link = hidden_links(scene.roads())[0];
+        let roads = scene.roads();
+        let (pa, pb) = (
+            roads.node(arch(roads, PORTAL_A)).unwrap().pos(),
+            roads.node(arch(roads, PORTAL_B)).unwrap().pos(),
+        );
+        let off = scene.sim.config().lane_offset + 0.05;
+        for _ in 0..6000 {
+            scene.sim.tick();
+            for car in scene.sim.cars() {
+                if !car.links().contains(&link) || car.hidden().len() != 1 {
+                    continue;
+                }
+                let (s_in, s_out) = car.hidden()[0];
+                if geom::dist(car.pose_at_distance(s_in).pos, pb) > off
+                    || geom::dist(car.pose_at_distance(s_out).pos, pa) > off
+                {
+                    continue;
+                }
+                assert!(s_in < s_out);
+                assert_eq!(car.opacity_at_distance(0.5 * (s_in + s_out)), 0.0);
+                assert_eq!(car.opacity_at_distance(s_in - 5.0), 1.0);
+                assert_eq!(car.opacity_at_distance(s_out + 5.0), 1.0);
+                assert!((car.opacity_at_distance(s_in - 1.5) - 0.5).abs() < 1e-4);
+                assert!((car.opacity_at_distance(s_out + 1.5) - 0.5).abs() < 1e-4);
+                found = true;
+                break 'seeds;
+            }
+        }
+    }
+    assert!(found, "no car drove the tunnel from B to A");
+}
