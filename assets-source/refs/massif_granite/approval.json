@@ -1,0 +1,9 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-29",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/massif_granite/ref-2.jpg"
+  ],
+  "notes": "ref-2, the craggy granite peak (about 36 m) with cliffs, scree fans and a few pines, even Meadow grass from rim to rock. Answered in chat (\"ref-2 approved\") from docs/checkpoints/massif_granite/reference/refs-sheet.jpg (A53 Q1 O1). Height and scree were not answered separately and are taken as drawn: peak about 36 m (A53 Q2 O1); cliffs and scree fans sculpted into the piece as landform, loose boulders on the ring stay runtime scatter (A53 Q3 O1). ref-4 is a second roll of the same prompt from a low camera and may guide the silhouette."
+}
