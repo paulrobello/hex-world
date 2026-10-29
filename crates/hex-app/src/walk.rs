@@ -170,7 +170,7 @@ impl WalkSession {
 pub fn refused_while_walking(a: &Action) -> Option<&'static str> {
     Some(match a {
         Action::Primary => "primary",
-        Action::Place(_) => "place",
+        Action::Place(_) | Action::PlaceAtLevel(..) => "place",
         Action::Pin(_) => "pin",
         Action::Bulldoze(_) => "bulldoze",
         Action::Rotate(_) => "rotate",

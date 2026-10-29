@@ -26,4 +26,5 @@
             (piece: "bush_verge", density: 0.6),
         ],
     ),
+    raisable: true,
 )

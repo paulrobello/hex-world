@@ -8,7 +8,9 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use bevy::math::{Quat, Vec2, Vec3, Vec3Swizzles, Vec4};
-use hex_core::{AgentKind, Axial, HEX_RADIUS, SocketKind, TileCatalog, TileDef, cell_seed};
+use hex_core::{
+    AgentKind, Axial, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, cell_seed,
+};
 
 use crate::{
     kit_scene::piece_rotation,
@@ -474,7 +476,8 @@ pub fn roosts_with(
             .map(|a| usize::from(a.max))
             .sum();
         let [x, z] = t.cell.to_world(HEX_RADIUS);
-        let (centre, rot) = (Vec3::new(x, 0.0, z), piece_rotation(t.rotation));
+        let y0 = f32::from(t.level) * LEVEL_STEP;
+        let (centre, rot) = (Vec3::new(x, y0, z), piece_rotation(t.rotation));
         let max = max.min(usize::from(u8::MAX));
         let hero: Vec<(Vec3, Vec3)> = tree_instances(def, t.cell)
             .iter()
@@ -1097,6 +1100,9 @@ pub struct BoidPlan {
     pub schools: Vec<u32>,
     /// Flock centre (xyz) and horizontal radius (w).
     pub sky: Vec4,
+    /// How far (m) the altitude band [`SKY_LOW`]..[`SKY_HIGH`] lifts (P4): the highest placed
+    /// level × `LEVEL_STEP`, so the flocks clear a raised world as they clear flat ground.
+    pub sky_lift: f32,
     cursor: usize,
     tiles: Option<Vec<PlayTile>>,
     /// Which of [`PERCH_PIECES`] the kit draws, as of the last `set_world`.
@@ -1127,6 +1133,7 @@ impl BoidPlan {
             water: FishWorld::default(),
             schools: vec![],
             sky: Vec4::new(0.0, 80.0, 0.0, 400.0),
+            sky_lift: 0.0,
             cursor: 0,
             tiles: None,
             drawn: vec![],
@@ -1218,7 +1225,7 @@ impl BoidPlan {
         let mut rng = Rng(self.seed ^ u64::from(flock).wrapping_mul(0xD1B5_4A32_D192_ED03));
         let a = rng.unit() * std::f32::consts::TAU;
         let d = rng.unit().sqrt() * self.sky.w;
-        let y = SKY_LOW + 2.0 + rng.unit() * (SKY_HIGH - SKY_LOW - 4.0);
+        let y = self.sky_lift + SKY_LOW + 2.0 + rng.unit() * (SKY_HIGH - SKY_LOW - 4.0);
         let mut own = Rng(self.seed ^ u64::from(slot).wrapping_mul(0xA076_1D64_78BD_642F));
         let b = own.unit() * std::f32::consts::TAU;
         let e = own.unit().sqrt() * FLOCK_SPREAD;
@@ -1252,7 +1259,11 @@ impl BoidPlan {
         self.tiles = Some(tiles.to_vec());
         self.drawn = now;
         self.scatter_dirty = false;
-        // Sky over the world's bounding box.
+        // Sky over the world's bounding box, its band lifted over the highest level.
+        self.sky_lift = tiles
+            .iter()
+            .map(|t| f32::from(t.level) * LEVEL_STEP)
+            .fold(0.0, f32::max);
         if !tiles.is_empty() {
             let pts: Vec<Vec2> = tiles
                 .iter()
@@ -1263,7 +1274,7 @@ impl BoidPlan {
             let c = 0.5 * (lo + hi);
             self.sky = Vec4::new(
                 c.x,
-                0.5 * (SKY_LOW + SKY_HIGH),
+                0.5 * (SKY_LOW + SKY_HIGH) + self.sky_lift,
                 c.y,
                 0.5 * lo.distance(hi) + HEX_RADIUS + SKY_MARGIN,
             );
@@ -1571,6 +1582,7 @@ mod tests {
             cell: Axial::new(q, r),
             tile: id.into(),
             rotation,
+            level: 0,
         }
     }
 
@@ -1862,6 +1874,51 @@ mod tests {
             roosts(&tiles, &c, &|p| p != "tree_hero_oak").is_empty(),
             "no oak drawn, no roosts"
         );
+    }
+
+    /// Elevation (P4): a tile's perches stand on its root, `level * LEVEL_STEP` up.
+    #[test]
+    fn roosts_stand_on_a_raised_tiles_root() {
+        let c = catalog();
+        let at = |level: u8| {
+            let t = PlayTile {
+                level,
+                ..tile(1, 0, "oak", 2)
+            };
+            roosts(&[t], &c, &|_| true)
+        };
+        let (low, high) = (at(0), at(2));
+        assert_eq!(low.len(), 12);
+        assert_eq!(low.len(), high.len());
+        for (a, b) in low.iter().zip(&high) {
+            assert!(
+                (b.pos - a.pos - Vec3::Y * 2.0 * LEVEL_STEP).length() < 1e-4,
+                "{a:?} vs {b:?}"
+            );
+        }
+    }
+
+    /// Elevation (P4): the play sky's altitude band lifts by the highest placed level, so flocks
+    /// spawn as high over a level-3 plateau as over flat ground; a flat world keeps the P3 band.
+    #[test]
+    fn the_sky_band_lifts_over_the_highest_level() {
+        let land = with_land(&[tile(0, 0, "meadow", 0), tile(3, 0, "meadow", 0)], 400);
+        let mut flat = BoidPlan::play(BoidBudget::HIGH, 9);
+        flat.set_world_all(&land, &catalog(), 0.0);
+        assert_eq!(flat.sky_lift, 0.0);
+        let mut raised = land.clone();
+        raised[1].level = 3;
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 9);
+        plan.set_world_all(&raised, &catalog(), 0.0);
+        let lift = 3.0 * LEVEL_STEP;
+        assert_eq!(plan.sky_lift, lift);
+        assert!((plan.sky.y - flat.sky.y - lift).abs() < 1e-4);
+        for (a, b) in flat.slots.iter().zip(&plan.slots) {
+            if a.kind == SlotKind::Bird {
+                assert!((b.spawn.y - a.spawn.y - lift).abs() < 1e-3, "{a:?} {b:?}");
+                assert!((SKY_LOW + lift..=SKY_HIGH + lift).contains(&b.spawn.y));
+            }
+        }
     }
 
     /// The pine forest has no Bird rule since the split (U3), so it never roosts: a world without

@@ -537,6 +537,29 @@ struct Params {
     flock: u32,
     /// Play flock centre (xyz) and horizontal radius (w).
     sky: Vec4,
+    /// How far (m) the play altitude band lifts ([`BoidPlan::sky_lift`]).
+    lift: f32,
+}
+
+/// The compute pass's per-frame input from the plan at time `t`, `dt` after the last frame.
+fn sim_params(plan: &BoidPlan, dt: f32, t: f32) -> Params {
+    let f = &plan.water.field;
+    Params {
+        count: plan.slots.len() as u32,
+        birds: plan.birds,
+        fish: plan.fish,
+        roosts: plan.roosts.len() as u32,
+        dt,
+        time: t,
+        mode: u32::from(plan.play),
+        field_w: f.w,
+        field_h: f.h,
+        field_x0: f.x0,
+        field_z0: f.z0,
+        flock: plan::FLOCK_SIZE,
+        sky: plan.sky,
+        lift: plan.sky_lift,
+    }
 }
 
 /// Per-frame simulation input, extracted to the render world.
@@ -1052,22 +1075,7 @@ fn plan_boids(world: BoidWorld, outputs: BoidOutputs) {
         inputs.field = storage(&mut buffers, samples, "boid_field");
         plan.world_dirty = false;
     }
-    let f = &plan.water.field;
-    sim.0 = Params {
-        count: plan.slots.len() as u32,
-        birds: plan.birds,
-        fish: plan.fish,
-        roosts: plan.roosts.len() as u32,
-        dt,
-        time: t,
-        mode: u32::from(plan.play),
-        field_w: f.w,
-        field_h: f.h,
-        field_x0: f.x0,
-        field_z0: f.z0,
-        flock: plan::FLOCK_SIZE,
-        sky: plan.sky,
-    };
+    sim.0 = sim_params(plan, dt, t);
     let pieces = match pieces.map(|p| p.state) {
         Some(PieceState::Ready) => "ready",
         Some(PieceState::Failed) => "failed",
@@ -1788,6 +1796,7 @@ mod tests {
             cell: a,
             tile: id.into(),
             rotation: 0,
+            level: 0,
         };
         let o = hex_core::Axial::new(0, 0);
         let (s, m) = (o.neighbor(3), o.neighbor(0));
@@ -1855,6 +1864,7 @@ mod tests {
             cell: hex_core::Axial::new(q, r),
             tile: id.into(),
             rotation: 0,
+            level: 0,
         };
         let mut plan = BoidPlan::play(BoidBudget::HIGH, 1);
         let tiles = [
@@ -1894,7 +1904,8 @@ mod tests {
     fn gpu_structs_match_the_shader_layout() {
         assert_eq!(std::mem::size_of::<Boid>(), 48);
         assert_eq!(std::mem::size_of::<Ctl>(), 48);
-        assert_eq!(Params::min_size().get(), 64);
+        // 68 bytes of fields (`lift` after `sky`), padded to 16.
+        assert_eq!(Params::min_size().get(), 80);
         // 60 bytes of fields (the slot mapping's three u32s after fold_back), padded to 16.
         assert_eq!(BoidForm::min_size().get(), 64);
     }
@@ -1910,6 +1921,7 @@ mod tests {
             cell: hex_core::Axial::new(0, 0),
             tile: "oak".into(),
             rotation: 2,
+            level: 0,
         }];
         let roosts = plan::roosts(&tiles, &c, &|_| true);
         assert_eq!(roosts.len(), 12);
@@ -1936,6 +1948,7 @@ mod tests {
             cell: a,
             tile: id.into(),
             rotation: 0,
+            level: 0,
         };
         let world = [
             t(s, "river_spring"),
@@ -1987,6 +2000,7 @@ mod tests {
             cell: a,
             tile: id.into(),
             rotation,
+            level: 0,
         };
         // river_mouth: River on edge 3 at rotation 0; river_mouth_l: River on edge 4.
         let o = hex_core::Axial::new(0, 0);
@@ -2077,6 +2091,7 @@ mod tests {
             cell: a,
             tile: id.into(),
             rotation: 0,
+            level: 0,
         };
         let world = [
             t(s, "river_spring"),
@@ -2177,6 +2192,22 @@ mod tests {
         );
     }
 
+    /// Elevation (P4): the play birds keep to the altitude band lifted by the plan's
+    /// [`plan::BoidPlan::sky_lift`], which reaches the compute pass as `Params::lift`.
+    #[test]
+    fn the_compute_pass_lifts_the_sky_band() {
+        let src = include_str!("../../../assets/shaders/boids_compute.wgsl");
+        for line in ["sky: vec4<f32>,", "lift: f32,"] {
+            assert!(src.contains(line), "Params lacks `{line}`");
+        }
+        for band in ["SKY_LOW + params.lift", "SKY_HIGH + params.lift"] {
+            assert!(src.contains(band), "the band ignores the lift: `{band}`");
+        }
+        let mut plan = plan::BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.sky_lift = 8.0;
+        assert_eq!(sim_params(&plan, 0.1, 2.0).lift, 8.0);
+    }
+
     /// The compute pass reads boids only from `prev` (last frame's copy) and writes only `boids`:
     /// reading neighbours from the buffer it is writing raced, and the flock differed run to run.
     #[test]
@@ -2209,6 +2240,7 @@ mod tests {
                 cell: hex_core::Axial::new(k, 0),
                 tile: if k == 0 { "oak" } else { "meadow" }.into(),
                 rotation: 0,
+                level: 0,
             })
             .collect();
         plan.set_world(&tiles, &c, &|_| true, 0.0);

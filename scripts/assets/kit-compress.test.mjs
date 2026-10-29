@@ -158,6 +158,34 @@ test("an over-budget piece throws and leaves outDir and the report untouched", a
   await assert.rejects(compressDir({ stageDir: dir, outDir: out, reportPath: rep, name: "t", budgetClass: "huge" }), /unknown budget class/);
 });
 
+// Owner O1 (2026-10-29): road_tunnel_portal ships a 512² PNG fallback albedo beside its 1024² KTX2,
+// so the png download family stays under its budget while the gated families keep full detail.
+test("a PNG fallback size ships a smaller PNG while the KTX2 keeps the source size", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "kitc-"));
+  await stage(dir);
+  const out = join(dir, "out"), rep = join(dir, "rep.json");
+  const r = await compressDir({ stageDir: dir, outDir: out, reportPath: rep, name: "t", pngSizes: { albedo: 32 } });
+  const albedo = await sharp(join(out, "t.albedo.png")).metadata();
+  assert.deepEqual([albedo.width, albedo.height], [32, 32]);
+  const normal = await sharp(join(out, "t.normal.png")).metadata();
+  assert.deepEqual([normal.width, normal.height], [64, 64]); // channels not named keep the source size
+  for (const fam of ["bc7", "astc"]) {
+    const h = ktx2Header(await readFile(join(out, `t.albedo.${fam}.ktx2`)));
+    assert.deepEqual([h.width, h.height], [64, 64], fam);
+  }
+  const png = r.textureEncodes.find((o) => o.channel === "albedo" && o.family === "png");
+  assert.equal(png.size, 32);
+  assert.equal(png.sha256, createHash("sha256").update(await readFile(join(out, "t.albedo.png"))).digest("hex"));
+  assert.deepEqual(r.settings.pngFallbackSize, { albedo: 32 });
+  // The same input gives the same PNG bytes (the resize is deterministic).
+  const r2 = await compressDir({ stageDir: dir, outDir: join(dir, "out2"), reportPath: join(dir, "rep2.json"), name: "t",
+    pngSizes: { albedo: 32 } });
+  assert.equal(r2.textureEncodes.find((o) => o.channel === "albedo" && o.family === "png").sha256, png.sha256);
+  for (const bad of [48, 64, 128, 0])
+    await assert.rejects(compressDir({ stageDir: dir, outDir: join(dir, `bad${bad}`), reportPath: join(dir, "bad.json"), name: "t",
+      pngSizes: { albedo: bad } }), /PNG fallback size \d+ must be a power of two below the source 64x64/);
+});
+
 test("KTX budgets are the owner's per-class values (mirrored by kit_manifest.rs)", () => {
   assert.deepEqual(KTX_BUDGETS, { piece: 1_500_000, tileable: 3_600_000, hero: 11_500_000 });
 });

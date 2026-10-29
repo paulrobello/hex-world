@@ -465,14 +465,33 @@ pub fn grounded_transform(p: &CarPose, wheel_y: impl Fn(Vec2) -> f32) -> Transfo
     )
 }
 
+/// Where a car stands on the play `ground` ([`grounded_transform`] on [`WalkGround::ride_car`]:
+/// the road crown over each tile's level, so it pitches on the road ramp), or on the level-0
+/// road crown without one.
+pub fn placed(ground: Option<&WalkGround>, p: &CarPose) -> Transform {
+    let centre = Vec2::from(p.pos);
+    grounded_transform(p, |q| {
+        ground.map_or(ROAD_SURFACE_Y, |g| g.ride_car(q, ROAD_SURFACE_Y, centre))
+    })
+}
+
+/// The placeholder body cannot fade: it hides while its car is fully transparent (in a tunnel).
+fn placeholder_visibility(opacity: f32) -> Visibility {
+    if opacity <= 0.0 {
+        Visibility::Hidden
+    } else {
+        Visibility::Inherited
+    }
+}
+
 /// Spawns, moves and despawns car entities to match [`CarsView`] by car id. Outside the play
 /// scenario every car entity goes. Cars are `SceneEntity`s, so a scenario switch also removes
 /// them, and this respawns whatever the view still holds. A kit car is a parent with the pose and
 /// one child per part (slot x LOD), every child tagged with the car's paint colour. Each car stands
-/// on the play ground ([`WalkGround::ride`], four lookups per car per frame) where `hex-app` keeps
+/// on the play ground ([`placed`], four lookups per car per frame) where `hex-app` keeps
 /// one, else on the road crown. A kit car fading out over a lowered cap (opacity under 1) draws
 /// its parts with their blended materials, its transparency in the `MeshTag`'s top byte; the
-/// placeholder does not fade.
+/// placeholder does not fade and hides at opacity 0.
 #[allow(clippy::too_many_arguments)]
 pub fn sync(
     mut commands: Commands,
@@ -488,6 +507,7 @@ pub fn sync(
         Has<CarPlaceholder>,
         Option<&mut CarOpacity>,
         Option<&Children>,
+        Option<&mut Visibility>,
     )>,
     mut parts: Query<(
         &CarPartMaterials,
@@ -495,12 +515,7 @@ pub fn sync(
         &mut MeshMaterial3d<CarMaterial>,
     )>,
 ) {
-    let ride = |q: Vec2| {
-        ground
-            .as_ref()
-            .map_or(ROAD_SURFACE_Y, |g| g.ride(q, ROAD_SURFACE_Y))
-    };
-    let place = |p: &CarPose| grounded_transform(p, ride);
+    let place = |p: &CarPose| placed(ground.as_deref(), p);
     let play = active.0 == Scenario::Play;
     let want: HashMap<u64, &CarPose> = if play {
         view.cars.iter().map(|c| (c.id, c)).collect()
@@ -515,7 +530,7 @@ pub fn sync(
         _ => None,
     };
     let mut have = HashSet::with_capacity(want.len());
-    for (e, car, mut t, placeholder, opacity, children) in &mut cars {
+    for (e, car, mut t, placeholder, opacity, children, visibility) in &mut cars {
         let upgrade = placeholder
             && want
                 .get(&car.0)
@@ -523,6 +538,9 @@ pub fn sync(
         match want.get(&car.0) {
             Some(p) if !upgrade && have.insert(car.0) => {
                 *t = place(p);
+                if placeholder && let Some(mut v) = visibility {
+                    v.set_if_neq(placeholder_visibility(p.opacity));
+                }
                 if let (Some(mut o), Some(children)) = (opacity, children)
                     && o.0 != p.opacity
                 {
@@ -594,6 +612,7 @@ pub fn sync(
                     Mesh3d(assets.mesh.clone()),
                     MeshMaterial3d(assets.material.clone()),
                     place(p),
+                    placeholder_visibility(p.opacity),
                     SceneEntity,
                 ));
             }
@@ -870,7 +889,12 @@ mod tests {
         let c = hex_core::TileCatalog::builtin().unwrap();
         let mut checked = vec![];
         // The level crossing's raised deck is the deck tests' (`a_car_on_the_crossing_deck_...`).
-        for def in c.tiles().iter().filter(|d| d.id != "rail_road_crossing") {
+        // A sloped road (the P4 ramp) climbs its field: `car_pitches_on_a_ramp` rides it.
+        for def in c
+            .tiles()
+            .iter()
+            .filter(|d| d.id != "rail_road_crossing" && !d.is_sloped())
+        {
             let lines = road_lines(def);
             if lines.is_empty() && def.parking.is_empty() {
                 continue;
@@ -940,6 +964,131 @@ mod tests {
                 "{id} not checked"
             );
         }
+    }
+
+    /// Elevation (P4): a car on the road ramp (level 0, edge 3 to edge 0, a level-1 road beyond)
+    /// pitches up the ramp's middle grade, `4 / (2a - 4)` for the apothem `a` (the vertical
+    /// curves, Task 4), and sits level where the ramp meets the flat roads at both ends, where
+    /// the wheels ride each road's own level.
+    #[test]
+    fn car_pitches_on_a_ramp() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let g = crate::walk::tests::world_at(
+            &c,
+            &[
+                (-1, 0, "road_straight", 0, 0),
+                (0, 0, "road_ramp", 0, 0),
+                (1, 0, "road_straight", 0, 1),
+            ],
+        );
+        let a = hex_core::HEX_RADIUS * 3f32.sqrt() / 2.0;
+        let grade = (4.0 / (2.0 * a - 4.0)).atan();
+        let pitch = |t: &Transform| (t.rotation * Vec3::X).y.asin();
+        for kind in CarKind::ALL {
+            let mid = placed(Some(&g), &pose(kind, Vec2::ZERO, Vec2::X));
+            assert!(
+                (pitch(&mid) - grade).abs() < 0.02,
+                "{kind:?} mid-slope pitch {} vs {grade}",
+                pitch(&mid)
+            );
+            assert!(
+                (mid.translation.y - (2.0 + ROAD_SURFACE_Y)).abs() < 0.1,
+                "{kind:?} mid-slope at {}",
+                mid.translation
+            );
+            // Centred on an edge, one axle stands in the 4 m vertical curve: the van's front tyre
+            // 1.9 m into it lifts 0.08 m over its 3 m wheelbase (0.023 rad), level otherwise.
+            for (x, level) in [(-a, 0.0), (a, 1.0)] {
+                let t = placed(Some(&g), &pose(kind, Vec2::new(x, 0.0), Vec2::X));
+                assert!(
+                    pitch(&t).abs() < 0.03,
+                    "{kind:?} at x {x}: pitch {}",
+                    pitch(&t)
+                );
+                assert!(
+                    (t.translation.y - (level * hex_core::LEVEL_STEP + ROAD_SURFACE_Y)).abs()
+                        < 0.05,
+                    "{kind:?} at x {x}: {}",
+                    t.translation
+                );
+            }
+        }
+    }
+
+    /// Elevation (P4): a car nearing a tunnel's arch stays level on the portal's road while it
+    /// fades. Its front wheels reach past edge 0 into the cover meadow one level up, which has no
+    /// road: they ride the car's own level there, not the cover's top. So do wheels past a raised
+    /// road's open end.
+    #[test]
+    fn a_car_entering_a_tunnel_stays_on_the_portal_road() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let g = crate::walk::tests::world_at(
+            &c,
+            &[(0, 0, "road_tunnel_portal", 0, 0), (1, 0, "meadow", 0, 1)],
+        );
+        let a = hex_core::HEX_RADIUS * 3f32.sqrt() / 2.0;
+        for kind in CarKind::ALL {
+            for x in [a - 3.0, a - 1.5, a - 0.5] {
+                let p = pose(kind, Vec2::new(x, -LANE_OFFSET), Vec2::X);
+                let t = placed(Some(&g), &p);
+                assert!(
+                    (t.translation.y - ROAD_SURFACE_Y).abs() < 1e-3
+                        && (t.rotation * Vec3::X).y.abs() < 1e-3,
+                    "{kind:?} at x {x}: {t:?}"
+                );
+            }
+        }
+        // A raised road's open end: the wheels past the map edge ride the road's level.
+        let end = crate::walk::tests::world_at(&c, &[(0, 0, "road_straight", 0, 1)]);
+        let top = hex_core::LEVEL_STEP + ROAD_SURFACE_Y;
+        for kind in CarKind::ALL {
+            let t = placed(Some(&end), &pose(kind, Vec2::new(a - 0.5, 0.0), Vec2::X));
+            assert!(
+                (t.translation.y - top).abs() < 1e-3 && (t.rotation * Vec3::X).y.abs() < 1e-3,
+                "{kind:?} at the raised end: {t:?}"
+            );
+        }
+    }
+
+    /// The placeholder body drawn before the car kit loads cannot fade, so it hides while its
+    /// pose is fully transparent (a car inside a tunnel) and shows again once the car comes out.
+    #[test]
+    fn a_placeholder_car_hides_at_zero_opacity() {
+        let mut app = App::new();
+        app.insert_resource(ActiveScenario(Scenario::Play))
+            .insert_resource(CarAssets {
+                mesh: Handle::default(),
+                material: Handle::default(),
+            })
+            .init_resource::<CarKit>()
+            .insert_resource(CarsView {
+                cars: vec![CarPose {
+                    id: 4,
+                    kind: CarKind::Sedan,
+                    pos: [0.0, 0.0],
+                    yaw: 0.0,
+                    opacity: 0.0,
+                }],
+            })
+            .add_systems(Update, sync);
+        let vis = |app: &mut App| {
+            let mut q = app
+                .world_mut()
+                .query_filtered::<&Visibility, With<CarPlaceholder>>();
+            q.iter(app.world()).copied().collect::<Vec<_>>()
+        };
+        app.update();
+        assert_eq!(vis(&mut app), vec![Visibility::Hidden], "in the tunnel");
+        app.world_mut().resource_mut::<CarsView>().cars[0].opacity = 1.0;
+        app.update();
+        assert_eq!(
+            vis(&mut app),
+            vec![Visibility::Inherited],
+            "out of the tunnel"
+        );
+        app.world_mut().resource_mut::<CarsView>().cars[0].opacity = 0.0;
+        app.update();
+        assert_eq!(vis(&mut app), vec![Visibility::Hidden], "back in");
     }
 
     #[test]

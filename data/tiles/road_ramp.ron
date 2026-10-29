@@ -1,0 +1,28 @@
+// Road ramp (P4): the straight road climbing one level. Corners c0..c5 = 110001, the straight bank
+// 000111 turned: edges 0 and 1 are flat at h1, edge 2 falls, edges 3 and 4 are flat at h0 and edge 5
+// rises. The road runs edge 3 (h0) to edge 0 (h1) over the RoadRamp height field.
+(
+    id: "road_ramp",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0)), height: 1),
+        (kind: Grass, height: 1),
+        (kind: Grass, profile: Fall),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Grass, profile: Rise),
+    ),
+    center: Some("road_straight_center"),
+    networks: [
+        (kind: Road, from: Edge(3), to: Edge(0)),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+            (piece: "bush_verge", density: 0.6),
+        ],
+    ),
+    raisable: true,
+    ground: RoadRamp,
+)

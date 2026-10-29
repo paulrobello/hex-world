@@ -37,6 +37,9 @@
         "rdo": 0.5,
         "normalize": false
       }
+    },
+    "pngFallbackSize": {
+      "normal": 512
     }
   },
   "textureEncodes": [
@@ -99,8 +102,9 @@
       "path": "assets/kit/p1/materials/grass/grass.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 3116798,
-      "sha256": "24d1d603ace85bf2f3c57bc5e07b27cff43f885ec08603672fc8d78d2c1ff3af"
+      "bytes": 671159,
+      "sha256": "3912b65c1869f53e9f016561b3fab9ff0b6ba392993b8bdb709c3b45e5a79851",
+      "size": 512
     },
     {
       "channel": "orm",

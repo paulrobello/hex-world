@@ -1,0 +1,40 @@
+// Tunnel portal (P4): the ramp's bank (corners 110001) with a head wall on edge 0, the tunnel mouth.
+// The road enters on edge 3 at h0 and runs on level through a cutting (Ground::Cutting) into the
+// arch; edge 0 is grass at h1, where the cover meadow sits. W1 wiring: the straight road centre,
+// explicit road_straight_edge pieces on edges 0 and 3 so the road runs on under the arch, and the
+// portal piece as a ground hero at the origin (the rail station platform pattern). The portal is
+// authored in absolute tile-local heights and is never draped. The arch node sits at the
+// interior back plane of the piece (scripts/blender/kit/_tunnel_portal.py).
+(
+    id: "road_tunnel_portal",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass, height: 1),
+        (kind: Grass, height: 1),
+        (kind: Grass, profile: Fall),
+        (kind: Road, lane: Some((offset: 0.0, width: 6.0))),
+        (kind: Grass),
+        (kind: Grass, profile: Rise),
+    ),
+    center: Some("road_straight_center"),
+    edge_pieces: Explicit((Some("road_straight_edge"), None, None, Some("road_straight_edge"), None, None)),
+    nodes: [
+        (id: "arch", at: (13.3, 0.0)),
+    ],
+    networks: [
+        (kind: Road, from: Edge(3), to: Node("arch")),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+            (piece: "bush_verge", density: 0.6),
+        ],
+        hero: [
+            (piece: "road_tunnel_portal", at: (0.0, 0.0), yaw_deg: 0.0),
+        ],
+    ),
+    raisable: true,
+    ground: Cutting,
+    tunnel: Some((node: "arch", edge: 0)),
+)

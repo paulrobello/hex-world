@@ -1352,6 +1352,7 @@ mod tests {
             cell: Axial::new(q, r),
             tile: id.into(),
             rotation,
+            level: 0,
         }
     }
 
@@ -1632,7 +1633,7 @@ mod tests {
         for (q, r, id, steps) in PROOF {
             let def = cat.get(id).unwrap();
             let cell = Axial::new(q, r);
-            let legal = world.legal_rotations(&cat, cell, def);
+            let legal = world.legal_orientations(&cat, cell, def);
             let rot = *legal
                 .get(steps)
                 .unwrap_or_else(|| panic!("{id} at ({q}, {r}): legal {legal:?}"));
@@ -1645,6 +1646,7 @@ mod tests {
                 cell: *c,
                 tile: t.def.clone(),
                 rotation: t.rotation,
+                level: t.level,
             })
             .collect();
         let rot = |q, r| world.tile(Axial::new(q, r)).unwrap().rotation;
@@ -1863,7 +1865,7 @@ mod tests {
                                 .iter()
                                 .map(|p| (fa.height(p.x, p.y) - fb.height(p.x, p.y)).abs())
                                 .fold(0.0, f32::max);
-                            if !sockets.edges_compatible(a.edge(w, ra), b.edge(back, rb)) {
+                            if !sockets.edges_compatible(a.edge(w, ra), 0, b.edge(back, rb), 0) {
                                 assert!(step > 3.9, "{seam}: refused, yet beds step only {step}");
                                 refused += 1;
                                 continue;
@@ -1908,10 +1910,14 @@ mod tests {
         let script: Vec<serde_json::Value> = serde_json::from_str(&text).unwrap();
         let cat = catalog();
         let mut world = World::new(1);
-        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
-        let snap = |world: &World, selected: &str, hovered: Option<Axial>, rotation: &mut u8| {
+        let (mut selected, mut hovered, mut rotation) =
+            ("meadow".to_owned(), None, hex_core::Orientation::default());
+        let snap = |world: &World,
+                    selected: &str,
+                    hovered: Option<Axial>,
+                    rotation: &mut hex_core::Orientation| {
             if let Some(c) = hovered.filter(|&c| world.is_slot(c))
-                && let Some(k) = world.auto_rotate(&cat, c, cat.get(selected).unwrap())
+                && let Some(k) = world.auto_orient(&cat, c, cat.get(selected).unwrap())
             {
                 *rotation = k;
             }
@@ -1949,10 +1955,20 @@ mod tests {
                     let def = cat.get(&selected).unwrap();
                     rotation = hovered
                         .filter(|&c| world.is_slot(c))
-                        .and_then(|c| world.cycle_rotation(&cat, c, def, rotation, dir))
+                        .and_then(|c| {
+                            world
+                                .cycle_group(&cat, c, &[def], (&def.id, rotation), dir)
+                                .map(|(_, o)| o)
+                        })
                         .unwrap_or(match dir {
-                            hex_core::RotateDir::Forward => (rotation + 1) % 6,
-                            hex_core::RotateDir::Back => (rotation + 5) % 6,
+                            hex_core::RotateDir::Forward => hex_core::Orientation::new(
+                                (rotation.rotation + 1) % 6,
+                                rotation.level,
+                            ),
+                            hex_core::RotateDir::Back => hex_core::Orientation::new(
+                                (rotation.rotation + 5) % 6,
+                                rotation.level,
+                            ),
                         });
                 }
                 _ => {}
@@ -1980,6 +1996,7 @@ mod tests {
                 cell: *c,
                 tile: t.def.clone(),
                 rotation: t.rotation,
+                level: t.level,
             })
             .collect();
         let coast: Vec<&PlayTile> = tiles
@@ -2559,13 +2576,24 @@ mod tests {
         for (q, r, id, want) in MOUTH_PROOF {
             let def = cat.get(id).unwrap();
             let cell = Axial::new(q, r);
-            let legal = world.legal_rotations(&cat, cell, def);
+            let legal: Vec<u8> = world
+                .legal_orientations(&cat, cell, def)
+                .iter()
+                .map(|o| o.rotation)
+                .collect();
             assert!(legal.contains(&want), "{id} at ({q}, {r}): legal {legal:?}");
-            let mut rot = world.auto_rotate(&cat, cell, def).unwrap();
+            let mut rot = world.auto_orient(&cat, cell, def).unwrap();
             let mut steps = 0;
-            while !def.same_orientation(rot, want) {
+            while !def.same_orientation(rot.rotation, want) {
                 rot = world
-                    .cycle_rotation(&cat, cell, def, rot, hex_core::RotateDir::Forward)
+                    .cycle_group(
+                        &cat,
+                        cell,
+                        &[def],
+                        (&def.id, rot),
+                        hex_core::RotateDir::Forward,
+                    )
+                    .map(|(_, o)| o)
                     .unwrap();
                 steps += 1;
                 assert!(steps < 7, "{id} at ({q}, {r})");
@@ -2593,7 +2621,8 @@ mod tests {
         let script: Vec<serde_json::Value> = serde_json::from_str(&text).unwrap();
         let cat = catalog();
         let mut world = World::new(1);
-        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
+        let (mut selected, mut hovered, mut rotation) =
+            ("meadow".to_owned(), None, hex_core::Orientation::default());
         let n = |cmd: &serde_json::Value, k: &str| i32::try_from(cmd[k].as_i64().unwrap()).unwrap();
         for cmd in &script {
             match cmd["cmd"].as_str().unwrap() {
@@ -2601,7 +2630,7 @@ mod tests {
                 "hover" => {
                     let c = Axial::new(n(cmd, "q"), n(cmd, "r"));
                     hovered = Some(c);
-                    if let Some(k) = world.auto_rotate(&cat, c, cat.get(&selected).unwrap()) {
+                    if let Some(k) = world.auto_orient(&cat, c, cat.get(&selected).unwrap()) {
                         rotation = k;
                     }
                 }
@@ -2609,7 +2638,14 @@ mod tests {
                     let c = hovered.unwrap();
                     let def = cat.get(&selected).unwrap();
                     rotation = world
-                        .cycle_rotation(&cat, c, def, rotation, hex_core::RotateDir::Forward)
+                        .cycle_group(
+                            &cat,
+                            c,
+                            &[def],
+                            (&def.id, rotation),
+                            hex_core::RotateDir::Forward,
+                        )
+                        .map(|(_, o)| o)
                         .unwrap();
                 }
                 "place" => {
@@ -2637,6 +2673,7 @@ mod tests {
                 cell: *c,
                 tile: t.def.clone(),
                 rotation: t.rotation,
+                level: t.level,
             })
             .collect();
         let lay = layout(&tiles, &cat, |_| false);
@@ -2661,7 +2698,8 @@ mod tests {
     /// and redo must succeed.
     fn replay(script: &[serde_json::Value], cat: &TileCatalog) -> World {
         let mut world = World::new(1);
-        let (mut selected, mut hovered, mut rotation) = ("meadow".to_owned(), None, 0u8);
+        let (mut selected, mut hovered, mut rotation) =
+            ("meadow".to_owned(), None, hex_core::Orientation::default());
         let n = |cmd: &serde_json::Value, k: &str| i32::try_from(cmd[k].as_i64().unwrap()).unwrap();
         for cmd in script {
             let at = || Axial::new(n(cmd, "q"), n(cmd, "r"));
@@ -2669,27 +2707,28 @@ mod tests {
                 "select_tile" => selected = cmd["id"].as_str().unwrap().to_owned(),
                 "hover" => {
                     hovered = Some(at());
-                    if let Some(k) = world.auto_rotate(cat, at(), cat.get(&selected).unwrap()) {
+                    if let Some(k) = world.auto_orient(cat, at(), cat.get(&selected).unwrap()) {
                         rotation = k;
                     }
                 }
                 "rotate" => {
                     let def = cat.get(&selected).unwrap();
                     rotation = world
-                        .cycle_rotation(
+                        .cycle_group(
                             cat,
                             hovered.unwrap(),
-                            def,
-                            rotation,
+                            &[def],
+                            (&def.id, rotation),
                             hex_core::RotateDir::Forward,
                         )
+                        .map(|(_, o)| o)
                         .unwrap();
                 }
                 "place" => {
                     if hovered != Some(at()) {
                         hovered = Some(at());
                         rotation = world
-                            .auto_rotate(cat, at(), cat.get(&selected).unwrap())
+                            .auto_orient(cat, at(), cat.get(&selected).unwrap())
                             .unwrap_or_else(|| {
                                 panic!("{selected} has no legal rotation at {:?}", at())
                             });
@@ -2699,7 +2738,7 @@ mod tests {
                         .unwrap_or_else(|e| panic!("{selected} at {:?}: {e:?}", at()));
                 }
                 "bulldoze" => {
-                    world.bulldoze(at()).unwrap();
+                    world.bulldoze(cat, at()).unwrap();
                 }
                 "undo" => assert!(world.undo()),
                 "redo" => assert!(world.redo()),
@@ -2741,9 +2780,11 @@ mod tests {
         let mut placed = 0;
         for (q, r) in candidates {
             let c = Axial::new(q, r);
-            if placed < 9 && world.tile(c).is_none() && world.auto_rotate(&cat, c, meadow).is_some()
+            if placed < 9 && world.tile(c).is_none() && world.auto_orient(&cat, c, meadow).is_some()
             {
-                world.place(&cat, c, "meadow", 0).unwrap();
+                world
+                    .place(&cat, c, "meadow", hex_core::Orientation::new(0, 0))
+                    .unwrap();
                 println!("  {{\"cmd\": \"place\", \"q\": {q}, \"r\": {r}}},");
                 placed += 1;
             }
@@ -2788,16 +2829,27 @@ mod tests {
         for (q, r, id, rot) in chain {
             let def = cat.get(id).unwrap();
             let cell = Axial::new(q, r);
-            let legal = world.legal_rotations(&cat, cell, def);
+            let legal: Vec<u8> = world
+                .legal_orientations(&cat, cell, def)
+                .iter()
+                .map(|o| o.rotation)
+                .collect();
             assert!(
                 legal.contains(&rot),
                 "{id} at ({q}, {r}) r{rot}: legal {legal:?}"
             );
-            let mut k = world.auto_rotate(&cat, cell, def).unwrap();
+            let mut k = world.auto_orient(&cat, cell, def).unwrap();
             let mut steps = 0;
-            while !def.same_orientation(k, rot) {
+            while !def.same_orientation(k.rotation, rot) {
                 k = world
-                    .cycle_rotation(&cat, cell, def, k, hex_core::RotateDir::Forward)
+                    .cycle_group(
+                        &cat,
+                        cell,
+                        &[def],
+                        (&def.id, k),
+                        hex_core::RotateDir::Forward,
+                    )
+                    .map(|(_, o)| o)
                     .unwrap();
                 steps += 1;
                 assert!(steps < 7, "{id}");
@@ -2833,6 +2885,7 @@ mod tests {
                 cell: *c,
                 tile: t.def.clone(),
                 rotation: t.rotation,
+                level: t.level,
             })
             .collect();
         assert_eq!(tiles.len(), 34);

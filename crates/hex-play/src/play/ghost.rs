@@ -37,7 +37,7 @@ use bevy::{
     shader::ShaderRef,
 };
 use hex_core::{
-    Axial, Biome, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, TileDef, cell_seed,
+    Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, cell_seed,
     rail_end::{self, BUFFER_STOP},
 };
 
@@ -47,6 +47,7 @@ use super::{
     packs::{PackState, PlayPacks},
     rise::ReducedMotion,
     scatter::{self, Layout, PlayScatter},
+    slope_ground::{self, SlopeMeshes},
 };
 use crate::{
     ActiveScenario, Scenario, SceneEntity,
@@ -143,6 +144,8 @@ struct Sig {
     cell: Axial,
     tile: String,
     rotation: u8,
+    /// The level it stands on (P4).
+    level: u8,
     world_seed: u64,
     /// Per scatter rule: its piece is in the kit (scatter pieces do not gate [`tile_ready`]).
     scatter: Vec<bool>,
@@ -325,6 +328,7 @@ fn water_surface(def: &TileDef, catalog: &TileCatalog) -> Option<Mesh> {
         cell: Axial::ORIGIN,
         tile: def.id.clone(),
         rotation: 0,
+        level: 0,
     };
     let cells = water::tiles::layout(std::slice::from_ref(&alone), catalog, |_| true);
     let field = cells.get(&Axial::ORIGIN)?.field();
@@ -438,6 +442,43 @@ fn ghost_pieces<'a>(
     out
 }
 
+/// A sloped tile's ghost (P4) draws its runtime ground for its base and its ramp's road pieces
+/// draped, as `tile_children` does; a raised ghost stands on its cliff column. `pieces` loses the
+/// entries `extra` takes over.
+fn runtime_ground(
+    def: &TileDef,
+    catalog: &TileCatalog,
+    (kit, slope, meshes): (
+        &HashMap<String, Vec<KitPart>>,
+        &mut SlopeMeshes,
+        &mut Assets<Mesh>,
+    ),
+    level: u8,
+    pieces: &mut Vec<(&str, Transform, Role)>,
+    extra: &mut Vec<(Handle<Mesh>, Transform, Role)>,
+) {
+    let base = Role::Base(def.biome);
+    if def.is_sloped() && kit.contains_key(slope_ground::GROUND_PIECE) {
+        pieces.retain(|(id, _, role)| !(*id == def.base.as_str() && *role == base));
+        let (cap, skirt) = slope.ground(def, meshes);
+        extra.push((cap, Transform::IDENTITY, base));
+        extra.push((skirt, Transform::IDENTITY, base));
+    }
+    if level > 0 {
+        extra.push((slope.column(level, meshes), Transform::IDENTITY, base));
+    }
+    let draped = slope_ground::draped_pieces(def, catalog);
+    for (id, t, role) in pieces.iter().filter(|(id, ..)| draped.contains(id)) {
+        let k = (0..6u8)
+            .find(|&k| piece_rotation(k).angle_between(t.rotation) < 1e-3)
+            .unwrap_or(0);
+        for part in kit[*id].iter().filter(|p| p.lod == 0 && p.rotor.is_none()) {
+            extra.push((slope.draped(&part.mesh, def, k, meshes), *t, *role));
+        }
+    }
+    pieces.retain(|(id, ..)| !draped.contains(id));
+}
+
 /// The local rail edges of `def` at `rotation` whose world edge (status `edges`) has no rail tile
 /// across it: the open ends the placed tile would have, one bit per local edge.
 fn open_mask(def: &TileDef, rotation: u8, edges: &[EdgeStatus; 6]) -> u8 {
@@ -508,7 +549,11 @@ pub fn sync(
         ResMut<GhostDrawn>,
         ResMut<GhostReport>,
     ),
-    (mut materials, mut scatter): (ResMut<Assets<GhostMaterial>>, ResMut<PlayScatter>),
+    (mut materials, mut scatter, mut slope): (
+        ResMut<Assets<GhostMaterial>>,
+        ResMut<PlayScatter>,
+        Option<ResMut<SlopeMeshes>>,
+    ),
     (gltfs, gltf_meshes, mut meshes): (
         Res<Assets<Gltf>>,
         Res<Assets<GltfMesh>>,
@@ -527,6 +572,7 @@ pub fn sync(
                 cell: g.cell,
                 tile: g.tile.clone(),
                 rotation: g.rotation,
+                level: g.level,
                 world_seed: view.world_seed,
                 scatter: def
                     .props
@@ -626,17 +672,34 @@ pub fn sync(
                 Some((mesh, Role::Water(k)))
             });
             let water_surface = water.is_some();
+            let mut extra: Vec<(Handle<Mesh>, Transform, Role)> = water
+                .map(|(mesh, role)| (mesh, Transform::IDENTITY, role))
+                .into_iter()
+                .collect();
+            if let Some(slope) = slope.as_deref_mut() {
+                runtime_ground(
+                    def,
+                    &catalog.0,
+                    (kit, slope, &mut meshes),
+                    sig.level,
+                    &mut pieces,
+                    &mut extra,
+                );
+            }
             ghost.dirty = true;
             let (root, cost) = spawn(
                 &mut commands,
                 &mut materials,
                 &mut ghost.materials,
                 (kit, &*meshes),
-                (&pieces, water_kind.is_some(), water),
+                (&pieces, water_kind.is_some(), extra),
                 sig.cell,
-                ghost
-                    .turn
-                    .map_or_else(|| piece_rotation(sig.rotation), |t| yaw(t.from)),
+                (
+                    ghost
+                        .turn
+                        .map_or_else(|| piece_rotation(sig.rotation), |t| yaw(t.from)),
+                    sig.level,
+                ),
             );
             ghost.root = Some(root);
             let counts: Vec<String> = def
@@ -729,18 +792,18 @@ fn spawn(
     materials: &mut Assets<GhostMaterial>,
     cache: &mut Vec<(Role, Handle<GhostMaterial>, Vec3)>,
     (kit, meshes): (&HashMap<String, Vec<KitPart>>, &Assets<Mesh>),
-    (pieces, slot_tint, water): (
+    (pieces, slot_tint, extra): (
         &[(&str, Transform, Role)],
         bool,
-        Option<(Handle<Mesh>, Role)>,
+        Vec<(Handle<Mesh>, Transform, Role)>,
     ),
     cell: Axial,
-    rotation: Quat,
+    (rotation, level): (Quat, u8),
 ) -> (Entity, Cost) {
     let [x, z] = cell.to_world(HEX_RADIUS);
     let root = commands
         .spawn((
-            Transform::from_xyz(x, 0.0, z).with_rotation(rotation),
+            Transform::from_xyz(x, f32::from(level) * LEVEL_STEP, z).with_rotation(rotation),
             Visibility::default(),
             SceneEntity,
         ))
@@ -775,8 +838,7 @@ fn spawn(
             (p.mesh.clone(), t * p.rotor.unwrap_or_default(), role)
         })
     });
-    let water = water.map(|(mesh, role)| (mesh, Transform::IDENTITY, role));
-    for (mesh, t, role) in parts.chain(water) {
+    for (mesh, t, role) in parts.chain(extra) {
         let material = material(role);
         cost.entities += 1;
         pairs.insert((mesh.id(), material.id()));

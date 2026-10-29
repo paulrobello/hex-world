@@ -215,7 +215,7 @@ pub(crate) mod tests {
         let c = TileCatalog::builtin().unwrap();
         let mut w = World::new(1);
         for &(q, r, id, rot) in tiles {
-            w.place(&c, Axial::new(q, r), id, rot)
+            w.place(&c, Axial::new(q, r), id, hex_core::Orientation::new(rot, 0))
                 .unwrap_or_else(|e| panic!("{id} at {q},{r}: {e:?}"));
         }
         (c, w)

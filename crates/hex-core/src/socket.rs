@@ -73,13 +73,15 @@ impl Side {
     }
 }
 
-/// Edge cross-section shape. Only `Flat` is used in the MVP (D5); `Cliff` and `Ramp` arrive in P4.
+/// Edge height profile, read clockwise viewed from +Y. `Flat` holds `height` along the whole edge,
+/// `Rise` climbs from `height` at the edge's start corner to `height + 1` at its end corner and
+/// `Fall` is the reverse (P4). A cliff is not a profile: it is two `Flat` edges that differ.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum EdgeProfile {
     #[default]
     Flat,
-    Cliff,
-    Ramp,
+    Rise,
+    Fall,
 }
 
 /// The socket descriptor carried by one tile edge (PRD §5.2).
@@ -91,7 +93,7 @@ pub struct EdgeSocket {
     /// The land side of a directional edge (`data/sockets.ron` `directional`), `None` elsewhere.
     #[serde(default)]
     pub land: Option<Side>,
-    /// Edge height level; 0 for every MVP edge.
+    /// Edge base height level, relative to the tile's own level; 0 for every MVP edge.
     #[serde(default)]
     pub height: u8,
     #[serde(default)]
@@ -108,6 +110,48 @@ impl EdgeSocket {
             height: 0,
             profile: EdgeProfile::Flat,
         }
+    }
+
+    /// The relative heights at the edge's clockwise (start, end) corners.
+    pub fn corners(&self) -> (u8, u8) {
+        match self.profile {
+            EdgeProfile::Flat => (self.height, self.height),
+            EdgeProfile::Rise => (self.height, self.height + 1),
+            EdgeProfile::Fall => (self.height + 1, self.height),
+        }
+    }
+}
+
+/// How two edges that share a seam meet in height (PRD §5.2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HeightMeet {
+    /// The corner heights agree on both ends: no step.
+    Seamless,
+    /// Both edges are flat with no lane and sit at different heights: a cliff face.
+    Cliff,
+    Refused,
+}
+
+/// PRD §5.2 height rule. Edge `a` of a tile at `a_level` and edge `b` of the tile across the seam
+/// at `b_level` meet `Seamless` when `a`'s absolute (start, end) corner heights equal `b`'s
+/// absolute (end, start), as the two edges run in opposite directions. Two `Flat` edges without
+/// lanes that differ meet as a `Cliff`. Anything else is `Refused`, so a lane edge (road, river,
+/// rail) always meets at equal absolute height.
+pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet {
+    let (a_start, a_end) = a.corners();
+    let (b_start, b_end) = b.corners();
+    let (a_start, a_end) = (a_start + a_level, a_end + a_level);
+    let (b_start, b_end) = (b_start + b_level, b_end + b_level);
+    if (a_start, a_end) == (b_end, b_start) {
+        HeightMeet::Seamless
+    } else if a.profile == EdgeProfile::Flat
+        && b.profile == EdgeProfile::Flat
+        && a.lane.is_none()
+        && b.lane.is_none()
+    {
+        HeightMeet::Cliff
+    } else {
+        HeightMeet::Refused
     }
 }
 
@@ -296,8 +340,14 @@ impl SocketTable {
     /// Whether two edges may meet across a seam: compatible kinds, matching lanes (both absent, or
     /// both present with equal width and mirrored offset, see [`LaneSpec`]), opposite land sides on
     /// directional edges (both absent, or `Left` against `Right`, see [`Side`]) and a legal height
-    /// step.
-    pub fn edges_compatible(&self, a: &EdgeSocket, b: &EdgeSocket) -> bool {
+    /// meeting ([`heights_meet`], each edge's tile at its level `a_level` / `b_level`).
+    pub fn edges_compatible(
+        &self,
+        a: &EdgeSocket,
+        a_level: u8,
+        b: &EdgeSocket,
+        b_level: u8,
+    ) -> bool {
         let lanes = match (&a.lane, &b.lane) {
             (None, None) => true,
             (Some(x), Some(y)) => x.meets(y),
@@ -308,7 +358,10 @@ impl SocketTable {
             (Some(x), Some(y)) => x == y.opposite(),
             _ => false,
         };
-        self.kinds_compatible(a.kind, b.kind) && lanes && sides && heights_compatible(a, b)
+        self.kinds_compatible(a.kind, b.kind)
+            && lanes
+            && sides
+            && heights_meet(a, a_level, b, b_level) != HeightMeet::Refused
     }
 
     /// Whether edges of `kind` are directional: each carries a land [`Side`].
@@ -362,19 +415,6 @@ impl SocketTable {
     /// The authored table backing this validated instance.
     pub fn file(&self) -> &SocketTableFile {
         &self.file
-    }
-}
-
-/// PRD §5.2 height rule: equal heights, except `Cliff` (any difference) and `Ramp` (exactly one
-/// level). Every MVP edge is `Flat` at height 0; the non-flat arms are the P4 rule as written.
-fn heights_compatible(a: &EdgeSocket, b: &EdgeSocket) -> bool {
-    let diff = a.height.abs_diff(b.height);
-    if a.profile == EdgeProfile::Cliff || b.profile == EdgeProfile::Cliff {
-        true
-    } else if a.profile == EdgeProfile::Ramp || b.profile == EdgeProfile::Ramp {
-        diff == 1
-    } else {
-        diff == 0
     }
 }
 
@@ -503,11 +543,11 @@ mod tests {
     #[test]
     fn beach_meets_only_the_opposite_land_side() {
         let t = table();
-        assert!(t.edges_compatible(&beach(Side::Left), &beach(Side::Right)));
-        assert!(t.edges_compatible(&beach(Side::Right), &beach(Side::Left)));
-        assert!(!t.edges_compatible(&beach(Side::Left), &beach(Side::Left)));
-        assert!(!t.edges_compatible(&beach(Side::Right), &beach(Side::Right)));
-        assert!(!t.edges_compatible(&beach(Side::Left), &EdgeSocket::new(Beach)));
+        assert!(t.edges_compatible(&beach(Side::Left), 0, &beach(Side::Right), 0));
+        assert!(t.edges_compatible(&beach(Side::Right), 0, &beach(Side::Left), 0));
+        assert!(!t.edges_compatible(&beach(Side::Left), 0, &beach(Side::Left), 0));
+        assert!(!t.edges_compatible(&beach(Side::Right), 0, &beach(Side::Right), 0));
+        assert!(!t.edges_compatible(&beach(Side::Left), 0, &EdgeSocket::new(Beach), 0));
     }
 
     #[test]
@@ -520,11 +560,11 @@ mod tests {
                     ..EdgeSocket::new(k)
                 };
                 assert!(
-                    !t.edges_compatible(&beach(side), &EdgeSocket::new(k)),
+                    !t.edges_compatible(&beach(side), 0, &EdgeSocket::new(k), 0),
                     "{k:?}"
                 );
                 assert!(
-                    !t.edges_compatible(&beach(side), &other),
+                    !t.edges_compatible(&beach(side), 0, &other, 0),
                     "{k:?} with a side"
                 );
             }
@@ -554,44 +594,99 @@ mod tests {
     #[test]
     fn matching_lanes_meet() {
         let t = table();
-        assert!(t.edges_compatible(&lane(Road, 0.0, 6.0), &lane(Road, 0.0, 6.0)));
+        assert!(t.edges_compatible(&lane(Road, 0.0, 6.0), 0, &lane(Road, 0.0, 6.0), 0));
     }
 
     #[test]
     fn lane_offset_is_mirrored_across_the_seam() {
         let t = table();
-        assert!(t.edges_compatible(&lane(Road, 1.5, 6.0), &lane(Road, -1.5, 6.0)));
-        assert!(!t.edges_compatible(&lane(Road, 1.5, 6.0), &lane(Road, 1.5, 6.0)));
+        assert!(t.edges_compatible(&lane(Road, 1.5, 6.0), 0, &lane(Road, -1.5, 6.0), 0));
+        assert!(!t.edges_compatible(&lane(Road, 1.5, 6.0), 0, &lane(Road, 1.5, 6.0), 0));
     }
 
     #[test]
     fn lane_width_must_match() {
         let t = table();
-        assert!(!t.edges_compatible(&lane(River, 0.0, 8.0), &lane(River, 0.0, 6.0)));
+        assert!(!t.edges_compatible(&lane(River, 0.0, 8.0), 0, &lane(River, 0.0, 6.0), 0));
     }
 
     #[test]
     fn lane_against_no_lane_is_incompatible() {
         let t = table();
-        assert!(!t.edges_compatible(&lane(Road, 0.0, 6.0), &EdgeSocket::new(Road)));
+        assert!(!t.edges_compatible(&lane(Road, 0.0, 6.0), 0, &EdgeSocket::new(Road), 0));
     }
 
     #[test]
     fn compatible_kinds_without_lanes_meet() {
         let t = table();
-        assert!(t.edges_compatible(&EdgeSocket::new(Grass), &EdgeSocket::new(Forest)));
-        assert!(!t.edges_compatible(&EdgeSocket::new(Grass), &EdgeSocket::new(Ocean)));
+        assert!(t.edges_compatible(&EdgeSocket::new(Grass), 0, &EdgeSocket::new(Forest), 0));
+        assert!(!t.edges_compatible(&EdgeSocket::new(Grass), 0, &EdgeSocket::new(Ocean), 0));
+    }
+
+    fn flat_at(kind: SocketKind, height: u8) -> EdgeSocket {
+        EdgeSocket {
+            height,
+            ..EdgeSocket::new(kind)
+        }
+    }
+
+    fn sloped(kind: SocketKind, height: u8, profile: EdgeProfile) -> EdgeSocket {
+        EdgeSocket {
+            height,
+            profile,
+            ..EdgeSocket::new(kind)
+        }
     }
 
     #[test]
-    fn flat_edges_need_equal_height() {
+    fn flat_equal_absolute_is_seamless() {
+        let (a, b) = (flat_at(Grass, 1), flat_at(Grass, 0));
+        assert_eq!(heights_meet(&a, 0, &b, 1), HeightMeet::Seamless);
+        assert!(table().edges_compatible(&a, 0, &b, 1));
+    }
+
+    #[test]
+    fn flat_unequal_is_cliff_without_lanes() {
+        let g = EdgeSocket::new(Grass);
+        assert_eq!(heights_meet(&g, 1, &g, 0), HeightMeet::Cliff);
+        assert!(table().edges_compatible(&g, 1, &g, 0));
+    }
+
+    #[test]
+    fn lane_edges_never_cliff() {
         let t = table();
-        let high = EdgeSocket {
-            height: 1,
-            ..EdgeSocket::new(Grass)
+        let road = EdgeSocket {
+            lane: t.lane(Road),
+            ..EdgeSocket::new(Road)
         };
-        assert!(!t.edges_compatible(&EdgeSocket::new(Grass), &high));
-        assert!(t.edges_compatible(&high, &high.clone()));
+        assert!(road.lane.is_some());
+        assert_eq!(heights_meet(&road, 1, &road, 0), HeightMeet::Refused);
+        assert!(!t.edges_compatible(&road, 1, &road, 0));
+        assert!(t.edges_compatible(&road, 1, &road, 1));
+    }
+
+    #[test]
+    fn rise_meets_fall_at_same_base() {
+        let (rise, fall) = (
+            sloped(Grass, 0, EdgeProfile::Rise),
+            sloped(Grass, 0, EdgeProfile::Fall),
+        );
+        assert_eq!(rise.corners(), (0, 1));
+        assert_eq!(fall.corners(), (1, 0));
+        assert_eq!(heights_meet(&rise, 0, &fall, 0), HeightMeet::Seamless);
+        assert_eq!(heights_meet(&rise, 0, &fall, 1), HeightMeet::Refused);
+    }
+
+    #[test]
+    fn slope_against_flat_refused() {
+        let flat = EdgeSocket::new(Grass);
+        for profile in [EdgeProfile::Rise, EdgeProfile::Fall] {
+            let slope = sloped(Grass, 0, profile);
+            for (sl, fl) in (0..=2).flat_map(|a| (0..=2).map(move |b| (a, b))) {
+                assert_eq!(heights_meet(&slope, sl, &flat, fl), HeightMeet::Refused);
+                assert_eq!(heights_meet(&flat, fl, &slope, sl), HeightMeet::Refused);
+            }
+        }
     }
 
     #[test]

@@ -132,7 +132,11 @@ impl Plugin for AffordancesPlugin {
             .add_plugins(MaterialPlugin::<affordances::AffordanceMaterial>::default())
             .add_systems(
                 Update,
-                (affordances::sync, affordances::animate)
+                (
+                    affordances::sync,
+                    affordances::occlude,
+                    affordances::animate,
+                )
                     .chain()
                     .in_set(PlaySet::Affordances),
             );

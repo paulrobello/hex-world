@@ -47,8 +47,8 @@
   },
   "compressReport": {
     "path": "assets-source/kit/materials/asphalt/compress-report.json",
-    "sha256": "3bffac75c74648ce1b25e55a165951481b129418e4edf86b9c2e4ad23e18cb28",
-    "bytes": 3907
+    "sha256": "90206b21925f0ecf0483ca69af3c84c92a24c098901ae3e26b76c362892bcf70",
+    "bytes": 3977
   },
   "compression": {
     "budgets": {
@@ -119,8 +119,9 @@
         "path": "assets/kit/p1/materials/asphalt/asphalt.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 2604578,
-        "sha256": "645cc362f347f066c2cdfa27b292d41a7cb38161919b6c161a7dac97b6001c88"
+        "bytes": 629465,
+        "sha256": "a86ace91d1c84e994ba8c8546018d41254cf2c0efd931f9eef4a94036b714430",
+        "size": 512
       },
       {
         "channel": "orm",
@@ -183,8 +184,8 @@
     },
     {
       "path": "assets/kit/p1/materials/asphalt/asphalt.normal.png",
-      "sha256": "645cc362f347f066c2cdfa27b292d41a7cb38161919b6c161a7dac97b6001c88",
-      "bytes": 2604578
+      "sha256": "a86ace91d1c84e994ba8c8546018d41254cf2c0efd931f9eef4a94036b714430",
+      "bytes": 629465
     },
     {
       "path": "assets/kit/p1/materials/asphalt/asphalt.orm.bc7.ktx2",
@@ -205,7 +206,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-16T18:17:50.421Z",
+    "date": "2026-10-29T04:15:36.361Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

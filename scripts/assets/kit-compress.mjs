@@ -10,6 +10,7 @@ import { EXTMeshoptCompression } from "@gltf-transform/extensions";
 import { reorder } from "@gltf-transform/functions";
 import { MeshoptEncoder } from "meshoptimizer";
 import validator from "gltf-validator";
+import sharp from "sharp";
 import { CHANNELS, GLB_MAX, KTX_BUDGETS, VK, fullLevels, kitItemDir, ktx2Header, ktxPlatformError, sha256 } from "./kit-lib.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -103,9 +104,17 @@ export function decodeUastc(path, pngOut) {
   return pngOut;
 }
 
-export async function encodeMap(png, channel, outStem, run = serial) {
+// pngSize: the PNG fallback's side when it ships smaller than the KTX2 (a power of two below the
+// source width; the KTX2 families keep the source size). The fallback is only for GPUs without BC7
+// or ASTC, so a smaller one trims the png download family without touching the gated families.
+export async function encodeMap(png, channel, outStem, run = serial, pngSize = undefined) {
   const c = CHANNELS[channel];
   if (!c) throw new Error(`unknown channel ${channel}`);
+  if (pngSize !== undefined) {
+    const { width, height } = await sharp(png).metadata();
+    if (!Number.isInteger(pngSize) || pngSize < 1 || (pngSize & (pngSize - 1)) !== 0 || pngSize >= Math.max(width, height))
+      throw new Error(`${png}: PNG fallback size ${pngSize} must be a power of two below the source ${width}x${height}`);
+  }
   const tmp = await encodeUastc(png, channel, `${outStem}.uastc.ktx2`, run);
   const outs = await settleAll(["bc7", "astc"].map(async (family) => {
     const path = `${outStem}.${family}.ktx2`;
@@ -121,9 +130,11 @@ export async function encodeMap(png, channel, outStem, run = serial) {
   }));
   await rm(tmp);
   const pngOut = `${outStem}.png`;
-  await copyFile(png, pngOut);
+  if (pngSize === undefined) await copyFile(png, pngOut);
+  else await sharp(png).resize(pngSize, pngSize, { kernel: "lanczos3" }).png({ compressionLevel: 9 }).toFile(pngOut);
   const pbuf = await readFile(pngOut);
-  outs.push({ channel, family: "png", path: pngOut, format: "PNG", transfer: c.srgb ? "srgb" : "linear", bytes: pbuf.length, sha256: sha256(pbuf) });
+  outs.push({ channel, family: "png", path: pngOut, format: "PNG", transfer: c.srgb ? "srgb" : "linear", bytes: pbuf.length,
+    sha256: sha256(pbuf), ...(pngSize !== undefined ? { size: pngSize } : {}) });
   return outs;
 }
 
@@ -132,9 +143,10 @@ export async function encodeMap(png, channel, outStem, run = serial) {
 // so a failed run leaves outDir and the report untouched. A piece stage (piece, the default) must
 // hold the GLB and export report kit-build writes: without the GLB the swap would replace the
 // shipped GLB with nothing. Material sets have neither. jobs bounds the concurrent ktx processes
-// (default: the core count); the output bytes do not depend on it.
+// (default: the core count); the output bytes do not depend on it. pngSizes maps a channel to its
+// PNG fallback size (encodeMap); channels it does not name ship their PNG at the source size.
 export async function compressDir({ stageDir, outDir, reportPath, name, budgetClass = "piece", budgets = KTX_BUDGETS, piece = true,
-  jobs = availableParallelism() }) {
+  jobs = availableParallelism(), pngSizes = {} }) {
   const ktxMax = budgets[budgetClass];
   if (ktxMax === undefined) throw new Error(`${name}: unknown budget class "${budgetClass}" (${Object.keys(budgets)})`);
   const shown = stageDir.startsWith(ROOT + sep) ? relative(ROOT, stageDir) : stageDir;
@@ -143,7 +155,7 @@ export async function compressDir({ stageDir, outDir, reportPath, name, budgetCl
   const work = `${outDir}.tmp-${process.pid}`;
   await rm(work, { recursive: true, force: true });
   try {
-    const report = await compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs });
+    const report = await compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs, pngSizes });
     await rm(outDir, { recursive: true, force: true });
     await rename(work, outDir);
     await mkdir(dirname(reportPath), { recursive: true });
@@ -155,7 +167,7 @@ export async function compressDir({ stageDir, outDir, reportPath, name, budgetCl
   }
 }
 
-async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs }) {
+async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax, jobs, pngSizes }) {
   const files = await readdir(stageDir);
   const finalPath = (p) => {
     const q = join(outDir, p.slice(work.length + 1));
@@ -163,7 +175,8 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax,
   };
   const report = { name, date: new Date().toISOString(), toolVersions: {
       gltfTransform: "4.3.0", meshoptimizer: "0.25.0", ktxSoftware: ktx("--version").trim(), node: process.version },
-    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, uastcThreads: UASTC_THREADS, zstd: 18, rdo: CHANNELS },
+    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, uastcThreads: UASTC_THREADS, zstd: 18, rdo: CHANNELS,
+      ...(Object.keys(pngSizes).length ? { pngFallbackSize: pngSizes } : {}) },
     textureEncodes: [], budgets: { class: budgetClass, ktxMax, ktxBytes: { bc7: 0, astc: 0 } } };
   await mkdir(work, { recursive: true });
   if (files.includes(`${name}.glb`)) {
@@ -174,7 +187,7 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax,
     .filter(([, ch]) => ch);
   // A map runs its UASTC encode, then its two transcodes side by side: 2 processes per map at most.
   const run = limiter(Math.max(1, Math.min(jobs, maps.length * 2)));
-  const encoded = await settleAll(maps.map(([f, ch]) => encodeMap(join(stageDir, f), ch, join(work, `${name}.${ch}`), run)));
+  const encoded = await settleAll(maps.map(([f, ch]) => encodeMap(join(stageDir, f), ch, join(work, `${name}.${ch}`), run, pngSizes[ch])));
   for (const o of encoded.flat()) {
     report.textureEncodes.push({ ...o, path: finalPath(o.path) });
     if (o.family !== "png") report.budgets.ktxBytes[o.family] += o.bytes;
@@ -199,18 +212,20 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   }
   const stageDir = resolve(ROOT, opt("stage", `target/kit-stage/${sub}`));
   // Budget class: --class, else "budgetClass" in the stage's export-report.json, else tileable for a
-  // material and piece otherwise.
-  let budgetClass = opt("class", "");
-  if (!budgetClass) {
-    const exp = await readFile(join(stageDir, "export-report.json"), "utf8").then(JSON.parse, () => ({}));
-    budgetClass = exp.budgetClass ?? (kind === "material" ? "tileable" : "piece");
-  }
+  // material and piece otherwise. PNG fallback sizes: "pngFallbackSize" ({channel: px}) in the same
+  // report, written by the generator (road_tunnel_portal ships a 512² fallback albedo, owner O1), over
+  // the item's committed assets-source/kit/<item>/compress.json, which a material set needs because its
+  // generator writes no export report (the core sets' 512² fallback normals, owner P2).
+  const exp = await readFile(join(stageDir, "export-report.json"), "utf8").then(JSON.parse, () => ({}));
+  const cfg = await readFile(resolve(ROOT, `assets-source/kit/${sub}/compress.json`), "utf8").then(JSON.parse, () => ({}));
+  const budgetClass = opt("class", "") || (exp.budgetClass ?? (kind === "material" ? "tileable" : "piece"));
+  const pngSizes = { ...(cfg.pngFallbackSize ?? {}), ...(exp.pngFallbackSize ?? {}) };
   let rep;
   try {
     // Default output: the item's folder under assets/kit as the runtime manifest lays it out.
     const out = opt("out") ?? join("assets/kit",
       kitItemDir(JSON.parse(await readFile(join(ROOT, "assets/kit/manifest.json"), "utf8")), kind, name));
-    rep = await compressDir({ name, budgetClass, stageDir, piece: kind === "piece",
+    rep = await compressDir({ name, budgetClass, stageDir, piece: kind === "piece", pngSizes,
       outDir: resolve(ROOT, out),
       reportPath: resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`)) });
   } catch (e) {

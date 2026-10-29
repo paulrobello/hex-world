@@ -1,0 +1,672 @@
+{
+  "pieceId": "road_tunnel_portal",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/road_tunnel_portal.py",
+    "sha256": "c66ab8d575a491cef57b0eb9bd499bda9b97c8f3673646a0c5d5d9c24469155f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.12,
+    "bakeStats": {
+      "albedoLuma": 0.5393096804618835,
+      "ao": {
+        "mean": 0.899421751499176,
+        "p05": 0.3450980484485626
+      },
+      "normalMissFraction": 0,
+      "seam": {
+        "band_foot.albedo": {
+          "u": 0.0038017432671040297
+        },
+        "band_foot.ao": {
+          "u": 0.00806722603738308
+        },
+        "band_foot.normal": {
+          "u": 0.00045907250023446977
+        },
+        "band_top.albedo": {
+          "u": 0.0018534079426899552
+        },
+        "band_top.ao": {
+          "u": 0.009257703088223934
+        },
+        "band_top.normal": {
+          "u": 0.0004824151692446321
+        },
+        "panel.albedo": {
+          "u": 0.005820624530315399,
+          "v": 0.010192337445914745
+        },
+        "panel.ao": {
+          "u": 0.026170240715146065,
+          "v": 0.0451301634311676
+        },
+        "panel.normal": {
+          "u": 0.00933914352208376,
+          "v": 0.015041881240904331
+        }
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.05,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "islands": {
+      "back": [
+        901,
+        918,
+        32,
+        32
+      ],
+      "band_foot": [
+        0,
+        376,
+        620,
+        120
+      ],
+      "band_top": [
+        0,
+        512,
+        620,
+        120
+      ],
+      "barrel": [
+        636,
+        577,
+        194,
+        120
+      ],
+      "cop_cfront": [
+        266,
+        807,
+        258,
+        42
+      ],
+      "cop_ctop": [
+        636,
+        164,
+        258,
+        111
+      ],
+      "cop_cunder": [
+        540,
+        854,
+        258,
+        19
+      ],
+      "cop_end": [
+        0,
+        914,
+        34,
+        73
+      ],
+      "cop_lfront": [
+        540,
+        807,
+        258,
+        31
+      ],
+      "cop_lunder": [
+        494,
+        889,
+        258,
+        16
+      ],
+      "fern0": [
+        420,
+        713,
+        233,
+        78
+      ],
+      "fern1": [
+        669,
+        713,
+        233,
+        78
+      ],
+      "jamb_band": [
+        989,
+        0,
+        11,
+        181
+      ],
+      "jamb_front": [
+        846,
+        488,
+        117,
+        181
+      ],
+      "jamb_inner": [
+        846,
+        291,
+        127,
+        181
+      ],
+      "jamb_top": [
+        50,
+        914,
+        117,
+        11
+      ],
+      "key_band": [
+        266,
+        865,
+        212,
+        26
+      ],
+      "key_front": [
+        636,
+        0,
+        212,
+        148
+      ],
+      "key_side0": [
+        814,
+        807,
+        148,
+        26
+      ],
+      "key_side1": [
+        814,
+        849,
+        148,
+        26
+      ],
+      "lining": [
+        949,
+        918,
+        32,
+        32
+      ],
+      "panel": [
+        0,
+        0,
+        620,
+        360
+      ],
+      "park_glass": [
+        316,
+        934,
+        16,
+        16
+      ],
+      "park_iron": [
+        348,
+        934,
+        16,
+        16
+      ],
+      "park_turf": [
+        380,
+        934,
+        16,
+        16
+      ],
+      "tuft0": [
+        0,
+        781,
+        117,
+        117
+      ],
+      "tuft1": [
+        133,
+        781,
+        117,
+        117
+      ],
+      "v0_band": [
+        768,
+        891,
+        194,
+        11
+      ],
+      "v0_front": [
+        0,
+        648,
+        194,
+        117
+      ],
+      "v0_side0": [
+        768,
+        918,
+        117,
+        11
+      ],
+      "v0_side1": [
+        476,
+        921,
+        117,
+        11
+      ],
+      "v0_soffit": [
+        636,
+        291,
+        194,
+        127
+      ],
+      "v1_band": [
+        266,
+        907,
+        194,
+        11
+      ],
+      "v1_front": [
+        210,
+        648,
+        194,
+        117
+      ],
+      "v1_side0": [
+        609,
+        921,
+        117,
+        11
+      ],
+      "v1_side1": [
+        183,
+        934,
+        117,
+        11
+      ],
+      "v1_soffit": [
+        636,
+        434,
+        194,
+        127
+      ]
+    },
+    "lod2Drops": {},
+    "lodTris": [
+      1491,
+      706,
+      187
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.12,
+    "portal": {
+      "colliderX": [
+        11.526,
+        13.856
+      ],
+      "crown": 3.15,
+      "field": "cut",
+      "fieldCheck": {
+        "cuttingSamples": 12,
+        "endLineMinM": 3.8287,
+        "plainSamples": 12
+      },
+      "openingHalfSpan": 3.9,
+      "springing": 0.6,
+      "wallTop": 4,
+      "xBack": 13.6564,
+      "xFace": 11.6564
+    },
+    "receiverSignature": "02e9182931474b50e85e96c85719482fed4eb201506861ff64d844b6353109ab",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "fern": {
+        "faces": 288,
+        "max": 474.9630393794015,
+        "median": 265.10477549184134,
+        "min": 175.60116631984044
+      },
+      "stone": {
+        "faces": 760,
+        "max": 288.13015248984277,
+        "median": 258.00002235172883,
+        "min": 242.2334149662837
+      }
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 1491,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 706,
+      "ratio": 0.47350771294433264
+    },
+    {
+      "lod": 2,
+      "tris": 187,
+      "ratio": 0.12541918175720992
+    }
+  ],
+  "collider": {
+    "node": "road_tunnel_portal_collider"
+  },
+  "sockets": [],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "fern": {
+      "faces": 288,
+      "max": 474.9630393794015,
+      "median": 265.10477549184134,
+      "min": 175.60116631984044
+    },
+    "stone": {
+      "faces": 760,
+      "max": 288.13015248984277,
+      "median": 258.00002235172883,
+      "min": 242.2334149662837
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1073315,
+        "astc": 1071453
+      },
+      "glbBytes": 129392
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 870502,
+        "sha256": "4a29f433c0cb51ccee86def7bcd0acec2708dcc4179c9aac8149d563c62f3a10"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 873221,
+        "sha256": "5eb867836d6d73ef85f8bfb3dbb8169cdb0ed8c5f06063d79e0a217462ed1036"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 507424,
+        "sha256": "cc31e4484652489f5f0c83249f56b865f03e502e4a605981f5d40c09de91bd0c",
+        "size": 512
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 5470,
+        "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 5322,
+        "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 6772,
+        "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 125964,
+        "sha256": "f49617bd670f6e8d961368c5689ef1d671820671b4f51082b75dda9b228d3552"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 123417,
+        "sha256": "576cd84df8374ece37132295915e292d9d9486163ccf6c4e6c8edce57ff7181e"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 267644,
+        "sha256": "cf0376fcc88f75ca4c5aec92031d0dc81946ff9b9ea0d4687132d42077047c38"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 71379,
+        "sha256": "e7180fcb73f4f34f4bcd1d5b3d954143e9fac2ed970fdd43ce16f74094b06347"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 69493,
+        "sha256": "78dc74584cec908fd095240ff40c100da2ef1d79e26591f4ff6b86dbcaeeb7ec"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 91306,
+        "sha256": "603f5f1fb06f2bbd9c984b35a2e5d5a714e686b215a2825a13e8db22d7d56c42"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.glb",
+      "sha256": "68d0ddcc7011fabd2988cf5916727f9f4768a6cab2a3107ec238b09867e06b6f",
+      "bytes": 129392
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.bc7.ktx2",
+      "sha256": "4a29f433c0cb51ccee86def7bcd0acec2708dcc4179c9aac8149d563c62f3a10",
+      "bytes": 870502
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.astc.ktx2",
+      "sha256": "5eb867836d6d73ef85f8bfb3dbb8169cdb0ed8c5f06063d79e0a217462ed1036",
+      "bytes": 873221
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.png",
+      "sha256": "cc31e4484652489f5f0c83249f56b865f03e502e4a605981f5d40c09de91bd0c",
+      "bytes": 507424
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.bc7.ktx2",
+      "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7",
+      "bytes": 5470
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.astc.ktx2",
+      "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615",
+      "bytes": 5322
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
+      "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600",
+      "bytes": 6772
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.bc7.ktx2",
+      "sha256": "f49617bd670f6e8d961368c5689ef1d671820671b4f51082b75dda9b228d3552",
+      "bytes": 125964
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.astc.ktx2",
+      "sha256": "576cd84df8374ece37132295915e292d9d9486163ccf6c4e6c8edce57ff7181e",
+      "bytes": 123417
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.png",
+      "sha256": "cf0376fcc88f75ca4c5aec92031d0dc81946ff9b9ea0d4687132d42077047c38",
+      "bytes": 267644
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.bc7.ktx2",
+      "sha256": "e7180fcb73f4f34f4bcd1d5b3d954143e9fac2ed970fdd43ce16f74094b06347",
+      "bytes": 71379
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.astc.ktx2",
+      "sha256": "78dc74584cec908fd095240ff40c100da2ef1d79e26591f4ff6b86dbcaeeb7ec",
+      "bytes": 69493
+    },
+    {
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.png",
+      "sha256": "603f5f1fb06f2bbd9c984b35a2e5d5a714e686b215a2825a13e8db22d7d56c42",
+      "bytes": 91306
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/road_tunnel_portal/ref-1.jpg",
+      "sha256": "dca38a6a7c5988c54b23a4085ffdd6364602360868ccd9f248e14a9a384b6b58",
+      "sourceSha256": "08cf40a190ba894a513d776421464fdf0c245a38153b1222a6f19b5fdd9d16ca",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "1eba1a24-56c3-46c3-95b5-351a5654c02d",
+      "prompt": "Tunnel portal tile: a single regular hexagonal diorama tile with exactly six straight flat edges, centred in frame, 32 m across, lush meadow grass cap and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, flat-topped so one flat side faces the camera along the bottom of the frame. The whole grass cap slopes up as one broad smooth grassy hillside from the bottom flat side, level with the road, to the top flat side about 4 m higher, like a tilted board. A 6 m wide two-lane asphalt country road, faded dashed white centre line, low concrete kerbs, grass verges with tufts and small bushes runs straight from the middle of the bottom flat side to the middle of the top flat side and stays level while the ground rises around it, so it runs through a grassy cutting whose steep banks grow taller toward the back. Along the top flat side, where the hillside is highest, the road enters an arched stone tunnel portal set into the raised face of the hill: a head wall of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the wall, and faint darker rain streaks running down from under the coping, the stone reading as a matte surface, an elliptical arch over the road ringed by pale dressed granite voussoirs with a keystone, a pale dressed coping along the top of the wall level with the hilltop, the meadow turf of the hill runs over the top of the wall and its long grass and a few small ferns tumble over the front edge of the coping, and the steep banks of the road cutting are lush and uneven, with grass tufts, a few wildflowers, small ferns and dock leaves growing up against the foot of the wall, the opening a shadowed recess whose stone soffit fades to near-black a short way inside, with no view through, and a pair of small black iron wall lanterns either side of the arch. The rest of the tile is open meadow grass with a few wildflowers, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/road_tunnel_portal/ref-2.jpg",
+      "sha256": "3ae33c58109e923c62111d40bb3fe74409b5918615488f1d2ef27c3a5583b1f4",
+      "sourceSha256": "dd949d6eb9738f219fbe4a97fb126b4b8ffac69ae9f36cfbdb0ecd36b4723afc",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "66b05c0c-a5e1-402a-aa1d-69415338c9be",
+      "prompt": "Close-up of an arched stone road tunnel portal set into the raised face of a grassy hillside on a diorama tile, on a plain neutral grey studio backdrop: a head wall of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the wall, and faint darker rain streaks running down from under the coping, the stone reading as a matte surface, an elliptical arch over a two-lane asphalt country road with low concrete kerbs and a faded dashed centre line, the arch ringed by a bold band of pale dressed granite voussoirs with crisp chamfered edges and a slightly larger projecting keystone at the crown, standing on squared dressed jamb stones, a pale dressed granite coping with a small projecting drip edge along the top of the wall, the meadow turf of the hill runs over the top of the wall and its long grass and a few small ferns tumble over the front edge of the coping, and the steep banks of the road cutting are lush and uneven, with grass tufts, a few wildflowers, small ferns and dock leaves growing up against the foot of the wall, the opening a shadowed recess whose stone soffit fades to near-black a short way inside, with no view through, and a pair of small black iron wall lanterns with warm amber glass panes, a little rust at their seams, each hung from a curled wrought-iron bracket fixed to the wall either side of the arch, rich specific surface detail. The whole portal is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/road_tunnel_portal/ref-3.jpg",
+      "sha256": "47657d34855d7775d20b188d4210125daa8d7ab689e07454716516bdc35fcdd0",
+      "sourceSha256": "eff78167b0b578ee4bfe9c2a4cf810e6392198af3129119b7dbc1acac5dba8a0",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "8785d9a5-78cc-4c50-bade-d33a6c3df1cb",
+      "prompt": "Close-up of an arched road tunnel portal set into the raised face of a grassy hillside on a diorama tile: a head wall of large rough-faced rusticated blocks of weathered warm honey-coloured sandstone with deep shadowed joints, soft green moss and grey lichen on the ledges and along the foot of the wall and darker weathering streaks, an elliptical arch over a two-lane asphalt country road with low concrete kerbs and a faded dashed centre line, the arch ringed by three courses of narrow weathered dark red brick voussoirs, a projecting moulded sandstone cornice along the top of the wall, the meadow turf of the hill runs over the top of the wall and its long grass and a few small ferns tumble over the front edge of the coping, and the steep banks of the road cutting are lush and uneven, with grass tufts, a few wildflowers, small ferns and dock leaves growing up against the foot of the wall, the opening a shadowed recess whose stone soffit fades to near-black a short way inside, with no view through, and in place of wall lanterns a pair of slender black cast-iron lamp posts with fluted shafts, each topped by one glass lantern with a small domed cap, standing on the grass verges at the foot of the wall either side of the road, smooth sculpted forms like a quality scale model with rich specific surface detail, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-10-29T04:51:05.150Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-29",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/road_tunnel_portal/ref-2.jpg"
+      ],
+      "notes": "ref-2, the grey granite portal with lichen and moss, projecting keystone, coping with ferns and amber wall lanterns. Answered in chat (\"ref-2\") from docs/checkpoints/road-tunnel-portal-refs/refs-sheet.jpg. Build method per owner: high-res source, baked textures, reduced poly count."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-29",
+      "gate": "piece",
+      "status": "approved",
+      "revision": "look-pass-2",
+      "requested": "2026-10-29",
+      "notes": "Approved in chat (\"approved\") on 2026-10-29: look pass 2, reviewed from docs/checkpoints/road_tunnel_portal/sheet.jpg."
+    }
+  ]
+}

@@ -1042,6 +1042,20 @@ test("placement stingers: every catalog tile has a family whose stinger is a mas
     road_bend_120: "road",
     road_bend_60: "road",
     road_junction: "road",
+    hillside_000001: "meadow",
+    hillside_000011: "meadow",
+    hillside_000101: "meadow",
+    hillside_000111: "meadow",
+    hillside_001001: "meadow",
+    hillside_001011: "meadow",
+    hillside_001101: "meadow",
+    hillside_001111: "meadow",
+    hillside_010101: "meadow",
+    hillside_010111: "meadow",
+    hillside_011011: "meadow",
+    hillside_011111: "meadow",
+    road_ramp: "road",
+    road_tunnel_portal: "road",
     rail_straight: "rail",
     rail_bend_60: "rail",
     rail_bend_120: "rail",
@@ -1090,6 +1104,21 @@ test("placement stingers: every catalog tile has a family whose stinger is a mas
   assert.ok(!ONE_SHOTS.some((r) => r.pool.startsWith("place-stinger")), "no timer row");
 });
 
+const pats = [
+  "000001",
+  "000011",
+  "000101",
+  "000111",
+  "001001",
+  "001011",
+  "001101",
+  "001111",
+  "010101",
+  "010111",
+  "011011",
+  "011111",
+];
+
 test("placement: a water tile selects the slosh pool and a land tile does not", () => {
   const edges = new Map(schema.catalog.tiles.map((t) => [t.id, t.edges]));
   const poolOf = (id: string) => placementPool(edges.get(id)!);
@@ -1098,7 +1127,8 @@ test("placement: a water tile selects the slosh pool and a land tile does not", 
   water.push("river_bend_60");
   for (const id of water) assert.equal(poolOf(id), PLACE_SLOSH.pool, `${id} sloshes`);
   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
-  land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction");
+  land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction", "road_ramp", "road_tunnel_portal");
+  land.push(...pats.map((p) => `hillside_${p}`));
   land.push("rail_straight", "rail_bend_60", "rail_bend_120", "rail_junction", "rail_station", "rail_road_crossing");
   for (const id of land) assert.equal(poolOf(id), null, `${id} has no slosh`);
   assert.equal(water.length + land.length, schema.catalog.tiles.length, "every catalog tile is classified");

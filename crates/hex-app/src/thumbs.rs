@@ -335,6 +335,7 @@ fn drive(
             cell: Axial::ORIGIN,
             tile: s.tile.clone(),
             rotation: s.rotation,
+            level: 0,
         }],
         ..default()
     };
@@ -449,6 +450,20 @@ mod tests {
             ("road_bend_120", 6),
             ("road_bend_60", 6),
             ("road_junction", 2),
+            ("hillside_000001", 6),
+            ("hillside_000011", 6),
+            ("hillside_000101", 6),
+            ("hillside_000111", 6),
+            ("hillside_001001", 3),
+            ("hillside_001011", 6),
+            ("hillside_001101", 6),
+            ("hillside_001111", 6),
+            ("hillside_010101", 2),
+            ("hillside_010111", 6),
+            ("hillside_011011", 3),
+            ("hillside_011111", 6),
+            ("road_ramp", 6),
+            ("road_tunnel_portal", 6),
             ("rail_straight", 3),
             ("rail_bend_60", 6),
             ("rail_bend_120", 6),
@@ -472,7 +487,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 31 + 142);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 45 + 216);
     }
 
     #[test]

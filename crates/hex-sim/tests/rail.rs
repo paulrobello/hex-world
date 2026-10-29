@@ -668,10 +668,14 @@ fn trains_are_rederived_from_the_world() {
     // The triangle around the start meadow: sides first (each touches the meadow), then corners.
     let tiles = triangle(2);
     for (cell, id, rot) in tiles.iter().filter(|t| t.1 == "rail_straight") {
-        world.place(&c, *cell, id, *rot).unwrap();
+        world
+            .place(&c, *cell, id, hex_core::Orientation::new(*rot, 0))
+            .unwrap();
     }
     for (cell, id, rot) in tiles.iter().filter(|t| t.1 == "rail_bend_60") {
-        world.place(&c, *cell, id, *rot).unwrap();
+        world
+            .place(&c, *cell, id, hex_core::Orientation::new(*rot, 0))
+            .unwrap();
     }
     let mut a = Simulation::from_world(&world, &c, SimConfig::default());
     let mut b = Simulation::from_world(&world, &c, SimConfig::default());
@@ -737,16 +741,25 @@ fn random_rail_layouts_keep_trains_apart_and_moving() {
             let frontier = world.frontier();
             let cell = frontier[next(frontier.len())];
             let def = c.get(RAIL[next(RAIL.len())]).unwrap();
-            let rots = world.legal_rotations(&c, cell, def);
+            let rots: Vec<u8> = world
+                .legal_orientations(&c, cell, def)
+                .into_iter()
+                .filter(|o| o.level == 0)
+                .map(|o| o.rotation)
+                .collect();
             if rots.is_empty() {
                 let meadow = c.get("meadow").unwrap();
-                if world.fits(&c, cell, meadow, 0) {
-                    world.place(&c, cell, "meadow", 0).unwrap();
+                if world.fits(&c, cell, meadow, hex_core::Orientation::new(0, 0)) {
+                    world
+                        .place(&c, cell, "meadow", hex_core::Orientation::new(0, 0))
+                        .unwrap();
                 }
                 continue;
             }
             let rot = rots[next(rots.len())];
-            world.place(&c, cell, &def.id, rot).unwrap();
+            world
+                .place(&c, cell, &def.id, hex_core::Orientation::new(rot, 0))
+                .unwrap();
         }
         let mut sim = Simulation::from_world(&world, &c, SimConfig::default());
         let mut last_moved: std::collections::BTreeMap<u64, u32> = Default::default();

@@ -159,19 +159,24 @@ pub struct View {
     pub size: Vec2,
 }
 
-/// Height of the upper corners projected for a cell: about a placed tile's cap.
+/// Height of the upper corners projected for a cell on level 0: about a placed tile's cap.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 const CELL_TOP: f32 = 2.0;
 
-/// The screen rectangle `[left, top, right, bottom]` (CSS px) around `cell`'s hex at ground and
-/// cap height, or `None` when any corner is behind the camera. Natively only the tests call it.
+/// The screen rectangle `[left, top, right, bottom]` (CSS px) around `cell`'s hex on `level`, from
+/// the ground up to cap height, both lifted by `level * LEVEL_STEP`, the top by a further
+/// `rise * LEVEL_STEP` for a tile whose highest corner stands `rise` levels above its own level
+/// (a hillside's tag then sits at its high side); `None` when any corner is behind the camera.
+/// Natively only the tests call it.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
-pub fn cell_rect(view: &View, cell: Axial) -> Option<[f32; 4]> {
+pub fn cell_rect(view: &View, cell: Axial, level: u8, rise: u8) -> Option<[f32; 4]> {
     let [cx, cz] = cell.to_world(HEX_RADIUS);
+    let lift = f32::from(level) * hex_core::LEVEL_STEP;
+    let top = CELL_TOP + f32::from(level + rise) * hex_core::LEVEL_STEP;
     let mut rect = [f32::MAX, f32::MAX, f32::MIN, f32::MIN];
     for i in 0..6 {
         let a = (30.0 + 60.0 * i as f32).to_radians();
-        for h in [0.0, CELL_TOP] {
+        for h in [lift, top] {
             let p = Vec3::new(cx + HEX_RADIUS * a.cos(), h, cz + HEX_RADIUS * a.sin());
             let clip = view.clip_from_world * p.extend(1.0);
             if clip.w <= 1e-4 {
@@ -227,12 +232,12 @@ mod exports {
         format!("[{}]", drained.join(","))
     }
 
-    /// `[left, top, right, bottom]` in CSS pixels around cell `(q, r)`, or `null` before the
-    /// camera exists or when the cell is behind it.
+    /// `[left, top, right, bottom]` in CSS pixels around cell `(q, r)` standing on `level`, or
+    /// `null` before the camera exists or when the cell is behind it.
     #[wasm_bindgen]
-    pub fn hex_world_cell_rect(q: i32, r: i32) -> String {
+    pub fn hex_world_cell_rect(q: i32, r: i32, level: u8, rise: u8) -> String {
         let view = *super::VIEW.lock().unwrap_or_else(|p| p.into_inner());
-        match view.and_then(|v| super::cell_rect(&v, hex_core::Axial::new(q, r))) {
+        match view.and_then(|v| super::cell_rect(&v, hex_core::Axial::new(q, r), level, rise)) {
             Some(r) => format!("[{},{},{},{}]", r[0], r[1], r[2], r[3]),
             None => "null".into(),
         }
@@ -335,7 +340,7 @@ mod exports {
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
 /// command and event names with their fields, enum spellings, the `play` state keys, the tile
-/// catalog with its socket table, and legal rotations for every frontier slot of five
+/// catalog with its socket table, and legal orientations for every frontier slot of six
 /// worlds (the overlay's fit rules are checked against them). `make ui-schema` rewrites the file;
 /// `web/ui/test/bridge-sync.test.ts` checks the TypeScript side against it.
 #[cfg(test)]
@@ -344,7 +349,7 @@ mod schema {
 
     use bevy::camera::CameraProjection;
     use bevy::prelude::{GlobalTransform, PerspectiveProjection, Transform, Vec2, Vec3};
-    use hex_core::{Axial, EdgeStatus, HEX_RADIUS, SocketKind, TileCatalog, World};
+    use hex_core::{Axial, EdgeStatus, HEX_RADIUS, Orientation, SocketKind, TileCatalog, World};
     use serde_json::{Value, json};
 
     use super::{View, cell_rect};
@@ -401,7 +406,7 @@ mod schema {
         r#"{"cmd":"select_tile","id":"meadow"}"#,
         r#"{"cmd":"hover","q":1,"r":0}"#,
         r#"{"cmd":"rotate","dir":"cw"}"#,
-        r#"{"cmd":"place","q":1,"r":0}"#,
+        r#"{"cmd":"place","q":1,"r":0,"level":1}"#,
         r#"{"cmd":"pin","q":1,"r":0}"#,
         r#"{"cmd":"unpin"}"#,
         r#"{"cmd":"replace","q":1,"r":0}"#,
@@ -503,12 +508,14 @@ mod schema {
                 r: 0,
                 tile: "meadow".into(),
                 rotation: 0,
+                level: 1,
             },
             GameEvent::PlacementRefused {
                 q: 1,
                 r: 0,
                 tile: "ocean".into(),
                 rotation: 0,
+                level: 0,
                 reason: "edges [3] do not fit".into(),
             },
             GameEvent::TileBulldozed {
@@ -526,6 +533,7 @@ mod schema {
                 r: 0,
                 tile: "forest".into(),
                 rotation: 2,
+                level: 1,
                 replaced: "meadow".into(),
             },
             GameEvent::Undone,
@@ -535,6 +543,7 @@ mod schema {
             },
             GameEvent::GhostRotated {
                 rotation: 1,
+                level: 1,
                 valid: true,
             },
             GameEvent::HoverChanged {
@@ -782,6 +791,11 @@ mod schema {
                     "land": t.edges.iter().map(|e| serde_json::to_value(e.land).unwrap()).collect::<Vec<_>>(),
                     "scatter": t.props.scatter.iter().map(|s| s.piece.0.as_str()).collect::<Vec<_>>(),
                     "period": t.orientation_period(),
+                    "heights": t.edges.iter().map(|e| { let (s, f) = e.corners(); [s, f] }).collect::<Vec<_>>(),
+                    "lanes": t.edges.iter().map(|e| e.lane.is_some()).collect::<Vec<_>>(),
+                    "raisable": t.raisable,
+                    "top": t.top(),
+                    "tunnel": t.tunnel.as_ref().map(|m| m.edge),
                 })
             })
             .collect();
@@ -809,6 +823,7 @@ mod schema {
             "stopped_end_ground": kind_name(hex_core::rail_end::STOPPED_END_GROUND),
             "directional": directional,
             "hex_radius": HEX_RADIUS,
+            "max_level": hex_core::MAX_LEVEL,
         })
     }
 
@@ -841,12 +856,37 @@ mod schema {
     fn rail_ends_world(c: &TileCatalog) -> World {
         let mut w = World::new(1);
         for &(q, r, id, k) in RAIL_ENDS {
-            w.place(c, Axial::new(q, r), id, k).unwrap();
+            w.place(c, Axial::new(q, r), id, Orientation::new(k, 0))
+                .unwrap();
         }
         w
     }
 
-    /// Legal rotations of every catalog tile at every frontier slot of the world a script leaves.
+    /// Raised ground (P4): [`RAIL_ENDS`] with the meadow beyond the station's stopped end on level
+    /// 1, a level-1 road beside that meadow and a level-2 meadow south of the start, so frontier
+    /// slots face neighbours at several levels (seamless, cliff, a lane across levels, a stopped
+    /// end against raised ground).
+    fn raised_world(c: &TileCatalog) -> World {
+        let mut w = World::new(1);
+        for &(q, r, id, k) in RAIL_ENDS {
+            let level = u8::from(id == "meadow");
+            w.place(c, Axial::new(q, r), id, Orientation::new(k, level))
+                .unwrap();
+        }
+        for (q, r, id, level) in [(2, 1, "road_straight", 1), (0, 1, "meadow", 2)] {
+            let cell = Axial::new(q, r);
+            let o = w
+                .legal_orientations(c, cell, c.get(id).unwrap())
+                .into_iter()
+                .find(|o| o.level == level)
+                .unwrap();
+            w.place(c, cell, id, o).unwrap();
+        }
+        w
+    }
+
+    /// Legal orientations of every catalog tile at every frontier slot of the world a script
+    /// leaves.
     fn parity(c: &TileCatalog, script: &str) -> Value {
         let mut g = GameState::new(1);
         for cmd in parse_script(script).unwrap() {
@@ -857,21 +897,28 @@ mod schema {
         parity_of(c, &g.world)
     }
 
-    /// Legal rotations of every catalog tile at every frontier slot of `w`.
+    /// Legal orientations (`[rotation, level]`, in hex-core order) of every catalog tile at every
+    /// frontier slot of `w`.
     fn parity_of(c: &TileCatalog, w: &World) -> Value {
         let tiles: Vec<Value> = w
             .tiles()
             .iter()
-            .map(|(cell, t)| json!([cell.q, cell.r, t.def, t.rotation]))
+            .map(|(cell, t)| json!([cell.q, cell.r, t.def, t.rotation, t.level]))
             .collect();
-        let slots: BTreeMap<String, BTreeMap<String, Vec<u8>>> = w
+        let slots: BTreeMap<String, BTreeMap<String, Vec<[u8; 2]>>> = w
             .frontier()
             .iter()
             .map(|s| {
                 let per_tile = c
                     .tiles()
                     .iter()
-                    .map(|t| (t.id.clone(), w.legal_rotations(c, *s, t)))
+                    .map(|t| {
+                        let legal = w.legal_orientations(c, *s, t);
+                        (
+                            t.id.clone(),
+                            legal.iter().map(|o| [o.rotation, o.level]).collect(),
+                        )
+                    })
                     .collect();
                 (format!("{},{}", s.q, s.r), per_tile)
             })
@@ -911,13 +958,18 @@ mod schema {
     fn parity_worlds() -> Value {
         let c = TileCatalog::builtin().unwrap();
         json!({
-            "about": "Legal rotations of every tile at every frontier slot of five worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
+            "about": "Legal orientations ([rotation, level], in hex-core order) of every tile at every frontier slot of seven worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
             "worlds": [
                 parity(&c, include_str!("../../../docs/checkpoints/play/play.json")),
                 parity(&c, include_str!("../../../docs/checkpoints/water-play/water-play.json")),
                 parity(&c, COAST_PART_BUILT),
                 parity(&c, include_str!("../../../docs/checkpoints/coast/coast.json")),
                 parity_of(&c, &rail_ends_world(&c)),
+                parity_of(&c, &raised_world(&c)),
+                parity(
+                    &c,
+                    include_str!("../../../docs/checkpoints/elevation/elevation.json"),
+                ),
             ],
         })
     }
@@ -953,15 +1005,24 @@ mod schema {
             origin: Vec2::ZERO,
             size: Vec2::new(1280.0, 800.0),
         };
-        let [l, t, r, b] = cell_rect(&view, Axial::ORIGIN).unwrap();
+        let [l, t, r, b] = cell_rect(&view, Axial::ORIGIN, 0, 0).unwrap();
         assert!(
             l < 640.0 && r > 640.0 && t < 400.0 && b > 400.0,
             "{l} {t} {r} {b}"
         );
         // East is to the right on screen from a camera south of the world.
-        let [el, ..] = cell_rect(&view, Axial::new(1, 0)).unwrap();
+        let [el, ..] = cell_rect(&view, Axial::new(1, 0), 0, 0).unwrap();
         assert!(el > l);
+        // A raised cell's rectangle sits higher on screen by its levels, so its box follows the tile.
+        let [_, rt, _, rb] = cell_rect(&view, Axial::ORIGIN, 2, 0).unwrap();
+        assert!(rt < t && rb < b, "level 2: {rt} {rb} against {t} {b}");
+        // A hillside's high corner lifts the top only: the bottom stays on the tile's level.
+        let [_, ht, _, hb] = cell_rect(&view, Axial::ORIGIN, 0, 1).unwrap();
+        assert!(
+            ht < t && (hb - b).abs() < 1e-3,
+            "rise 1: {ht} {hb} against {t} {b}"
+        );
         // Behind the camera.
-        assert!(cell_rect(&view, Axial::new(0, 40)).is_none());
+        assert!(cell_rect(&view, Axial::new(0, 40), 0, 0).is_none());
     }
 }

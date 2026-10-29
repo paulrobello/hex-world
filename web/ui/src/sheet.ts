@@ -50,6 +50,7 @@ export interface SheetView {
   /** The ghost's tile and rotation when it sits on the sheet's slot. */
   ghostTile: string | null;
   ghostRotation: number | null;
+  ghostLevel: number;
   /** R presses at this slot: every other fitting row turns in step, through its own distinct fits. */
   turns: number;
   bulldoze: boolean;
@@ -242,11 +243,11 @@ export class Sheet {
       const ghost = r.entry.tiles.find((t) => t.id === v.ghostTile);
       const n = f?.seq.length ?? 0;
       const turn: Turn = !f
-        ? { def: r.entry.tiles[0]!, k: 0 }
+        ? { def: r.entry.tiles[0]!, k: 0, level: 0 }
         : !f.ok
           ? f.best
           : selected && ghost && v.ghostRotation != null
-            ? { def: ghost, k: v.ghostRotation }
+            ? { def: ghost, k: v.ghostRotation, level: v.ghostLevel }
             : f.seq[((v.turns % n) + n) % n]!;
       const follows = selected && !!ghost && v.ghostRotation != null;
       this.showFace(r, turn, (follows ? ghostTurned : rowsTurned) && !moved ? this.turnDir : 0);

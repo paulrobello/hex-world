@@ -1,0 +1,78 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/elevation/visual-parity/visual-parity.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        192.58,
+        85.56,
+        65.83
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 24.4,
+      "load_after": [
+        144.18,
+        82.89,
+        65.45
+      ],
+      "frames": {
+        "parity-play": {
+          "mean": 0.1867,
+          "problem": null
+        },
+        "parity-ring-play": {
+          "mean": 0.2722,
+          "problem": null
+        },
+        "parity-ring-low": {
+          "mean": 0.2116,
+          "problem": null
+        },
+        "parity-ring-seam-low": {
+          "mean": 0.2544,
+          "problem": null
+        },
+        "parity-cliff-play": {
+          "mean": 0.1682,
+          "problem": null
+        },
+        "parity-cliff-low": {
+          "mean": 0.2493,
+          "problem": null
+        },
+        "parity-ring-play-nograss": {
+          "mean": 0.2719,
+          "problem": null
+        },
+        "parity-ring-low-nograss": {
+          "mean": 0.2083,
+          "problem": null
+        },
+        "parity-cliff-low-nograss": {
+          "mean": 0.2166,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

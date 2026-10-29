@@ -1,0 +1,69 @@
+road_tunnel_portal integration (asset agent, 2026-10-29, the ref-2 bake build). Base main 2285a68.
+
+Controller rulings in force: Q1 the cut row (hex-core `Ground::Cutting`), Q3 wiring W1 (the portal is
+a ground hero at the origin of a straight-road tile), the `arch` node at [13.3, 0.0].
+
+Verified: with the scatter.rs hunk below applied on this branch, `cargo test -p hex-play --lib --
+scatter walk grass` gave 103 passed, 0 failed (ground_props_stand_at_the_origin_on_a_hex_turn
+among them); the agent then reverted it. The grass.rs test-list line the turf slot needs is already
+on this branch as its own commit ("test(grass): list road_tunnel_portal_turf among the grass slots").
+
+data/tiles/road_tunnel_portal.ron (Task 3 shape, changed for W1; not on main, so a list):
+  1. `center: Some("road_straight_center")`.
+  2. `edge_pieces: Explicit((Some("road_straight_edge"), None, None, Some("road_straight_edge"), None,
+     None))`: the road runs on under the arch to edge 0 (its far end hides behind the interior back
+     plane at x 13.656).
+  3. `props: (hero: [(piece: "road_tunnel_portal", at: [0.0, 0.0], yaw_deg: 0.0)], scatter: [...])`:
+     y 0, a whole hex turn (`ground_props_stand_at_the_origin_on_a_hex_turn`).
+  4. `nodes: [(id: "arch", at: [13.3, 0.0])]`; `tunnel: Some((node: "arch", edge: 0))` unchanged. The
+     face is at x 11.656, the back plane at 13.656, edge 0 at 13.856; cars fade over the last 3 m, from
+     x 10.3.
+  5. `ground: Cutting`: the corridor |z| <= 4 at 0, smoothstep over 4 < |z| < 8 to the hillside field
+     (Task 4's final field; `scripts/blender/kit/_tunnel_portal.py` `cut_height_at` mirrors it).
+  6. Never drape the portal or the road pieces on this tile: the corridor is flat at 0, and the portal
+     is authored in absolute tile-local heights.
+data/pending-pieces.ron: remove "road_tunnel_portal" in the commit that lands the tile.
+
+Runtime tables (scatter.rs hunk below):
+- GROUND_PROPS gains the portal: its coping and turf top are ground (walkable from the cover meadow,
+  4.0 m), its 3.9 m face is a step over MAX_STEP so the walker cannot enter the arch.
+- NOT_GROUND gains `road_tunnel_portal_fern`: the fern cards over the coping are not ground.
+- No GROUND_BOXES entry, on purpose: the portal's turf slot samples the `grass` set, so runtime grass
+  blades grow on the wall top flush with the cover meadow (ref-2's grass over the coping); scatter
+  already keeps off every `road_` slot (`excluded_slot`); a GROUND_PROPS hero with no box clears only
+  the default 1 m disc at the tile centre, which is road.
+- Not needed: walk OBSTACLES and prop_kind (the portal is ground), CAR_GROUND (inside the arch the
+  road_straight_edge asphalt is CAR_GROUND and the turf over it is not, so cars keep ROAD_SURFACE_Y
+  0.11), FOOTPRINTS (a GROUND_PROPS hero, as the station platform).
+
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 2f95748..1bf4858 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -1366,8 +1366,9 @@ fn bucket(v: f32) -> usize {
+ }
+
+ /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
+-/// on a centre piece. Nothing stands on them and the walker walks through them.
+-pub const NOT_GROUND: &[&str] = &["wheat_field_wheat"];
++/// on a centre piece, the tunnel portal's fern cards over its coping. Nothing stands on them and the
++/// walker walks through them.
++pub const NOT_GROUND: &[&str] = &["wheat_field_wheat", "road_tunnel_portal_fern"];
+
+ impl Surface {
+     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
+@@ -1462,10 +1463,12 @@ impl Surface {
+ }
+
+ /// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
+-/// walker stands on and scatter keeps off. Each stands at the tile origin at a whole hex turn
++/// walker stands on and scatter keeps off, and the tunnel portal, whose 4 m wall top (coping and
++/// turf, where grass blades grow) the walker crosses from the cover meadow and whose face is a step
++/// it cannot climb into the arch. Each stands at the tile origin at a whole hex turn
+ /// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
+ /// as a centre piece does.
+-pub const GROUND_PROPS: &[&str] = &["rail_station_platform"];
++pub const GROUND_PROPS: &[&str] = &["rail_station_platform", "road_tunnel_portal"];
+
+ /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
+ /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its

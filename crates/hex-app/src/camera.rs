@@ -1,10 +1,11 @@
-//! Orbit, pan and zoom (PRD §4.5, D14) and pointer picking on the ground plane.
+//! Orbit, pan and zoom (PRD §4.5, D14) and pointer picking on the world's tops (P4: raised tiles
+//! first, then the ground plane).
 //!
 //! The rig keeps no state of its own: each camera action derives the focus point, distance, yaw and
 //! pitch from the current transform, so the `camera` script command and scripted views keep working.
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use hex_core::{Axial, HEX_RADIUS};
+use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP};
 use hex_render::{ActiveScenario, Scenario};
 
 use crate::actions::{Action, ActionQueue};
@@ -36,7 +37,8 @@ pub fn free_rotation(yaw: f32, pitch: f32, roll: f32) -> Quat {
     Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll)
 }
 
-/// Where the view centre meets the ground (y = 0), the point the camera orbits.
+/// Where the view centre meets the ground (y = 0). The play rig orbits [`focus_over`], which
+/// stands on raised tiles; this flat focus is the saved orbit pose's and the audio layer's.
 pub fn focus(t: &Transform) -> Vec3 {
     let f = t.forward();
     if f.y < -0.05 {
@@ -66,8 +68,15 @@ pub(crate) fn place(focus: Vec3, yaw: f32, pitch: f32, dist: f32) -> Transform {
     Transform::from_translation(focus + offset).looking_at(focus, Vec3::Y)
 }
 
-/// Applies one camera action; other actions return the transform unchanged.
+/// [`apply_over`] in a world with no raised tile: orbit and zoom turn about the flat [`focus`].
+#[cfg(test)]
 pub fn apply(t: Transform, action: &Action) -> Transform {
+    apply_about(t, action, focus(&t))
+}
+
+/// Applies one camera action, orbit and zoom about `c`; other actions return the transform
+/// unchanged.
+fn apply_about(t: Transform, action: &Action, c: Vec3) -> Transform {
     match *action {
         Action::Fly(d) => {
             let (yaw, _) = yaw_pitch(*t.forward());
@@ -89,7 +98,6 @@ pub fn apply(t: Transform, action: &Action) -> Transform {
         }
         _ => {}
     }
-    let c = focus(&t);
     let (yaw, pitch, dist) = spherical(t.translation - c);
     match *action {
         Action::Orbit(d) => place(
@@ -135,11 +143,48 @@ pub fn axial_at(x: f32, z: f32) -> Axial {
     Axial::new(rq as i32, rr as i32)
 }
 
-/// The cell under a view ray on the ground plane.
-pub fn ground_cell(ray: Ray3d) -> Option<Axial> {
-    let d = ray.intersect_plane(Vec3::ZERO, InfinitePlane3d::new(Vec3::Y))?;
-    let p = ray.get_point(d);
-    Some(axial_at(p.x, p.z))
+/// The planes a pick tries, highest first: every top a tile can have (`MAX_LEVEL` 3 × 4 m).
+const PICK_PLANES: [f32; 4] = [3.0 * LEVEL_STEP, 2.0 * LEVEL_STEP, LEVEL_STEP, 0.0];
+
+/// Where a view ray first meets the world's tops (P4), and the cell there. `top_of` gives a
+/// placed tile's top (`level * 4 + def.top() * 4`), `None` for an empty cell (top 0). The ray
+/// crosses y = 12, 8, 4 and 0 in turn and stops at the first crossing over a cell whose top
+/// reaches that plane: equal is the cell's top, higher means the ray went into its cliff face
+/// between two planes. So a raised tile is picked before the level-0 cell behind it, and a ray
+/// into a cliff picks the cliff's tile.
+fn pick(ray: Ray3d, top_of: impl Fn(Axial) -> Option<f32>) -> Option<(Axial, Vec3)> {
+    PICK_PLANES.into_iter().find_map(|y| {
+        let d = ray.intersect_plane(Vec3::Y * y, InfinitePlane3d::new(Vec3::Y))?;
+        let p = ray.get_point(d);
+        let cell = axial_at(p.x, p.z);
+        (top_of(cell).unwrap_or(0.0) >= y - 1e-3).then_some((cell, p))
+    })
+}
+
+/// The cell under a view ray: the first raised top it meets ([`pick`]), else its y = 0 cell.
+pub fn pick_cell(ray: Ray3d, top_of: impl Fn(Axial) -> Option<f32>) -> Option<Axial> {
+    pick(ray, top_of).map(|(c, _)| c)
+}
+
+/// [`focus`] over raised ground: where the view centre meets the world's tops ([`pick`]).
+pub fn focus_over(t: &Transform, top_of: impl Fn(Axial) -> Option<f32>) -> Vec3 {
+    let f = t.forward();
+    if f.y < -0.05 {
+        let ray = Ray3d::new(t.translation, f);
+        pick(ray, top_of).map_or_else(|| focus(t), |(_, p)| p)
+    } else {
+        t.translation + f * HORIZON_FOCUS
+    }
+}
+
+/// Applies one camera action, orbit and zoom about [`focus_over`] (zooming in on a plateau stops
+/// above its top, not inside it); other actions return the transform unchanged.
+pub fn apply_over(
+    t: Transform,
+    action: &Action,
+    top_of: impl Fn(Axial) -> Option<f32>,
+) -> Transform {
+    apply_about(t, action, focus_over(&t, top_of))
 }
 
 /// Hovers the cell under the pointer in the play scenario. It emits only when that cell changes
@@ -167,7 +212,7 @@ pub fn pick_hover(
         .and(window.cursor_position())
         .and_then(|p| {
             let (camera, gt) = cameras.iter().next()?;
-            ground_cell(camera.viewport_to_world(gt, p).ok()?)
+            pick_cell(camera.viewport_to_world(gt, p).ok()?, |c| game.top_of(c))
         });
     if cell != *last {
         *last = cell;
@@ -215,9 +260,76 @@ mod tests {
             Vec3::new(x, 50.0, z + 20.0),
             Dir3::new(Vec3::new(0.0, -50.0, -20.0)).unwrap(),
         );
-        assert_eq!(ground_cell(ray), Some(Axial::new(1, 2)));
+        assert_eq!(pick_cell(ray, |_| None), Some(Axial::new(1, 2)));
         let up = Ray3d::new(Vec3::Y, Dir3::Y);
-        assert_eq!(ground_cell(up), None);
+        assert_eq!(pick_cell(up, |_| None), None);
+    }
+
+    /// A view ray at 25° below the horizon heading +x that passes through `target`.
+    fn ray_at(target: Vec3) -> Ray3d {
+        let dir = Vec3::new(25f32.to_radians().cos(), -25f32.to_radians().sin(), 0.0);
+        Ray3d::new(target - dir * 60.0, Dir3::new(dir).unwrap())
+    }
+
+    /// Elevation (P4): a ray aimed at a level-2 tile's top picks that tile, not the level-0 cell
+    /// its y = 0 hit lies in beyond it; with no raised tile it picks that y = 0 cell.
+    #[test]
+    fn pick_hits_the_raised_top_first() {
+        let raised = Axial::new(2, 0);
+        let [x, z] = raised.to_world(HEX_RADIUS);
+        let ray = ray_at(Vec3::new(x, 8.0, z));
+        let below = pick_cell(ray, |_| None).unwrap();
+        assert_ne!(below, raised, "the y = 0 hit lies beyond the raised tile");
+        let top_of = |c: Axial| (c == raised).then_some(8.0);
+        assert_eq!(pick_cell(ray, top_of), Some(raised));
+        assert_eq!(pick_cell(ray, |_| None), Some(below));
+    }
+
+    /// A ray into a raised tile's cliff face picks that tile: its y = 4 crossing lies over the
+    /// level-0 cell in front and its y = 0 crossing inside the raised tile's column.
+    #[test]
+    fn pick_through_a_cliff_face_takes_the_cliff() {
+        let raised = Axial::new(1, 0);
+        let [x, z] = raised.to_world(HEX_RADIUS);
+        let wall = x - HEX_RADIUS * 3f32.sqrt() / 2.0;
+        let ray = ray_at(Vec3::new(wall, 2.0, z));
+        let top_of = |c: Axial| (c == raised).then_some(LEVEL_STEP);
+        assert_eq!(pick_cell(ray, top_of), Some(raised));
+    }
+
+    /// The orbit pivot over a raised tile is its top, so zooming in stops above it, not inside.
+    #[test]
+    fn focus_over_lands_on_a_raised_top() {
+        let raised = Axial::new(2, 0);
+        let [x, z] = raised.to_world(HEX_RADIUS);
+        let t =
+            Transform::from_xyz(x - 40.0, 40.0 + 8.0, z).looking_at(Vec3::new(x, 8.0, z), Vec3::Y);
+        let top_of = |c: Axial| (c == raised).then_some(8.0);
+        assert!((focus_over(&t, top_of) - Vec3::new(x, 8.0, z)).length() < 1e-3);
+        assert!(focus(&t).y.abs() < 1e-4, "the flat focus stays on y = 0");
+        let near = apply_over(t, &Action::Zoom(1_000.0), top_of);
+        assert!(near.translation.y > 8.0 + 1.0, "{}", near.translation);
+    }
+
+    /// With no raised tile the play rig moves exactly as the flat rig: orbit, zoom and pan about
+    /// the y = 0 focus.
+    #[test]
+    fn apply_over_a_flat_world_is_the_flat_rig() {
+        let t = cam();
+        for a in [
+            Action::Orbit(Vec2::new(120.0, 30.0)),
+            Action::Orbit(Vec2::new(-40.0, -500.0)),
+            Action::Zoom(3.0),
+            Action::Zoom(-2.0),
+            Action::Pan(Vec2::new(0.2, -0.1)),
+        ] {
+            let (over, flat) = (apply_over(t, &a, |_| None), apply(t, &a));
+            assert!(
+                over.translation.distance(flat.translation) < 1e-4
+                    && over.rotation.dot(flat.rotation).abs() > 1.0 - 1e-6,
+                "{a:?}: {over:?} vs {flat:?}"
+            );
+        }
     }
 
     fn cam() -> Transform {

@@ -8,7 +8,7 @@ use std::ops::RangeInclusive;
 
 use serde::{Deserialize, Serialize};
 
-use crate::socket::{EdgeSocket, SocketKind, SocketTable};
+use crate::socket::{EdgeProfile, EdgeSocket, SocketKind, SocketTable};
 
 /// Id of a kit piece in `assets/kit/manifest.json` (or `data/pending-pieces.ron` until it is built).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -36,6 +36,13 @@ pub fn world_edge(local: u8, rotation: u8) -> u8 {
 /// Inverse of [`world_edge`]: the local edge that faces world edge `world` under `rotation`.
 pub fn local_edge(world: u8, rotation: u8) -> u8 {
     (world % 6 + 6 - rotation % 6) % 6
+}
+
+/// The (start, end) corner indices of edge `e`, clockwise viewed from +Y. Corner `k` sits at angle
+/// 30° + 60°·k (`prism::corner`) and edge `e` faces axial direction `e`, so it runs from corner
+/// `(e + 5) % 6` to corner `e`.
+pub fn edge_corners(e: u8) -> (u8, u8) {
+    ((e % 6 + 5) % 6, e % 6)
 }
 
 /// The world edge of the neighbor across world edge `edge`.
@@ -323,6 +330,24 @@ pub enum Unlock {
     Recipe(String),
 }
 
+/// Which height field shapes the ground of a tile (P4): the plain corner blend, the road ramp, or
+/// the tunnel portal's cutting. The fields land with the terrain surface; this selects one.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Ground {
+    #[default]
+    Plain,
+    RoadRamp,
+    Cutting,
+}
+
+/// The mouth of a tunnel on a tile (P4): the network node at the arch and the local edge the tunnel
+/// runs out of.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct TunnelEnd {
+    pub node: String,
+    pub edge: u8,
+}
+
 /// One tile type, loaded from `data/tiles/<id>.ron` (PRD §5.3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TileDef {
@@ -363,12 +388,45 @@ pub struct TileDef {
     /// sockets alone to decide ([`TileDef::orientation_period`]). Divides 6.
     #[serde(default)]
     pub look_period: Option<u8>,
+    /// Whether the player may place the tile on any level 0..=3 (P4). Defaults off.
+    #[serde(default)]
+    pub raisable: bool,
+    /// The height field that shapes this tile's ground. Defaults to the plain corner blend.
+    #[serde(default)]
+    pub ground: Ground,
+    /// Set on a tunnel portal: where its tunnel starts.
+    #[serde(default)]
+    pub tunnel: Option<TunnelEnd>,
 }
 
 impl TileDef {
     /// The socket facing world edge `world` when the tile is placed with `rotation`.
     pub fn edge(&self, world: u8, rotation: u8) -> &EdgeSocket {
         &self.edges[local_edge(world, rotation) as usize]
+    }
+
+    /// Relative corner heights in world corner order when placed with `rotation`. Edge `e`'s
+    /// [`EdgeSocket::corners`] are the heights at local corners `(e + 5) % 6` and `e`.
+    pub fn corners(&self, rotation: u8) -> [u8; 6] {
+        let mut corners = [0u8; 6];
+        for (e, edge) in self.edges.iter().enumerate() {
+            let (start, end) = edge_corners(e as u8);
+            let (h_start, h_end) = edge.corners();
+            corners[world_edge(start, rotation) as usize] = h_start;
+            corners[world_edge(end, rotation) as usize] = h_end;
+        }
+        corners
+    }
+
+    /// The highest relative corner.
+    pub fn top(&self) -> u8 {
+        self.corners(0).into_iter().max().unwrap_or(0)
+    }
+
+    /// Whether any corner differs from the others: the tile is not level.
+    pub fn is_sloped(&self) -> bool {
+        let c = self.corners(0);
+        c.iter().any(|&h| h != c[0])
     }
 
     /// Whether rotations `a` and `b` give every world edge an equal socket (kind, lane, land side,
@@ -458,11 +516,47 @@ impl TileDef {
             }
         }
 
+        for (e, edge) in self.edges.iter().enumerate() {
+            let next = &self.edges[(e + 1) % 6];
+            if edge.corners().1 != next.corners().0 {
+                issue(format!(
+                    "edge {e} ends its corner at height {} but edge {} starts at {}",
+                    edge.corners().1,
+                    (e + 1) % 6,
+                    next.corners().0
+                ));
+            }
+            let (start, end) = edge.corners();
+            if start > 1 || end > 1 {
+                issue(format!(
+                    "edge {e} corner heights {start}, {end} are outside 0..=1"
+                ));
+            }
+        }
+        let hillside_family = self.id.starts_with("hillside_")
+            || self.id == "road_ramp"
+            || self.id == "road_tunnel_portal";
+        if self.raisable
+            && !hillside_family
+            && self.edges.iter().any(|e| e.profile != EdgeProfile::Flat)
+        {
+            issue("raisable tile has non-Flat edges but is not hillside family".into());
+        }
+
         let mut node_ids: BTreeSet<&str> = BTreeSet::new();
         for node in &self.nodes {
             if !node_ids.insert(node.id.as_str()) {
                 issue(format!("node {:?} is declared twice", node.id));
             }
+        }
+
+        if let Some(t) = &self.tunnel
+            && (!node_ids.contains(t.node.as_str()) || t.edge >= 6)
+        {
+            issue(format!(
+                "tunnel names undeclared node {:?} or edge {}",
+                t.node, t.edge
+            ));
         }
 
         let mut endpoints: BTreeMap<u8, usize> = BTreeMap::new();
@@ -788,6 +882,109 @@ mod tests {
         })
     }
 
+    /// A tile whose corners 0 and 1 are raised: edge 0 (corners 5, 0) rises, edge 1 (corners 0, 1)
+    /// is flat at 1, edge 2 (corners 1, 2) falls, the rest are flat at 0.
+    fn raised_pair() -> TileDef {
+        let mut t = bend60();
+        t.edges = std::array::from_fn(|_| EdgeSocket::new(Grass));
+        t.networks.clear();
+        t.edges[0].profile = EdgeProfile::Rise;
+        t.edges[1].height = 1;
+        t.edges[2].profile = EdgeProfile::Fall;
+        t
+    }
+
+    #[test]
+    fn validate_rejects_broken_corner_chain() {
+        let mut t = raised_pair();
+        assert_eq!(t.validate(&sockets()), Vec::<String>::new());
+        t.edges[1].height = 0;
+        let issues = t.validate(&sockets());
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("edge 0") && i.contains("corner")),
+            "{issues:?}"
+        );
+    }
+
+    #[test]
+    fn validate_rejects_corner_above_one() {
+        let mut t = raised_pair();
+        t.edges[1].height = 2;
+        let issues = t.validate(&sockets());
+        assert!(
+            issues
+                .iter()
+                .any(|i| i.contains("edge 1") && i.contains("0..=1")),
+            "{issues:?}"
+        );
+    }
+
+    #[test]
+    fn raisable_sloped_tile_must_be_hillside_family() {
+        let mut t = raised_pair();
+        t.raisable = true;
+        let issues = t.validate(&sockets());
+        assert!(issues.iter().any(|i| i.contains("raisable")), "{issues:?}");
+        for id in ["hillside_a", "road_ramp", "road_tunnel_portal"] {
+            t.id = id.into();
+            assert!(
+                !t.validate(&sockets())
+                    .iter()
+                    .any(|i| i.contains("raisable")),
+                "{id}"
+            );
+        }
+        let mut flat = bend60();
+        flat.raisable = true;
+        assert!(
+            !flat
+                .validate(&sockets())
+                .iter()
+                .any(|i| i.contains("raisable"))
+        );
+    }
+
+    #[test]
+    fn corners_rotate_with_the_tile() {
+        let t = raised_pair();
+        let c0 = t.corners(0);
+        assert_eq!(c0, [1, 1, 0, 0, 0, 0]);
+        assert!(t.is_sloped());
+        assert_eq!(t.top(), 1);
+        for r in 0..6u8 {
+            let mut want = c0;
+            want.rotate_right(r as usize);
+            assert_eq!(t.corners(r), want, "rotation {r}");
+        }
+        assert!(!bend60().is_sloped());
+        assert_eq!(bend60().top(), 0);
+    }
+
+    #[test]
+    fn edge_corners_match_geometry() {
+        use crate::axial::{Axial, HEX_RADIUS};
+        for e in 0..6u8 {
+            let (s, t) = edge_corners(e);
+            let (a, b) = (
+                crate::prism::corner(HEX_RADIUS, s as usize),
+                crate::prism::corner(HEX_RADIUS, t as usize),
+            );
+            let mid = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
+            let n = Axial::ORIGIN.neighbor(e).to_world(HEX_RADIUS);
+            // The edge midpoint lies halfway to the neighbour's centre, along it.
+            assert!(
+                (mid[0] - n[0] / 2.0).abs() < 1e-3 && (mid[1] - n[1] / 2.0).abs() < 1e-3,
+                "edge {e}: {mid:?} vs {n:?}"
+            );
+            // Clockwise viewed from +Y: the start corner leads the end corner by 60 degrees.
+            let (ang_a, ang_b) = (a[1].atan2(a[0]), b[1].atan2(b[0]));
+            let step = (ang_b - ang_a).to_degrees().rem_euclid(360.0);
+            assert!((step - 60.0).abs() < 1e-3, "edge {e}: {step}");
+        }
+    }
+
     /// Road on edges 0 and 1 (`road_bend_60`).
     fn bend60() -> TileDef {
         let mut edges: [EdgeSocket; 6] = std::array::from_fn(|_| EdgeSocket::new(Grass));
@@ -820,6 +1017,9 @@ mod tests {
             rise: RiseTimeline::default(),
             unlock: Unlock::Default,
             look_period: None,
+            raisable: false,
+            ground: Ground::Plain,
+            tunnel: None,
         }
     }
 

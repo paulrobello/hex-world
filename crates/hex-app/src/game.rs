@@ -3,7 +3,9 @@
 use std::collections::{BTreeMap, VecDeque};
 
 use bevy::prelude::*;
-use hex_core::{Axial, EdgeStatus, ReplaceError, RotateDir, TileCatalog, TileDef, World};
+use hex_core::{
+    Axial, EdgeStatus, Orientation, ReplaceError, RotateDir, TileCatalog, TileDef, World,
+};
 use hex_play::{
     ActiveScenario, Scenario,
     play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage},
@@ -26,12 +28,14 @@ pub enum GameEvent {
         r: i32,
         tile: String,
         rotation: u8,
+        level: u8,
     },
     PlacementRefused {
         q: i32,
         r: i32,
         tile: String,
         rotation: u8,
+        level: u8,
         reason: String,
     },
     TileBulldozed {
@@ -46,6 +50,7 @@ pub enum GameEvent {
         r: i32,
         tile: String,
         rotation: u8,
+        level: u8,
         replaced: String,
     },
     BulldozeRefused {
@@ -60,6 +65,7 @@ pub enum GameEvent {
     },
     GhostRotated {
         rotation: u8,
+        level: u8,
         valid: bool,
     },
     HoverChanged {
@@ -197,11 +203,11 @@ pub struct GameState {
     pub catalog: TileCatalog,
     /// Selected tile id; always a catalog id.
     pub selected: String,
-    /// Ghost rotation 0..6.
-    pub rotation: u8,
-    /// The rotation the player last chose with R, per tile id. Hovering a slot or selecting the
+    /// The ghost orientation: rotation 0..6 and level.
+    pub chosen: Orientation,
+    /// The orientation the player last chose with R, per tile id. Hovering a slot or selecting the
     /// tile again restores it wherever it is legal, instead of snapping to the first legal one.
-    pub chosen_rotation: BTreeMap<String, u8>,
+    pub chosen_orientation: BTreeMap<String, Orientation>,
     /// The member the player last chose per picker group (selected by id, or turned to with R), so
     /// a hover tries it first and only falls back to another member where it has no legal rotation.
     pub chosen_variant: BTreeMap<String, String>,
@@ -238,8 +244,8 @@ impl GameState {
             world: World::new(seed),
             catalog,
             selected,
-            rotation: 0,
-            chosen_rotation: BTreeMap::new(),
+            chosen: Orientation::default(),
+            chosen_orientation: BTreeMap::new(),
             chosen_variant: BTreeMap::new(),
             tool: Tool::Place,
             hovered: None,
@@ -295,16 +301,80 @@ impl GameState {
         }
     }
 
-    fn legal_here(&self, cell: Axial) -> Vec<u8> {
-        self.world
-            .legal_rotations(&self.catalog, cell, self.selected_def())
+    /// The top (m) of the tile placed at `cell`, `(level + def.top()) * LEVEL_STEP`; `None` on an
+    /// empty cell. Pointer picking and the orbit pivot stand on it (`camera::pick_cell`).
+    pub fn top_of(&self, cell: Axial) -> Option<f32> {
+        let t = self.world.tile(cell)?;
+        let top = self.catalog.get(&t.def).map_or(0, |d| d.top());
+        Some(f32::from(t.level + top) * hex_core::LEVEL_STEP)
     }
 
-    /// The tile and rotation the ghost snaps to on the free slot `cell` (PRD §4.2): the chosen
+    /// The level each free slot's outline sits on, where it is not 0 ([`PlayView::slot_levels`]):
+    /// the level of the selected tile's default orientation there (the first legal one, cliff-free
+    /// first), else the highest neighbour's level when the tile fits nowhere. A slot whose
+    /// neighbours are all level, unsloped ground is level 0 without asking.
+    fn slot_levels(&self, frontier: &[Axial]) -> BTreeMap<Axial, u8> {
+        let def = self.selected_def();
+        frontier
+            .iter()
+            .filter_map(|&cell| {
+                let around: Vec<(u8, bool)> = (0..6)
+                    .filter_map(|e| self.world.tile(cell.neighbor(e)))
+                    .map(|t| {
+                        let sloped = self.catalog.get(&t.def).is_some_and(|d| d.is_sloped());
+                        (t.level, sloped)
+                    })
+                    .collect();
+                if around.iter().all(|&(level, sloped)| level == 0 && !sloped) {
+                    return None;
+                }
+                let level = self
+                    .world
+                    .auto_orient(&self.catalog, cell, def)
+                    .map_or_else(
+                        || around.iter().map(|&(l, _)| l).max().unwrap_or(0),
+                        |o| o.level,
+                    );
+                (level > 0).then_some((cell, level))
+            })
+            .collect()
+    }
+
+    fn legal_here(&self, cell: Axial) -> Vec<Orientation> {
+        self.world
+            .legal_orientations(&self.catalog, cell, self.selected_def())
+    }
+
+    /// The orientation `d` takes at `cell` among `legal` (cliff-free first): `preferred` where it
+    /// is legal and as cliff-free as `legal[0]`, else `legal[0]`'s level at the preferred rotation
+    /// where that is legal and as cliff-free, else `legal[0]`. So a cliff chosen at one cell is
+    /// never the default at another, nor on coming back. `None` when `legal` is empty.
+    fn pick(
+        &self,
+        cell: Axial,
+        d: &TileDef,
+        legal: &[Orientation],
+        preferred: Option<Orientation>,
+    ) -> Option<Orientation> {
+        let first = *legal.first()?;
+        let cliff = |o: Orientation| {
+            self.world
+                .cliff_edges(&self.catalog, cell, d, o)
+                .contains(&true)
+        };
+        let fits = |o: &Orientation| legal.contains(o) && cliff(*o) == cliff(first);
+        preferred
+            .into_iter()
+            .flat_map(|p| [p, Orientation::new(p.rotation, first.level)])
+            .find(fits)
+            .or(Some(first))
+    }
+
+    /// The tile and orientation the ghost snaps to on the free slot `cell` (PRD §4.2): the chosen
     /// member of the selected tile's picker group (the selected tile itself when it has none) at
-    /// its chosen rotation where that is legal, else at its first legal rotation, else the next
-    /// member that fits, the same way. `None` when no member fits.
-    fn snap_at(&self, cell: Axial) -> Option<(String, u8)> {
+    /// its chosen orientation as [`GameState::pick`] allows it, else the next member that fits,
+    /// the same way. `None` when no member fits.
+    fn snap_at(&self, cell: Axial) -> Option<(String, Orientation)> {
         let members = self.catalog.siblings(&self.selected);
         // Not `selected`: a hover that fell back to another member must not make it the preference.
         let preferred = self
@@ -316,27 +386,31 @@ impl GameState {
         let start = members.iter().position(|d| &d.id == preferred).unwrap_or(0);
         let n = members.len();
         (0..n).map(|i| members[(start + i) % n]).find_map(|d| {
-            let legal = self.world.legal_rotations(&self.catalog, cell, d);
-            self.chosen_rotation
-                .get(&d.id)
-                .copied()
-                .filter(|k| legal.contains(k))
-                .or_else(|| legal.first().copied())
+            let legal = self.world.legal_orientations(&self.catalog, cell, d);
+            self.pick(cell, d, &legal, self.chosen_orientation.get(&d.id).copied())
                 .map(|k| (d.id.clone(), k))
         })
     }
 
-    /// Auto-rotate (PRD §4.2): `snap` takes [`GameState::snap_at`]; otherwise the tile and rotation
-    /// are kept while they are still legal. With nothing legal they are left as they are.
+    /// Auto-rotate (PRD §4.2): `snap` takes [`GameState::snap_at`]; otherwise the tile and
+    /// orientation are kept while they are still legal. With nothing legal they are left as they
+    /// are.
     fn resnap(&mut self, snap: bool) {
-        let Some(cell) = self.target_slot() else {
-            return;
-        };
-        if (snap || !self.legal_here(cell).contains(&self.rotation))
-            && let Some((tile, k)) = self.snap_at(cell)
+        if let Some(cell) = self.target_slot()
+            && (snap || !self.legal_here(cell).contains(&self.chosen))
+            && let Some((tile, o)) = self.snap_at(cell)
         {
             self.selected = tile;
-            self.rotation = k;
+            self.chosen = o;
+        }
+        self.ground_unraisable();
+    }
+
+    /// A kept orientation's level may not suit the selected tile (a meadow turned up to level 1,
+    /// then the ocean selected where it fits nowhere): it drops to the ground.
+    fn ground_unraisable(&mut self) {
+        if !hex_core::level_allowed(self.selected_def(), self.chosen.level) {
+            self.chosen.level = 0;
         }
     }
 
@@ -345,7 +419,8 @@ impl GameState {
         self.photo_mode || self.walk_mode
     }
 
-    /// The ghost at the target slot; none in bulldoze mode, photo mode or walk mode.
+    /// The ghost at the target slot, with the rotations legal at the ghost's level (ascending);
+    /// none in bulldoze mode, photo mode or walk mode.
     pub fn ghost(&self) -> Option<(Axial, Vec<u8>, [EdgeStatus; 6], bool)> {
         if self.tool != Tool::Place || self.viewing() {
             return None;
@@ -354,9 +429,16 @@ impl GameState {
         let def = self.selected_def();
         let edges = self
             .world
-            .edge_status(&self.catalog, cell, def, self.rotation);
-        let valid = self.world.fits(&self.catalog, cell, def, self.rotation);
-        Some((cell, self.legal_here(cell), edges, valid))
+            .edge_status(&self.catalog, cell, def, self.chosen);
+        let valid = self.world.fits(&self.catalog, cell, def, self.chosen);
+        let mut legal: Vec<u8> = self
+            .legal_here(cell)
+            .into_iter()
+            .filter(|o| o.level == self.chosen.level)
+            .map(|o| o.rotation)
+            .collect();
+        legal.sort();
+        Some((cell, legal, edges, valid))
     }
 
     /// The hovered tile in bulldoze mode, with the refusal reason when removing it is blocked.
@@ -367,7 +449,10 @@ impl GameState {
         let cell = self.hovered.filter(|c| self.world.tile(*c).is_some())?;
         Some((
             cell,
-            self.world.can_bulldoze(cell).err().map(|e| e.to_string()),
+            self.world
+                .can_bulldoze(&self.catalog, cell)
+                .err()
+                .map(|e| e.to_string()),
         ))
     }
 
@@ -437,6 +522,7 @@ impl GameState {
             },
             Action::Replace(cell) => self.replace(cell),
             Action::Place(cell) => self.place_at(cell),
+            Action::PlaceAtLevel(cell, level) => self.place_at_level(cell, level),
             Action::Pin(cell) => self.pin_action(cell),
             Action::Unpin => self.unpin(),
             Action::Escape => self.escape(),
@@ -530,34 +616,36 @@ impl GameState {
                     &self.catalog,
                     cell,
                     &members,
-                    (&self.selected, self.rotation),
+                    (&self.selected, self.chosen),
                     dir,
                 )
-                .map(|(d, k)| (d.id.clone(), k))
+                .map(|(d, o)| (d.id.clone(), o))
         });
-        // No legal rotation: still turn one step, so the edge markers show why.
+        // No legal orientation: still turn one step, so the edge markers show why.
         match cycled {
-            Some((tile, k)) => {
+            Some((tile, o)) => {
                 self.selected = tile;
-                self.rotation = k;
+                self.chosen = o;
             }
             None => {
-                self.rotation = match dir {
-                    RotateDir::Forward => (self.rotation + 1) % 6,
-                    RotateDir::Back => (self.rotation + 5) % 6,
-                }
+                self.chosen.rotation = match dir {
+                    RotateDir::Forward => (self.chosen.rotation + 1) % 6,
+                    RotateDir::Back => (self.chosen.rotation + 5) % 6,
+                };
+                self.ground_unraisable();
             }
         }
         if let Some(g) = self.catalog.group_of(&self.selected) {
             self.chosen_variant
                 .insert(g.to_owned(), self.selected.clone());
         }
-        self.chosen_rotation
-            .insert(self.selected.clone(), self.rotation);
+        self.chosen_orientation
+            .insert(self.selected.clone(), self.chosen);
         let valid = self.ghost().is_some_and(|g| g.3);
         self.result("rotate", self.target_slot().or(self.hovered), None);
         vec![GameEvent::GhostRotated {
-            rotation: self.rotation,
+            rotation: self.chosen.rotation,
+            level: self.chosen.level,
             valid,
         }]
     }
@@ -566,6 +654,33 @@ impl GameState {
         let mut events = self.set_pin(None);
         events.extend(self.hover(Some(cell)));
         events.extend(self.place(cell));
+        events
+    }
+
+    /// [`GameState::place_at`] on `level`: the ghost's rotation where it is legal there, else the
+    /// first legal rotation there. With none legal the placement is attempted as asked and the
+    /// world's own refusal (clashing edges, level out of range, no neighbour) is the event.
+    fn place_at_level(&mut self, cell: Axial, level: u8) -> Vec<GameEvent> {
+        let mut events = self.set_pin(None);
+        events.extend(self.hover(Some(cell)));
+        let legal = self.legal_here(cell);
+        let on_level: Vec<Orientation> = legal.into_iter().filter(|o| o.level == level).collect();
+        let preferred = Orientation::new(self.chosen.rotation, level);
+        let def = self.selected_def().clone();
+        // `pick` keeps the ghost's rotation only when it is as cliff-free as the first entry.
+        let o = self
+            .pick(cell, &def, &on_level, Some(preferred))
+            .unwrap_or(preferred);
+        let tile = self.selected.clone();
+        let placed = self.place_with(cell, tile, o);
+        if placed
+            .iter()
+            .any(|e| matches!(e, GameEvent::TilePlaced { .. }))
+        {
+            self.chosen = o;
+            self.chosen_orientation.insert(self.selected.clone(), o);
+        }
+        events.extend(placed);
         events
     }
 
@@ -688,29 +803,30 @@ impl GameState {
     }
 
     fn place(&mut self, cell: Axial) -> Vec<GameEvent> {
-        self.place_with(cell, self.selected.clone(), self.rotation)
+        self.place_with(cell, self.selected.clone(), self.chosen)
     }
 
-    /// The tile and rotation the ghost would show on the free slot `cell`: the current ones when
-    /// the ghost is there, else [`GameState::snap_at`], else the current ones (refused there).
-    fn snap_rotation(&self, cell: Axial) -> (String, u8) {
+    /// The tile and orientation the ghost would show on the free slot `cell`: the current ones
+    /// when the ghost is there, else [`GameState::snap_at`], else the current ones (refused there).
+    fn snap_orientation(&self, cell: Axial) -> (String, Orientation) {
         if self.target_slot() == Some(cell) {
-            return (self.selected.clone(), self.rotation);
+            return (self.selected.clone(), self.chosen);
         }
         self.snap_at(cell)
-            .unwrap_or_else(|| (self.selected.clone(), self.rotation))
+            .unwrap_or_else(|| (self.selected.clone(), self.chosen))
     }
 
-    /// Shift+click on a free slot: places at once at the ghost's tile and rotation for it. The
+    /// Shift+click on a free slot: places at once at the ghost's tile and orientation for it. The
     /// pin, if it is on another slot, stays.
     fn quick_place(&mut self, cell: Axial) -> Vec<GameEvent> {
-        let (tile, rotation) = self.snap_rotation(cell);
-        self.place_with(cell, tile, rotation)
+        let (tile, o) = self.snap_orientation(cell);
+        self.place_with(cell, tile, o)
     }
 
-    /// Swaps the tile at `cell` for the selected tile (one undoable action). The ghost's rotation
-    /// is preferred where it fits, else the first rotation that fits. A free slot places as
-    /// Shift+click does; the same tile in the same orientation changes nothing.
+    /// Swaps the tile at `cell` for the selected tile (one undoable action), in the cell's own
+    /// cliff-free-first order with the ghost's rotation kept where [`GameState::pick`] allows it.
+    /// A free slot places as Shift+click does; the same tile in the same orientation and level
+    /// changes nothing.
     fn replace(&mut self, cell: Axial) -> Vec<GameEvent> {
         if self.tool != Tool::Place || self.photo_mode {
             return self.refuse("replace", "replacing needs the place tool".into());
@@ -718,33 +834,33 @@ impl GameState {
         if self.world.is_slot(cell) {
             return self.quick_place(cell);
         }
-        // The selected tile first (at the ghost's rotation where it fits), then the rest of its
-        // picker group, so a Beach Curve replace takes whichever of headland and bay fits.
+        // The selected tile first, then the rest of its picker group, so a Beach Curve replace
+        // takes whichever of headland and bay fits. The ghost sits on a free slot, never on this
+        // cell, so the cell's own cliff-free-first order decides the level; the ghost's rotation
+        // is kept where `pick` allows it.
         let members = self.catalog.siblings(&self.selected);
         let start = members
             .iter()
             .position(|d| d.id == self.selected)
             .unwrap_or(0);
         let n = members.len();
-        let (tile, rotation) = (0..n)
+        let (tile, o) = (0..n)
             .map(|i| members[(start + i) % n])
             .find_map(|d| {
-                let legal = self.world.replace_rotations(&self.catalog, cell, d);
-                let k = if d.id == self.selected && legal.contains(&self.rotation) {
-                    Some(self.rotation)
-                } else {
-                    legal.first().copied()
-                };
-                k.map(|k| (d.id.clone(), k))
+                let legal = self.world.replace_orientations(&self.catalog, cell, d);
+                let ghost = (d.id == self.selected).then_some(self.chosen);
+                self.pick(cell, d, &legal, ghost).map(|k| (d.id.clone(), k))
             })
-            .unwrap_or_else(|| (self.selected.clone(), self.rotation));
-        match self.world.replace(&self.catalog, cell, &tile, rotation) {
+            .unwrap_or_else(|| (self.selected.clone(), self.chosen));
+        let (rotation, level) = (o.rotation, o.level);
+        match self.world.replace(&self.catalog, cell, &tile, o) {
             Ok(old) => {
                 let mut events = vec![GameEvent::TileReplaced {
                     q: cell.q,
                     r: cell.r,
                     tile,
                     rotation,
+                    level,
                     replaced: old.def,
                 }];
                 events.extend(self.drop_stale_pin());
@@ -772,20 +888,23 @@ impl GameState {
                     r: cell.r,
                     tile,
                     rotation,
+                    level,
                     reason,
                 }]
             }
         }
     }
 
-    fn place_with(&mut self, cell: Axial, tile: String, rotation: u8) -> Vec<GameEvent> {
-        match self.world.place(&self.catalog, cell, &tile, rotation) {
+    fn place_with(&mut self, cell: Axial, tile: String, o: Orientation) -> Vec<GameEvent> {
+        let (rotation, level) = (o.rotation, o.level);
+        match self.world.place(&self.catalog, cell, &tile, o) {
             Ok(()) => {
                 let mut events = vec![GameEvent::TilePlaced {
                     q: cell.q,
                     r: cell.r,
                     tile,
                     rotation,
+                    level,
                 }];
                 events.extend(self.drop_stale_pin());
                 self.last_bulldoze = None;
@@ -803,6 +922,7 @@ impl GameState {
                     r: cell.r,
                     tile,
                     rotation,
+                    level,
                     reason,
                 }]
             }
@@ -810,7 +930,7 @@ impl GameState {
     }
 
     fn bulldoze(&mut self, cell: Axial) -> Vec<GameEvent> {
-        match self.world.bulldoze(cell) {
+        match self.world.bulldoze(&self.catalog, cell) {
             Ok(tile) => {
                 let mut events = vec![GameEvent::TileBulldozed {
                     q: cell.q,
@@ -848,7 +968,7 @@ impl GameState {
         self.last = None;
         self.recent.clear();
         self.recent.push_back(event);
-        self.chosen_rotation.clear();
+        self.chosen_orientation.clear();
         self.chosen_variant.clear();
         self.last_bulldoze = None;
         self.revision += 1;
@@ -873,7 +993,7 @@ impl GameState {
             .world
             .tiles()
             .iter()
-            .map(|(c, t)| json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation }))
+            .map(|(c, t)| json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation, "level": t.level }))
             .collect();
         json!({
             "tiles": tiles,
@@ -895,8 +1015,8 @@ impl GameState {
             }
         });
         let ghost = self.ghost().map(|(c, legal, edges, valid)| {
-            json!({ "q": c.q, "r": c.r, "tile": self.selected, "rotation": self.rotation,
-                    "valid": valid, "legal_rotations": legal, "edges": edges })
+            json!({ "q": c.q, "r": c.r, "tile": self.selected, "rotation": self.chosen.rotation,
+                    "level": self.chosen.level, "valid": valid, "legal_rotations": legal, "edges": edges })
         });
         let inventory: Vec<&str> = self
             .target_slot()
@@ -914,7 +1034,7 @@ impl GameState {
         json!({
             "tool": self.tool,
             "selected": self.selected,
-            "rotation": self.rotation,
+            "rotation": self.chosen.rotation,
             "inventory_open": self.inventory_open,
             "photo_mode": self.photo_mode,
             "walk_mode": self.walk_mode,
@@ -924,6 +1044,10 @@ impl GameState {
             "ghost": ghost,
             "inventory": inventory,
             "bulldoze": bulldoze,
+            // Per selected tile, so it lives here with the selection rather than in the world block.
+            "slot_levels": self.slot_levels(&self.world.frontier()).iter()
+                .map(|(c, l)| json!({ "q": c.q, "r": c.r, "level": l }))
+                .collect::<Vec<_>>(),
             "last_result": self.last,
             "recent_events": self.recent,
         })
@@ -931,7 +1055,14 @@ impl GameState {
 
     /// What `hex_play::play` draws.
     pub fn view(&self) -> PlayView {
-        PlayView {
+        let frontier = if self.viewing() {
+            vec![]
+        } else {
+            self.world.frontier()
+        };
+        let mut view = PlayView {
+            slot_levels: self.slot_levels(&frontier),
+            frontier,
             tiles: self
                 .world
                 .tiles()
@@ -940,20 +1071,25 @@ impl GameState {
                     cell: *c,
                     tile: t.def.clone(),
                     rotation: t.rotation,
+                    level: t.level,
                 })
                 .collect(),
-            frontier: if self.viewing() {
-                vec![]
-            } else {
-                self.world.frontier()
-            },
             ghost: self.ghost().map(|(cell, _, edges, valid)| PlayGhost {
                 cell,
                 tile: self.selected.clone(),
-                rotation: self.rotation,
+                rotation: self.chosen.rotation,
+                level: self.chosen.level,
                 edges,
                 valid,
                 pinned: self.pinned == Some(cell),
+                tunnel: hex_core::tunnel::preview(
+                    &self.world,
+                    &self.catalog,
+                    cell,
+                    self.selected_def(),
+                    self.chosen,
+                )
+                .cells,
             }),
             pointer_slot: self.hovered_slot().filter(|&c| {
                 self.tool == Tool::Place && !self.viewing() && self.pinned.is_some_and(|p| p != c)
@@ -964,12 +1100,19 @@ impl GameState {
             bulldoze: self
                 .bulldoze_target()
                 .map(|(c, reason)| (c, reason.is_none())),
+            bulldoze_cover: self.bulldoze_target().is_some_and(|(c, _)| {
+                self.world.can_bulldoze(&self.catalog, c)
+                    == Err(hex_core::BulldozeError::TunnelCover)
+            }),
             bulldoze_mode: self.tool == Tool::Bulldoze && !self.viewing(),
             bulldozed: self.last_bulldoze,
             refusals: self.refusals,
             epoch: self.epoch,
             world_seed: self.world.seed(),
-        }
+            ..PlayView::default()
+        };
+        view.index_tiles();
+        view
     }
 }
 
@@ -1001,8 +1144,12 @@ pub fn apply_actions(
             continue;
         }
         if action.is_camera() {
+            // In play the rig orbits and zooms about the raised tops it looks at (P4).
+            let play = active.0 == Scenario::Play;
             for mut t in &mut cameras {
-                *t = crate::camera::apply(*t, &action);
+                *t = crate::camera::apply_over(*t, &action, |c| {
+                    play.then(|| game.top_of(c)).flatten()
+                });
             }
             continue;
         }
@@ -1054,6 +1201,264 @@ mod tests {
         GameState::new(1)
     }
 
+    /// The elevation visual-parity capture script (`docs/checkpoints/elevation/visual-parity/`,
+    /// run by `make shots-piece` in a booked window) builds its scene with no refusal: a level-1
+    /// meadow ringed by six cliff-free hillsides in flat meadow, and a two-tile plateau one level
+    /// up beside flat meadow, its edges cliffs.
+    #[test]
+    fn the_visual_parity_script_builds_its_elevation_scene() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/elevation/visual-parity/visual-parity.json"
+        );
+        let script = crate::control::parse_script(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let mut g = game();
+        for cmd in &script {
+            if let Some(a) = cmd.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, GameEvent::PlacementRefused { .. }),
+                        "{cmd:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        let tile = |q, r| g.world.tile(ax(q, r)).cloned().expect("placed");
+        let cliffs = |q, r| {
+            let t = tile(q, r);
+            let def = g.catalog.get(&t.def).unwrap();
+            let o = Orientation::new(t.rotation, t.level);
+            g.world
+                .cliff_edges(&g.catalog, ax(q, r), def, o)
+                .iter()
+                .filter(|c| **c)
+                .count()
+        };
+        let p = tile(3, 0);
+        assert_eq!((p.def.as_str(), p.level), ("meadow", 1));
+        assert_eq!(cliffs(3, 0), 0, "the hillside ring meets the plateau");
+        for e in 0..6 {
+            let c = ax(3, 0).neighbor(e);
+            let t = tile(c.q, c.r);
+            assert_eq!((t.def.as_str(), t.level), ("hillside_000011", 0), "{c:?}");
+            assert_eq!(cliffs(c.q, c.r), 0, "{c:?}");
+        }
+        for (q, r) in [(-1, -1), (-2, 0)] {
+            let t = tile(q, r);
+            assert_eq!((t.def.as_str(), t.level), ("meadow", 1));
+            assert!(cliffs(q, r) >= 1, "({q}, {r}) stands on a cliff");
+        }
+    }
+
+    /// The elevation parity and shots world (`docs/checkpoints/elevation/elevation.json`) is legal
+    /// by the Rust rules: no placement is refused, a three-tile plateau stands a level up ringed by
+    /// hillsides, a two-portal tunnel runs under raised meadow, a road climbs a ramp, and the river
+    /// and beach stay on the ground.
+    #[test]
+    fn the_elevation_world_script_is_legal() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/elevation/elevation.json"
+        );
+        let script = crate::control::parse_script(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let mut g = game();
+        for cmd in &script {
+            if let Some(a) = cmd.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, GameEvent::PlacementRefused { .. }),
+                        "{cmd:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        let at = |q, r| g.world.tile(ax(q, r)).cloned().expect("placed");
+        for (q, r) in [(0, -2), (0, -3), (1, -3)] {
+            let t = at(q, r);
+            assert_eq!(
+                (t.def.as_str(), t.level),
+                ("meadow", 1),
+                "plateau ({q}, {r})"
+            );
+        }
+        assert_eq!(
+            hex_core::tunnel::tunnels(&g.world, &g.catalog)
+                .iter()
+                .map(|t| (t.a, t.b, t.cover.clone(), t.level))
+                .collect::<Vec<_>>(),
+            [(ax(2, 2), ax(4, 2), vec![ax(3, 2)], 0)]
+        );
+        assert_eq!(
+            at(3, 2).level,
+            1,
+            "the cover stands a level above the portals"
+        );
+        assert_eq!((at(6, 2).def.as_str(), at(6, 2).level), ("road_ramp", 0));
+        assert_eq!(
+            (at(7, 2).def.as_str(), at(7, 2).level),
+            ("road_straight", 1)
+        );
+        for (q, r) in [(-1, 0), (-2, 0), (0, 1)] {
+            assert_eq!(at(q, r).level, 0, "({q}, {r}) is on the ground");
+        }
+        // Nothing in the world stands on a cliff.
+        for (c, t) in g.world.tiles() {
+            let def = g.catalog.get(&t.def).unwrap();
+            let o = Orientation::new(t.rotation, t.level);
+            assert!(
+                !g.world.cliff_edges(&g.catalog, *c, def, o).contains(&true),
+                "{c:?} {}",
+                t.def
+            );
+        }
+        // The cover cannot be removed or swapped (hex-core TunnelCover).
+        g.apply(Action::SelectTile("forest".into()));
+        let refused = g.apply(Action::Replace(ax(3, 2)));
+        assert!(
+            matches!(&refused[..], [GameEvent::PlacementRefused { reason, .. }] if reason.contains("tunnel")),
+            "{refused:?}"
+        );
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        let refused = g.apply(Action::Bulldoze(ax(3, 2)));
+        assert!(
+            matches!(&refused[..], [GameEvent::BulldozeRefused { reason, .. }] if reason.contains("tunnel")),
+            "{refused:?}"
+        );
+    }
+
+    /// Hovering a tunnel cover in bulldoze mode carries the TunnelCover refusal into the view
+    /// (`bulldoze_cover`), the way the HUD's `cutOff` returns nothing for a cover; a portal does not.
+    #[test]
+    fn bulldoze_of_a_tunnel_cover_is_flagged_in_the_view() {
+        let mut g = game();
+        let o = Orientation::new;
+        // A tunnel along r = 0 with a road-free meadow detour along r = 2 keeping the world
+        // connected (hex-sim tests/common tunnel_layout), the cover placed last.
+        let mut edits = vec![
+            (ax(1, 0), "house_cluster", 0, 0),
+            (ax(2, 0), "road_straight", 0, 0),
+            (ax(3, 0), "road_tunnel_portal", 0, 0),
+            (ax(0, 1), "meadow", 0, 0),
+        ];
+        edits.extend((0..=9).map(|q| (ax(q, 2), "meadow", 0, 0)));
+        edits.extend([
+            (ax(9, 1), "meadow", 0, 0),
+            (ax(9, 0), "meadow", 0, 0),
+            (ax(8, 0), "house_cluster", 3, 0),
+            (ax(7, 0), "road_straight", 0, 0),
+            (ax(6, 0), "road_tunnel_portal", 3, 0),
+            (ax(4, 0), "meadow", 0, 1),
+            (ax(5, 0), "meadow", 0, 1),
+        ]);
+        for (cell, id, rot, level) in edits {
+            g.world.place(&g.catalog, cell, id, o(rot, level)).unwrap();
+        }
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        g.apply(Action::Hover(Some(ax(4, 0))));
+        let v = g.view();
+        assert_eq!(v.bulldoze, Some((ax(4, 0), false)));
+        assert!(v.bulldoze_cover);
+        g.apply(Action::Hover(Some(ax(3, 0))));
+        assert!(
+            !g.view().bulldoze_cover,
+            "a portal is refused for another reason, if at all"
+        );
+    }
+
+    /// A scripted `place` on a level keeps the ghost's rotation only when it is as cliff-free as the
+    /// first legal one there; a cliff rotation never wins over a seamless one.
+    #[test]
+    fn scripted_place_on_a_level_never_prefers_a_cliff_rotation() {
+        let mut g = game();
+        let cell = ax(1, 0);
+        g.apply(Action::SelectTile("hillside_000011".into()));
+        let def = g.catalog.get("hillside_000011").unwrap().clone();
+        let on_ground: Vec<Orientation> = g
+            .world
+            .legal_orientations(&g.catalog, cell, &def)
+            .into_iter()
+            .filter(|o| o.level == 0)
+            .collect();
+        let cliff = |o: Orientation| {
+            g.world
+                .cliff_edges(&g.catalog, cell, &def, o)
+                .contains(&true)
+        };
+        let seamless = on_ground
+            .iter()
+            .copied()
+            .find(|&o| !cliff(o))
+            .expect("a seamless rotation");
+        let steep = on_ground
+            .iter()
+            .copied()
+            .find(|&o| cliff(o))
+            .expect("a cliff rotation");
+        g.apply(Action::Hover(Some(cell)));
+        g.chosen = steep;
+        g.chosen_orientation.insert(g.selected.clone(), steep);
+        let e = g.apply(Action::PlaceAtLevel(cell, 0));
+        assert!(
+            e.iter().any(|e| matches!(e, GameEvent::TilePlaced { .. })),
+            "{e:?}"
+        );
+        let t = g.world.tile(cell).unwrap();
+        let got = Orientation::new(t.rotation, t.level);
+        assert!(
+            !g.world
+                .cliff_edges(&g.catalog, cell, &def, got)
+                .contains(&true),
+            "took the cliff rotation {got:?} over {seamless:?}"
+        );
+    }
+
+    /// A refused scripted `place` leaves the ghost where the hover put it, not on the refused level.
+    #[test]
+    fn a_refused_scripted_place_leaves_the_ghost_alone() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::PlaceAtLevel(ax(1, 0), 9));
+        assert_ne!(g.chosen.level, 9);
+        assert_eq!(g.chosen.level, 0);
+        assert_ne!(g.chosen_orientation.get("meadow").map(|o| o.level), Some(9));
+    }
+
+    /// The script `place` command's optional `level` (P4): omitted, the first legal orientation;
+    /// given, that level, at the ghost's rotation where it is legal there.
+    #[test]
+    fn scripted_place_takes_a_level_or_is_refused() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        let e = g.apply(Action::PlaceAtLevel(ax(1, 0), 2));
+        assert!(
+            e.contains(&GameEvent::TilePlaced {
+                q: 1,
+                r: 0,
+                tile: "meadow".into(),
+                rotation: 0,
+                level: 2
+            }),
+            "{e:?}"
+        );
+        assert_eq!(g.world.tile(ax(1, 0)).unwrap().level, 2);
+        // Omitted: the ground, as the ghost lands.
+        g.apply(Action::Place(ax(-1, 0)));
+        assert_eq!(g.world.tile(ax(-1, 0)).unwrap().level, 0);
+        // A level no orientation is legal on is a refusal with the world's own reason.
+        g.apply(Action::SelectTile("river_straight".into()));
+        let e = g.apply(Action::PlaceAtLevel(ax(0, 1), 1));
+        assert!(
+            matches!(e.last(), Some(GameEvent::PlacementRefused { level: 1, .. })),
+            "{e:?}"
+        );
+        assert!(g.world.tile(ax(0, 1)).is_none());
+        let e = g.apply(Action::PlaceAtLevel(ax(0, 1), 9));
+        assert!(
+            matches!(e.last(), Some(GameEvent::PlacementRefused { level: 9, .. })),
+            "{e:?}"
+        );
+    }
+
     fn place(g: &mut GameState, id: &str, cell: Axial) -> Vec<GameEvent> {
         g.apply(Action::SelectTile(id.into()));
         g.apply(Action::Place(cell))
@@ -1080,7 +1485,7 @@ mod tests {
         // Edge 3 of (1,0) faces the meadow, so neither road edge may point there.
         let (_, legal, edges, valid) = g.ghost().unwrap();
         assert_eq!(legal, [1, 2, 4, 5]);
-        assert_eq!(g.rotation, 1);
+        assert_eq!(g.chosen.rotation, 1);
         assert!(valid);
         assert_eq!(edges[3], EdgeStatus::Compatible);
         assert_eq!(edges[0], EdgeStatus::Neutral);
@@ -1091,34 +1496,55 @@ mod tests {
         let mut g = game();
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        // Legal 1, 2, 4, 5, but a straight road turned 180° looks the same: two orientations.
+        // Legal 1, 2, 4, 5, but a straight road turned 180° looks the same: two orientations on
+        // the ground, then the same two one level up (a cliff to the meadow), and so on to 3.
+        assert_eq!(g.chosen, Orientation::new(1, 0));
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 2);
+        assert_eq!(g.chosen, Orientation::new(2, 0));
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 1, "4 repeats 1's sockets and is skipped");
+        assert_eq!(
+            g.chosen,
+            Orientation::new(1, 1),
+            "4 repeats 1's sockets and is skipped; the ground ones are done"
+        );
         g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!(g.rotation, 2);
+        assert_eq!(g.chosen, Orientation::new(2, 0));
         g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!(g.rotation, 1);
+        assert_eq!(g.chosen, Orientation::new(1, 0));
+        g.apply(Action::Rotate(RotateDir::Back));
+        assert_eq!(
+            g.chosen,
+            Orientation::new(2, 3),
+            "back from the first wraps"
+        );
     }
 
     #[test]
     fn rotate_on_a_fully_symmetric_tile_keeps_its_one_orientation() {
         let mut g = game();
-        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::SelectTile("forest".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        assert_eq!(g.rotation, 0);
+        assert_eq!(g.chosen, Orientation::new(0, 0));
         for dir in [RotateDir::Forward, RotateDir::Back] {
             let e = g.apply(Action::Rotate(dir));
-            assert_eq!(g.rotation, 0);
+            assert_eq!(g.chosen, Orientation::new(0, 0));
             assert_eq!(
                 e,
                 [GameEvent::GhostRotated {
                     rotation: 0,
+                    level: 0,
                     valid: true
                 }]
             );
         }
+        // A raisable meadow has one orientation per level: R steps it up, ground first.
+        g.apply(Action::SelectTile("meadow".into()));
+        assert_eq!(g.chosen, Orientation::new(0, 0));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(0, 1));
+        g.apply(Action::Rotate(RotateDir::Back));
+        g.apply(Action::Rotate(RotateDir::Back));
+        assert_eq!(g.chosen, Orientation::new(0, 3));
     }
 
     #[test]
@@ -1126,26 +1552,109 @@ mod tests {
         let mut g = game();
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        assert_eq!(g.rotation, 1, "auto-rotate: the first legal rotation");
+        assert_eq!(
+            g.chosen,
+            Orientation::new(1, 0),
+            "auto-rotate: the first legal rotation, on the ground"
+        );
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 2);
+        assert_eq!(g.chosen, Orientation::new(2, 0));
         // At (1, -1) the meadow sits on world edge 2, so rotation 2 is illegal there.
         g.apply(Action::Hover(Some(ax(1, -1))));
-        assert_eq!(g.rotation, 0, "not legal here: the first legal rotation");
+        assert_eq!(
+            g.chosen,
+            Orientation::new(0, 0),
+            "not legal here: the first legal rotation"
+        );
         g.apply(Action::Hover(None));
         g.apply(Action::Hover(Some(ax(1, 0))));
         assert_eq!(
-            g.rotation, 2,
+            g.chosen.rotation, 2,
             "back on the slot: the chosen rotation, not a reset"
         );
         g.apply(Action::Hover(Some(ax(0, 1))));
-        assert_eq!(g.rotation, 2, "legal at another slot too");
+        assert_eq!(g.chosen.rotation, 2, "legal at another slot too");
         // Per tile: another tile snaps as usual, and the road keeps its choice.
         g.apply(Action::SelectTile("road_bend_120".into()));
         let first = g.ghost().unwrap().1[0];
-        assert_eq!(g.rotation, first);
+        assert_eq!(g.chosen.rotation, first);
         g.apply(Action::SelectTile("road_straight".into()));
-        assert_eq!(g.rotation, 2);
+        assert_eq!(g.chosen.rotation, 2);
+    }
+
+    /// A cliff chosen with R at one slot is never the default elsewhere, nor on coming back.
+    #[test]
+    fn a_chosen_cliff_level_does_not_follow_the_hover() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(0, 1));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.chosen.level, 0, "a fresh ground slot snaps cliff-free");
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        assert_eq!(g.chosen.level, 0, "back on the slot: no kept cliff");
+        // The remembered rotation still applies where it is cliff-free.
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(1, 1));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.chosen, Orientation::new(1, 0));
+    }
+
+    #[test]
+    fn quick_place_away_from_the_ghost_places_cliff_free() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(0, 1));
+        g.quick_place(ax(-1, 0));
+        assert_eq!(g.world.tile(ax(-1, 0)).unwrap().level, 0);
+    }
+
+    #[test]
+    fn replacing_a_plateau_tile_keeps_the_plateau_level() {
+        let mut g = game();
+        for q in 1..=3 {
+            g.world
+                .place(&g.catalog, ax(q, 0), "meadow", Orientation::new(0, 1))
+                .unwrap();
+        }
+        // The ghost sits on a ground slot west of the start, on level 0.
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        assert_eq!(g.chosen.level, 0);
+        g.apply(Action::Replace(ax(2, 0)));
+        let t = g.world.tile(ax(2, 0)).unwrap();
+        assert_eq!((t.def.as_str(), t.level), ("road_straight", 1));
+        assert_eq!(
+            t.rotation, g.chosen.rotation,
+            "the ghost's rotation, where it fits"
+        );
+    }
+
+    #[test]
+    fn a_raised_choice_drops_to_the_ground_for_a_tile_that_cannot_rise() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(0, 1));
+        // The ocean fits nowhere beside the meadow, so nothing snaps; it still may not float.
+        g.apply(Action::SelectTile("ocean".into()));
+        assert_eq!(g.chosen.level, 0);
+        assert_eq!(g.view().ghost.unwrap().level, 0);
+        g.apply(Action::Primary);
+        let e = g.apply(Action::Primary);
+        assert!(
+            matches!(&e[0], GameEvent::PlacementRefused { reason, .. } if reason.contains("do not fit")),
+            "{e:?}"
+        );
+        // Back on the meadow at that slot: cliff-free again, not the remembered cliff.
+        g.apply(Action::SelectTile("meadow".into()));
+        assert_eq!(g.chosen, Orientation::new(0, 0));
     }
 
     #[test]
@@ -1156,9 +1665,9 @@ mod tests {
         let (_, legal, edges, valid) = g.ghost().unwrap();
         assert!(legal.is_empty() && !valid);
         assert!(edges.contains(&EdgeStatus::Incompatible));
-        let before = g.rotation;
+        let before = g.chosen.rotation;
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, (before + 1) % 6, "turns one raw step");
+        assert_eq!(g.chosen.rotation, (before + 1) % 6, "turns one raw step");
         let e = g.apply(Action::Primary);
         assert_eq!(
             e,
@@ -1166,7 +1675,11 @@ mod tests {
                 cell: Some(ax(0, 1))
             }]
         );
-        assert_eq!(g.rotation, (before + 1) % 6, "pinning keeps the turn");
+        assert_eq!(
+            g.chosen.rotation,
+            (before + 1) % 6,
+            "pinning keeps the turn"
+        );
         let e = g.apply(Action::Primary);
         assert!(
             matches!(&e[0], GameEvent::PlacementRefused { reason, .. } if reason.contains("do not fit"))
@@ -1185,7 +1698,8 @@ mod tests {
             q: -1,
             r: 0,
             tile: "forest".into(),
-            rotation: 0
+            rotation: 0,
+            level: 0
         }));
         assert!(g.world.can_undo() && !g.world.can_redo());
         assert_eq!(g.apply(Action::Undo), [GameEvent::Undone]);
@@ -1264,11 +1778,11 @@ mod tests {
         );
         g.apply(Action::Hover(Some(ax(1, 0))));
         // East of the start meadow: one headland orientation, then three bay ones, then around.
-        let mut seen = vec![(g.selected.clone(), g.rotation)];
+        let mut seen = vec![(g.selected.clone(), g.chosen.rotation)];
         for _ in 0..4 {
             g.apply(Action::Rotate(RotateDir::Forward));
             assert!(g.ghost().unwrap().3, "every step is legal");
-            seen.push((g.selected.clone(), g.rotation));
+            seen.push((g.selected.clone(), g.chosen.rotation));
         }
         let ids: Vec<&str> = seen.iter().map(|(t, _)| t.as_str()).collect();
         assert_eq!(
@@ -1283,14 +1797,14 @@ mod tests {
         );
         assert_eq!(seen[0], seen[4], "the fifth press wraps");
         g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_inner", 5));
         // The bay stays chosen: hovering off and back, or picking the group again, restores it.
         g.apply(Action::Hover(None));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_inner", 5));
         g.apply(Action::SelectTile("meadow".into()));
         g.apply(Action::SelectTile("beach_curve".into()));
-        assert_eq!((g.selected.as_str(), g.rotation), ("beach_inner", 5));
+        assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_inner", 5));
         // Placing places the variant the ghost shows.
         g.apply(Action::Place(ax(1, 0)));
         let t = g.world.tile(ax(1, 0)).unwrap();
@@ -1374,15 +1888,19 @@ mod tests {
         assert!(g.view().ghost.unwrap().pinned);
         // R turns the pinned ghost, through the rotations legal at (1, 0).
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 2);
+        assert_eq!(g.chosen.rotation, 2);
         g.apply(Action::Hover(Some(ax(1, 0))));
-        assert_eq!(g.rotation, 2, "hovering the pinned slot keeps the turn");
+        assert_eq!(
+            g.chosen.rotation, 2,
+            "hovering the pinned slot keeps the turn"
+        );
         let e = g.apply(Action::Primary);
         assert!(e.contains(&GameEvent::TilePlaced {
             q: 1,
             r: 0,
             tile: "road_straight".into(),
-            rotation: 2
+            rotation: 2,
+            level: 0
         }));
         assert!(e.contains(&GameEvent::PinChanged { cell: None }));
         assert_eq!(g.pinned, None);
@@ -1465,7 +1983,8 @@ mod tests {
                     q,
                     r: 0,
                     tile: "meadow".into(),
-                    rotation: 0
+                    rotation: 0,
+                    level: 0
                 }),
                 "{e:?}"
             );
@@ -1487,7 +2006,7 @@ mod tests {
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
         g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.rotation, 2, "the player turned the ghost");
+        assert_eq!(g.chosen.rotation, 2, "the player turned the ghost");
         g.apply(Action::QuickPlace);
         assert_eq!(g.world.tile(ax(1, 0)).unwrap().rotation, 2);
         // A pin on (-1, 0): Shift+click on (0, -1) places there and the pin stays.
@@ -1543,7 +2062,8 @@ mod tests {
                 q: 1,
                 r: 0,
                 tile: "forest".into(),
-                rotation: g.rotation,
+                rotation: g.chosen.rotation,
+                level: g.chosen.level,
                 replaced: "meadow".into(),
             }]
         );
@@ -1571,16 +2091,17 @@ mod tests {
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(-1, 0))));
         g.apply(Action::Rotate(RotateDir::Forward));
-        let ghost = g.rotation;
-        // At (1, 0) the meadows sit on world edge 3 only, so the ghost's rotation from (-1, 0)
+        let ghost = g.chosen;
+        // At (1, 0) the meadows sit on world edge 3 only, so the ghost's orientation from (-1, 0)
         // fits there when its road ends avoid edge 3.
-        let fits = g.world.replace_rotations(
+        let fits = g.world.replace_orientations(
             &g.catalog,
             ax(1, 0),
             g.catalog.get("road_straight").unwrap(),
         );
         g.apply(Action::Replace(ax(1, 0)));
-        let got = g.world.tile(ax(1, 0)).unwrap().rotation;
+        let t = g.world.tile(ax(1, 0)).unwrap();
+        let got = Orientation::new(t.rotation, t.level);
         if fits.contains(&ghost) {
             assert_eq!(got, ghost);
         } else {
@@ -1703,6 +2224,55 @@ mod tests {
             GameEvent::BulldozeRefused { reason, .. } if *reason == disconnect
         )));
         assert_eq!(g.world.tiles().len(), 4, "meadow, two roads, forest");
+    }
+
+    /// Elevation (P4): a free slot's outline sits on the level the selected tile's default
+    /// orientation takes there. Beside a lone level-1 meadow a meadow goes cliff-free on level 1;
+    /// between it and the level-0 start every level makes a cliff, so the ground wins. A flat
+    /// world lists no slot.
+    /// The published `slot_levels` follow the selected tile: it rides the selection fields, so a
+    /// selection change republishes it without a world change.
+    #[test]
+    fn published_slot_levels_follow_the_selection() {
+        let mut g = game();
+        g.world
+            .place(&g.catalog, ax(1, 0), "meadow", Orientation::new(0, 1))
+            .unwrap();
+        let published = |g: &GameState| {
+            g.state_fields_json()["slot_levels"]
+                .as_array()
+                .unwrap()
+                .len()
+        };
+        assert_eq!(published(&g), 3, "meadow goes up beside the plateau");
+        g.apply(Action::SelectTile("river_straight".into()));
+        assert_eq!(published(&g), g.view().slot_levels.len());
+        assert_eq!(published(&g), 0, "a river stays on the ground");
+    }
+
+    #[test]
+    fn free_slots_take_the_level_the_selected_tile_would() {
+        let mut g = game();
+        assert_eq!(g.selected, "meadow");
+        assert!(g.view().slot_levels.is_empty(), "a flat world");
+        g.world
+            .place(&g.catalog, ax(1, 0), "meadow", Orientation::new(0, 1))
+            .unwrap();
+        let v = g.view();
+        let raised: Vec<Axial> = v.slot_levels.keys().copied().collect();
+        assert_eq!(raised, vec![ax(1, 1), ax(2, -1), ax(2, 0)], "{v:?}");
+        assert!(v.slot_levels.values().all(|&l| l == 1));
+        for c in &v.frontier {
+            if !raised.contains(c) {
+                assert_eq!(
+                    g.world
+                        .auto_orient(&g.catalog, *c, g.selected_def())
+                        .unwrap()
+                        .level,
+                    0
+                );
+            }
+        }
     }
 
     #[test]

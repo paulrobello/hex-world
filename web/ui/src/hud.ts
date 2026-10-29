@@ -11,6 +11,7 @@ import {
   type TileMap,
   cellKey,
   cutOff,
+  tunnelCover,
   diffTiles,
   entryOf,
   entryReadout,
@@ -19,6 +20,7 @@ import {
   needsAt,
   rotationReadout,
   tileDef,
+  tileRise,
   tileMap,
 } from "./rules.ts";
 import { Photo } from "./photo.ts";
@@ -100,7 +102,7 @@ export class Hud {
   private hidden = false;
   private pointerOff = true;
   private lastRotate = 0;
-  private placed: { cell: Cell; text: string; until: number } | null = null;
+  private placed: { cell: Cell; level: number; text: string; until: number } | null = null;
   private refusal: { cell: Cell; tile: string; text: string; until: number } | null = null;
   private toastState: { verb: string; count: number } | null = null;
   private toastTimer = 0;
@@ -420,7 +422,7 @@ export class Hud {
   private onEvent(e: GameEvent, before: TileMap, now: number): void {
     switch (e.type) {
       case "tilePlaced":
-        this.placed = { cell: e, text: `Placed ${tileName(e.tile)}`, until: now + PLACED_TAG_MS };
+        this.placed = { cell: e, level: e.level, text: `Placed ${tileName(e.tile)}`, until: now + PLACED_TAG_MS };
         this.refusal = null;
         this.fire("place");
         this.say(`Placed ${tileName(e.tile)}.`);
@@ -428,7 +430,7 @@ export class Hud {
         break;
       case "tileReplaced": {
         const text = `Replaced ${tileName(e.replaced)} with ${tileName(e.tile)}`;
-        this.placed = { cell: e, text, until: now + PLACED_TAG_MS };
+        this.placed = { cell: e, level: e.level, text, until: now + PLACED_TAG_MS };
         this.refusal = null;
         this.fire("place");
         this.say(`${text}.`);
@@ -436,7 +438,14 @@ export class Hud {
       }
       case "placementRefused": {
         const def = tileDef(e.tile);
-        const why = def ? fit(def, needsAt(e, this.map)).why : "";
+        // A refused replace on a tunnel's cover: the tile stays and says why (hex-core `ReplaceError::TunnelCover`).
+        const why = this.coverCells().has(cellKey(e))
+          ? "This tile covers a tunnel."
+          : e.reason.includes("cannot stand at level")
+            ? `${e.reason[0]!.toUpperCase()}${e.reason.slice(1)}.`
+            : def
+              ? fit(def, needsAt(e, this.map), e.level).why
+              : "";
         const text = why || "An edge doesn't match its neighbour.";
         this.refusal = { cell: e, tile: e.tile, text, until: now + 2000 };
         if (!reduceMotion()) retrigger(this.tag, "is-pulse");
@@ -481,6 +490,17 @@ export class Hud {
     }
   }
 
+  private coverRev = -1;
+  private cover = new Set<string>();
+  /** The cells under a complete tunnel's cover, recomputed only when the tiles change. */
+  private coverCells(): Set<string> {
+    if (this.coverRev !== this.tilesRev) {
+      this.cover = tunnelCover(this.map);
+      this.coverRev = this.tilesRev;
+    }
+    return this.cover;
+  }
+
   private say(msg: string): void {
     this.live.textContent = msg;
   }
@@ -489,6 +509,7 @@ export class Hud {
   private renderTag(st: PlayState, now: number): void {
     const tag = this.tag;
     let cell: Cell | null = null;
+    let level = 0;
     let sig = "";
     const parts: (Node | string)[] = [];
     let bad = false;
@@ -499,6 +520,7 @@ export class Hud {
       const b = st.bulldoze;
       cell = b;
       const t = this.map.get(cellKey(b));
+      level = t?.level ?? 0;
       if (b.allowed) {
         sig = `rm|${cellKey(b)}`;
         parts.push(
@@ -514,33 +536,57 @@ export class Hud {
       }
     } else if (this.placed && st.tool === "place" && (!st.ghost || sameCell(st.ghost, this.placed.cell))) {
       cell = this.placed.cell;
+      level = this.placed.level;
       sig = `placed|${cellKey(cell)}|${this.placed.text}`;
       parts.push(icon("check", "ic ok-ic"), h("span", {}, this.placed.text));
     } else if (this.refusal && st.tool === "place" && this.map.has(cellKey(this.refusal.cell))) {
       // A refused replace: the placed tile stays, and the tag says why the selected one can't swap in.
       const f = this.refusal;
       cell = f.cell;
+      level = this.map.get(cellKey(cell))?.level ?? 0;
       bad = true;
       sig = `swap|${cellKey(cell)}|${f.tile}|${f.text}`;
       parts.push(icon("alert"), h("span", {}, tileName(f.tile)), h("span", { class: "ghost-tag__fit is-bad" }, f.text));
+    } else if (
+      st.tool === "place" &&
+      st.hovered_kind === "tile" &&
+      st.hovered &&
+      !(st.ghost && sameCell(st.pinned, st.ghost)) &&
+      this.coverCells().has(cellKey(st.hovered))
+    ) {
+      // The pointer is on a tunnel's cover: a replace here is refused, so say so before the click.
+      cell = st.hovered;
+      level = this.map.get(cellKey(cell))?.level ?? 0;
+      bad = true;
+      sig = `cover|${cellKey(cell)}`;
+      parts.push(
+        icon("alert"),
+        h("span", {}, tileName(this.map.get(cellKey(cell))?.tile ?? "")),
+        h("span", { class: "ghost-tag__fit is-bad" }, "Covers a tunnel"),
+      );
     } else if (st.tool === "place" && st.ghost) {
       const g = st.ghost;
       cell = g;
+      level = g.level;
       const def = tileDef(g.tile);
-      const f = def ? fit(def, needsAt(g, this.map)) : null;
+      const f = def ? fit(def, needsAt(g, this.map), g.level) : null;
       const name = tileName(g.tile);
       if (f?.ok && g.valid) {
         // A group (the Beach Curve) counts every member's orientations together, as R walks them.
         const entry = entryOf(g.tile);
+        const entryFit = entry ? fitEntry(entry, needsAt(g, this.map)) : null;
         const { index, count } =
-          entry && entry.tiles.length > 1
-            ? entryReadout(fitEntry(entry, needsAt(g, this.map)), g.tile, g.rotation)
+          entry && entryFit && entry.tiles.length > 1
+            ? entryReadout(entryFit, g.tile, g.rotation, g.level)
             : rotationReadout(def!, g.legal_rotations, g.rotation);
+        // R steps every level too, so the hint shows while any orientation is left to turn to.
+        const canTurn = count > 1 || (entryFit?.seq.length ?? 0) > 1;
         const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
         const pinned = sameCell(st.pinned, g);
-        sig = `ok|${cellKey(g)}|${g.tile}|${text}|${pinned}`;
+        sig = `ok|${cellKey(g)}|${g.tile}|${text}|${g.level}|${canTurn}|${pinned}`;
         parts.push(h("span", {}, name), h("span", { class: "ghost-tag__fit" }, text));
-        if (count > 1) parts.push(h("kbd", {}, "R"));
+        if (g.level > 0) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, `Level ${g.level}`));
+        if (canTurn) parts.push(h("kbd", {}, "R"));
         if (pinned) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, "Pinned · click to place"));
       } else {
         bad = true;
@@ -551,7 +597,7 @@ export class Hud {
             : f && !f.ok
               ? f.why
               : `${plural(clashes, "edge")} clash`;
-        sig = `bad|${cellKey(g)}|${g.tile}|${why}`;
+        sig = `bad|${cellKey(g)}|${g.tile}|${why}|${g.level}`;
         parts.push(icon("alert"), h("span", {}, name), h("span", { class: "ghost-tag__fit is-bad" }, why));
         if (f?.ok) parts.push(h("kbd", {}, "R"));
       }
@@ -568,7 +614,10 @@ export class Hud {
       tag.classList.toggle("is-stacked", stacked);
       tag.setAttribute("aria-label", tag.textContent ?? "");
     }
-    const rect = this.hw.cellRect(cell.q, cell.r);
+    // A hillside or ramp stands up to one level above its own, so the tag anchors at its high side.
+    const ghostTile = st.tool === "place" && st.ghost && sameCell(st.ghost, cell) ? st.ghost.tile : null;
+    const rise = tileRise(ghostTile ?? this.map.get(cellKey(cell))?.tile ?? "");
+    const rect = this.hw.cellRect(cell.q, cell.r, level, rise);
     if (!rect) {
       tag.classList.add("is-gone");
       return;
@@ -678,7 +727,7 @@ export class Hud {
 
   /** Centre of a cell on screen, for callouts. */
   cellCentre(c: Cell): [number, number] | null {
-    const r = this.hw.cellRect(c.q, c.r);
+    const r = this.hw.cellRect(c.q, c.r, this.map.get(cellKey(c))?.level ?? 0);
     return r ? [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2] : null;
   }
 

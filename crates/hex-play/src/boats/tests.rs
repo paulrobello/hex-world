@@ -15,6 +15,7 @@ fn tile(q: i32, r: i32, id: &str, rotation: u8) -> PlayTile {
         cell: Axial::new(q, r),
         tile: id.to_owned(),
         rotation,
+        level: 0,
     }
 }
 
@@ -256,7 +257,8 @@ fn boats_are_never_saved() {
         } else {
             "river_straight"
         };
-        w.place(&c, Axial::new(q, 1), id, 0).unwrap();
+        w.place(&c, Axial::new(q, 1), id, hex_core::Orientation::new(0, 0))
+            .unwrap();
     }
     let save = SaveData {
         world: w.clone(),
@@ -288,6 +290,7 @@ fn boats_are_never_saved() {
                 cell: *cell,
                 tile: t.def.clone(),
                 rotation: t.rotation,
+                level: t.level,
             })
             .collect()
     };
@@ -520,7 +523,7 @@ pub(crate) fn checkpoint_world() -> World {
     let c = catalog();
     let mut w = World::new(1);
     let mut put = |q: i32, r: i32, id: &str, rot: u8| {
-        w.place(&c, Axial::new(q, r), id, rot)
+        w.place(&c, Axial::new(q, r), id, hex_core::Orientation::new(rot, 0))
             .unwrap_or_else(|e| panic!("{id} at ({q}, {r}) r{rot}: {e:?}"));
     };
     put(0, 1, "river_straight", 0);
@@ -561,6 +564,7 @@ fn the_checkpoint_world_holds_three_of_each() {
             cell: *cell,
             tile: t.def.clone(),
             rotation: t.rotation,
+            level: t.level,
         })
         .collect();
     let plan = BoatPlan::new(&tiles, &catalog(), w.seed());
@@ -627,6 +631,7 @@ fn play_tiles(w: &World) -> Vec<PlayTile> {
             cell: *cell,
             tile: t.def.clone(),
             rotation: t.rotation,
+            level: t.level,
         })
         .collect()
 }
@@ -641,14 +646,25 @@ fn fork_cell() -> Axial {
 fn fork_world() -> Vec<PlayTile> {
     let c = catalog();
     let mut w = World::new(5);
-    w.place(&c, fork_cell(), "river_fork", 0).unwrap();
+    w.place(
+        &c,
+        fork_cell(),
+        "river_fork",
+        hex_core::Orientation::new(0, 0),
+    )
+    .unwrap();
     // A straight at rotation r carries world edges r and r + 3.
     for (e, rot) in [(0u8, 0u8), (2, 2), (4, 1)] {
         let mut cell = fork_cell();
         for _ in 0..2 {
             cell = cell.neighbor(e);
-            w.place(&c, cell, "river_straight", rot)
-                .unwrap_or_else(|err| panic!("arm {e} at {cell:?}: {err:?}"));
+            w.place(
+                &c,
+                cell,
+                "river_straight",
+                hex_core::Orientation::new(rot, 0),
+            )
+            .unwrap_or_else(|err| panic!("arm {e} at {cell:?}: {err:?}"));
         }
     }
     play_tiles(&w)
@@ -828,9 +844,22 @@ fn rowing_boats_keep_to_the_channel_round_the_tight_bend() {
     // Beside the start tile, a grass edge toward it.
     let bend = Axial::ORIGIN.neighbor(5);
     let mut w = World::new(2);
-    w.place(&c, bend, "river_bend_60", 0).unwrap();
-    w.place(&c, bend.neighbor(0), "river_straight", 0).unwrap();
-    w.place(&c, bend.neighbor(1), "river_straight", 1).unwrap();
+    w.place(&c, bend, "river_bend_60", hex_core::Orientation::new(0, 0))
+        .unwrap();
+    w.place(
+        &c,
+        bend.neighbor(0),
+        "river_straight",
+        hex_core::Orientation::new(0, 0),
+    )
+    .unwrap();
+    w.place(
+        &c,
+        bend.neighbor(1),
+        "river_straight",
+        hex_core::Orientation::new(1, 0),
+    )
+    .unwrap();
     let tiles = play_tiles(&w);
     for seed in 0..4u64 {
         let mut plan = BoatPlan::new(&tiles, &c, seed);

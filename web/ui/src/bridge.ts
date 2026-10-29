@@ -111,7 +111,7 @@ export type Command =
   | { cmd: "pin"; q: number; r: number }
   | { cmd: "unpin" }
   | { cmd: "rotate"; dir: Spin }
-  | { cmd: "place"; q: number; r: number }
+  | { cmd: "place"; q: number; r: number; level?: number }
   | { cmd: "replace"; q: number; r: number }
   | { cmd: "undo" }
   | { cmd: "redo" }
@@ -188,15 +188,15 @@ export interface DiagGpu {
 }
 
 export type GameEvent =
-  | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number }
-  | { type: "placementRefused"; q: number; r: number; tile: string; rotation: number; reason: string }
+  | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number; level: number }
+  | { type: "placementRefused"; q: number; r: number; tile: string; rotation: number; level: number; reason: string }
   | { type: "tileBulldozed"; q: number; r: number; tile: string }
   | { type: "bulldozeRefused"; q: number; r: number; reason: string }
-  | { type: "tileReplaced"; q: number; r: number; tile: string; rotation: number; replaced: string }
+  | { type: "tileReplaced"; q: number; r: number; tile: string; rotation: number; level: number; replaced: string }
   | { type: "undone" }
   | { type: "redone" }
   | { type: "tileSelected"; tile: string }
-  | { type: "ghostRotated"; rotation: number; valid: boolean }
+  | { type: "ghostRotated"; rotation: number; level: number; valid: boolean }
   | { type: "hoverChanged"; cell: Cell | null }
   | { type: "pinChanged"; cell: Cell | null }
   | { type: "toolChanged"; mode: Tool }
@@ -228,6 +228,8 @@ export interface PlayTile {
   r: number;
   tile: string;
   rotation: number;
+  /** The level the tile stands on (P4): 0 is the ground. */
+  level: number;
 }
 
 export interface Ghost {
@@ -235,6 +237,8 @@ export interface Ghost {
   r: number;
   tile: string;
   rotation: number;
+  /** The level the ghost would stand on; `legal_rotations` are the rotations legal on it. */
+  level: number;
   valid: boolean;
   legal_rotations: number[];
   edges: EdgeStatus[];
@@ -263,12 +267,16 @@ export interface RisingTile {
   t: number;
 }
 
-/** A driving car in `play.car_list`: its sim id, trip phase and world XZ position in metres. */
+/**
+ * A driving car in `play.car_list`: its sim id, trip phase, world XZ position in metres and body
+ * opacity (0 inside a tunnel, fading in over the metres before the arch).
+ */
 export interface CarInfo {
   id: number;
   phase: "pulling_out" | "leaving" | "road" | "parking";
   x: number;
   z: number;
+  opacity: number;
 }
 
 /**
@@ -304,6 +312,8 @@ export interface PlayState {
   walk_mode: boolean;
   tiles: PlayTile[];
   frontier: Cell[];
+  /** The level each free slot's outline sits on, where it is not 0 (P4). */
+  slot_levels: (Cell & { level: number })[];
   hovered: Cell | null;
   /** The slot a click pinned: the ghost stays there while the pointer moves; null when nothing is pinned. */
   pinned: Cell | null;
@@ -590,7 +600,12 @@ export interface HexWorld {
   /** Overlay hook: every drained batch, without taking it from `events()` callers. */
   watchEvents(cb: (batch: GameEvent[]) => void): void;
   pumpEvents(): void;
-  cellRect(q: number, r: number): Rect | null;
+  /**
+   * The screen rectangle around the cell standing on `level` (0 when omitted). `rise` is how many
+   * levels the tile's highest corner stands above its own level (a hillside or ramp: 1), which
+   * lifts the rectangle's top so a tag anchors at the high side.
+   */
+  cellRect(q: number, r: number, level?: number, rise?: number): Rect | null;
   /** Removes and returns a finished capture's PNG data URL (screenshots and photo exports). */
   takeShot(name: string): string | null;
   /** The `.hexworld` bytes of the `save` command tagged `tag`, once its `saved` event fired; null before or after. */
@@ -631,7 +646,7 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   pin: keys<CommandOf<"pin">>({ q: true, r: true }),
   unpin: keys<CommandOf<"unpin">>({}),
   rotate: keys<CommandOf<"rotate">>({ dir: true }),
-  place: keys<CommandOf<"place">>({ q: true, r: true }),
+  place: keys<CommandOf<"place">>({ q: true, r: true, level: true }),
   replace: keys<CommandOf<"replace">>({ q: true, r: true }),
   undo: keys<CommandOf<"undo">>({}),
   redo: keys<CommandOf<"redo">>({}),
@@ -676,15 +691,29 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
 };
 
 export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
-  tilePlaced: keys<EventOf<"tilePlaced">>({ q: true, r: true, tile: true, rotation: true }),
-  placementRefused: keys<EventOf<"placementRefused">>({ q: true, r: true, tile: true, rotation: true, reason: true }),
+  tilePlaced: keys<EventOf<"tilePlaced">>({ q: true, r: true, tile: true, rotation: true, level: true }),
+  placementRefused: keys<EventOf<"placementRefused">>({
+    q: true,
+    r: true,
+    tile: true,
+    rotation: true,
+    level: true,
+    reason: true,
+  }),
   tileBulldozed: keys<EventOf<"tileBulldozed">>({ q: true, r: true, tile: true }),
   bulldozeRefused: keys<EventOf<"bulldozeRefused">>({ q: true, r: true, reason: true }),
-  tileReplaced: keys<EventOf<"tileReplaced">>({ q: true, r: true, tile: true, rotation: true, replaced: true }),
+  tileReplaced: keys<EventOf<"tileReplaced">>({
+    q: true,
+    r: true,
+    tile: true,
+    rotation: true,
+    level: true,
+    replaced: true,
+  }),
   undone: keys<EventOf<"undone">>({}),
   redone: keys<EventOf<"redone">>({}),
   tileSelected: keys<EventOf<"tileSelected">>({ tile: true }),
-  ghostRotated: keys<EventOf<"ghostRotated">>({ rotation: true, valid: true }),
+  ghostRotated: keys<EventOf<"ghostRotated">>({ rotation: true, level: true, valid: true }),
   hoverChanged: keys<EventOf<"hoverChanged">>({ cell: true }),
   pinChanged: keys<EventOf<"pinChanged">>({ cell: true }),
   toolChanged: keys<EventOf<"toolChanged">>({ mode: true }),
@@ -730,6 +759,7 @@ export const STATE_FIELDS = {
     walk_mode: true,
     tiles: true,
     frontier: true,
+    slot_levels: true,
     hovered: true,
     pinned: true,
     hovered_kind: true,
@@ -757,10 +787,19 @@ export const STATE_FIELDS = {
     orbit: true,
   }),
   orbit: keys<OrbitPose>({ focus: true, yaw: true, pitch: true, distance: true }),
-  ghost: keys<Ghost>({ q: true, r: true, tile: true, rotation: true, valid: true, legal_rotations: true, edges: true }),
+  ghost: keys<Ghost>({
+    q: true,
+    r: true,
+    tile: true,
+    rotation: true,
+    level: true,
+    valid: true,
+    legal_rotations: true,
+    edges: true,
+  }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
   last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
-  tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true }),
+  tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true, level: true }),
   rising: keys<RisingTile>({ q: true, r: true, tile: true, stage: true, t: true }),
   cell: keys<Cell>({ q: true, r: true }),
   hovered_kind: keys<Record<HoveredKind, true>>({ tile: true, slot: true, empty: true }),

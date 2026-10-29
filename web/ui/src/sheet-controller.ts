@@ -95,12 +95,14 @@ export class SheetController {
     const onSlot = st.ghost && sameCell(st.ghost, slot) ? st.ghost : null;
     const ghostRotation = onSlot ? onSlot.rotation : null;
     const ghostTile = onSlot ? onSlot.tile : null;
+    const ghostLevel = onSlot ? onSlot.level : 0;
     const signature = [
       tilesRevision,
       slot && cellKey(slot),
       st.selected,
       ghostTile,
       ghostRotation,
+      ghostLevel,
       st.tool,
       this.turns,
     ].join("|");
@@ -113,6 +115,7 @@ export class SheetController {
       selected: st.selected,
       ghostTile,
       ghostRotation,
+      ghostLevel,
       turns: this.turns,
       bulldoze: st.tool === "bulldoze",
       nearest,

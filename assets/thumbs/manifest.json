@@ -116,6 +116,118 @@
       "road_junction-r0.webp",
       "road_junction-r1.webp"
     ],
+    "hillside_000001": [
+      "hillside_000001-r0.webp",
+      "hillside_000001-r1.webp",
+      "hillside_000001-r2.webp",
+      "hillside_000001-r3.webp",
+      "hillside_000001-r4.webp",
+      "hillside_000001-r5.webp"
+    ],
+    "hillside_000011": [
+      "hillside_000011-r0.webp",
+      "hillside_000011-r1.webp",
+      "hillside_000011-r2.webp",
+      "hillside_000011-r3.webp",
+      "hillside_000011-r4.webp",
+      "hillside_000011-r5.webp"
+    ],
+    "hillside_000101": [
+      "hillside_000101-r0.webp",
+      "hillside_000101-r1.webp",
+      "hillside_000101-r2.webp",
+      "hillside_000101-r3.webp",
+      "hillside_000101-r4.webp",
+      "hillside_000101-r5.webp"
+    ],
+    "hillside_000111": [
+      "hillside_000111-r0.webp",
+      "hillside_000111-r1.webp",
+      "hillside_000111-r2.webp",
+      "hillside_000111-r3.webp",
+      "hillside_000111-r4.webp",
+      "hillside_000111-r5.webp"
+    ],
+    "hillside_001001": [
+      "hillside_001001-r0.webp",
+      "hillside_001001-r1.webp",
+      "hillside_001001-r2.webp",
+      "hillside_001001-r0.webp",
+      "hillside_001001-r1.webp",
+      "hillside_001001-r2.webp"
+    ],
+    "hillside_001011": [
+      "hillside_001011-r0.webp",
+      "hillside_001011-r1.webp",
+      "hillside_001011-r2.webp",
+      "hillside_001011-r3.webp",
+      "hillside_001011-r4.webp",
+      "hillside_001011-r5.webp"
+    ],
+    "hillside_001101": [
+      "hillside_001101-r0.webp",
+      "hillside_001101-r1.webp",
+      "hillside_001101-r2.webp",
+      "hillside_001101-r3.webp",
+      "hillside_001101-r4.webp",
+      "hillside_001101-r5.webp"
+    ],
+    "hillside_001111": [
+      "hillside_001111-r0.webp",
+      "hillside_001111-r1.webp",
+      "hillside_001111-r2.webp",
+      "hillside_001111-r3.webp",
+      "hillside_001111-r4.webp",
+      "hillside_001111-r5.webp"
+    ],
+    "hillside_010101": [
+      "hillside_010101-r0.webp",
+      "hillside_010101-r1.webp",
+      "hillside_010101-r0.webp",
+      "hillside_010101-r1.webp",
+      "hillside_010101-r0.webp",
+      "hillside_010101-r1.webp"
+    ],
+    "hillside_010111": [
+      "hillside_010111-r0.webp",
+      "hillside_010111-r1.webp",
+      "hillside_010111-r2.webp",
+      "hillside_010111-r3.webp",
+      "hillside_010111-r4.webp",
+      "hillside_010111-r5.webp"
+    ],
+    "hillside_011011": [
+      "hillside_011011-r0.webp",
+      "hillside_011011-r1.webp",
+      "hillside_011011-r2.webp",
+      "hillside_011011-r0.webp",
+      "hillside_011011-r1.webp",
+      "hillside_011011-r2.webp"
+    ],
+    "hillside_011111": [
+      "hillside_011111-r0.webp",
+      "hillside_011111-r1.webp",
+      "hillside_011111-r2.webp",
+      "hillside_011111-r3.webp",
+      "hillside_011111-r4.webp",
+      "hillside_011111-r5.webp"
+    ],
+    "road_ramp": [
+      "road_ramp-r0.webp",
+      "road_ramp-r1.webp",
+      "road_ramp-r2.webp",
+      "road_ramp-r3.webp",
+      "road_ramp-r4.webp",
+      "road_ramp-r5.webp"
+    ],
+    "road_tunnel_portal": [
+      "road_tunnel_portal-r0.webp",
+      "road_tunnel_portal-r1.webp",
+      "road_tunnel_portal-r2.webp",
+      "road_tunnel_portal-r3.webp",
+      "road_tunnel_portal-r4.webp",
+      "road_tunnel_portal-r5.webp"
+    ],
     "rail_straight": [
       "rail_straight-r0.webp",
       "rail_straight-r1.webp",

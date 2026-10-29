@@ -15,7 +15,7 @@ const refusal = (code: Refusal["code"], reason: string, version: number | null =
 /** A header of a real file: HEXWORLD, version `v` little-endian, then a payload length. */
 const header = (v: number): Uint8Array => new Uint8Array([72, 69, 88, 87, 79, 82, 76, 68, v, 0, 9, 0, 0, 0, 1, 2]);
 const states = (r: ReturnType<typeof refusedOf>) => r.checks.map((c) => c.state).join(" ");
-const tile = (q: number, r: number, id: string, rotation = 0): PlayTile => ({ q, r, tile: id, rotation });
+const tile = (q: number, r: number, id: string, rotation = 0): PlayTile => ({ q, r, tile: id, rotation, level: 0 });
 
 test("sniff names the files players pick by mistake, else shows their first bytes", () => {
   assert.equal(sniff(new Uint8Array([0x50, 0x4b, 3, 4, 0])), "PK, which is a .zip archive");

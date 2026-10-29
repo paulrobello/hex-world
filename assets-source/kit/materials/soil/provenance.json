@@ -47,8 +47,8 @@
   },
   "compressReport": {
     "path": "assets-source/kit/materials/soil/compress-report.json",
-    "sha256": "3f33e7985983651bd1d734d35710966c1450e8e3997535735e3bb6f9180a0080",
-    "bytes": 3849
+    "sha256": "be795a66f33e06b5455a41354b5902d36558d7c9a31d73718659073b0b17dcdb",
+    "bytes": 3919
   },
   "compression": {
     "budgets": {
@@ -119,8 +119,9 @@
         "path": "assets/kit/p1/materials/soil/soil.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 2745992,
-        "sha256": "7d75ef5f858b338d4b88b3a0044c89af615eace7347471a4b89404a66d46e257"
+        "bytes": 590616,
+        "sha256": "8e33f617481e3978974a4d049cf204880a7adbb0492764b2320a8009d0e79692",
+        "size": 512
       },
       {
         "channel": "orm",
@@ -183,8 +184,8 @@
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.normal.png",
-      "sha256": "7d75ef5f858b338d4b88b3a0044c89af615eace7347471a4b89404a66d46e257",
-      "bytes": 2745992
+      "sha256": "8e33f617481e3978974a4d049cf204880a7adbb0492764b2320a8009d0e79692",
+      "bytes": 590616
     },
     {
       "path": "assets/kit/p1/materials/soil/soil.orm.bc7.ktx2",
@@ -205,7 +206,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-16T18:17:50.081Z",
+    "date": "2026-10-29T04:15:34.794Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

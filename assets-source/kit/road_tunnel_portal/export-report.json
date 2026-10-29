@@ -1,0 +1,42 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_tunnel_portal.py",
+    "sha256": "c66ab8d575a491cef57b0eb9bd499bda9b97c8f3673646a0c5d5d9c24469155f"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    }
+  ],
+  "lodTris": {
+    "road_tunnel_portal_lod0": 1491,
+    "road_tunnel_portal_lod1": 706,
+    "road_tunnel_portal_lod2": 187
+  },
+  "nodes": [
+    "road_tunnel_portal",
+    "road_tunnel_portal_collider",
+    "road_tunnel_portal_lod0",
+    "road_tunnel_portal_lod1",
+    "road_tunnel_portal_lod2"
+  ],
+  "pieceId": "road_tunnel_portal",
+  "pngFallbackSize": {
+    "albedo": 512
+  },
+  "sockets": []
+}

@@ -4,12 +4,29 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## State
 
-- `main` holds everything through the P4 brainstorm decisions (`c51f3e8`). Pushed through `d1b16b0` (CI green, deployed); the commits since are doc-only and ride with the next push. `dist/` rebuilt.
+- `main` holds P4 elevation's first round (squash-merged 2026-10-29) and everything before it. Pushed with the P4 merge (CI watched) and deployed; `dist/` rebuilt.
+- P4 elevation first round is complete (plan `docs/superpowers/plans/2026-10-28-elevation-first-round.md`, ledger rulings listed for the owner at close-out). It covers:
+  - the level byte live in saves (0..=3, format v3 unchanged);
+  - raised Meadow, 12 hillside shapes with runtime ground matching the baked Meadow, and soil cliffs where raised meets lower (placement never defaults to one);
+  - `road_ramp` and roads on raised ground;
+  - `road_tunnel_portal` (owner-approved look pass 2, 512² png fallback albedo) and multi-tile road tunnels under raised Meadow, with cars fading out and back in;
+  - walkers, cars, picking, camera and boids following levels;
+  - affordances drawing over the world, hidden only by raised terrain (flat worlds are byte-identical);
+  - the HUD "Level N" readout with R across levels;
+  - `make shots-elevation` and `e2e/elevation.mjs`.
+
+  Evidence: `docs/checkpoints/elevation/` and `docs/perf/elevation-2026-10-28/` (flat world2066 within 0.4% of main on MiniMac, plus a raised-world orbit measurement). Core grass, soil and asphalt halved their png fallback normals (owner P2) for png-family headroom.
+
+  Deferred by the owner: rivers, waterfalls and rail at levels; other raised tile types (only Meadow rises); portal lamps stay inert until P5.
+
+  Open:
+  - KTX2 re-encode drift card 01a185e1f1a6 (high);
+  - back-to-back portals with no cover count as a tunnel (owner question).
 - Later 2026-10-28: the shots-photo tree click moved to the forked oak at 35.84 m (`8dd98cb`/`683eb8c`, card closed), `e2e/persist.mjs` reads only a settled save state (`d1b16b0`, flake card closed), and the close-camera regression since c032d97 is noise (paired c032d97/4897f2e/main run, card closed; `docs/perf/close-camera-regression-2026-10-28/`).
 - A45 O1 (owner 2026-10-28): shared scatter is parked on branch `worktree-agent-abbcb3566f8fc0322` (it failed the no-camera-slower bar at 2,048, 1,536 and 1,024: the 2,066-tile overview is about 0.1 ms slower); 6235e5e is kept, the farms world stays tracked.
 - Grass cost on MiniMac web (`docs/perf/grass-cost-2026-10-28/`, 31.34 ms with grass off): Sparse +2.1, Normal +4.2, Lush +6.4 ms; sway +3.7 ms at the close camera. The base M4 is GPU-bound, so the p95 16.6 ms target cannot hold there. Owner A46 O1 accepted it as the P2 result (grass box checked, card 01a13c876aaf closed); the sway cut has its own card 01a183f767ec. The 12 matte-foliage pieces are owner-approved, so the approvals and open-questions pages are empty.
 - 2026-10-28 landed and pushed: offscreen native captures (capture runs render offscreen by default, so a covered or minimized window no longer captures black; card 01a17f7bb57b), B2 walls and hedges (`cb160f5`, card closed), large-world bounds (`d3f4673`: water meshes spawn with fixed bounds, calculate_bounds 6.1 -> 0.01 ms, main thread -6.0/-5.6 ms on MiniMac), the title theme on New world (A37, `0648d5d`), CI pruning test fixtures from the Pages artifact (`c7e4ff9`, live 404s checked), the scatter density test fix, and the A35 matte oaks/dune grass/ferns with the matte-foliage gate (12 pieces pending owner re-approval on docs/review/approvals.html).
-- P4 is lifted (owner 2026-10-28: "i want to work on the tile height element and resources it requires"); P5-P8 stay held. Elevation is in a superpowers brainstorm: decisions so far are in PRD §15 P4 (A38-A42 plus 2026-10-28: hillside tiles that slope across a whole tile, any outline of raised ground, road tunnels several tiles long with arched portals lit at night once P5 lands, raised Meadow first and only Meadow over a tunnel). The first-round scope playback is with Paul; next is the spec at `docs/superpowers/specs/2026-10-28-elevation-design.md`, the builder check, owner approval, then writing-plans. Nothing is built until the spec is approved.
+- P4 is lifted (owner 2026-10-28); P5-P8 stay held. The elevation decisions are in PRD §15 P4 (A38-A42 and the 2026-10-28/29 owner decisions), and the approved spec is `docs/superpowers/specs/2026-10-28-elevation-design.md`.
 - Owner 2026-10-28: A43 O1 built (a first visit with no saved worlds hears the title theme from the first gesture). A44 Q1 O1 / Q2 O3 are settled by A45 above.
 - Open upstream card: kanban schedule release/shorten (01a17fb3c7b7).
 - Batch 39 landed: the large-world O4/O5 regressions (card 01a1786dc9c5, closed). O4's p95 cost was frame pacing under the old web frame limiter and is gone with `e88b1bd`. O5's overview cost was GPU time lost to overlap between shadow cascades and is gone on main (fix inferred, likely `f1aff3e`). On main, `kit_ablate=cascade_clip|coalesce` turns either cut off in one build, and neither is slower than its absence while the draw cuts hold. Evidence: `docs/perf/large-world-o4o5/`.

@@ -1,7 +1,7 @@
 //! Shared presentation data. No game rules, plugins, or renderer dependency.
 use bevy::prelude::*;
 use hex_core::{Axial, EdgeStatus, PairPieces, TileCatalog};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 /// The play systems (kit loading, the view sync, the rise and the affordances), in order. `hex-app`
 /// orders its view writer before this set and the car mirror after it.
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -12,6 +12,8 @@ pub struct PlayTile {
     pub cell: Axial,
     pub tile: String,
     pub rotation: u8,
+    /// The level the tile stands on (P4), `0..=MAX_LEVEL`.
+    pub level: u8,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -19,19 +21,30 @@ pub struct PlayGhost {
     pub cell: Axial,
     pub tile: String,
     pub rotation: u8,
+    pub level: u8,
     /// Status per world edge 0..6.
     pub edges: [EdgeStatus; 6],
     /// False when the tile does not fit here at this rotation.
     pub valid: bool,
     /// The ghost sits on a pinned slot (U4) rather than under the pointer.
     pub pinned: bool,
+    /// A portal ghost's tunnel preview (P4, `hex_core::tunnel::preview`): the cells its tunnel
+    /// would run under, in order from the portal. Empty for any other tile.
+    pub tunnel: Vec<Axial>,
 }
 
 /// What the play scenario draws, written by `hex-app` when the game changes.
 #[derive(Resource, Clone, Debug, Default, PartialEq)]
 pub struct PlayView {
     pub tiles: Vec<PlayTile>,
+    /// Position in `tiles` by cell, built once per view by [`PlayView::index_tiles`] so the
+    /// affordances look a tile up in O(1); [`PlayView::tile_at`] scans when it is stale or unset.
+    pub tile_index: HashMap<Axial, usize>,
     pub frontier: Vec<Axial>,
+    /// The level a free slot's outline sits on where it is not 0 (P4): the level the selected
+    /// tile's default orientation takes there (the first cliff-free legal one), else the highest
+    /// neighbour's level when it fits nowhere.
+    pub slot_levels: BTreeMap<Axial, u8>,
     pub ghost: Option<PlayGhost>,
     /// A free slot under the pointer while another slot is pinned: a click there pins it.
     pub pointer_slot: Option<Axial>,
@@ -39,6 +52,9 @@ pub struct PlayView {
     pub pointer_tile: Option<Axial>,
     /// Bulldoze tool: the hovered tile and whether removing it is allowed.
     pub bulldoze: Option<(Axial, bool)>,
+    /// The bulldoze target is refused as a tunnel cover (hex-core `BulldozeError::TunnelCover`):
+    /// nothing is cut off by it, so no cut hatch draws.
+    pub bulldoze_cover: bool,
     /// The bulldoze tool is active (the slot ring hides).
     pub bulldoze_mode: bool,
     /// The cell the latest world change bulldozed: when its tile leaves the view it sinks inside a
@@ -52,6 +68,30 @@ pub struct PlayView {
     pub epoch: u64,
     /// The world seed: each tile scatters from it and its cell (scatter presentation).
     pub world_seed: u64,
+}
+
+impl PlayView {
+    /// Builds [`PlayView::tile_index`] from `tiles`.
+    pub fn index_tiles(&mut self) {
+        self.tile_index = self
+            .tiles
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (t.cell, i))
+            .collect();
+    }
+
+    /// The placed tile at `cell`.
+    pub fn tile_at(&self, cell: Axial) -> Option<&PlayTile> {
+        if self.tile_index.len() == self.tiles.len() {
+            self.tile_index
+                .get(&cell)
+                .and_then(|&i| self.tiles.get(i))
+                .filter(|t| t.cell == cell)
+        } else {
+            self.tiles.iter().find(|t| t.cell == cell)
+        }
+    }
 }
 
 /// Tile definitions the view's ids resolve against (the embedded catalog `hex-app` also uses).

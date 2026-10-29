@@ -528,10 +528,25 @@ fn uv0_texture_px(
         }),
         _ => return None,
     };
-    Some(stem.and_then(|stem| {
-        let path = kit.root.join(map_file(stem, TextureFamily::Png));
-        png_width(&path).map(|w| w * slot.tile_uv_scale.unwrap_or(1.0))
-    }))
+    Some(
+        stem.and_then(|stem| {
+            texture_width(kit, stem).map(|w| w * slot.tile_uv_scale.unwrap_or(1.0))
+        }),
+    )
+}
+
+/// The width a GPU samples: the BC7 KTX2's (both KTX2 families share it), or the PNG's where a kit
+/// ships no KTX2 (scratch kits). A PNG fallback may be smaller than the KTX2 (kit-compress
+/// `pngFallbackSize`, owner O1: road_tunnel_portal's 512² fallback albedo beside its 1024² KTX2).
+fn texture_width(kit: &Kit, stem: &str) -> Result<f32, String> {
+    let ktx = kit.root.join(map_file(stem, TextureFamily::Bc7));
+    if !ktx.exists() {
+        return png_width(&kit.root.join(map_file(stem, TextureFamily::Png)));
+    }
+    let bytes = std::fs::read(&ktx).map_err(|e| format!("{}: {e}", ktx.display()))?;
+    ktx2_info(&bytes)
+        .map(|i| i.width as f32)
+        .ok_or_else(|| format!("{}: not KTX2", ktx.display()))
 }
 
 fn check_texel_density(
@@ -1236,17 +1251,23 @@ fn tile_edge_pieces(id: &str) -> Option<[Option<String>; 6]> {
 }
 
 /// Edge pieces a tile lists in its own `Explicit` edge pieces (road_bend_60's trimmed stubs): they
-/// meet only that tile's centre, so the every-piece-of-the-kind fallback leaves them out.
+/// meet only that tile's centre, so the every-piece-of-the-kind fallback leaves them out. A piece
+/// some tile also gets by the socket table (the tunnel portal lists `road_straight_edge` by name)
+/// is the kind's ordinary edge piece and stays in the fallback.
 fn explicit_edge_pieces() -> BTreeSet<String> {
     let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
-    catalog
-        .tiles()
-        .iter()
-        .filter(|t| t.edge_pieces != hex_core::EdgePieces::Derived)
-        .flat_map(|t| t.edge_pieces(catalog.sockets()))
-        .flatten()
-        .map(|k| k.as_str().to_string())
-        .collect()
+    let pieces = |explicit: bool| -> BTreeSet<String> {
+        catalog
+            .tiles()
+            .iter()
+            .filter(|t| (t.edge_pieces != hex_core::EdgePieces::Derived) == explicit)
+            .flat_map(|t| t.edge_pieces(catalog.sockets()))
+            .flatten()
+            .map(|k| k.as_str().to_string())
+            .collect()
+    };
+    let derived = pieces(false);
+    pieces(true).difference(&derived).cloned().collect()
 }
 
 /// One lane joint: `c`'s section at `edge`'s inner end (`joint_x`) on lane `k`, rotated onto edge
@@ -4109,6 +4130,34 @@ fn texel_density_is_checked_per_material() {
         "{err}"
     );
     assert!(uv0_texture_px(&k, &p, "fixture_cap", &p.slots["fixture_cap"]).is_none());
+}
+
+/// Texel density is measured against the texture the GPU samples: road_tunnel_portal ships a 512²
+/// PNG fallback albedo (owner O1) beside its 1024² KTX2, and its stone slot measures at 1024.
+#[test]
+fn density_reads_the_ktx2_width_not_a_smaller_png_fallback() {
+    let kit = kits()
+        .into_iter()
+        .find(|k| k.root.ends_with("assets/kit"))
+        .unwrap();
+    let p = kit
+        .manifest
+        .pieces
+        .iter()
+        .find(|p| p.id == "road_tunnel_portal")
+        .expect("road_tunnel_portal is in the kit");
+    let stem = &p.maps[&Channel::Albedo];
+    assert_eq!(
+        png_width(&kit.root.join(map_file(stem, TextureFamily::Png))).unwrap(),
+        512.0
+    );
+    let stone = &p.slots["road_tunnel_portal_stone"];
+    assert_eq!(
+        uv0_texture_px(&kit, p, "road_tunnel_portal_stone", stone)
+            .unwrap()
+            .unwrap(),
+        1024.0
+    );
 }
 
 /// A mesh's triangles in the runtime XZ plane: ([x, y, z] corners, slot name).

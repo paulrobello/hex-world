@@ -35,8 +35,10 @@ mod plugins;
 pub use plugins::PlayPlugin;
 pub mod rise;
 pub mod scatter;
+pub mod slope_ground;
 
 use packs::{PackRequests, PlayPacks};
+use slope_ground::{GroundBuild, SlopeMeshes};
 
 use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
 
@@ -164,6 +166,7 @@ pub fn setup(
     commands.insert_resource(PlayWaiting::default());
     commands.insert_resource(ghost::GhostMeshes::default());
     commands.insert_resource(rise::PlayDust::default());
+    commands.insert_resource(SlopeMeshes::default());
     Transform::from_xyz(14.0, 95.0, 125.0).looking_at(Vec3::new(14.0, 0.0, 16.0), Vec3::Y)
 }
 
@@ -446,6 +449,18 @@ fn spawn_kit_parts(
     t: Transform,
     rise: Option<(Axial, RiseRole)>,
 ) -> Option<Vec<Entity>> {
+    spawn_kit_parts_with(p, kit, piece, t, rise, &mut |part| part.mesh.clone())
+}
+
+/// [`spawn_kit_parts`] drawing each part with the mesh `mesh` gives it (a ramp's draped road).
+fn spawn_kit_parts_with(
+    p: &mut ChildSpawnerCommands,
+    kit: &HashMap<String, Vec<KitPart>>,
+    piece: &str,
+    t: Transform,
+    rise: Option<(Axial, RiseRole)>,
+    mesh: &mut dyn FnMut(&KitPart) -> Handle<Mesh>,
+) -> Option<Vec<Entity>> {
     let parts = kit.get(piece)?;
     let mut out = vec![];
     let mut bodies: [Option<Entity>; 3] = [None; 3];
@@ -457,7 +472,7 @@ fn spawn_kit_parts(
             let [x, z] = rise.map_or([0.0; 2], |(cell, _)| cell.to_world(HEX_RADIUS));
             let hub = Vec3::new(x, 0.0, z) + (t * rest).translation;
             let e = p.commands_mut().spawn((
-                Mesh3d(part.mesh.clone()),
+                Mesh3d(mesh(part)),
                 MeshMaterial3d(part.material.clone()),
                 rest,
                 KitRotor {
@@ -474,7 +489,7 @@ fn spawn_kit_parts(
         }
         let cover = part_cover(parts, part);
         let mut e = p.spawn((
-            Mesh3d(part.mesh.clone()),
+            Mesh3d(mesh(part)),
             MeshMaterial3d(part.material.clone()),
             t,
             lod_cover_range(cover),
@@ -589,16 +604,23 @@ pub(crate) fn on_edge(e: u8, along: f32, y: f32) -> Transform {
     Transform::from_translation(rot * Vec3::new(along, y, 0.0)).with_rotation(rot)
 }
 
+/// A placed tile's root at rest: on its cell at its level (P4), turned to its rotation.
+pub(crate) fn tile_rest(t: &PlayTile) -> Transform {
+    let [x, z] = t.cell.to_world(HEX_RADIUS);
+    Transform::from_xyz(x, f32::from(t.level) * LEVEL_STEP, z)
+        .with_rotation(piece_rotation(t.rotation))
+}
+
 fn spawn_tile(
     commands: &mut Commands,
     plain: &PlainAssets,
     kit: &HashMap<String, Vec<KitPart>>,
     catalog: &TileCatalog,
     t: &PlayTile,
+    ground: &mut GroundBuild,
 ) -> Entity {
-    let [x, z] = t.cell.to_world(HEX_RADIUS);
     let def = catalog.get(&t.tile);
-    let rest = Transform::from_xyz(x, 0.0, z).with_rotation(piece_rotation(t.rotation));
+    let rest = tile_rest(t);
     commands
         .spawn((
             PlayTileRoot,
@@ -608,7 +630,7 @@ fn spawn_tile(
             SceneEntity,
         ))
         .with_children(|p| match def {
-            Some(def) => tile_children(p, plain, kit, catalog, def, t.cell),
+            Some(def) => tile_children(p, plain, kit, catalog, def, (t.cell, t.level), ground),
             None => {
                 p.spawn((
                     Mesh3d(plain.prism.clone()),
@@ -616,9 +638,34 @@ fn spawn_tile(
                     Transform::from_xyz(0.0, -LEVEL_STEP, 0.0),
                     SceneEntity,
                 ));
+                spawn_column(p, kit, t.level, ground, &plain.block_mat);
             }
         })
         .id()
+}
+
+/// A raised tile's cliff column (P4), down to the level-0 floor: in `meadow_base`'s skirt soil
+/// once the core pack is in, else in `fallback`. Nothing at level 0.
+fn spawn_column(
+    p: &mut ChildSpawnerCommands,
+    kit: &HashMap<String, Vec<KitPart>>,
+    level: u8,
+    ground: &mut GroundBuild,
+    fallback: &Handle<StandardMaterial>,
+) {
+    if level == 0 {
+        return;
+    }
+    let mesh = Mesh3d(ground.cache.column(level, ground.meshes));
+    match slope_ground::slot_material(kit, slope_ground::SKIRT_SLOT) {
+        Some(mat) => p.spawn((mesh, MeshMaterial3d(mat), Transform::IDENTITY, SceneEntity)),
+        None => p.spawn((
+            mesh,
+            MeshMaterial3d(fallback.clone()),
+            Transform::IDENTITY,
+            SceneEntity,
+        )),
+    };
 }
 
 /// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included). The
@@ -642,7 +689,8 @@ fn tile_children(
     kit: &HashMap<String, Vec<KitPart>>,
     catalog: &TileCatalog,
     def: &TileDef,
-    cell: Axial,
+    (cell, level): (Axial, u8),
+    ground: &mut GroundBuild,
 ) {
     let plain_mesh = |p: &mut ChildSpawnerCommands,
                       mesh: &Handle<Mesh>,
@@ -666,7 +714,31 @@ fn tile_children(
     // over the channel; road strips stay as the bridge deck.
     let water_bed = water::tiles::stand_in_bed(def, |id| kit.contains_key(id));
     let pending_water = !center_kit && water::tiles::water_kind(def, 0).is_some();
-    if !water_bed && !spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY, None) {
+    // A sloped tile's base is its runtime ground in meadow's own cap and skirt materials; a raised
+    // tile stands on a cliff column in the skirt's soil down to the level-0 floor (P4).
+    let slot = |s: &str| slope_ground::slot_material(kit, s);
+    let runtime = def.is_sloped() && !water_bed;
+    let drawn_base = match (
+        runtime,
+        slot(slope_ground::CAP_SLOT),
+        slot(slope_ground::SKIRT_SLOT),
+    ) {
+        (true, Some(cap_mat), Some(skirt_mat)) => {
+            let (cap, skirt) = ground.cache.ground(def, ground.meshes);
+            for (mesh, mat) in [(cap, cap_mat), (skirt, skirt_mat)] {
+                p.spawn((
+                    Mesh3d(mesh),
+                    MeshMaterial3d(mat),
+                    Transform::IDENTITY,
+                    SceneEntity,
+                ));
+            }
+            true
+        }
+        (true, ..) => false,
+        (false, ..) => water_bed || spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY, None),
+    };
+    if !drawn_base {
         plain_mesh(
             p,
             &plain.prism,
@@ -675,6 +747,8 @@ fn tile_children(
             None,
         );
     }
+    spawn_column(p, kit, level, ground, &plain.biome[biome_index(def.biome)]);
+    let draped = slope_ground::draped_pieces(def, catalog);
     let lanes: Vec<(u8, SocketKind)> = (0..6u8)
         .filter_map(|e| {
             let s = &def.edges[e as usize];
@@ -683,20 +757,26 @@ fn tile_children(
                 .then_some((e, s.kind))
         })
         .collect();
+    // A ramp's centre and lane-edge pieces follow its field, each part draped once per shape.
+    let mut kit_piece = |p: &mut ChildSpawnerCommands, piece: &str, k: u8, t: Transform| {
+        if draped.contains(&piece) {
+            let GroundBuild { cache, meshes } = &mut *ground;
+            spawn_kit_parts_with(p, kit, piece, t, edge, &mut |part| {
+                cache.draped(&part.mesh, def, k, meshes)
+            })
+            .is_some()
+        } else {
+            spawn_kit(p, kit, piece, t, edge)
+        }
+    };
     if center_kit {
         if let Some(center) = &def.center {
-            spawn_kit(p, kit, center.as_str(), Transform::IDENTITY, edge);
+            kit_piece(p, center.as_str(), 0, Transform::IDENTITY);
         }
         let pieces = def.edge_pieces(catalog.sockets());
         for &(e, kind) in &lanes {
             let piece = pieces[e as usize].map(|k| k.as_str()).unwrap_or_default();
-            if !spawn_kit(
-                p,
-                kit,
-                piece,
-                Transform::from_rotation(piece_rotation(e)),
-                edge,
-            ) {
+            if !kit_piece(p, piece, e, Transform::from_rotation(piece_rotation(e))) {
                 let i = (kind == SocketKind::River) as usize;
                 plain_mesh(
                     p,
@@ -820,15 +900,18 @@ pub fn sync(
     config: Res<GateConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
-    (packs, waiting_out, children, no_stops, no_bounds): (
+    (packs, waiting_out, children, no_stops, no_bounds, slope): (
         Option<Res<PlayPacks>>,
         Option<ResMut<PlayWaiting>>,
         Query<&Children>,
         Option<Res<NoBufferStops>>,
         Option<Res<NoBoundaries>>,
+        Option<ResMut<SlopeMeshes>>,
     ),
 ) {
-    let (Scenario::Play, Some(mut spawned), Some(plain)) = (active.0, spawned, plain) else {
+    let (Scenario::Play, Some(mut spawned), Some(plain), Some(mut slope)) =
+        (active.0, spawned, plain, slope)
+    else {
         return;
     };
     let stops = no_stops.is_none();
@@ -937,6 +1020,10 @@ pub fn sync(
         &children,
         (&mut rises, reduced.0, &mut out),
     );
+    let mut ground = GroundBuild {
+        cache: &mut slope,
+        meshes: &mut meshes,
+    };
     let (refreshed, shown) = sync_spans::refresh_tiles(
         &mut commands,
         &mut spawned,
@@ -947,6 +1034,7 @@ pub fn sync(
         &mut rises,
         reduced.0,
         &mut out,
+        &mut ground,
     );
     let added: Vec<&PlayTile> = view
         .tiles
@@ -962,7 +1050,7 @@ pub fn sync(
         if !swap {
             rises.cancel_sink(t.cell, &mut commands);
         }
-        let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t);
+        let e = spawn_tile(&mut commands, &plain, kit, &catalog.0, t, &mut ground);
         spawned.tiles.insert(t.cell, (t.clone(), e));
         if waiting_cells.contains(&t.cell) {
             commands.entity(e).insert(Visibility::Hidden);
@@ -972,7 +1060,7 @@ pub fn sync(
         }
         match catalog.0.get(&t.tile).filter(|_| !rebuild) {
             Some(def) => {
-                rises.begin(t.cell, &t.tile, &def.rise, reduced.0, &mut out);
+                rises.begin(t.cell, (&t.tile, t.level), &def.rise, reduced.0, &mut out);
                 if swap {
                     rises.delay(t.cell, rise::SinkKind::Replace.seconds());
                 }
@@ -1063,12 +1151,12 @@ mod sync_spans {
         spawned.tiles.retain(|cell, (t, e)| match want.get(cell) {
             Some(w) if *w == t => true,
             Some(_) => {
-                swapped.push((*cell, t.tile.clone(), *e));
+                swapped.push((*cell, (t.tile.clone(), t.level), *e));
                 changed.insert(*cell);
                 false
             }
             None => {
-                gone.push((*cell, t.tile.clone(), *e));
+                gone.push((*cell, (t.tile.clone(), t.level), *e));
                 false
             }
         });
@@ -1077,7 +1165,7 @@ mod sync_spans {
         for c in &changed {
             spawned.hidden.remove(c);
         }
-        for (cell, tile, root) in gone {
+        for (cell, (tile, level), root) in gone {
             let mut entities = vec![root];
             entities.extend(released.remove(&cell).unwrap_or_default());
             let kind = if view.bulldozed == Some(cell) {
@@ -1085,10 +1173,10 @@ mod sync_spans {
             } else {
                 rise::SinkKind::Undo
             };
-            rises.remove(cell, &tile, kind, entities, reduced, commands, out);
+            rises.remove(cell, (&tile, level), kind, entities, reduced, commands, out);
         }
         let swapped_cells: HashSet<Axial> = swapped.iter().map(|(c, ..)| *c).collect();
-        for (cell, tile, root) in swapped {
+        for (cell, (tile, level), root) in swapped {
             let mut entities = vec![root];
             entities.extend(released.remove(&cell).unwrap_or_default());
             // The new tile's rise poses every part of this cell; the sinking tile's parts leave it.
@@ -1100,7 +1188,7 @@ mod sync_spans {
             }
             rises.remove(
                 cell,
-                &tile,
+                (&tile, level),
                 rise::SinkKind::Replace,
                 entities,
                 reduced,
@@ -1127,6 +1215,7 @@ mod sync_spans {
         rises: &mut PlayRises,
         reduced: bool,
         out: &mut Vec<RiseMessage>,
+        ground: &mut GroundBuild,
     ) -> (BTreeSet<Axial>, BTreeSet<Axial>) {
         let refresh = std::mem::take(&mut spawned.refresh);
         let mut refreshed: BTreeSet<Axial> = BTreeSet::new();
@@ -1144,9 +1233,11 @@ mod sync_spans {
                 .entity(*root)
                 .insert(Visibility::Inherited)
                 .despawn_children()
-                .with_children(|p| tile_children(p, plain, kit, catalog, def, cell));
+                .with_children(|p| {
+                    tile_children(p, plain, kit, catalog, def, (cell, t.level), ground)
+                });
             if rise {
-                rises.begin(cell, &t.tile, &def.rise, reduced, out);
+                rises.begin(cell, (&t.tile, t.level), &def.rise, reduced, out);
             } else {
                 rises.rest(cell);
             }
@@ -1167,7 +1258,9 @@ mod sync_spans {
                 commands
                     .entity(*root)
                     .despawn_children()
-                    .with_children(|p| tile_children(p, plain, kit, catalog, def, *cell));
+                    .with_children(|p| {
+                        tile_children(p, plain, kit, catalog, def, (*cell, t.level), ground)
+                    });
                 refreshed.insert(*cell);
             }
             let pairs_arrived = spawned
@@ -1366,10 +1459,61 @@ mod tests {
         assert_eq!(covered, vec![(0, LodCover { first: 0, last: 1 })]);
     }
 
+    /// A tile at level 2 stands 8 m up (P4): its root, which the rise poses from.
+    #[test]
+    fn root_sits_at_level() {
+        let mut world = World::new();
+        let mut meshes = Assets::<Mesh>::default();
+        let mut mats = Assets::<StandardMaterial>::default();
+        let plain = PlainAssets::new(&mut meshes, &mut mats);
+        let catalog = TileCatalog::builtin().unwrap();
+        let t = PlayTile {
+            cell: Axial::new(1, 0),
+            tile: "meadow".into(),
+            rotation: 0,
+            level: 2,
+        };
+        let mut cache = SlopeMeshes::default();
+        let mut ground = GroundBuild {
+            cache: &mut cache,
+            meshes: &mut meshes,
+        };
+        let root = spawn_tile(
+            &mut world.commands(),
+            &plain,
+            &HashMap::new(),
+            &catalog,
+            &t,
+            &mut ground,
+        );
+        world.flush();
+        let tf = world.get::<Transform>(root).unwrap();
+        assert_eq!(tf.translation.y, 8.0);
+        assert_eq!(world.get::<RisePart>(root).unwrap().rest, *tf);
+        let parts =
+            |world: &World, root: Entity| world.get::<Children>(root).map_or(0, |c| c.len());
+        // A raised tile stands on its cliff column, an unknown one too (prism and column).
+        assert_eq!(parts(&world, root), 2, "the plain prism and the column");
+        let unknown = PlayTile {
+            tile: "no_such_tile".into(),
+            ..t
+        };
+        let root = spawn_tile(
+            &mut world.commands(),
+            &plain,
+            &HashMap::new(),
+            &catalog,
+            &unknown,
+            &mut ground,
+        );
+        world.flush();
+        assert_eq!(parts(&world, root), 2, "the block prism and the column");
+    }
+
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 31);
+        assert_eq!(c.0.tiles().len(), 45);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

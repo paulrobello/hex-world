@@ -122,10 +122,15 @@ pub enum Command {
         dir: Spin,
     },
     /// Place the selected tile at the current ghost rotation; a cell other than the hovered one
-    /// is hovered first, which auto-rotates.
+    /// is hovered first, which auto-rotates. `level` (P4) places it on that level, at the ghost's
+    /// rotation where that is legal there, else the first legal rotation; omitted, the ghost's own
+    /// orientation (the first legal one, cliff-free first). A level with no legal orientation is
+    /// refused (`placementRefused`).
     Place {
         q: i32,
         r: i32,
+        #[serde(default)]
+        level: Option<u8>,
     },
     /// Pin a free slot (U4), as the first click on it does: the ghost, its rotation and the
     /// inventory stay there while the pointer moves. Refused for a cell that is not a free slot.
@@ -256,7 +261,12 @@ impl Command {
                 Spin::Cw => RotateDir::Forward,
                 Spin::Ccw => RotateDir::Back,
             }),
-            Command::Place { q, r } => Action::Place(Axial::new(*q, *r)),
+            Command::Place { q, r, level: None } => Action::Place(Axial::new(*q, *r)),
+            Command::Place {
+                q,
+                r,
+                level: Some(level),
+            } => Action::PlaceAtLevel(Axial::new(*q, *r), *level),
             Command::Pin { q, r } => Action::Pin(Axial::new(*q, *r)),
             Command::Unpin => Action::Unpin,
             Command::Replace { q, r } => Action::Replace(Axial::new(*q, *r)),
@@ -699,8 +709,9 @@ pub fn extend_play_rise(
     map.insert("reduced_motion".into(), serde_json::json!(reduced_motion));
 }
 
-/// Adds the audio layer's view to the `play` state: `focus`, the ground point the camera orbits
-/// (`camera::focus`), and `zoom`, the camera's distance from it in metres. Both are `null` without a camera.
+/// Adds the audio layer's view to the `play` state: `focus`, where the view centre meets y = 0
+/// (`camera::focus`; over raised tiles the rig orbits `camera::focus_over` instead), and `zoom`,
+/// the camera's distance from it in metres. Both are `null` without a camera.
 pub fn extend_play_view(play: &mut serde_json::Value, camera: Option<&Transform>) {
     let serde_json::Value::Object(map) = play else {
         return;

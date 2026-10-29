@@ -46,7 +46,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
 /// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4): edges 0..5 for each
 /// inventory tile.
-const F1: [(&str, [SocketKind; 6]); 31] = [
+const F1: [(&str, [SocketKind; 6]); 45] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -59,6 +59,59 @@ const F1: [(&str, [SocketKind; 6]); 31] = [
     ("road_bend_120", [Road, Grass, Road, Grass, Grass, Grass]),
     ("road_bend_60", [Road, Road, Grass, Grass, Grass, Grass]),
     ("road_junction", [Road, Grass, Road, Grass, Road, Grass]),
+    (
+        "hillside_000001",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_000011",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_000101",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_000111",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_001001",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_001011",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_001101",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_001111",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_010101",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_010111",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_011011",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    (
+        "hillside_011111",
+        [Grass, Grass, Grass, Grass, Grass, Grass],
+    ),
+    ("road_ramp", [Road, Grass, Grass, Road, Grass, Grass]),
+    (
+        "road_tunnel_portal",
+        [Grass, Grass, Grass, Road, Grass, Grass],
+    ),
     ("rail_straight", [Rail, Grass, Grass, Rail, Grass, Grass]),
     ("rail_bend_60", [Rail, Rail, Grass, Grass, Grass, Grass]),
     ("rail_bend_120", [Rail, Grass, Rail, Grass, Grass, Grass]),
@@ -179,12 +232,58 @@ fn every_beach_edge_names_the_side_its_land_is_on() {
 }
 
 #[test]
-fn every_mvp_edge_is_flat_at_height_zero() {
+fn only_hillside_family_edges_leave_flat_zero() {
     for t in catalog().tiles() {
+        let family =
+            t.id.starts_with("hillside_") || t.id == "road_ramp" || t.id == "road_tunnel_portal";
         for (e, edge) in t.edges.iter().enumerate() {
-            assert_eq!(edge.height, 0, "{} edge {e}", t.id);
-            assert_eq!(edge.profile, EdgeProfile::Flat, "{} edge {e}", t.id);
+            if !family {
+                assert_eq!(edge.height, 0, "{} edge {e}", t.id);
+                assert_eq!(edge.profile, EdgeProfile::Flat, "{} edge {e}", t.id);
+            }
         }
+        if family {
+            assert!(t.is_sloped(), "{} is a family tile but level", t.id);
+        }
+    }
+}
+
+#[test]
+fn hillside_patterns_are_the_twelve_necklaces() {
+    let c = catalog();
+    let got: Vec<[u8; 6]> = c
+        .tiles()
+        .iter()
+        .filter(|t| t.id.starts_with("hillside_"))
+        .map(|t| t.corners(0))
+        .collect();
+    let canon = |p: [u8; 6]| {
+        (0..6)
+            .map(|r| (0..6).map(|i| p[(i + r) % 6]).collect::<Vec<_>>())
+            .min()
+            .unwrap()
+    };
+    let want: BTreeSet<Vec<u8>> = (1u8..63)
+        .map(|n| canon(std::array::from_fn(|i| (n >> i) & 1)))
+        .collect();
+    assert_eq!(want.len(), 12);
+    let have: BTreeSet<Vec<u8>> = got.iter().map(|p| canon(*p)).collect();
+    assert_eq!(have, want, "one hillside per necklace");
+    assert_eq!(
+        got.len(),
+        12,
+        "no two hillsides are rotations of each other"
+    );
+    for t in c.tiles().iter().filter(|t| t.id.starts_with("hillside_")) {
+        let name: String = t.corners(0).iter().map(|h| h.to_string()).collect();
+        assert_eq!(t.id, format!("hillside_{name}"));
+        assert_eq!(
+            name,
+            canon(t.corners(0))
+                .iter()
+                .map(|h| h.to_string())
+                .collect::<String>()
+        );
     }
 }
 

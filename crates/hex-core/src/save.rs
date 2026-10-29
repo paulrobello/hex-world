@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use crate::axial::Axial;
 use crate::catalog::TileCatalog;
 use crate::tile::TileDef;
-use crate::world::{Action, HISTORY_DEPTH, PlacedTile, World};
+use crate::world::{Action, HISTORY_DEPTH, MAX_LEVEL, PlacedTile, World, level_allowed};
 
 /// First bytes of every `.hexworld` file.
 pub const SAVE_MAGIC: [u8; 8] = *b"HEXWORLD";
@@ -31,10 +31,6 @@ const PREFIX_LEN: usize = 14;
 /// Largest `|q|` or `|r|` a saved cell may have. Far beyond any reachable world, and small enough
 /// that neighbor and distance arithmetic on a loaded world cannot overflow `i32`.
 const CELL_LIMIT: i32 = 1 << 24;
-
-/// Highest elevation level a saved tile may carry. The v1 record reserves the field (PRD D5 plans
-/// levels 0..=3); P4 raises this bound instead of bumping the format version.
-const MAX_LEVEL: u8 = 0;
 
 /// CRC-32 (IEEE) trailer over everything before it, u32 LE.
 const CRC_LEN: usize = 4;
@@ -127,7 +123,7 @@ pub enum WorldIssue {
     DuplicateCell(Axial),
     /// A coordinate is outside `-2^24..=2^24`.
     OutOfRange(Axial),
-    /// The reserved elevation level is above what this build supports (only 0 until P4).
+    /// A tile level above [`MAX_LEVEL`], or a level its tile may not stand at ([`level_allowed`]).
     LevelOutOfRange {
         cell: Axial,
         level: u8,
@@ -156,7 +152,7 @@ impl fmt::Display for WorldIssue {
             WorldIssue::OutOfRange(c) => write!(f, "cell ({}, {}) is out of range", c.q, c.r),
             WorldIssue::LevelOutOfRange { cell, level } => write!(
                 f,
-                "level {level} at ({}, {}) is above {MAX_LEVEL}",
+                "level {level} at ({}, {}) is not allowed for its tile (0..={MAX_LEVEL})",
                 cell.q, cell.r
             ),
             WorldIssue::UnknownTile { cell, id } => {
@@ -414,7 +410,7 @@ fn validate_tiles(
     let Some(&start) = tiles.keys().next() else {
         return Err(WorldIssue::Empty);
     };
-    let mut defs: BTreeMap<Axial, (&TileDef, u8)> = BTreeMap::new();
+    let mut defs: BTreeMap<Axial, (&TileDef, u8, u8)> = BTreeMap::new();
     for (&cell, t) in tiles {
         if [cell.q, cell.r]
             .iter()
@@ -434,16 +430,22 @@ fn validate_tiles(
                 rotation: t.rotation,
             });
         }
-        defs.insert(cell, (def, t.rotation));
+        if !level_allowed(def, t.level) {
+            return Err(WorldIssue::LevelOutOfRange {
+                cell,
+                level: t.level,
+            });
+        }
+        defs.insert(cell, (def, t.rotation, t.level));
     }
     // The edge rule (`TileCatalog::edges_meet`) is symmetric, so checking world edges 0..3 of every tile covers each
     // touching pair once.
-    for (&cell, &(def, rotation)) in &defs {
+    for (&cell, &(def, rotation, level)) in &defs {
         for w in 0..3 {
-            let Some(&(other, other_rotation)) = defs.get(&cell.neighbor(w)) else {
+            let Some(&(other, other_rotation, other_level)) = defs.get(&cell.neighbor(w)) else {
                 continue;
             };
-            if !catalog.edges_meet(def, rotation, w, other, other_rotation) {
+            if !catalog.edges_meet(def, rotation, level, w, other, other_rotation, other_level) {
                 return Err(WorldIssue::Incompatible { cell, edge: w });
             }
         }
@@ -548,8 +550,8 @@ mod v1 {
     pub(super) struct Tile {
         pub q: i32,
         pub r: i32,
-        /// Reserved elevation level (PRD D5). Written as 0; decode rejects anything above
-        /// [`MAX_LEVEL`].
+        /// Elevation level (PRD D5, live from P4). Decode rejects anything above [`MAX_LEVEL`];
+        /// the world rules then check it against the tile ([`level_allowed`]).
         pub level: u8,
         pub def: String,
         pub rotation: u8,
@@ -602,7 +604,7 @@ mod v1 {
             Self {
                 q: cell.q,
                 r: cell.r,
-                level: 0,
+                level: t.level,
                 def: t.def.clone(),
                 rotation: t.rotation,
                 seed: t.seed,
@@ -622,6 +624,7 @@ mod v1 {
                 PlacedTile {
                     def: self.def,
                     rotation: self.rotation,
+                    level: self.level,
                     seed: self.seed,
                 },
             ))
@@ -865,7 +868,7 @@ mod v3 {
         }
 
         /// Structural conversion only. It catches the rules the runtime types cannot carry:
-        /// duplicate cells (a map would silently keep one) and the reserved level.
+        /// duplicate cells (a map would silently keep one) and levels above MAX_LEVEL.
         pub(super) fn into_runtime(self) -> Result<SaveData, SaveError> {
             let mut tiles: BTreeMap<Axial, PlacedTile> = BTreeMap::new();
             for t in self.tiles {
@@ -914,6 +917,7 @@ mod v3 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::world::Orientation;
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap_or_else(|e| panic!("{e}"))
@@ -950,10 +954,12 @@ mod tests {
     /// Three places, a bulldoze and one undo: both history stacks are non-empty.
     fn sample(c: &TileCatalog) -> SaveData {
         let mut w = World::new(42);
-        w.place(c, EAST, "road_straight", 1).unwrap();
-        w.place(c, WEST, "forest", 2).unwrap();
-        w.place(c, Axial::new(0, 1), "meadow", 0).unwrap();
-        w.bulldoze(WEST).unwrap();
+        w.place(c, EAST, "road_straight", Orientation::new(1, 0))
+            .unwrap();
+        w.place(c, WEST, "forest", Orientation::new(2, 0)).unwrap();
+        w.place(c, Axial::new(0, 1), "meadow", Orientation::new(0, 0))
+            .unwrap();
+        w.bulldoze(c, WEST).unwrap();
         w.undo();
         SaveData {
             world: w,
@@ -969,9 +975,12 @@ mod tests {
     fn tiles_against_a_stopped_rail_end_load() {
         let c = catalog();
         let mut w = World::new(42);
-        w.place(&c, EAST, "rail_station", 1).unwrap();
-        w.place(&c, Axial::new(1, 1), "meadow", 0).unwrap();
-        w.place(&c, Axial::new(1, -1), "forest", 0).unwrap();
+        w.place(&c, EAST, "rail_station", Orientation::new(1, 0))
+            .unwrap();
+        w.place(&c, Axial::new(1, 1), "meadow", Orientation::new(0, 0))
+            .unwrap();
+        w.place(&c, Axial::new(1, -1), "forest", Orientation::new(0, 0))
+            .unwrap();
         w.undo();
         let save = SaveData {
             world: w,
@@ -1027,8 +1036,9 @@ mod tests {
     fn a_placed_windmill_round_trips() {
         let c = catalog();
         let mut w = World::new(9);
-        w.place(&c, EAST, "windmill", 3).unwrap();
-        w.place(&c, WEST, "meadow", 0).unwrap();
+        w.place(&c, EAST, "windmill", Orientation::new(3, 0))
+            .unwrap();
+        w.place(&c, WEST, "meadow", Orientation::new(0, 0)).unwrap();
         let save = SaveData {
             world: w,
             unlocks: BTreeSet::new(),
@@ -1053,8 +1063,8 @@ mod tests {
     fn a_placed_farm_round_trips() {
         let c = catalog();
         let mut w = World::new(9);
-        w.place(&c, EAST, "farm", 2).unwrap();
-        w.place(&c, WEST, "meadow", 0).unwrap();
+        w.place(&c, EAST, "farm", Orientation::new(2, 0)).unwrap();
+        w.place(&c, WEST, "meadow", Orientation::new(0, 0)).unwrap();
         let save = SaveData {
             world: w,
             unlocks: BTreeSet::new(),
@@ -1077,7 +1087,8 @@ mod tests {
     fn a_placed_wheat_field_round_trips() {
         let c = catalog();
         let mut w = World::new(9);
-        w.place(&c, EAST, "wheat_field", 0).unwrap();
+        w.place(&c, EAST, "wheat_field", Orientation::new(0, 0))
+            .unwrap();
         let save = SaveData {
             world: w,
             unlocks: BTreeSet::new(),
@@ -1095,7 +1106,7 @@ mod tests {
     fn a_placed_bakery_round_trips() {
         let c = catalog();
         let mut w = World::new(9);
-        w.place(&c, EAST, "bakery", 1).unwrap();
+        w.place(&c, EAST, "bakery", Orientation::new(1, 0)).unwrap();
         let save = SaveData {
             world: w,
             unlocks: BTreeSet::new(),
@@ -1135,14 +1146,14 @@ mod tests {
                         let options = w.inventory(&c, cell);
                         if !options.is_empty() {
                             let def = options[rng.below(options.len())];
-                            let rotations = w.legal_rotations(&c, cell, def);
-                            let k = rotations[rng.below(rotations.len())];
-                            w.place(&c, cell, &def.id, k).unwrap();
+                            let legal = w.legal_orientations(&c, cell, def);
+                            let o = legal[rng.below(legal.len())];
+                            w.place(&c, cell, &def.id, o).unwrap();
                         }
                     }
                     6 => {
                         let cells: Vec<Axial> = w.tiles().keys().copied().collect();
-                        let _ = w.bulldoze(cells[rng.below(cells.len())]);
+                        let _ = w.bulldoze(&c, cells[rng.below(cells.len())]);
                     }
                     7 | 8 => {
                         w.undo();
@@ -1348,23 +1359,34 @@ mod tests {
     }
 
     #[test]
-    fn reserved_levels_other_than_zero_are_rejected() {
+    fn level_above_max_is_rejected() {
         let c = catalog();
         assert!(wire(&sample(&c)).tiles.iter().all(|t| t.level == 0));
 
         let mut w = wire(&sample(&c));
-        tile_at(&mut w, 0, 1).level = 1;
+        tile_at(&mut w, 0, 1).level = 4;
         assert_eq!(
             decode(&file(&w)),
             Err(SaveError::InvalidWorld(WorldIssue::LevelOutOfRange {
                 cell: Axial::new(0, 1),
+                level: 4
+            }))
+        );
+
+        // A tile that is not raisable stands on level 0 only.
+        let mut w = wire(&sample(&c));
+        tile_at(&mut w, -1, 0).level = 1;
+        assert_eq!(
+            decode(&file(&w)),
+            Err(SaveError::InvalidWorld(WorldIssue::LevelOutOfRange {
+                cell: WEST,
                 level: 1
             }))
         );
 
-        // History records reserve the same field. undo[0] is the oldest action, applied last.
+        // History records carry the same field. undo[0] is the oldest action, applied last.
         let mut w = wire(&sample(&c));
-        w.undo[0].tile.level = 2;
+        w.undo[0].tile.level = 4;
         assert_eq!(
             decode(&file(&w)),
             Err(SaveError::InvalidHistory(HistoryIssue::InvalidState {
@@ -1372,12 +1394,12 @@ mod tests {
                 index: 2,
                 issue: WorldIssue::LevelOutOfRange {
                     cell: EAST,
-                    level: 2
+                    level: 4
                 }
             }))
         );
         let mut w = wire(&sample(&c));
-        w.redo[0].tile.level = 3;
+        w.redo[0].tile.level = 4;
         assert_eq!(
             decode(&file(&w)),
             Err(SaveError::InvalidHistory(HistoryIssue::InvalidState {
@@ -1385,10 +1407,53 @@ mod tests {
                 index: 0,
                 issue: WorldIssue::LevelOutOfRange {
                     cell: WEST,
-                    level: 3
+                    level: 4
                 }
             }))
         );
+    }
+
+    /// Meadows stepping up from level 0 to 3 in a line east of the start, a raised road, a replace
+    /// that changes only a level, and undo: every level survives encode and decode, history too.
+    #[test]
+    fn levels_round_trip() {
+        let c = catalog();
+        let mut w = World::new(9);
+        for (q, level) in [(1, 1), (2, 2), (3, 3)] {
+            w.place(&c, Axial::new(q, 0), "meadow", Orientation::new(0, level))
+                .unwrap();
+        }
+        // Road on world edges 0 and 3, its grass sides against the meadows at levels 0 and 1.
+        w.place(
+            &c,
+            Axial::new(0, 1),
+            "road_straight",
+            Orientation::new(0, 2),
+        )
+        .unwrap();
+        w.replace(&c, Axial::new(2, 0), "meadow", Orientation::new(0, 1))
+            .unwrap();
+        w.replace(&c, Axial::new(3, 0), "meadow", Orientation::new(0, 0))
+            .unwrap();
+        assert!(w.undo());
+        let levels: Vec<u8> = w.tiles().values().map(|t| t.level).collect();
+        assert_eq!(levels.iter().copied().max(), Some(3));
+        assert!(levels.contains(&2) && levels.contains(&1) && levels.contains(&0));
+        let save = SaveData {
+            world: w,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        assert!(
+            wire(&save)
+                .redo
+                .iter()
+                .any(|a| a.tile.level == 0 && a.replaced.as_ref().is_some_and(|r| r.level == 3))
+        );
+        let back = decode(&save.encode()).unwrap();
+        assert_eq!(back, save);
+        assert_eq!(back.world.tile(Axial::new(3, 0)).unwrap().level, 3);
     }
 
     #[test]
@@ -1552,8 +1617,10 @@ mod tests {
         let mut save = sample(c);
         let w = &mut save.world;
         w.redo();
-        w.replace(c, EAST, "forest", 0).unwrap();
-        w.replace(c, Axial::new(0, 1), "forest", 4).unwrap();
+        w.replace(c, EAST, "forest", Orientation::new(0, 0))
+            .unwrap();
+        w.replace(c, Axial::new(0, 1), "forest", Orientation::new(4, 0))
+            .unwrap();
         w.undo();
         save
     }

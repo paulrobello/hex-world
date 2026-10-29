@@ -44,6 +44,10 @@ pub enum Action {
     /// Place the selected tile at a cell. A cell other than the hovered one is hovered first.
     /// Clears any pinned slot first, so the rotation is the one legal at this cell.
     Place(Axial),
+    /// [`Action::Place`] on a chosen level (the script `place` command's `level`): at the ghost's
+    /// rotation where it is legal on that level, else the first legal rotation there; refused when
+    /// the level has no legal orientation.
+    PlaceAtLevel(Axial, u8),
     /// Pin a free slot: the ghost and the inventory stay on it while the pointer moves.
     Pin(Axial),
     /// Clear the pinned slot.

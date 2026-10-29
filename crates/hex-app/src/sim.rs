@@ -62,8 +62,9 @@ pub struct SimStats {
     pub parked_cars: usize,
     pub connected_destinations: usize,
     pub spawn_rate_hz: f32,
-    /// Every driving car: id, trip phase and position (for scripted checkpoints).
-    pub car_list: Vec<(u64, &'static str, [f32; 2])>,
+    /// Every driving car: id, trip phase, position and opacity, 0 while it is inside a tunnel (for
+    /// scripted checkpoints).
+    pub car_list: Vec<(u64, &'static str, [f32; 2], f32)>,
     /// Every train (P3).
     pub train_list: Vec<TrainStat>,
     /// Every junction: cell, the leg its switch is set to and the legs facing trains took.
@@ -122,7 +123,7 @@ impl CarSim {
     /// missing from `catalog` are left out, as `Simulation::from_world` does. Returns whether the
     /// world had changed.
     pub fn mirror(&mut self, world: &World, catalog: &TileCatalog) -> bool {
-        self.mirror_tiles(world.tiles(), catalog)
+        self.mirror_tiles(world.tiles(), world, catalog)
     }
 
     /// [`CarSim::mirror`] with an agents gate: a tile not mirrored yet joins the sim only once
@@ -140,10 +141,17 @@ impl CarSim {
             .filter(|(c, t)| self.mirrored.get(c) == Some(t) || ready(**c))
             .map(|(c, t)| (*c, t.clone()))
             .collect();
-        self.mirror_tiles(&now, catalog)
+        self.mirror_tiles(&now, world, catalog)
     }
 
-    fn mirror_tiles(&mut self, now: &BTreeMap<Axial, PlacedTile>, catalog: &TileCatalog) -> bool {
+    /// Mirrors the tiles in `now` (all of `world`'s, or those the agents gate lets through), then
+    /// the tunnels of `world` whose portals and cover are all mirrored.
+    fn mirror_tiles(
+        &mut self,
+        now: &BTreeMap<Axial, PlacedTile>,
+        world: &World,
+        catalog: &TileCatalog,
+    ) -> bool {
         let removed: Vec<Axial> = self
             .mirrored
             .keys()
@@ -169,6 +177,16 @@ impl CarSim {
             }
             self.mirrored.insert(cell, tile.clone());
         }
+        let tunnels: Vec<hex_core::Tunnel> = hex_core::tunnels(world, catalog)
+            .into_iter()
+            .filter(|t| {
+                [t.a, t.b]
+                    .iter()
+                    .chain(&t.cover)
+                    .all(|c| self.mirrored.get(c) == world.tile(*c))
+            })
+            .collect();
+        self.sim.set_tunnels(&tunnels, world, catalog);
         self.refresh();
         true
     }
@@ -279,7 +297,14 @@ impl CarSim {
                 .sim
                 .cars()
                 .iter()
-                .map(|c| (c.id().0, c.phase().as_str(), c.pose_at(1.0).pos))
+                .map(|c| {
+                    (
+                        c.id().0,
+                        c.phase().as_str(),
+                        c.pose_at(1.0).pos,
+                        c.opacity_at(1.0),
+                    )
+                })
                 .collect(),
             train_list: self
                 .sim
@@ -328,8 +353,9 @@ impl CarSim {
                 self.stats
                     .car_list
                     .iter()
-                    .map(|(id, phase, p)| json!({
-                        "id": id, "phase": phase, "x": round(p[0]), "z": round(p[1])
+                    .map(|(id, phase, p, opacity)| json!({
+                        "id": id, "phase": phase, "x": round(p[0]), "z": round(p[1]),
+                        "opacity": round(*opacity)
                     }))
                     .collect::<Vec<_>>()
             ),
@@ -569,7 +595,8 @@ pub fn publish_cars(
         return;
     }
     let alpha = fixed.overstep_fraction();
-    // A car over a lowered cap fades out on the Legend motion curve (PRD §7.2).
+    // A car over a lowered cap fades out on the Legend motion curve (PRD §7.2), and a driving car
+    // fades out into a tunnel and back after it (P4).
     let opacity = |id| 1.0 - affordances::ease(sim.sim.fade(id, alpha));
     view.cars.clear();
     view.cars.extend(cars.iter().map(|c| {
@@ -580,7 +607,7 @@ pub fn publish_cars(
             kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
-            opacity: opacity(c.id()),
+            opacity: opacity(c.id()) * c.opacity_at(alpha),
         }
     }));
     view.cars.extend(parked.iter().map(|c| {
@@ -750,6 +777,187 @@ mod tests {
         assert!(sim.mirror(&g.world, &g.catalog));
         assert_matches_world(&sim, &g.world, &g.catalog);
         assert!(!sim.mirror(&g.world, &g.catalog), "nothing left to mirror");
+    }
+
+    /// Undo, redo and the gated mirror keep a tunnel's hidden road link in step with the world: the
+    /// cover that completes it brings it in, its undo takes it out with every car routed over it,
+    /// and its redo brings it back (P4).
+    #[test]
+    fn mirror_follows_a_tunnel_through_undo_and_redo() {
+        let mut g = GameState::new(1);
+        let o = hex_core::Orientation::new;
+        // Two houses joined only through a tunnel along r = 0; the east half is reached by a
+        // road-free meadow detour along r = 2, so the cover at (5,0) completes the tunnel last
+        // (hex-sim tests/common tunnel_layout).
+        let mut edits: Vec<(Axial, &str, u8, u8)> = vec![
+            (Axial::new(1, 0), "house_cluster", 0, 0),
+            (Axial::new(2, 0), "road_straight", 0, 0),
+            (Axial::new(3, 0), "road_tunnel_portal", 0, 0),
+            (Axial::new(0, 1), "meadow", 0, 0),
+        ];
+        edits.extend((0..=9).map(|q| (Axial::new(q, 2), "meadow", 0, 0)));
+        edits.extend([
+            (Axial::new(9, 1), "meadow", 0, 0),
+            (Axial::new(9, 0), "meadow", 0, 0),
+            (Axial::new(8, 0), "house_cluster", 3, 0),
+            (Axial::new(7, 0), "road_straight", 0, 0),
+            (Axial::new(6, 0), "road_tunnel_portal", 3, 0),
+            (Axial::new(4, 0), "meadow", 0, 1),
+        ]);
+        for (cell, id, rot, level) in edits {
+            g.world.place(&g.catalog, cell, id, o(rot, level)).unwrap();
+        }
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let hidden = |sim: &CarSim| -> Vec<hex_sim::LinkId> {
+            let net = sim.sim.network(NetworkKind::Road);
+            net.links()
+                .filter(|(_, l)| l.hidden())
+                .map(|(id, _)| id)
+                .collect()
+        };
+        assert!(hidden(&sim).is_empty(), "the tunnel is still open");
+
+        g.world
+            .place(&g.catalog, Axial::new(5, 0), "meadow", o(0, 1))
+            .unwrap();
+        // The gate holds the cover back: no tunnel until it is mirrored.
+        assert!(!sim.mirror_gated(&g.world, &g.catalog, |_| false));
+        assert!(hidden(&sim).is_empty());
+        assert!(sim.mirror(&g.world, &g.catalog));
+        let link = hidden(&sim);
+        assert_eq!(link.len(), 1);
+        assert_matches_world(&sim, &g.world, &g.catalog);
+        let mut through = false;
+        for _ in 0..4000 {
+            sim.tick();
+            if sim.sim.cars().iter().any(|c| c.links().contains(&link[0])) {
+                through = true;
+                break;
+            }
+        }
+        assert!(through, "no car took the tunnel");
+
+        assert!(g.world.undo());
+        assert!(sim.mirror(&g.world, &g.catalog));
+        sim.tick();
+        assert!(hidden(&sim).is_empty(), "undo took the hidden link out");
+        let net = sim.sim.network(NetworkKind::Road);
+        for car in sim.sim.cars() {
+            assert!(car.links().iter().all(|l| net.link(*l).is_some()));
+        }
+        assert_matches_world(&sim, &g.world, &g.catalog);
+
+        assert!(g.world.redo());
+        assert!(sim.mirror(&g.world, &g.catalog));
+        assert_eq!(hidden(&sim), link, "redo brought it back");
+        assert_matches_world(&sim, &g.world, &g.catalog);
+    }
+
+    /// The web smoke world (`docs/checkpoints/elevation/smoke.json`, driven by `e2e/elevation.mjs`)
+    /// is legal, completes the tunnel, and a car in it reports opacity 0 in `play.car_list`.
+    #[test]
+    fn the_smoke_world_sends_a_car_through_the_tunnel() {
+        let json = include_str!("../../../docs/checkpoints/elevation/smoke.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if let Some(a) = c.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, crate::game::GameEvent::PlacementRefused { .. }),
+                        "{c:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let cover = Axial::new(3, 2);
+        assert_eq!(hex_core::tunnels(&g.world, &g.catalog).len(), 1);
+        let mut hidden = None;
+        for _ in 0..(600 * hex_sim::TICK_HZ) {
+            sim.tick();
+            let mut play = serde_json::json!({});
+            sim.extend_state(&mut play);
+            hidden = play["car_list"]
+                .as_array()
+                .and_then(|l| l.iter().find(|c| c["opacity"] == 0.0).cloned());
+            if hidden.is_some() {
+                break;
+            }
+        }
+        let car = hidden.expect("no car went dark in the tunnel");
+        let [x, z] = cover.to_world(hex_core::HEX_RADIUS);
+        let (dx, dz) = (
+            car["x"].as_f64().unwrap() - f64::from(x),
+            car["z"].as_f64().unwrap() - f64::from(z),
+        );
+        assert!(
+            dx.hypot(dz) <= f64::from(hex_core::HEX_RADIUS) * 2.0,
+            "{car} is not near the cover"
+        );
+    }
+
+    /// The `make shots-elevation` script (`docs/checkpoints/elevation/elevation-shots.json`) builds
+    /// without a refusal, and its two houses end up joined through the tunnel so a car drives.
+    #[test]
+    fn the_shots_script_world_has_cars_in_the_tunnel() {
+        let json = include_str!("../../../docs/checkpoints/elevation/elevation-shots.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if let Some(a) = c.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(
+                            e,
+                            crate::game::GameEvent::PlacementRefused { .. }
+                                | crate::game::GameEvent::BulldozeRefused { .. }
+                        ),
+                        "{c:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        assert_eq!(hex_core::tunnels(&g.world, &g.catalog).len(), 1);
+        let mut sim = CarSim::new(&g.world, &g.catalog);
+        let mut dark = false;
+        for _ in 0..(600 * hex_sim::TICK_HZ) {
+            sim.tick();
+            dark = sim.stats.car_list.iter().any(|c| c.3 == 0.0);
+            if dark {
+                break;
+            }
+        }
+        assert!(dark, "no car went dark in the tunnel");
+    }
+
+    /// The flat control of `e2e/perf-elevation-orbit.mjs` (`docs/checkpoints/elevation/flat-control.json`)
+    /// is legal, covers the very cells of the elevation world, and holds only level-0 meadow (roads are left out: a road needs its neighbours' road edges, which the cell-for-cell copy cannot give it).
+    #[test]
+    fn the_flat_control_world_matches_the_elevation_footprint() {
+        let build = |json: &str| {
+            let mut g = GameState::new(1);
+            for c in parse_script(json).unwrap() {
+                if let Some(a) = c.action() {
+                    for e in g.apply(a) {
+                        assert!(
+                            !matches!(e, crate::game::GameEvent::PlacementRefused { .. }),
+                            "{c:?}: {e:?}"
+                        );
+                    }
+                }
+            }
+            g
+        };
+        let raised = build(include_str!(
+            "../../../docs/checkpoints/elevation/elevation.json"
+        ));
+        let flat = build(include_str!(
+            "../../../docs/checkpoints/elevation/flat-control.json"
+        ));
+        let cells = |g: &GameState| g.world.tiles().keys().copied().collect::<BTreeSet<_>>();
+        assert_eq!(cells(&flat), cells(&raised));
+        assert!(raised.world.tiles().values().any(|t| t.level > 0));
+        assert!(flat.world.tiles().values().all(|t| t.level == 0));
+        assert!(flat.world.tiles().values().all(|t| t.def == "meadow"));
     }
 
     /// The agents gate: a placed tile joins the sim only once it is ready (its rise reached the
@@ -950,9 +1158,21 @@ mod tests {
     fn station_departures_whistle_once() {
         let c = TileCatalog::builtin().unwrap();
         let mut w = World::new(1);
-        w.place(&c, Axial::new(0, -1), "rail_station", 0).unwrap();
+        w.place(
+            &c,
+            Axial::new(0, -1),
+            "rail_station",
+            hex_core::Orientation::new(0, 0),
+        )
+        .unwrap();
         for q in [1, 2, -1, -2] {
-            w.place(&c, Axial::new(q, -1), "rail_straight", 0).unwrap();
+            w.place(
+                &c,
+                Axial::new(q, -1),
+                "rail_straight",
+                hex_core::Orientation::new(0, 0),
+            )
+            .unwrap();
         }
         let mut sim = CarSim::new(&w, &c);
         let (mut at_station, mut other) = (0, 0);

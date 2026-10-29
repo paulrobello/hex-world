@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use hex_core::{Axial, Destination, NetworkKind, TileCatalog, TileDef, World};
+use hex_core::{Axial, Destination, NetworkKind, TileCatalog, TileDef, Tunnel, World, tunnels};
 
 use crate::geom::{self, LanePath, Pose, Vec2};
 use crate::network::{LinkId, Network, NodeId};
@@ -27,6 +27,9 @@ pub const CAR_FADE_TICKS: u64 = 5;
 /// Largest distance a car drives right of the road centerline: the middle of the right half of the
 /// 6 m road lane (plan F3).
 pub const MAX_LANE_OFFSET: f32 = 1.5;
+
+/// Meters over which a car fades out before a tunnel arch and back in after the far one (P4).
+pub const TUNNEL_FADE: f32 = 3.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SimConfig {
@@ -136,6 +139,8 @@ pub struct Car {
     /// Where a pull-out from a forecourt on a through road ends and where a turn into one starts,
     /// in meters along `path` ([`drive_holds`]): `(0, ∞)` for a trip with neither.
     drives: (f32, f32),
+    /// The stretches of `path` inside a tunnel, arch to arch, in meters along it, in travel order.
+    hidden: Vec<(f32, f32)>,
 }
 
 impl Car {
@@ -211,6 +216,37 @@ impl Car {
     pub fn pose_at(&self, alpha: f32) -> Pose {
         let a = alpha.clamp(0.0, 1.0);
         self.pose_at_distance(self.prev + (self.s - self.prev) * a)
+    }
+
+    /// The stretches of the path inside a tunnel, from the arch the car enters by to the one it
+    /// leaves by, in meters along the path and in travel order.
+    pub fn hidden(&self) -> &[(f32, f32)] {
+        &self.hidden
+    }
+
+    /// How visible the car is `d` meters along its trip: 0 inside a tunnel, ramping linearly
+    /// from 1 to 0 over the [`TUNNEL_FADE`] meters before an arch and back over those after the
+    /// far one, else 1.
+    pub fn opacity_at_distance(&self, d: f32) -> f32 {
+        self.hidden
+            .iter()
+            .map(|&(a, b)| {
+                if d < a {
+                    ((a - d) / TUNNEL_FADE).min(1.0)
+                } else if d > b {
+                    ((d - b) / TUNNEL_FADE).min(1.0)
+                } else {
+                    0.0
+                }
+            })
+            .fold(1.0, f32::min)
+    }
+
+    /// [`Car::opacity_at_distance`] between the previous tick (`alpha = 0`) and the latest one
+    /// (`alpha = 1`), as [`Car::pose_at`].
+    pub fn opacity_at(&self, alpha: f32) -> f32 {
+        let a = alpha.clamp(0.0, 1.0);
+        self.opacity_at_distance(self.prev + (self.s - self.prev) * a)
     }
 
     /// The level crossings on the trip: each crossing cell and the distance along the path where
@@ -766,7 +802,33 @@ impl Simulation {
                 sim.apply_place(*cell, def, tile.rotation);
             }
         }
+        sim.sync_tunnels(world, catalog);
         sim
+    }
+
+    /// Recomputes the world's tunnels ([`hex_core::tunnels`]) after an edit and mirrors them as
+    /// [`Simulation::set_tunnels`] does. The app calls it after every place, bulldoze, replace,
+    /// undo and redo, once the tiles are mirrored.
+    pub fn sync_tunnels(&mut self, world: &World, catalog: &TileCatalog) {
+        self.set_tunnels(&tunnels(world, catalog), world, catalog);
+    }
+
+    /// Sets the road graph's tunnels ([`Network::set_tunnels`]). Cars routed through a tunnel that
+    /// went are removed, freeing their spots, and their clusters get their cars back, parked.
+    pub fn set_tunnels(&mut self, tunnels: &[Tunnel], world: &World, catalog: &TileCatalog) {
+        let before = self.roads.version();
+        self.roads.set_tunnels(tunnels, world, catalog);
+        if self.roads.version() == before {
+            return;
+        }
+        let gone: std::collections::BTreeSet<CarId> = self
+            .cars
+            .iter()
+            .filter(|c| c.links.iter().any(|l| self.roads.link(*l).is_none()))
+            .map(|c| c.id)
+            .collect();
+        self.remove_cars(&gone);
+        self.refill();
     }
 
     pub fn config(&self) -> &SimConfig {
@@ -1196,6 +1258,21 @@ impl Simulation {
                 (d < 3.0).then_some((x.cell(), (s - crate::rail::CAR_CROSSING_STOP).max(0.0)))
             })
             .collect();
+        // Where the trip runs through a tunnel: from the closest point to the arch it enters by
+        // to the closest point to the one it leaves by.
+        let hidden: Vec<(f32, f32)> = route
+            .links
+            .iter()
+            .enumerate()
+            .filter(|(_, l)| self.roads.link(**l).is_some_and(|link| link.hidden()))
+            .filter_map(|(i, _)| {
+                let at = |n: NodeId| self.roads.node(n).map(|n| n.pos());
+                let (enter, leave) = (at(route.nodes[i])?, at(route.nodes[i + 1])?);
+                let (_, a) = crate::rail::closest_distance(&points, enter);
+                let (_, b) = crate::rail::closest_distance(&points, leave);
+                Some((a.min(b), a.max(b)))
+            })
+            .collect();
         let id = car.id;
         self.parked.retain(|c| c.id != id);
         if let Some(s) = self.spot_mut(car.spot) {
@@ -1232,6 +1309,7 @@ impl Simulation {
                     f32::INFINITY
                 },
             ),
+            hidden,
         };
         let at = self.cars.partition_point(|c| c.id < id);
         self.cars.insert(at, new);

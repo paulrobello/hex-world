@@ -5,8 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use hex_core::{
-    AudioVolumes, Axial, CameraState, GameSettings, QualitySetting, SAVE_FORMAT_VERSION, SaveData,
-    TileCatalog, World, cell_seed,
+    AudioVolumes, Axial, CameraState, GameSettings, Orientation, QualitySetting,
+    SAVE_FORMAT_VERSION, SaveData, TileCatalog, World, cell_seed,
 };
 
 fn fixture_dir() -> PathBuf {
@@ -47,11 +47,12 @@ const NORTH: Axial = Axial { q: 0, r: -1 };
 /// history stacks are non-empty.
 fn small_world_v1(c: &TileCatalog) -> SaveData {
     let mut w = World::new(2026);
-    w.place(c, EAST, "road_straight", 1).unwrap();
-    w.place(c, WEST, "forest", 3).unwrap();
-    w.place(c, SOUTH, "meadow", 0).unwrap();
-    w.place(c, NORTH, "beach", 4).unwrap();
-    w.bulldoze(WEST).unwrap();
+    w.place(c, EAST, "road_straight", Orientation::new(1, 0))
+        .unwrap();
+    w.place(c, WEST, "forest", Orientation::new(3, 0)).unwrap();
+    w.place(c, SOUTH, "meadow", Orientation::new(0, 0)).unwrap();
+    w.place(c, NORTH, "beach", Orientation::new(4, 0)).unwrap();
+    w.bulldoze(c, WEST).unwrap();
     assert!(w.undo() && w.undo());
     SaveData {
         world: w,
@@ -110,6 +111,42 @@ fn every_fixture_loads_and_every_version_has_one() {
     let versions: BTreeSet<u16> = all.values().copied().collect();
     for v in 1..=SAVE_FORMAT_VERSION {
         assert!(versions.contains(&v), "no fixture for format version {v}");
+    }
+}
+
+/// P4 reads the v1 `level` byte that every earlier save wrote as 0: each fixture loads with all
+/// tiles (and every history record) on level 0. A current-version fixture re-encodes byte for
+/// byte. An older one is upgraded on load, so it re-encodes to the current version and decodes
+/// back equal instead.
+#[test]
+fn fixtures_load_at_level_zero() {
+    let c = catalog();
+    for (path, version) in &fixtures() {
+        let bytes = std::fs::read(path).unwrap();
+        let save = SaveData::decode(&bytes, &c).unwrap();
+        let w = &save.world;
+        assert!(
+            w.tiles().values().all(|t| t.level == 0),
+            "{}",
+            path.display()
+        );
+        for step in [World::undo, World::redo] {
+            let mut probe = w.clone();
+            while step(&mut probe) {
+                assert!(probe.tiles().values().all(|t| t.level == 0));
+            }
+        }
+        let again = save.encode();
+        if *version == SAVE_FORMAT_VERSION {
+            assert_eq!(again, bytes, "{}", path.display());
+        } else {
+            assert_eq!(
+                SaveData::decode(&again, &c).unwrap(),
+                save,
+                "{}",
+                path.display()
+            );
+        }
     }
 }
 
@@ -186,8 +223,9 @@ fn v2_tilt_chosen_keeps_the_players_toggle() {
 fn replaced_v3(c: &TileCatalog) -> SaveData {
     let mut save = tilt_chosen_v2(c);
     let w = &mut save.world;
-    w.replace(c, EAST, "forest", 0).unwrap();
-    w.replace(c, SOUTH, "oak", 2).unwrap();
+    w.replace(c, EAST, "forest", Orientation::new(0, 0))
+        .unwrap();
+    w.replace(c, SOUTH, "oak", Orientation::new(2, 0)).unwrap();
     assert!(w.undo());
     save
 }

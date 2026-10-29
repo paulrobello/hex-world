@@ -19,7 +19,7 @@ import {
   openSlots,
 } from "../src/slots.ts";
 
-const tile = (q: number, r: number, id: string, rotation = 0): PlayTile => ({ q, r, tile: id, rotation });
+const tile = (q: number, r: number, id: string, rotation = 0): PlayTile => ({ q, r, tile: id, rotation, level: 0 });
 
 test("slot summary: the socket mix counts every edge, the map keeps the tiles nearest the start", () => {
   const tiles = [tile(0, 0, "meadow"), tile(1, 0, "road_straight", 1), tile(-1, 0, "forest")];
@@ -171,7 +171,7 @@ function setup(store: MemoryBackend | null) {
   return { host, notes, p, tick: (ms: number) => (now += ms) };
 }
 
-const placed: GameEvent = { type: "tilePlaced", q: 1, r: 0, tile: "meadow", rotation: 0 };
+const placed: GameEvent = { type: "tilePlaced", q: 1, r: 0, tile: "meadow", rotation: 0, level: 0 };
 
 test("autosave: a burst of edits is one debounced save, written to the current world's slot", async () => {
   const store = new MemoryBackend();

@@ -191,25 +191,7 @@ pub fn body(piece: &str) -> Option<&'static Body> {
     BODIES.iter().find(|(id, _)| *id == piece).map(|(_, b)| b)
 }
 
-/// The meadow relief under tile-frame `(x, z)`: `meadow_relief()` in scripts/blender/kit/_terrain.py
-/// at Blender `(x, -z)`. Hollows on a plane level with the border ring: 0 wherever the undulation
-/// `0.5 + 0.5 * swell` is under one half, down to -0.25 m where it is 1, faded to 0 over the last
-/// 3 m of the border.
-pub fn meadow_relief(x: f32, z: f32) -> f32 {
-    let (bx, by) = (x, -z);
-    let apothem = HEX_RADIUS * 3.0f32.sqrt() / 2.0;
-    let (h, k) = (0.5, 3.0f32.sqrt() / 2.0);
-    let reach = bx
-        .abs()
-        .max((h * bx + k * by).abs())
-        .max((h * bx - k * by).abs());
-    let t = ((apothem - reach) / 3.0).clamp(0.0, 1.0);
-    let falloff = t * t * (3.0 - 2.0 * t);
-    let swell = 0.6 * (0.31 * bx + 1.7).sin() * (0.27 * by - 0.4).cos()
-        + 0.4 * (0.53 * bx - 0.45 * by + 0.9).sin();
-    let hollow = swell.clamp(0.0, 1.0);
-    -0.25 * falloff * hollow * hollow
-}
+pub use hex_core::meadow_relief;
 
 /// The paddock of `def` in the tile frame: its first hero fence's line, closed across the gate.
 pub fn paddock(def: &TileDef) -> Option<Vec<Vec2>> {
@@ -1475,9 +1457,9 @@ mod tests {
         let cell = w
             .frontier()
             .into_iter()
-            .find(|&cell| !w.legal_rotations(&c, cell, &def).is_empty())
+            .find(|&cell| !w.legal_orientations(&c, cell, &def).is_empty())
             .unwrap();
-        let k = w.legal_rotations(&c, cell, &def)[0];
+        let k = w.legal_orientations(&c, cell, &def)[0];
         w.place(&c, cell, "farm", k).unwrap();
         let save = SaveData {
             world: w.clone(),

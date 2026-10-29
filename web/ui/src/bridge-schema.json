@@ -30,6 +30,7 @@
       "Beach"
     ],
     "hex_radius": 16.0,
+    "max_level": 3,
     "picker": [
       {
         "id": "meadow",
@@ -101,6 +102,35 @@
         "id": "road_junction",
         "tiles": [
           "road_junction"
+        ]
+      },
+      {
+        "id": "hillside",
+        "tiles": [
+          "hillside_000001",
+          "hillside_000011",
+          "hillside_000101",
+          "hillside_000111",
+          "hillside_001001",
+          "hillside_001011",
+          "hillside_001101",
+          "hillside_001111",
+          "hillside_010101",
+          "hillside_010111",
+          "hillside_011011",
+          "hillside_011111"
+        ]
+      },
+      {
+        "id": "road_ramp",
+        "tiles": [
+          "road_ramp"
+        ]
+      },
+      {
+        "id": "road_tunnel_portal",
+        "tiles": [
+          "road_tunnel_portal"
         ]
       },
       {
@@ -220,6 +250,32 @@
           "Grass",
           "Grass"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "meadow",
         "land": [
           null,
@@ -229,8 +285,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": true,
         "scatter": [
           "outcrop_granite",
           "boulder_granite",
@@ -245,7 +310,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -256,6 +323,32 @@
           "Forest",
           "Forest"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "forest",
         "land": [
           null,
@@ -265,8 +358,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "outcrop_granite",
           "boulder_granite",
@@ -284,7 +386,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -295,6 +399,32 @@
           "Forest",
           "Forest"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "oak",
         "land": [
           null,
@@ -304,8 +434,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 6,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "rock_small",
           "wildflower_clump",
@@ -319,7 +458,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -329,6 +470,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "windmill",
         "land": [
@@ -339,8 +506,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 6,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -352,7 +528,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -362,6 +540,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "farm",
         "land": [
@@ -372,8 +576,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 6,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -385,7 +598,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -395,6 +610,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "wheat_field",
         "land": [
@@ -405,8 +646,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 3,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -418,7 +668,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -428,6 +680,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "house_cluster",
         "land": [
@@ -438,8 +716,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 6,
         "rail": false,
+        "raisable": false,
         "scatter": [],
         "stopped": [
           false,
@@ -448,7 +735,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -458,6 +747,32 @@
           "Road",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "bakery",
         "land": [
@@ -468,8 +783,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 6,
         "rail": false,
+        "raisable": false,
         "scatter": [],
         "stopped": [
           false,
@@ -478,7 +802,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -488,6 +814,32 @@
           "Road",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "road_straight",
         "land": [
@@ -498,8 +850,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -511,7 +872,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -521,6 +884,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "road_bend_120",
         "land": [
@@ -531,8 +920,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -544,7 +942,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -554,6 +954,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "road_bend_60",
         "land": [
@@ -564,8 +990,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -577,7 +1012,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -587,6 +1024,32 @@
           "Grass",
           "Road",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "road_junction",
         "land": [
@@ -597,8 +1060,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          true,
+          false,
+          true,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single",
           "bush_verge"
@@ -610,7 +1082,1025 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "hillside_000001",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_000011",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "hillside_000101",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_000111",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "hillside_001001",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_001011",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "hillside_001101",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_001111",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "hillside_010101",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_010111",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_011011",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "id": "hillside_011111",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "outcrop_granite",
+          "boulder_granite",
+          "wildflower_clump",
+          "rock_small",
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Road",
+          "Grass",
+          "Grass",
+          "Road",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "road_ramp",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "period": 1,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "wildflower_single",
+          "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Road",
+          "Grass",
+          "Grass"
+        ],
+        "heights": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "road_tunnel_portal",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "period": 6,
+        "rail": false,
+        "raisable": true,
+        "scatter": [
+          "wildflower_single",
+          "bush_verge"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": 0
       },
       {
         "edges": [
@@ -620,6 +2110,32 @@
           "Rail",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_straight",
         "land": [
@@ -630,8 +2146,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -642,7 +2167,9 @@
           true,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -652,6 +2179,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_bend_60",
         "land": [
@@ -662,8 +2215,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -674,7 +2236,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -684,6 +2248,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_bend_120",
         "land": [
@@ -694,8 +2284,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -706,7 +2305,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -716,6 +2317,32 @@
           "Rail",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_junction",
         "land": [
@@ -726,8 +2353,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -738,7 +2374,9 @@
           true,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -748,6 +2386,32 @@
           "Rail",
           "Road",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_road_crossing",
         "land": [
@@ -758,8 +2422,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          true,
+          true,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -770,7 +2443,9 @@
           true,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -780,6 +2455,32 @@
           "Rail",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "rail_station",
         "land": [
@@ -790,8 +2491,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 6,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "wildflower_single"
         ],
@@ -802,7 +2512,9 @@
           true,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -812,6 +2524,32 @@
           "River",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_straight",
         "land": [
@@ -822,8 +2560,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -835,7 +2582,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -845,6 +2594,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_bend",
         "land": [
@@ -855,8 +2630,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          true,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds",
@@ -870,7 +2654,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -880,6 +2666,32 @@
           "Grass",
           "Grass",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_bend_60",
         "land": [
@@ -890,8 +2702,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -903,7 +2724,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -913,6 +2736,32 @@
           "River",
           "Road",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_road_bridge",
         "land": [
@@ -923,8 +2772,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          true,
+          true,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -936,7 +2794,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -946,6 +2806,32 @@
           "River",
           "Rail",
           "Grass"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_rail_bridge",
         "land": [
@@ -956,8 +2842,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          true,
+          false,
+          true,
+          true,
+          false
+        ],
         "period": 1,
         "rail": true,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -969,7 +2864,9 @@
           false,
           true,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -980,6 +2877,32 @@
           "Grass",
           "Grass"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "river_spring",
         "land": [
           null,
@@ -989,8 +2912,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds",
@@ -1004,7 +2936,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1015,6 +2949,32 @@
           "River",
           "Grass"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "river_fork",
         "land": [
           null,
@@ -1024,8 +2984,17 @@
           null,
           null
         ],
+        "lanes": [
+          true,
+          false,
+          true,
+          false,
+          true,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -1037,7 +3006,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1048,6 +3019,32 @@
           "Grass",
           "Beach"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "beach",
         "land": [
           null,
@@ -1057,8 +3054,17 @@
           null,
           "Left"
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
@@ -1072,7 +3078,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1083,6 +3091,32 @@
           "Beach",
           "Ocean"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "beach_outer",
         "land": [
           null,
@@ -1092,8 +3126,17 @@
           "Left",
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
@@ -1106,7 +3149,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1117,6 +3162,32 @@
           "Grass",
           "Beach"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "beach_inner",
         "land": [
           null,
@@ -1126,8 +3197,17 @@
           null,
           "Left"
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
@@ -1141,7 +3221,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1151,6 +3233,32 @@
           "River",
           "Grass",
           "Beach"
+        ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
         ],
         "id": "river_mouth",
         "land": [
@@ -1161,8 +3269,17 @@
           null,
           "Left"
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
@@ -1176,7 +3293,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1187,6 +3306,32 @@
           "River",
           "Beach"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "river_mouth_l",
         "land": [
           null,
@@ -1196,8 +3341,17 @@
           null,
           "Left"
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          true,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "beach_driftwood",
           "beach_dunegrass",
@@ -1211,7 +3365,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       },
       {
         "edges": [
@@ -1222,6 +3378,32 @@
           "Ocean",
           "Ocean"
         ],
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
         "id": "ocean",
         "land": [
           null,
@@ -1231,8 +3413,17 @@
           null,
           null
         ],
+        "lanes": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
         "period": 1,
         "rail": false,
+        "raisable": false,
         "scatter": [
           "seabed_rock",
           "seabed_pebbles"
@@ -1244,7 +3435,9 @@
           false,
           false,
           false
-        ]
+        ],
+        "top": 0,
+        "tunnel": null
       }
     ]
   },
@@ -1304,6 +3497,7 @@
       "r"
     ],
     "place": [
+      "level",
       "q",
       "r"
     ],
@@ -1468,6 +3662,7 @@
       "z"
     ],
     "ghostRotated": [
+      "level",
       "rotation",
       "valid"
     ],
@@ -1503,6 +3698,7 @@
       "cell"
     ],
     "placementRefused": [
+      "level",
       "q",
       "r",
       "reason",
@@ -1533,12 +3729,14 @@
       "tile"
     ],
     "tilePlaced": [
+      "level",
       "q",
       "r",
       "rotation",
       "tile"
     ],
     "tileReplaced": [
+      "level",
       "q",
       "r",
       "replaced",
@@ -1586,6 +3784,7 @@
     "ghost": [
       "edges",
       "legal_rotations",
+      "level",
       "q",
       "r",
       "rotation",
@@ -1690,6 +3889,7 @@
       "rising",
       "rotation",
       "selected",
+      "slot_levels",
       "spawn_rate_hz",
       "tiles",
       "tool",
@@ -1706,6 +3906,7 @@
       "tile"
     ],
     "tile": [
+      "level",
       "q",
       "r",
       "rotation",

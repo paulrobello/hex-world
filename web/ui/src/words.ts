@@ -17,6 +17,21 @@ export const TILE_NAMES: Record<string, string> = {
   road_bend_120: "Road bend 120°",
   road_bend_60: "Road bend 60°",
   road_junction: "Road junction",
+  // One picker entry, the Hillside group (P4): R turns it through every shape and level.
+  hillside_000001: "Hillside",
+  hillside_000011: "Hillside",
+  hillside_000101: "Hillside",
+  hillside_000111: "Hillside",
+  hillside_001001: "Hillside",
+  hillside_001011: "Hillside",
+  hillside_001101: "Hillside",
+  hillside_001111: "Hillside",
+  hillside_010101: "Hillside",
+  hillside_010111: "Hillside",
+  hillside_011011: "Hillside",
+  hillside_011111: "Hillside",
+  road_ramp: "Road ramp",
+  road_tunnel_portal: "Tunnel portal",
   rail_straight: "Rail straight",
   rail_bend_60: "Rail bend 60°",
   rail_bend_120: "Rail bend 120°",
@@ -69,6 +84,8 @@ export function actionText(diff: TileDiff, isRedo: boolean): string {
 export function bulldozeRefusal(reason: string | null, cut: readonly PlayTile[]): { head: string; sub: string } {
   if (reason && /last tile/i.test(reason))
     return { head: "The world needs at least one tile", sub: "Place another before removing this one" };
+  if (reason && /tunnel/i.test(reason))
+    return { head: "This tile covers a tunnel", sub: "Remove one of its portals first" };
   if (reason && /split/i.test(reason)) {
     const kinds = new Set(cut.map((t) => t.tile));
     const what = kinds.size === 1 ? `${tileName(cut[0]!.tile).toLowerCase()} tile` : "tile";

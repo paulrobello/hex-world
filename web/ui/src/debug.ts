@@ -6,6 +6,7 @@
 import type { Command, DebugState, ForceLod, HexWorld, PlayState, State } from "./bridge.ts";
 import { h } from "./dom.ts";
 import { icon } from "./icons.ts";
+import { tileRise } from "./rules.ts";
 import { seg } from "./photo.ts";
 
 type Switch = "lod_tint" | "perf" | "grid" | "sockets" | "colliders" | "scatter" | "networks";
@@ -222,12 +223,17 @@ export class DebugHud {
 
   private renderLabels(hw: HexWorld, play: PlayState): void {
     const cells = [
-      ...play.tiles.map((t) => ({ q: t.q, r: t.r, slot: false })),
-      ...play.frontier.map((c) => ({ ...c, slot: true })),
+      ...play.tiles.map((t) => ({ q: t.q, r: t.r, level: t.level, rise: tileRise(t.tile), slot: false })),
+      ...play.frontier.map((c) => ({
+        ...c,
+        level: play.slot_levels.find((s) => s.q === c.q && s.r === c.r)?.level ?? 0,
+        rise: 0,
+        slot: true,
+      })),
     ];
     let n = 0;
     for (const c of cells) {
-      const rect = hw.cellRect(c.q, c.r);
+      const rect = hw.cellRect(c.q, c.r, c.level, c.rise);
       if (!rect) continue;
       let el = this.pool[n];
       if (!el) {

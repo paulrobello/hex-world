@@ -256,7 +256,7 @@ pub fn load_result_json(r: &Result<(u32, u16), Refusal>) -> String {
 
 /// The web's `hexWorld.inspect(bytes)`: decodes `.hexworld` bytes as a load would, but changes
 /// nothing (no load is queued and no `loadRefused` event fires), for the import preview and the
-/// refusal checks. Returns JSON: `{"ok":true,"version":v,"supported":s,"tiles":[{q,r,tile,rotation}]}`
+/// refusal checks. Returns JSON: `{"ok":true,"version":v,"supported":s,"tiles":[{q,r,tile,rotation,level}]}`
 /// or `{"ok":false,"code":..,"reason":..,"version":..,"supported":s}`, where `supported` is the
 /// newest format version this build reads.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
@@ -268,7 +268,7 @@ pub fn inspect_json(bytes: &[u8]) -> String {
                 .tiles()
                 .iter()
                 .map(|(c, t)| {
-                    serde_json::json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation })
+                    serde_json::json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation, "level": t.level })
                 })
                 .collect();
             serde_json::json!({

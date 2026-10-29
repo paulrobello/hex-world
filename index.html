@@ -104,7 +104,7 @@
           watchEvents: function (cb) { watchers.push(cb); },
           pumpEvents: pump,
           // [left, top, right, bottom] in CSS px around cell (q, r) for the current camera, or null.
-          cellRect: function (q, r) { return JSON.parse(w.hex_world_cell_rect(q, r)); },
+          cellRect: function (q, r, level, rise) { return JSON.parse(w.hex_world_cell_rect(q, r, level || 0, rise || 0)); },
           // Removes and returns a finished capture's PNG data URL (a screenshot or a photo export), else null.
           takeShot: function (name) { return w.hex_world_take_shot(name) || null; },
           // Saves (PRD §12.2): cmd({cmd:"save",tag}) encodes after earlier commands and fires `saved`;

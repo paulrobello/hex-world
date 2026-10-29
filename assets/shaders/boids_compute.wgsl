@@ -10,6 +10,8 @@ struct Params {
     dt: f32, time: f32, mode: u32, field_w: u32,
     field_h: u32, field_x0: i32, field_z0: i32, flock: u32,
     sky: vec4<f32>,
+    // How far the play altitude band lifts over the highest placed level (plan::BoidPlan::sky_lift).
+    lift: f32,
 };
 @group(0) @binding(0) var<storage, read_write> boids: array<Boid>;
 @group(0) @binding(1) var<uniform> params: Params;
@@ -208,8 +210,10 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     if (od > params.sky.w) {
         v -= vec3<f32>(off.x, 0.0, off.y) / od * ((od - params.sky.w) * 0.01 * k);
     }
-    if (p.y < SKY_LOW) { v.y += (SKY_LOW - p.y) * 0.05 * k; }
-    if (p.y > SKY_HIGH) { v.y -= (p.y - SKY_HIGH) * 0.05 * k; }
+    let low = SKY_LOW + params.lift;
+    let high = SKY_HIGH + params.lift;
+    if (p.y < low) { v.y += (low - p.y) * 0.05 * k; }
+    if (p.y > high) { v.y -= (p.y - high) * 0.05 * k; }
     v.y -= v.y * 0.02 * k;
     let speed = clamp(length(v), 5.0, 12.0);
     v = normalize(v + vec3<f32>(1e-5, 0.0, 0.0)) * speed;

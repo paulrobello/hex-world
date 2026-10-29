@@ -191,7 +191,7 @@ EdgeSocket {
   kind: SocketKind,        // terrain/feature type at this edge
   lane: Option<LaneSpec>,  // road/river crossing (rail later): offset along the edge and width
   height: u8,              // edge height level (0 in MVP; reserved for D5)
-  profile: EdgeProfile,    // Flat | Cliff | Ramp (MVP: Flat only)
+  profile: EdgeProfile,    // Flat | Rise | Fall, read clockwise: Rise climbs from `height` at the edge's start corner to `height + 1` at its end corner, Fall is the reverse (MVP: Flat only)
   land: Option<Side>,      // directional kinds only (Beach): Left | Right, which side the land is on looking out across the edge
 }
 ```
@@ -202,7 +202,7 @@ EdgeSocket {
 - Lane sockets must also match in lane offset and width, so roads and rivers line up exactly across the seam. Road lanes are 6 m wide and river lanes 8 m, both centred on the edge (`data/sockets.ron`).
 - A forest edge against a forest edge also gets a pair edge piece (`pair_edge_pieces` in `data/sockets.ron`): `forest_forest_edge`, one variant per local edge of the forest base, carries the leaf litter across the seam, ending in a straight slope at a corner beside a meadow edge (owner D3, A19 and Q3 option O-a, 2026-10-14; O-b follows when forest moves into its own streamed pack).
 - A tile may list its own edge pieces instead of deriving them from its sockets (`edge_pieces: Explicit(...)`). `road_bend_60` does: its stubs are `road_straight_edge` trimmed at the inner bisector (`road_bend_60_edge_e0` on lane 0, its mirror `road_bend_60_edge_e1` on lane 1), so the two stubs and the centre meet at the inner corner without overlapping faces and with the same look (owner A7, 2026-10-21; built 2026-10-25). The kit gate checks each centre's joints against the edge pieces its tile places.
-- Height rules (P4): edges must have equal height, unless the edge profile is `Cliff` (any difference) or `Ramp` (a difference of exactly 1).
+- Height rules (P4, `hex-core` `heights_meet`): an edge's corner heights are absolute once the tile's level is added. Two edges meet seamlessly when one's absolute (start, end) corners equal the other's absolute (end, start), because they run in opposite directions across the seam. Two `Flat` edges with no lane at different heights meet as a cliff. Everything else is refused, so a lane edge (road, river, rail) always meets at equal absolute height.
 
 ### 5.3 Tile definitions (data)
 
@@ -674,9 +674,10 @@ P3 references are owner-approved (A17, 2026-10-14, `assets-source/refs/<id>/appr
 
 ### P4 — Elevation
 
-- [ ] Height levels 0–3, with `Cliff` and `Ramp` edge profiles and height-aware socket rules.
-- [ ] Hills and mountain tiles. Rivers that flow downhill (river lanes carry a flow direction). Waterfalls at cliff edges.
-- [ ] Roads ramp between levels; rail crosses height on viaducts and in tunnels.
+- [x] Height levels 0–3, with `Rise`/`Fall` edge profiles, cliffs between flat laneless edges, and height-aware socket rules. (First round, landed on the `p4-elevation` branch: the level byte is live in saves, 0..=3, format v3 unchanged, `docs/save-format.md`; raised Meadow; cliffs shown as a soil skirt and never picked by default; 12 hillside shapes in `data/tiles/hillside_*.ron`; thumbnails, `docs/checkpoints/elevation/`.)
+- [ ] Hills and mountain tiles. Rivers that flow downhill (river lanes carry a flow direction). Waterfalls at cliff edges. (Hillside slope tiles landed, as the first-round way to change level. Single-tile mountains and peaks (A40) are not in. Deferred: rivers, flow direction and waterfalls at levels, so rivers and beaches stay at level 0.)
+- [x] Roads ramp between levels; road tunnels run under raised Meadow. (Landed: the `road_ramp` tile, straight, bend and junction roads on raised ground, and the `road_tunnel_portal` piece with cars fading out into and back out of a tunnel. Deferred: rail at levels, rail viaducts and rail tunnels. The portal lamp hook is inert until the P5 day/night cycle drives it.)
+- [ ] Other raised tile types (deferred, owner 2026-10-28): forest, oak, farm, wheat field, houses, bakery and windmill get their raised versions later; in the first round only Meadow rises, and only raised Meadow may sit above a tunnel.
 
 P4 decisions (owner, 2026-10-27, open questions A38–A42, recommended options):
 - A38 O1, setting a level: a tile takes the level its neighbours imply, the way placement already picks a rotation, and R/scroll cycles the legal levels when more than one fits. Tile definitions keep edge heights relative to the tile's own level, so a placed tile stores one absolute level and the per-(tile, rotation) thumbnails stay valid.

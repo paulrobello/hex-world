@@ -5,8 +5,9 @@
 //! - **Ground.** Blades grow on the topmost LOD0 surface of a tile's ground pieces (scatter's
 //!   [`Surface`], from [`PlayScatter::ground`]) where its slot is a grass slot: a manifest slot whose
 //!   tileable set is `grass` and that is not foliage ([`grass_slots`]: `meadow_base_cap`,
-//!   `forest_base_rim` and `_edge`, `road_verge`, `river_grass` and `beach_grass`; the hedge is
-//!   foliage). Scatter's own slot filter ([`scatter::excluded_slot`]) is not used: it drops every
+//!   `forest_base_rim` and `_edge`, `road_verge`, `river_grass`, `beach_grass` and the tunnel
+//!   portal's wall-top `road_tunnel_portal_turf`; the hedge is foliage). Scatter's own slot
+//!   filter ([`scatter::excluded_slot`]) is not used: it drops every
 //!   `road_`, `river_` and `beach_` slot and every rim and edge band, which are exactly the verges,
 //!   banks and dune grass that should carry blades. Roads, sand, river beds and pads are not grass
 //!   slots, so they never do.
@@ -68,7 +69,7 @@ use bevy::{
 };
 use bytemuck::{Pod, Zeroable};
 use hex_assets::KitManifest;
-use hex_core::{Axial, HEX_RADIUS, TileCatalog, TileDef, cell_seed};
+use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, TileCatalog, TileDef, cell_seed};
 
 use super::{
     APOTHEM, PlayCatalog, PlayKit, PlaySpawned, PlayView,
@@ -1140,12 +1141,16 @@ pub fn sync(
         .iter()
         .find(|(c, _)| c.is_active)
         .map(|(_, g)| g.translation());
-    // A tile's nearest point from the camera (m), at rest.
+    // A tile's nearest point from the camera (m), at rest, its cap at its level (P4).
     let reach = |cell: Axial| {
+        let y0 = spawned
+            .tiles
+            .get(&cell)
+            .map_or(0.0, |(t, _)| f32::from(t.level) * LEVEL_STEP);
         camera.map_or(f32::MAX, |c| {
             let [x, z] = cell.to_world(HEX_RADIUS);
             let flat = (Vec2::new(c.x - x, c.z - z).length() - HEX_RADIUS).max(0.0);
-            Vec2::new(flat, c.y).length()
+            Vec2::new(flat, c.y - y0).length()
         })
     };
     let wanted: HashMap<Entity, (Axial, Key)> = spawned
@@ -1305,6 +1310,7 @@ mod tests {
                 "forest_base_rim",
                 "meadow_base_cap",
                 "river_grass",
+                "road_tunnel_portal_turf",
                 "road_verge"
             ]
         );

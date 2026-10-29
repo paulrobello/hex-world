@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-test
 
 fmt:
 	cargo fmt --all
@@ -207,7 +207,8 @@ BLEND_STORE = $(shell python3 scripts/blender/lib/paths.py store)
 KIT_BLEND = $(or $(BLEND),$(if $(filter interactive,$(ROUTE)),$(shell python3 scripts/blender/lib/paths.py blend $(PIECE))))
 KIT_PROV_ARGS = $(if $(REFS),--refs $(REFS)) $(if $(KIT_BLEND),--blend $(KIT_BLEND) --blend-store $(BLEND_STORE)) $(if $(ROUTE),--route $(ROUTE))
 kit-provenance:
-	@test -n "$(PIECE)" || { echo "usage: make kit-provenance PIECE=<id> [REFS=assets-source/refs/<ref>] [ROUTE=interactive [BLEND=path]]"; exit 2; }
+	@test -n "$(PIECE)" || { echo "usage: make kit-provenance PIECE=<id> REFS=assets-source/refs/<ref> [ROUTE=interactive [BLEND=path]]"; exit 2; }
+	@test -n "$(REFS)" || { echo "kit-provenance: REFS=assets-source/refs/<ref> is required: a kit piece's provenance carries the owner's reference approval (R2)"; exit 2; }
 	@if [ "$(ROUTE)" = interactive ] && [ ! -f "$(KIT_BLEND)" ]; then \
 	  echo "kit-provenance: ROUTE=interactive needs the piece's .blend, got '$(KIT_BLEND)' (BLEND=, or python3 scripts/blender/lib/paths.py blend $(PIECE))"; exit 2; fi
 	node scripts/assets/kit-provenance.mjs $(PIECE) $(KIT_PROV_ARGS) --stage target/kit-stage/$(PIECE) --check
@@ -334,6 +335,17 @@ shots-piece:
 	@test -n "$(SCRIPT)" && test -n "$(OUT)" || { echo "usage: make shots-piece SCRIPT=<json> OUT=<dir> [ARGS='--scenario play'] [ENV='HEXW_PACK_HOLD_FRAMES=300']"; exit 2; }
 	cargo build -p hex-app --release
 	env $(ENV) python3 scripts/shots/piece.py --script $(SCRIPT) --out $(OUT) -- $(ARGS)
+
+# Elevation review shots (P4): docs/checkpoints/elevation/elevation-shots.json (from elevation.json)
+# builds the elevation world, then shoots an overview, a low camera up the ramp and a burst of frames
+# of a car driving into the east tunnel portal, each with its state dump (play.car_list opacity).
+# The cliff-edge frame is not re-shot here: the elevation world has no cliff by design, so it reuses
+# docs/checkpoints/elevation/visual-parity/parity-cliff-low.jpg (rerun that script with
+# visual-parity/run.sh). Native shots draw no HUD; the "Level N" readout frame (hud-level.jpg) comes
+# from `node e2e/elevation.mjs dist`. Fixed clocks, so a rerun replays. GPU capture: run only inside
+# a booked load-sensitive window.
+shots-elevation:
+	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/elevation/elevation-shots.json OUT=docs/checkpoints/elevation ARGS='--scenario play --clock fixed --water_clock fixed'
 
 shots-kit:
 	mkdir -p target/shots

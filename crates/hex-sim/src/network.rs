@@ -3,12 +3,19 @@
 //! A segment ending on a lane edge ends at a seam node keyed by the seam itself, so the tiles on
 //! both sides of a seam share that node and are stitched by key, never by float position. A seam
 //! node with only one placed side is a half-seam of degree 1 facing an empty cell.
+//!
+//! A complete tunnel (P4) adds one hidden road link from portal `a`'s arch node to portal `b`'s,
+//! a straight 2D line under the cover ([`Network::set_tunnels`]). An open portal's arch is a dead
+//! end of degree 1 and never a destination.
 
 use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 
-use hex_core::{Axial, Destination, Endpoint, NetworkKind, TileDef, opposite_edge, world_edge};
+use hex_core::{
+    Axial, Destination, Endpoint, NetworkKind, TileCatalog, TileDef, Tunnel, World, opposite_edge,
+    world_edge,
+};
 
 use crate::geom::{self, Vec2};
 use crate::route::{Route, find_route};
@@ -20,7 +27,12 @@ const ROUTE_CACHE_CAP: usize = 4096;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NodeId(pub u32);
 
-/// A link is segment `segment` (its index in [`TileDef::networks`]) of the tile at `cell`.
+/// The [`LinkId::segment`] of a tunnel's hidden link, keyed by its portal `a`. No tile declares
+/// this many segments.
+pub const TUNNEL_SEGMENT: u16 = u16::MAX;
+
+/// A link is segment `segment` (its index in [`TileDef::networks`]) of the tile at `cell`, or the
+/// hidden link of the tunnel whose portal `a` is `cell` ([`TUNNEL_SEGMENT`]).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct LinkId {
     pub cell: Axial,
@@ -82,6 +94,7 @@ pub struct Link {
     b: NodeId,
     points: Vec<Vec2>,
     length: f32,
+    hidden: bool,
 }
 
 impl Link {
@@ -102,6 +115,11 @@ impl Link {
     /// Centerline length in meters; the routing cost.
     pub fn length(&self) -> f32 {
         self.length
+    }
+
+    /// Whether the link runs through a tunnel, out of sight under its cover.
+    pub fn hidden(&self) -> bool {
+        self.hidden
     }
 }
 
@@ -191,6 +209,8 @@ pub struct Network {
     links: BTreeMap<LinkId, Link>,
     routes: HashMap<(NodeId, NodeId), Option<Arc<Route>>>,
     components: Option<Components>,
+    /// The tunnels whose hidden links are in the graph, keyed by link.
+    tunnels: BTreeMap<LinkId, Tunnel>,
 }
 
 impl Network {
@@ -204,6 +224,7 @@ impl Network {
             links: BTreeMap::new(),
             routes: HashMap::new(),
             components: None,
+            tunnels: BTreeMap::new(),
         }
     }
 
@@ -251,6 +272,7 @@ impl Network {
                     b,
                     length: geom::polyline_length(&points),
                     points,
+                    hidden: false,
                 },
             );
             changed = true;
@@ -261,27 +283,102 @@ impl Network {
         changed
     }
 
-    /// Removes every link of the tile at `cell` and any node left without links. Returns whether
-    /// the graph changed.
+    /// Removes every link of the tile at `cell`, the hidden link of any tunnel with a portal at
+    /// `cell`, and any node left without links. Returns whether the graph changed.
     pub fn remove_tile(&mut self, cell: Axial) -> bool {
-        let ids: Vec<LinkId> = self.links_of(cell).map(|(id, _)| id).collect();
+        let ids: Vec<LinkId> = self
+            .links_of(cell)
+            .map(|(id, _)| id)
+            .chain(
+                self.tunnels
+                    .iter()
+                    .filter(|(_, t)| t.a == cell || t.b == cell)
+                    .map(|(id, _)| *id),
+            )
+            .collect();
         for id in &ids {
-            let link = self.links.remove(id).expect("listed above");
-            for end in [link.a, link.b] {
-                let Some(node) = self.nodes.get_mut(&end) else {
-                    continue;
-                };
-                node.links.remove(id);
-                if node.links.is_empty() {
-                    let node = self.nodes.remove(&end).expect("present above");
-                    self.ids.remove(&node.key);
-                }
-            }
+            self.remove_link(*id);
         }
         if !ids.is_empty() {
             self.touch();
         }
         !ids.is_empty()
+    }
+
+    /// Replaces the tunnels' hidden links with one per tunnel in `tunnels`: a straight segment
+    /// from portal `a`'s arch node to portal `b`'s, keyed by `a` ([`TUNNEL_SEGMENT`]). A tunnel no
+    /// longer listed loses its link. Portals are looked up in `world` and `c`; a tunnel whose
+    /// portal is missing is skipped. Only a road network has tunnels. Leaves the graph untouched
+    /// when the set is unchanged.
+    pub fn set_tunnels(&mut self, tunnels: &[Tunnel], world: &World, c: &TileCatalog) {
+        let want: BTreeMap<LinkId, &Tunnel> = if self.kind == NetworkKind::Road {
+            tunnels
+                .iter()
+                .map(|t| {
+                    let id = LinkId {
+                        cell: t.a,
+                        segment: TUNNEL_SEGMENT,
+                    };
+                    (id, t)
+                })
+                .collect()
+        } else {
+            BTreeMap::new()
+        };
+        let stale: Vec<LinkId> = self
+            .tunnels
+            .iter()
+            .filter(|(id, t)| want.get(id) != Some(t))
+            .map(|(id, _)| *id)
+            .collect();
+        let mut changed = !stale.is_empty();
+        for id in stale {
+            self.remove_link(id);
+        }
+        for (id, t) in want {
+            if self.tunnels.contains_key(&id) {
+                continue;
+            }
+            let (Some(from), Some(to)) = (arch(world, c, t.a), arch(world, c, t.b)) else {
+                continue;
+            };
+            let a = self.node_for(from, id);
+            let b = self.node_for(to, id);
+            let points = vec![self.nodes[&a].pos, self.nodes[&b].pos];
+            self.links.insert(
+                id,
+                Link {
+                    a,
+                    b,
+                    length: geom::polyline_length(&points),
+                    points,
+                    hidden: true,
+                },
+            );
+            self.tunnels.insert(id, t.clone());
+            changed = true;
+        }
+        if changed {
+            self.touch();
+        }
+    }
+
+    /// Removes link `id`, its tunnel entry, and any end node left without links.
+    fn remove_link(&mut self, id: LinkId) {
+        self.tunnels.remove(&id);
+        let Some(link) = self.links.remove(&id) else {
+            return;
+        };
+        for end in [link.a, link.b] {
+            let Some(node) = self.nodes.get_mut(&end) else {
+                continue;
+            };
+            node.links.remove(&id);
+            if node.links.is_empty() {
+                let node = self.nodes.remove(&end).expect("present above");
+                self.ids.remove(&node.key);
+            }
+        }
     }
 
     pub fn node(&self, id: NodeId) -> Option<&Node> {
@@ -319,12 +416,12 @@ impl Network {
         self.links.iter().map(|(id, l)| (*id, l))
     }
 
-    /// Links of the tile at `cell`, in segment order.
+    /// Links of the tile at `cell`, in segment order. A tunnel's hidden link is not one of them.
     pub fn links_of(&self, cell: Axial) -> impl Iterator<Item = (LinkId, &Link)> {
         let lo = LinkId { cell, segment: 0 };
         let hi = LinkId {
             cell,
-            segment: u16::MAX,
+            segment: TUNNEL_SEGMENT - 1,
         };
         self.links.range(lo..=hi).map(|(id, l)| (*id, l))
     }
@@ -409,6 +506,14 @@ struct End {
     key: NodeKey,
     pos: Vec2,
     destination: Option<Destination>,
+}
+
+/// The arch node of the portal at `cell`, or `None` when no portal stands there.
+fn arch(world: &World, c: &TileCatalog, cell: Axial) -> Option<End> {
+    let tile = world.tile(cell)?;
+    let def = c.get(&tile.def)?;
+    let node = def.tunnel.as_ref()?.node.clone();
+    endpoint(cell, def, tile.rotation, &Endpoint::Node(node))
 }
 
 /// `None` when the endpoint names a node the tile does not declare (never true for a validated

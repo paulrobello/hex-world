@@ -37,6 +37,9 @@
         "rdo": 0.5,
         "normalize": false
       }
+    },
+    "pngFallbackSize": {
+      "normal": 512
     }
   },
   "textureEncodes": [
@@ -99,8 +102,9 @@
       "path": "assets/kit/p1/materials/soil/soil.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 2745992,
-      "sha256": "7d75ef5f858b338d4b88b3a0044c89af615eace7347471a4b89404a66d46e257"
+      "bytes": 590616,
+      "sha256": "8e33f617481e3978974a4d049cf204880a7adbb0492764b2320a8009d0e79692",
+      "size": 512
     },
     {
       "channel": "orm",

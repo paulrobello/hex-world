@@ -50,7 +50,7 @@ use bevy::{
     prelude::*,
 };
 use hex_core::{
-    Axial, HEX_RADIUS, NetworkKind, ParkPose, TileCatalog, TileDef,
+    Axial, HEX_RADIUS, LEVEL_STEP, NetworkKind, ParkPose, TileCatalog, TileDef,
     rail_end::{self, BUFFER_STOP},
 };
 
@@ -281,8 +281,14 @@ struct CellGround {
     tile: String,
     centre: Vec2,
     rotation: u8,
-    /// `None`: a placeholder tile, flat at y = 0.
+    /// The tile's level height (P4), `level * LEVEL_STEP`: every query adds it to the
+    /// tile-frame surface, so a cliff between two levels is a step [`MAX_STEP`] refuses.
+    y0: f32,
+    /// `None`: a placeholder tile, flat at `y0`.
     surface: Option<Arc<Surface>>,
+    /// The tile carries a road or a parking spot: a car's wheel over any other tile (a tunnel's
+    /// cover past the arch) rides the car's own tile ([`WalkGround::ride_car`]).
+    car_paths: bool,
     water: bool,
     /// River or spring water: deeper than [`MAX_WADE`] is crossed at that depth, not refused.
     ford: bool,
@@ -922,10 +928,11 @@ pub fn fallback_hull(piece: &str) -> Vec<Vec2> {
         .collect()
 }
 
-/// The tile root's rest transform (`play::spawn_tile`).
+/// The tile root's rest transform (`play::spawn_tile`), on its level.
 fn root_transform(t: &PlayTile) -> Transform {
     let [x, z] = t.cell.to_world(HEX_RADIUS);
-    Transform::from_xyz(x, 0.0, z).with_rotation(piece_rotation(t.rotation))
+    Transform::from_xyz(x, f32::from(t.level) * LEVEL_STEP, z)
+        .with_rotation(piece_rotation(t.rotation))
 }
 
 fn place_hull(hull: &[Vec2], t: &Transform) -> Vec<Vec2> {
@@ -976,7 +983,10 @@ impl WalkGround {
                     tile: t.tile.clone(),
                     centre: Vec2::new(x, z),
                     rotation: t.rotation,
+                    y0: f32::from(t.level) * LEVEL_STEP,
                     surface,
+                    car_paths: !def.parking.is_empty()
+                        || def.networks.iter().any(|n| n.kind == NetworkKind::Road),
                     ride_max: ride_max.unwrap_or(f32::MIN),
                     water: water_kind(def, t.rotation).is_some(),
                     ford: matches!(
@@ -1087,10 +1097,11 @@ impl WalkGround {
         }
         let d = p - g.centre;
         let l = turn((6 - g.rotation % 6) % 6, [d.x, 0.0, d.y]);
-        let h = match &g.surface {
-            Some(s) => s.at(l[0], l[2]).ok_or(Blocked::Edge)?.0,
-            None => 0.0,
-        };
+        let h = g.y0
+            + match &g.surface {
+                Some(s) => s.at(l[0], l[2]).ok_or(Blocked::Edge)?.0,
+                None => 0.0,
+            };
         let depth = if g.water { (WATER_Y - h).max(0.0) } else { 0.0 };
         Ok((h, depth, g.ford))
     }
@@ -1117,11 +1128,18 @@ impl WalkGround {
     /// higher of `floor` and the ground there when that is [`CAR_GROUND`]. A tile whose car paths never rise more than
     /// [`RIDE_FLAT`] above `floor` ([`ride_max`], cached per tile id) answers `floor` after one
     /// cell lookup: every flat road tile and the river road bridge. Only a tile with a ramp or a
-    /// raised deck searches its surface. Off the drawn tiles, `floor`.
+    /// raised deck searches its surface. `floor` is over the tile's level (P4): the answer adds
+    /// the level's height, so a car on a raised road rides its top and one on the road ramp
+    /// climbs its draped asphalt. Off the drawn tiles, `floor`.
     pub fn ride(&self, p: Vec2, floor: f32) -> f32 {
         let Some(g) = self.cells.get(&cell_at(p)) else {
             return floor;
         };
+        g.y0 + Self::ride_on(g, p, floor)
+    }
+
+    /// [`WalkGround::ride`] in the tile's own frame, over its level.
+    fn ride_on(g: &CellGround, p: Vec2, floor: f32) -> f32 {
         let Some(s) = g
             .surface
             .as_ref()
@@ -1134,6 +1152,18 @@ impl WalkGround {
         match s.at(l[0], l[2]) {
             Some((h, slot)) if CAR_GROUND.contains(&slot) => h.max(floor),
             _ => floor,
+        }
+    }
+
+    /// [`WalkGround::ride`] for a wheel at `p` of a car whose centre is at `centre`. A wheel over
+    /// a tile with no road or parking (a tunnel's cover, past the arch) or off the drawn tiles (a
+    /// raised road's open end) rides `floor` on the level of the tile under the centre: a car
+    /// entering a tunnel stays on its road while it fades, rather than climbing onto the cover one
+    /// level up, and one at a raised dead end does not tip toward the ground.
+    pub fn ride_car(&self, p: Vec2, floor: f32, centre: Vec2) -> f32 {
+        match self.cells.get(&cell_at(p)) {
+            Some(g) if g.car_paths => g.y0 + Self::ride_on(g, p, floor),
+            _ => self.cells.get(&cell_at(centre)).map_or(0.0, |c| c.y0) + floor,
         }
     }
 
@@ -1446,12 +1476,9 @@ pub fn sync(
         if !pieces.iter().all(|(id, _)| kit.contains_key(*id)) {
             return None;
         }
-        let mut all: Vec<(Tri, String)> = vec![];
-        for (id, k) in pieces {
-            for (t, s) in scatter::kit_tris(id, &packs, assets)? {
-                all.push((t.map(|p| turn(k, p)), s));
-            }
-        }
+        let all = crate::play::slope_ground::tile_ground_tris(def, &catalog.0, &mut |id| {
+            scatter::kit_tris(id, &packs, assets)
+        })?;
         let s = Arc::new(Surface::new(all));
         let ride = ride_max(def, &s);
         surfaces.insert(def.id.clone(), (s.clone(), ride));
@@ -2201,12 +2228,9 @@ pub(crate) mod tests {
     }
 
     pub(crate) fn surface(def: &TileDef) -> Option<Arc<Surface>> {
-        let mut all = vec![];
-        for (id, k) in scatter::ground_pieces(def, &catalog()) {
-            for (t, s) in mesh_tris(id, "lod0")? {
-                all.push((t.map(|p| turn(k, p)), s));
-            }
-        }
+        let all = crate::play::slope_ground::tile_ground_tris(def, &catalog(), &mut |id| {
+            mesh_tris(id, "lod0")
+        })?;
         Some(Arc::new(Surface::new(all)))
     }
 
@@ -2225,12 +2249,19 @@ pub(crate) mod tests {
     }
 
     pub(crate) fn world_in(c: &TileCatalog, tiles: &[(i32, i32, &str, u8)]) -> WalkGround {
+        let at: Vec<_> = tiles.iter().map(|&(q, r, t, k)| (q, r, t, k, 0)).collect();
+        world_at(c, &at)
+    }
+
+    /// [`world_in`] with each tile's level: (q, r, id, rotation, level).
+    pub(crate) fn world_at(c: &TileCatalog, tiles: &[(i32, i32, &str, u8, u8)]) -> WalkGround {
         let play: Vec<PlayTile> = tiles
             .iter()
-            .map(|&(q, r, tile, rotation)| PlayTile {
+            .map(|&(q, r, tile, rotation, level)| PlayTile {
                 cell: Axial::new(q, r),
                 tile: tile.into(),
                 rotation,
+                level,
             })
             .collect();
         let mut scatter = BTreeMap::new();
@@ -2621,6 +2652,110 @@ pub(crate) mod tests {
     fn the_sea_still_stops_the_walker() {
         let g = world(&[(0, 0, "beach", 0), (1, 0, "ocean", 0)]);
         assert_eq!(g.ground(centre(1, 0)), Err(Blocked::Water));
+    }
+
+    /// The distance (m) from a hex's centre to its edges.
+    const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
+
+    /// A standable point at x = `x` from the centre of the tile at (q, r): the first of a few
+    /// offsets across the line that no scatter obstacle covers.
+    fn standable(g: &WalkGround, q: i32, r: i32, x: f32) -> Vec3 {
+        let c = centre(q, r);
+        [0.0, 1.0, -1.0, 2.0, -2.0, 3.0, -3.0]
+            .into_iter()
+            .find_map(|z| {
+                let p = c + Vec2::new(x, z);
+                g.stand(p).ok().map(|h| Vec3::new(p.x, h, p.y))
+            })
+            .expect("a standable point")
+    }
+
+    /// Elevation (P4): a meadow one level up is ground 4 m higher than the same meadow on the
+    /// ground, and a walker stands on its top.
+    #[test]
+    fn walker_stands_on_a_raised_meadow() {
+        let g = world_at(
+            &catalog(),
+            &[(0, 0, "meadow", 0, 0), (1, 0, "meadow", 0, 1)],
+        );
+        let low = g.ground(centre(0, 0)).unwrap();
+        let high = g.ground(centre(1, 0)).unwrap();
+        assert!((high - low - LEVEL_STEP).abs() < 1e-4, "{low} vs {high}");
+        let feet = standable(&g, 1, 0, 0.0);
+        assert!((feet.y - LEVEL_STEP).abs() < 0.3, "stands at {feet}");
+    }
+
+    /// A cliff (a level-0 meadow beside a level-1 meadow) is a wall: the step up onto the raised
+    /// tile is refused as steep and the walker stays on its own tile. Walking off the raised tile
+    /// the other way is a drop, which [`WalkGround::step`] allows (the walker falls).
+    #[test]
+    fn cliff_blocks_a_step() {
+        let g = world_at(
+            &catalog(),
+            &[(0, 0, "meadow", 0, 0), (1, 0, "meadow", 0, 1)],
+        );
+        let from = standable(&g, 0, 0, APOTHEM - 0.6);
+        let s = g.step(from, Vec2::new(1.2, 0.0));
+        assert_eq!(s.blocked, Some(Blocked::Steep), "{s:?}");
+        assert!(s.pos.x < centre(0, 0).x + APOTHEM, "stays below: {s:?}");
+        let top = standable(&g, 1, 0, -APOTHEM + 0.6);
+        let down = g.step(top, Vec2::new(-1.2, 0.0));
+        assert_eq!(down.blocked, None, "the drop is allowed: {down:?}");
+        assert!(down.pos.y < top.y - 3.0, "{down:?}");
+    }
+
+    /// The road ramp is walkable: from the level-0 road west of edge 3, along the ramp's road and
+    /// onto the level-1 road east of edge 0, no 0.25 m stride climbs more than [`MAX_STEP`] and
+    /// nothing refuses the walk.
+    #[test]
+    fn hillside_is_walkable() {
+        let g = world_at(
+            &catalog(),
+            &[
+                (-1, 0, "road_straight", 0, 0),
+                (0, 0, "road_ramp", 0, 0),
+                (1, 0, "road_straight", 0, 1),
+            ],
+        );
+        let (x0, x1) = (centre(-1, 0).x, centre(1, 0).x);
+        let mut pos = Vec3::new(x0, g.stand(Vec2::new(x0, 0.0)).unwrap(), 0.0);
+        let start = pos.y;
+        let mut steepest = 0.0f32;
+        while pos.x < x1 - 0.25 {
+            let s = g.step(pos, Vec2::new(0.25, 0.0));
+            assert_eq!(s.blocked, None, "blocked at {pos}: {s:?}");
+            assert!(s.pos.y - pos.y <= MAX_STEP, "{pos} -> {}", s.pos);
+            steepest = steepest.max(s.pos.y - pos.y);
+            pos = s.pos;
+        }
+        println!("ramp walk: steepest 0.25 m rise {steepest:.3} m");
+        assert!(
+            (pos.y - start - LEVEL_STEP).abs() < 0.05,
+            "the ramp climbs one level: {start} -> {}",
+            pos.y
+        );
+    }
+
+    /// A tunnel (P4): the portal's cutting runs level to the portal's face, 2.2 m inside edge 0,
+    /// and the portal (a ground hero) stands there as a 4 m wall. The walker walking up the cutting
+    /// is stopped by the face's step and never stands in the arch; the cover meadow beyond edge 0
+    /// stands one level up and the walker on it stands on its top.
+    #[test]
+    fn walker_cannot_enter_the_tunnel() {
+        let g = world_at(
+            &catalog(),
+            &[(0, 0, "road_tunnel_portal", 0, 0), (1, 0, "meadow", 0, 1)],
+        );
+        let edge = centre(0, 0).x + APOTHEM;
+        let face = edge - 2.2;
+        let floor = g.ground(Vec2::new(face - 0.5, 0.0)).unwrap();
+        let wall = g.ground(Vec2::new(face + 0.5, 0.0)).unwrap();
+        assert!(wall - floor > MAX_STEP, "face step {floor} -> {wall}");
+        let s = walk(&g, centre(0, 0), Vec2::X, 30.0);
+        assert_eq!(s.blocked, Some(Blocked::Steep), "{s:?}");
+        assert!(s.pos.x < face, "stopped short of the face: {s:?}");
+        let on_top = g.ground(centre(1, 0)).unwrap();
+        assert!((on_top - LEVEL_STEP).abs() < 0.3, "cover top {on_top}");
     }
 
     fn ray(o: Vec3, d: Vec3) -> Ray3d {

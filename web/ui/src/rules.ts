@@ -1,6 +1,6 @@
 // The placement rules the sheet reads (PRD §4.1–4.2), from the Rust catalog and socket table in
-// bridge-schema.json. hex-core stays the authority: test/rules.test.ts checks legalRotations
-// against hex-core's own answers for every slot of five worlds (rules-parity.json).
+// bridge-schema.json. hex-core stays the authority: test/rules.test.ts checks
+// legalOrientations against hex-core's own answers for every slot of six worlds (rules-parity.json).
 import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 
@@ -28,6 +28,19 @@ export interface TileDef {
    * turn with it, 3 for the wheat field's rows, 1 where the sockets alone decide (`same_orientation`).
    */
   period: number;
+  /**
+   * Each local edge's relative corner heights `[start, end]`, clockwise viewed from above (hex-core
+   * `EdgeSocket::corners`). Equal heights are a flat edge; a slope differs by one.
+   */
+  heights: [number, number][];
+  /** Which local edges carry a lane (road, river, rail): those never meet across a cliff. */
+  lanes: boolean[];
+  /** Whether the tile may stand on a level above 0 (hex-core `TileDef::raisable`). */
+  raisable: boolean;
+  /** Its highest relative corner (hex-core `TileDef::top`): `level + top` stays within MAX_LEVEL. */
+  top: number;
+  /** The local edge a tunnel portal's mouth opens on (hex-core `TileDef::tunnel`), null on every other tile. */
+  tunnel: number | null;
 }
 
 export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
@@ -37,8 +50,15 @@ export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   stopped: t.stopped,
   rail: t.rail,
   period: t.period,
+  heights: t.heights as [number, number][],
+  lanes: t.lanes,
+  raisable: t.raisable,
+  top: t.top,
+  tunnel: t.tunnel,
 }));
 export const START_TILE: string = schema.catalog.start;
+/** Highest level a tile may stand on (hex-core `MAX_LEVEL`). */
+export const MAX_LEVEL: number = schema.catalog.max_level;
 const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
 /** What a stopped rail end meets a tile without rail as (hex-core `rail_end::STOPPED_END_GROUND`). */
 const STOPPED_END_GROUND = schema.catalog.stopped_end_ground as SocketKind;
@@ -97,6 +117,52 @@ export function rotatedStopped(def: TileDef, k: number): boolean[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.stopped[(w - k + 12) % 6]!);
 }
 
+/** How many levels a tile's highest corner stands above its own level (hillside, ramp: 1; flat: 0). */
+export const tileRise = (id: string): number => Math.max(0, ...(tileDef(id)?.heights.flat() ?? [0]));
+
+/** World-edge corner heights `[start, end]` of a tile turned by k and standing on `level`. */
+export function rotatedHeights(def: TileDef, k: number, level: number): [number, number][] {
+  return [0, 1, 2, 3, 4, 5].map((w) => {
+    const [s, e] = def.heights[(w - k + 12) % 6]!;
+    return [s + level, e + level];
+  });
+}
+
+/** Which world edges of a tile turned by k carry a lane. */
+export function rotatedLanes(def: TileDef, k: number): boolean[] {
+  return [0, 1, 2, 3, 4, 5].map((w) => def.lanes[(w - k + 12) % 6]!);
+}
+
+/** One edge's height: its relative corners `[start, end]` and whether it carries a lane. */
+export interface EdgeHeight {
+  heights: readonly [number, number];
+  lane: boolean;
+}
+
+export type HeightMeet = "Seamless" | "Cliff" | "Refused";
+
+/** {@link heightsMeet} on absolute corner heights. */
+function absoluteMeet(
+  a: readonly [number, number],
+  aLane: boolean,
+  b: readonly [number, number],
+  bLane: boolean,
+): HeightMeet {
+  if (a[0] === b[1] && a[1] === b[0]) return "Seamless";
+  const flat = (h: readonly [number, number]) => h[0] === h[1];
+  return flat(a) && flat(b) && !aLane && !bLane ? "Cliff" : "Refused";
+}
+
+/**
+ * How edge `a` of a tile on `aLevel` and edge `b` across the seam on `bLevel` meet in height
+ * (hex-core `heights_meet`): seamless when a's absolute (start, end) equals b's (end, start), as the
+ * edges run opposite ways; a cliff when both are flat without lanes but differ; refused otherwise.
+ */
+export function heightsMeet(a: EdgeHeight, aLevel: number, b: EdgeHeight, bLevel: number): HeightMeet {
+  const abs = (e: EdgeHeight, l: number): [number, number] => [e.heights[0] + l, e.heights[1] + l];
+  return absoluteMeet(abs(a, aLevel), a.lane, abs(b, bLevel), b.lane);
+}
+
 /** Equal for two rotations exactly when their world-edge sockets are equal and they are a whole number of periods apart. */
 const orientation = (def: TileDef, k: number): string =>
   `${k % def.period}|${rotated(def, k).join()}|${rotatedLand(def, k).join()}`;
@@ -108,25 +174,43 @@ const orientation = (def: TileDef, k: number): string =>
 export const meets = (theirs: SocketKind, theirLand: Side | null, mine: SocketKind, myLand: Side | null): boolean =>
   compatible(theirs, mine) && (theirLand === null || myLand === null ? theirLand === myLand : theirLand !== myLand);
 
-/** One side of a seam: the edge's kind, land side and whether it is a stopped rail end, and whether its tile carries rail. */
+/**
+ * One side of a seam: the edge's kind, land side and whether it is a stopped rail end, whether its
+ * tile carries rail, the edge's absolute corner heights `[start, end]` and whether it has a lane.
+ */
 export interface Facing {
   kind: SocketKind;
   land: Side | null;
   stopped: boolean;
   rail: boolean;
+  heights: readonly [number, number];
+  lane: boolean;
 }
 
-/** Whether `end` is a stopped rail end that `other`, a tile without rail, meets as grass (owner, 2026-10-25). */
+/**
+ * Whether `end` is a stopped rail end that `other`, a tile without rail, meets as grass (owner,
+ * 2026-10-25). The stop meets it as lane-free ground at the end's own height, so it may face raised
+ * ground across a cliff.
+ */
 const stopCloses = (end: Facing, other: Facing): boolean =>
-  end.stopped && !other.rail && other.land === null && compatible(STOPPED_END_GROUND, other.kind);
+  end.stopped &&
+  !other.rail &&
+  other.land === null &&
+  !other.lane &&
+  compatible(STOPPED_END_GROUND, other.kind) &&
+  absoluteMeet(end.heights, false, other.heights, other.lane) !== "Refused";
 
 /**
  * Whether my edge may be placed against the placed edge it faces (hex-core
- * `TileCatalog::placement_meets`): the sockets meet, or theirs is a stopped rail end and my tile
- * carries no rail. A tile with rail never turns an end toward a placed tile without rail.
+ * `TileCatalog::placement_meets`): the sockets meet (kinds, land sides, lanes and heights), or
+ * theirs is a stopped rail end and my tile carries no rail. A tile with rail never turns an end
+ * toward a placed tile without rail.
  */
 export const placementMeets = (theirs: Facing, mine: Facing): boolean =>
-  meets(theirs.kind, theirs.land, mine.kind, mine.land) || stopCloses(theirs, mine);
+  (meets(theirs.kind, theirs.land, mine.kind, mine.land) &&
+    theirs.lane === mine.lane &&
+    absoluteMeet(mine.heights, mine.lane, theirs.heights, theirs.lane) !== "Refused") ||
+  stopCloses(theirs, mine);
 
 export type TileMap = Map<string, PlayTile>;
 export const tileMap = (tiles: readonly PlayTile[]): TileMap => new Map(tiles.map((t) => [cellKey(t), t]));
@@ -136,13 +220,18 @@ export type Kinds = (SocketKind | null)[];
 
 /**
  * What each world edge of a slot touches: the neighbour's facing socket kind and its land side,
- * whether that edge is a stopped rail end, and whether the neighbour carries rail.
+ * whether that edge is a stopped rail end, whether the neighbour carries rail, the neighbour's
+ * level, the facing edge's absolute corner heights `[start, end]` (null where nothing touches)
+ * and whether it carries a lane.
  */
 export interface Needs {
   kinds: Kinds;
   land: (Side | null)[];
   stopped: boolean[];
   rail: boolean[];
+  levels: number[];
+  heights: ([number, number] | null)[];
+  lanes: boolean[];
 }
 
 export function needsAt(slot: Cell, tiles: TileMap): Needs {
@@ -150,12 +239,16 @@ export function needsAt(slot: Cell, tiles: TileMap): Needs {
     const n = tiles.get(cellKey(neighbor(slot, w)));
     const def = n && tileDef(n.tile);
     const back = (w + 3) % 6;
+    const level = n?.level ?? 0;
     return def
       ? {
           kind: rotated(def, n.rotation)[back]!,
           land: rotatedLand(def, n.rotation)[back]!,
           stopped: rotatedStopped(def, n.rotation)[back]!,
           rail: def.rail,
+          level,
+          heights: rotatedHeights(def, n.rotation, level)[back]!,
+          lane: rotatedLanes(def, n.rotation)[back]!,
         }
       : null;
   });
@@ -164,31 +257,100 @@ export function needsAt(slot: Cell, tiles: TileMap): Needs {
     land: facing.map((f) => f?.land ?? null),
     stopped: facing.map((f) => f?.stopped ?? false),
     rail: facing.map((f) => f?.rail ?? false),
+    levels: facing.map((f) => f?.level ?? 0),
+    heights: facing.map((f) => f?.heights ?? null),
+    lanes: facing.map((f) => f?.lane ?? false),
   };
 }
 
 export const isSlot = (c: Cell, tiles: TileMap): boolean =>
   !tiles.has(cellKey(c)) && [0, 1, 2, 3, 4, 5].some((w) => tiles.has(cellKey(neighbor(c, w))));
 
-/** World edges where `def` turned by k does not meet what the slot touches. */
-function clashes(def: TileDef, k: number, needs: Needs): number[] {
-  const [r, l, st] = [rotated(def, k), rotatedLand(def, k), rotatedStopped(def, k)];
+/** What my edge on world edge `w` of `def` turned by k on `level` offers, and what it faces. */
+function seam(
+  def: TileDef,
+  k: number,
+  level: number,
+  needs: Needs,
+  w: number,
+): { mine: Facing; theirs: Facing } | null {
+  const kind = needs.kinds[w];
+  if (kind == null) return null;
+  const theirs: Facing = {
+    kind,
+    land: needs.land[w] ?? null,
+    stopped: needs.stopped[w] ?? false,
+    rail: needs.rail[w] ?? false,
+    heights: needs.heights[w] ?? [0, 0],
+    lane: needs.lanes[w] ?? false,
+  };
+  const mine: Facing = {
+    kind: rotated(def, k)[w]!,
+    land: rotatedLand(def, k)[w]!,
+    stopped: rotatedStopped(def, k)[w]!,
+    rail: def.rail,
+    heights: rotatedHeights(def, k, level)[w]!,
+    lane: rotatedLanes(def, k)[w]!,
+  };
+  return { mine, theirs };
+}
+
+/** World edges where `def` turned by k on `level` (0 by default) does not meet what the slot touches. */
+function clashes(def: TileDef, k: number, needs: Needs, level = 0): number[] {
   return [0, 1, 2, 3, 4, 5].filter((w) => {
-    const kind = needs.kinds[w];
-    if (kind == null) return false;
-    const theirs = {
-      kind,
-      land: needs.land[w] ?? null,
-      stopped: needs.stopped[w] ?? false,
-      rail: needs.rail[w] ?? false,
-    };
-    return !placementMeets(theirs, { kind: r[w]!, land: l[w]!, stopped: st[w]!, rail: def.rail });
+    const s = seam(def, k, level, needs, w);
+    return s !== null && !placementMeets(s.theirs, s.mine);
   });
 }
 
-/** Rotations 0..6 at which `def` fits a slot with these needs, ascending (hex-core legal_rotations). */
-export function legalRotations(def: TileDef, needs: Needs): number[] {
-  return [0, 1, 2, 3, 4, 5].filter((k) => clashes(def, k, needs).length === 0);
+/**
+ * Whether `def` turned by k on `level` meets any placed neighbour across a cliff (hex-core
+ * `World::cliff_edges`): an accepted seam whose corners differ, a stopped rail end included.
+ */
+function hasCliff(def: TileDef, k: number, needs: Needs, level: number): boolean {
+  return [0, 1, 2, 3, 4, 5].some((w) => {
+    const s = seam(def, k, level, needs, w);
+    return s !== null && absoluteMeet(s.mine.heights, s.mine.lane, s.theirs.heights, s.theirs.lane) !== "Seamless";
+  });
+}
+
+/** A rotation and the level a tile stands on (hex-core `Orientation`). */
+export interface Orientation {
+  rotation: number;
+  level: number;
+}
+
+/**
+ * Orientations in which `def` fits a slot with these needs, in hex-core `legal_orientations` order:
+ * cliff-free first, then by level, then by rotation. A tile that is not raisable stands on level 0.
+ */
+export function legalOrientations(def: TileDef, needs: Needs): Orientation[] {
+  return legalEntries(def, needs).map((e) => e.o);
+}
+
+/** {@link legalOrientations} with each orientation's cliff flag (hex-core `cliff_edges` has any). */
+function legalEntries(def: TileDef, needs: Needs): { o: Orientation; cliff: boolean }[] {
+  const top = def.raisable ? MAX_LEVEL - def.top : 0;
+  const out: { o: Orientation; cliff: boolean }[] = [];
+  for (let level = 0; level <= top; level++)
+    for (let rotation = 0; rotation < 6; rotation++)
+      if (clashes(def, rotation, needs, level).length === 0)
+        out.push({ o: { rotation, level }, cliff: hasCliff(def, rotation, needs, level) });
+  out.sort((a, b) => Number(a.cliff) - Number(b.cliff) || a.o.level - b.o.level || a.o.rotation - b.o.rotation);
+  return out;
+}
+
+/**
+ * Rotations at which `def` fits a slot with these needs on `level` (the lowest level it fits on when
+ * omitted: the ground first, as the ghost lands), ascending.
+ */
+export function legalRotations(def: TileDef, needs: Needs, level?: number): number[] {
+  const all = legalOrientations(def, needs);
+  const on = level ?? all[0]?.level;
+  return all
+    .filter((o) => o.level === on)
+    .map((o) => o.rotation)
+    .sort((a, b) => a - b);
 }
 
 /** The first rotation of each distinct orientation among `ks` (equal world-edge sockets count once). */
@@ -247,6 +409,7 @@ function clashPhrase(mine: SocketKind, theirs: SocketKind): string {
 
 export interface Fit {
   ok: boolean;
+  /** Rotations legal on `level`, ascending. */
   legal: number[];
   /** First rotation of each distinct legal orientation (PRD §4.7 Q6 counts these). */
   distinct: number[];
@@ -254,11 +417,16 @@ export interface Fit {
   why: string;
   /** The rotation with the fewest clashing edges (what an unfitting ghost shows). */
   bestK: number;
+  /** The level `legal` is read on: the one asked for, else the lowest it fits on. */
+  level: number;
 }
 
-export function fit(def: TileDef, needs: Needs): Fit {
-  const legal = legalRotations(def, needs);
-  if (legal.length) return { ok: true, legal, distinct: distinctRotations(def, legal), why: "", bestK: legal[0]! };
+export function fit(def: TileDef, needs: Needs, level?: number): Fit {
+  const all = legalOrientations(def, needs);
+  const on = level ?? all[0]?.level ?? 0;
+  const legal = legalRotations(def, needs, on);
+  const distinct = distinctRotations(def, legal);
+  if (all.length) return { ok: true, legal, distinct, why: "", bestK: legal[0] ?? all[0]!.rotation, level: on };
   let bestK = 0;
   let best = 7;
   for (let k = 0; k < 6; k++) {
@@ -269,7 +437,7 @@ export function fit(def: TileDef, needs: Needs): Fit {
   const lacking = kinds.find((n) => !def.edges.some((e) => compatible(n, e)));
   const w = clashes(def, bestK, needs)[0] ?? 0;
   const why = lacking ? missing(lacking) : clashPhrase(rotated(def, bestK)[w]!, needs.kinds[w]!);
-  return { ok: false, legal, distinct: [], why, bestK };
+  return { ok: false, legal, distinct: [], why, bestK, level: on };
 }
 
 /** Row meta for a fitting tile: "Fits any way round", "1 rotation fits", "3 rotations fit". */
@@ -278,16 +446,20 @@ export function fitMeta(def: TileDef, f: Fit): string {
   return `${f.distinct.length} rotations fit`;
 }
 
-/** A tile and a rotation: one step of what R walks through for a picker entry. */
+/** A tile, a rotation and a level: one step of what R walks through for a picker entry. */
 export interface Turn {
   def: TileDef;
   k: number;
+  level: number;
 }
 
 export interface EntryFit {
   /** Whether any member fits. */
   ok: boolean;
-  /** Every member's distinct legal orientations, member after member (hex-core group_orientations). */
+  /**
+   * Every member's distinct legal orientations, cliff-free first, then by level, then member after
+   * member, then by rotation (hex-core `group_orientations`): the steps R takes, every level included.
+   */
   seq: Turn[];
   /** Why no member fits, from the member with the fewest clashes; empty when one fits. */
   why: string;
@@ -298,24 +470,42 @@ export interface EntryFit {
 /** The fit of a picker entry: fitting when any member fits (the Legend's "Fits here" filter). */
 export function fitEntry(entry: PickerEntry, needs: Needs): EntryFit {
   const fits = entry.tiles.map((def) => ({ def, f: fit(def, needs) }));
-  const seq = fits.flatMap(({ def, f }) => f.distinct.map((k) => ({ def, k })));
+  const keyed = entry.tiles.flatMap((def, i) => {
+    const reps: { def: TileDef; o: Orientation; cliff: boolean }[] = [];
+    for (const { o, cliff } of legalEntries(def, needs))
+      if (!reps.some((r) => r.o.level === o.level && orientation(def, r.o.rotation) === orientation(def, o.rotation)))
+        reps.push({ def, o, cliff });
+    return reps.map((r) => ({ ...r, i }));
+  });
+  keyed.sort(
+    (a, b) => Number(a.cliff) - Number(b.cliff) || a.o.level - b.o.level || a.i - b.i || a.o.rotation - b.o.rotation,
+  );
+  const seq = keyed.map((e) => ({ def: e.def, k: e.o.rotation, level: e.o.level }));
   if (seq.length) return { ok: true, seq, why: "", best: seq[0]! };
   const least = (def: TileDef, k: number) => clashes(def, k, needs).length;
   const worst = fits.reduce((a, b) => (least(b.def, b.f.bestK) < least(a.def, a.f.bestK) ? b : a));
-  return { ok: false, seq, why: worst.f.why, best: { def: worst.def, k: worst.f.bestK } };
+  return { ok: false, seq, why: worst.f.why, best: { def: worst.def, k: worst.f.bestK, level: 0 } };
 }
 
-/** Row meta for a fitting entry, counting every member's distinct orientations together. */
+/** The steps of an entry's sequence on one level: what the rotation count reads (the first step's level when omitted). */
+const onLevel = (f: EntryFit, level?: number): Turn[] => {
+  const on = level ?? f.seq[0]?.level;
+  return f.seq.filter((t) => t.level === on);
+};
+
+/** Row meta for a fitting entry, counting every member's distinct orientations on its lowest level together. */
 export function entryMeta(entry: PickerEntry, f: EntryFit): string {
   const lone = entry.tiles.length === 1 ? entry.tiles[0]! : null;
-  if (f.seq.length === 1) return lone && new Set(lone.edges).size === 1 ? "Fits any way round" : "1 rotation fits";
-  return `${f.seq.length} rotations fit`;
+  const n = onLevel(f).length;
+  if (n === 1) return lone && new Set(lone.edges).size === 1 ? "Fits any way round" : "1 rotation fits";
+  return `${n} rotations fit`;
 }
 
-/** Where the ghost's tile and rotation sit in an entry's sequence ("Rotation 4 of 5"). */
-export function entryReadout(f: EntryFit, tile: string, k: number): { index: number; count: number } {
-  const index = f.seq.findIndex((t) => t.def.id === tile && orientation(t.def, t.k) === orientation(t.def, k));
-  return { index: index < 0 ? 0 : index, count: f.seq.length };
+/** Where the ghost's tile and rotation sit among an entry's orientations on `level` ("Rotation 4 of 5"). */
+export function entryReadout(f: EntryFit, tile: string, k: number, level = 0): { index: number; count: number } {
+  const steps = onLevel(f, level);
+  const index = steps.findIndex((t) => t.def.id === tile && orientation(t.def, t.k) === orientation(t.def, k));
+  return { index: index < 0 ? 0 : index, count: steps.length };
 }
 
 /** Row meta with no slot pointed at, over every member's edges. */
@@ -388,8 +578,45 @@ export function rotationReadout(def: TileDef, legal: readonly number[], k: numbe
   return { index: index < 0 ? 0 : index, count: distinct.length };
 }
 
-/** Tiles that removing `target` would cut off: everything outside the largest remaining part. */
+/** The only tile that may cover a tunnel (hex-core `tunnel::COVER_DEF`). */
+const COVER_DEF = "meadow";
+
+/**
+ * The cells under the cover of a complete tunnel (hex-core `tunnel::tunnels`): two portals on one
+ * level face each other along a straight line, every cell between them a meadow one level higher.
+ * Such a cell can be neither bulldozed nor replaced.
+ */
+export function tunnelCover(tiles: TileMap): Set<string> {
+  const cover = new Set<string>();
+  for (const a of tiles.values()) {
+    const mouth = tileDef(a.tile)?.tunnel;
+    if (mouth == null) continue;
+    const edge = (mouth + a.rotation) % 6;
+    const between: string[] = [];
+    let at = neighbor(a, edge);
+    let n = tiles.get(cellKey(at));
+    while (n && n.tile === COVER_DEF && n.level === a.level + 1) {
+      between.push(cellKey(at));
+      at = neighbor(at, edge);
+      n = tiles.get(cellKey(at));
+    }
+    const far = n && tileDef(n.tile)?.tunnel;
+    if (n && far != null && n.level === a.level && (far + n.rotation) % 6 === (edge + 3) % 6)
+      for (const k of between) cover.add(k);
+  }
+  return cover;
+}
+
+/** Whether `cell` is under the cover of a complete tunnel (hex-core `tunnel::is_cover`). */
+export const isCover = (tiles: TileMap, cell: Cell): boolean => tunnelCover(tiles).has(cellKey(cell));
+
+/**
+ * Tiles that removing `target` would cut off: everything outside the largest remaining part. A tunnel
+ * cover cell is refused before any connectivity check (hex-core `BulldozeError::TunnelCover`), so
+ * nothing is cut off by it.
+ */
 export function cutOff(tiles: TileMap, target: Cell): PlayTile[] {
+  if (isCover(tiles, target)) return [];
   const rest = new Map(tiles);
   rest.delete(cellKey(target));
   const seen = new Set<string>();

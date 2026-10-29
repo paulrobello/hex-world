@@ -7,7 +7,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 
 use crate::rail_end::{STOPPED_END_GROUND, carries_rail, stopped_edges};
-use crate::socket::{EdgeSocket, SocketTable, SocketTableError};
+use crate::socket::{EdgeSocket, HeightMeet, SocketTable, SocketTableError, heights_meet};
 use crate::tile::{KitRef, TileDef, local_edge, opposite_edge};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
@@ -43,6 +43,62 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
     (
         "road_junction",
         include_str!("../../../data/tiles/road_junction.ron"),
+    ),
+    (
+        "hillside_000001",
+        include_str!("../../../data/tiles/hillside_000001.ron"),
+    ),
+    (
+        "hillside_000011",
+        include_str!("../../../data/tiles/hillside_000011.ron"),
+    ),
+    (
+        "hillside_000101",
+        include_str!("../../../data/tiles/hillside_000101.ron"),
+    ),
+    (
+        "hillside_000111",
+        include_str!("../../../data/tiles/hillside_000111.ron"),
+    ),
+    (
+        "hillside_001001",
+        include_str!("../../../data/tiles/hillside_001001.ron"),
+    ),
+    (
+        "hillside_001011",
+        include_str!("../../../data/tiles/hillside_001011.ron"),
+    ),
+    (
+        "hillside_001101",
+        include_str!("../../../data/tiles/hillside_001101.ron"),
+    ),
+    (
+        "hillside_001111",
+        include_str!("../../../data/tiles/hillside_001111.ron"),
+    ),
+    (
+        "hillside_010101",
+        include_str!("../../../data/tiles/hillside_010101.ron"),
+    ),
+    (
+        "hillside_010111",
+        include_str!("../../../data/tiles/hillside_010111.ron"),
+    ),
+    (
+        "hillside_011011",
+        include_str!("../../../data/tiles/hillside_011011.ron"),
+    ),
+    (
+        "hillside_011111",
+        include_str!("../../../data/tiles/hillside_011111.ron"),
+    ),
+    (
+        "road_ramp",
+        include_str!("../../../data/tiles/road_ramp.ron"),
+    ),
+    (
+        "road_tunnel_portal",
+        include_str!("../../../data/tiles/road_tunnel_portal.ron"),
     ),
     (
         "rail_straight",
@@ -123,6 +179,23 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
 pub const PICKER_GROUPS: &[(&str, &[&str])] = &[
     ("beach_curve", &["beach_outer", "beach_inner"]),
     ("river_mouths", &["river_mouth", "river_mouth_l"]),
+    (
+        "hillside",
+        &[
+            "hillside_000001",
+            "hillside_000011",
+            "hillside_000101",
+            "hillside_000111",
+            "hillside_001001",
+            "hillside_001011",
+            "hillside_001101",
+            "hillside_001111",
+            "hillside_010101",
+            "hillside_010111",
+            "hillside_011011",
+            "hillside_011111",
+        ],
+    ),
 ];
 
 /// One Tiles sheet entry: a lone tile (`id` is its tile id) or a picker group.
@@ -251,45 +324,74 @@ impl TileCatalog {
         )
     }
 
-    /// Whether `def` turned by `rotation` may be placed with its world edge `w` against the placed
-    /// `neighbour` turned by `nrot` (owner, 2026-10-25): the sockets meet
+    /// Whether `def` turned by `rotation` at height `level` may be placed with its world edge `w`
+    /// against the placed `neighbour` turned by `nrot` at `nlevel` (owner, 2026-10-25): the sockets meet
     /// ([`SocketTable::edges_compatible`]), or `def` carries no rail at all and the neighbour's
     /// facing edge is a rail end that gets a buffer stop, which closes the line, so `def` meets it
     /// as [`STOPPED_END_GROUND`]. A tile that carries rail gets the socket rule alone: it continues
     /// the line, and it never turns an end toward a placed tile without rail.
+    #[allow(clippy::too_many_arguments)]
     pub fn placement_meets(
         &self,
         def: &TileDef,
         rotation: u8,
+        level: u8,
         w: u8,
         neighbour: &TileDef,
         nrot: u8,
+        nlevel: u8,
     ) -> bool {
         let back = opposite_edge(w);
         let (mine, theirs) = (def.edge(w, rotation), neighbour.edge(back, nrot));
-        self.sockets.edges_compatible(mine, theirs)
-            || self.stop_closes(neighbour, local_edge(back, nrot), theirs, def, mine)
+        self.sockets.edges_compatible(mine, level, theirs, nlevel)
+            || self.stop_closes(
+                (neighbour, local_edge(back, nrot), theirs, nlevel),
+                (def, mine, level),
+            )
     }
 
-    /// Whether placed tiles `a` (turned by `ra`) and `b` (turned by `rb`) may touch across `a`'s
-    /// world edge `w`, in either placement order: [`TileCatalog::placement_meets`] one way or the
+    /// Whether placed tiles `a` (turned by `ra`, at level `la`) and `b` (turned by `rb`, at level
+    /// `lb`) may touch across `a`'s world edge `w`, in either placement order: [`TileCatalog::placement_meets`] one way or the
     /// other. Loading checks this, as a world holds the pair however it was built (a station placed
     /// before the meadow beyond its end looks the same as one placed after). It is symmetric and
     /// depends only on the two tiles, so no third tile's placement or removal can change it.
-    pub fn edges_meet(&self, a: &TileDef, ra: u8, w: u8, b: &TileDef, rb: u8) -> bool {
-        self.placement_meets(a, ra, w, b, rb)
-            || self.placement_meets(b, rb, opposite_edge(w), a, ra)
+    #[allow(clippy::too_many_arguments)]
+    pub fn edges_meet(
+        &self,
+        a: &TileDef,
+        ra: u8,
+        la: u8,
+        w: u8,
+        b: &TileDef,
+        rb: u8,
+        lb: u8,
+    ) -> bool {
+        self.placement_meets(a, ra, la, w, b, rb, lb)
+            || self.placement_meets(b, rb, lb, opposite_edge(w), a, ra, la)
+    }
+
+    /// How the facing sockets of `a` and `b` meet in height across `a`'s world edge `w`
+    /// ([`heights_meet`]): `Cliff` seams are the ones a cliff skirt is drawn on.
+    #[allow(clippy::too_many_arguments)]
+    pub fn meet_kind(
+        &self,
+        a: &TileDef,
+        ra: u8,
+        la: u8,
+        w: u8,
+        b: &TileDef,
+        rb: u8,
+        lb: u8,
+    ) -> HeightMeet {
+        heights_meet(a.edge(w, ra), la, b.edge(opposite_edge(w), rb), lb)
     }
 
     /// Whether local edge `edge` (socket `own`) of `def` is a stopped rail end that meets `other`'s
     /// socket `theirs` as [`STOPPED_END_GROUND`], `other` carrying no rail.
     fn stop_closes(
         &self,
-        def: &TileDef,
-        edge: u8,
-        own: &EdgeSocket,
-        other: &TileDef,
-        theirs: &EdgeSocket,
+        (def, edge, own, own_level): (&TileDef, u8, &EdgeSocket, u8),
+        (other, theirs, their_level): (&TileDef, &EdgeSocket, u8),
     ) -> bool {
         let stopped = self.rail_ends(def).0 & (1 << edge) != 0;
         let ground = EdgeSocket {
@@ -297,7 +399,11 @@ impl TileCatalog {
             profile: own.profile,
             ..EdgeSocket::new(STOPPED_END_GROUND)
         };
-        stopped && !self.rail_ends(other).1 && self.sockets.edges_compatible(&ground, theirs)
+        stopped
+            && !self.rail_ends(other).1
+            && self
+                .sockets
+                .edges_compatible(&ground, own_level, theirs, their_level)
     }
 
     /// The picker group `id` belongs to, when it is a member of one in this catalog.
@@ -456,7 +562,8 @@ mod tests {
         let i = ids.iter().position(|&id| id == "beach_curve").unwrap();
         assert_eq!(ids[i - 1], "beach");
         assert_eq!(p[i].tiles, ["beach_outer", "beach_inner"]);
-        assert_eq!(p.len(), c.tiles().len() - 2);
+        let folded: usize = PICKER_GROUPS.iter().map(|(_, m)| m.len() - 1).sum();
+        assert_eq!(p.len(), c.tiles().len() - folded);
         assert_eq!(c.siblings("beach_inner").len(), 2);
         assert_eq!(c.siblings("meadow").len(), 1);
     }
@@ -470,6 +577,20 @@ mod tests {
         let i = ids.iter().position(|&id| id == "river_mouths").unwrap();
         assert_eq!(p[i].tiles, ["river_mouth", "river_mouth_l"]);
         assert_eq!(c.siblings("river_mouth_l").len(), 2);
+    }
+
+    #[test]
+    fn portal_and_ramp_share_the_straight_bank() {
+        let c = TileCatalog::builtin().unwrap();
+        let ramp = c.get("road_ramp").unwrap();
+        let portal = c.get("road_tunnel_portal").unwrap();
+        assert_eq!(ramp.corners(0), [1, 1, 0, 0, 0, 1]);
+        assert_eq!(portal.corners(0), [1, 1, 0, 0, 0, 1]);
+        assert_eq!(ramp.ground, crate::Ground::RoadRamp);
+        assert_eq!(portal.ground, crate::Ground::Cutting);
+        assert_eq!(portal.tunnel.as_ref().unwrap().edge, 0);
+        assert_eq!(c.siblings("road_ramp").len(), 1);
+        assert_eq!(c.siblings("hillside_000111").len(), 12);
     }
 
     #[test]

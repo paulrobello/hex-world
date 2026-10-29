@@ -20,8 +20,15 @@ use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, RiseStage, RiseTimeline};
 
 use crate::{ActiveScenario, Scenario, SceneEntity};
 
-/// Metres below rest at which a rising column starts: the cap starts under the ground plane.
+/// Metres below rest at which a level-0 rising column starts: the cap starts under the ground plane.
 pub const RISE_DEPTH: f32 = LEVEL_STEP + 0.6;
+
+/// Metres below rest at which a tile at `level` starts its rise and ends its sink (P4): one
+/// [`RISE_DEPTH`] below the level-0 floor, so a raised tile rises out of the ground rather than
+/// appearing as a short pillar, and sinks back under it.
+pub fn rise_depth(level: u8) -> f32 {
+    RISE_DEPTH + f32::from(level) * LEVEL_STEP
+}
 /// Peak height of the cap's overshoot above rest (m).
 pub const OVERSHOOT: f32 = 0.35;
 /// Undo and redo sink a tile this long (s), ease-in (`design/ui/legend/in-world.md`, Place).
@@ -97,6 +104,8 @@ pub fn stage_name(s: RiseStage) -> &'static str {
 pub struct RiseMessage {
     pub cell: Axial,
     pub tile: String,
+    /// The tile's level (P4): its dust rises from there.
+    pub level: u8,
     pub cue: RiseCue,
     pub skipped: bool,
 }
@@ -105,6 +114,8 @@ pub struct RiseMessage {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rise {
     pub tile: String,
+    /// The level the tile stands on (P4).
+    pub level: u8,
     pub timeline: RiseTimeline,
     /// Seconds since the rise started.
     pub t: f32,
@@ -140,6 +151,7 @@ impl Rise {
     pub fn new(tile: &str, timeline: &RiseTimeline) -> Self {
         Self {
             tile: tile.to_owned(),
+            level: 0,
             timeline: timeline.clone(),
             t: 0.0,
             announced: 0,
@@ -220,7 +232,8 @@ impl Rise {
         let cap = self.progress(RiseStage::Cap, t).unwrap_or(0.0);
         let edges = self.progress(RiseStage::Edges, t);
         RisePose {
-            column_y: -RISE_DEPTH * (1.0 - ease_out_cubic(col)) + OVERSHOOT * cap_bump(cap),
+            column_y: -rise_depth(self.level) * (1.0 - ease_out_cubic(col))
+                + OVERSHOOT * cap_bump(cap),
             edges,
             fill: edges.map_or(0.0, smoothstep01),
             props: self.progress(RiseStage::Props, t),
@@ -331,6 +344,8 @@ impl RisePartPose for RisePart {
 /// A removed tile on its way down: its root and its released water entities.
 struct Sink {
     cell: Axial,
+    /// The removed tile's level: it sinks [`rise_depth`] of it.
+    level: u8,
     entities: Vec<Entity>,
     /// Rest heights captured on the first frame.
     bases: Vec<(Entity, f32)>,
@@ -397,6 +412,7 @@ impl PlayRises {
                     out.push(RiseMessage {
                         cell: *cell,
                         tile: r.tile.clone(),
+                        level: r.level,
                         cue,
                         skipped: true,
                     });
@@ -410,18 +426,20 @@ impl PlayRises {
     pub(crate) fn begin(
         &mut self,
         cell: Axial,
-        tile: &str,
+        (tile, level): (&str, u8),
         timeline: &RiseTimeline,
         reduced: bool,
         out: &mut Vec<RiseMessage>,
     ) {
         let mut r = Rise::new(tile, timeline);
+        r.level = level;
         if reduced {
             r.t = r.total();
             for cue in r.due() {
                 out.push(RiseMessage {
                     cell,
                     tile: tile.to_owned(),
+                    level,
                     cue,
                     skipped: true,
                 });
@@ -457,7 +475,7 @@ impl PlayRises {
     pub(crate) fn remove(
         &mut self,
         cell: Axial,
-        tile: &str,
+        (tile, level): (&str, u8),
         kind: SinkKind,
         entities: Vec<Entity>,
         reduced: bool,
@@ -470,6 +488,7 @@ impl PlayRises {
         out.push(RiseMessage {
             cell,
             tile: tile.to_owned(),
+            level,
             cue: RiseCue::Sink(kind),
             skipped: reduced,
         });
@@ -480,6 +499,7 @@ impl PlayRises {
         } else {
             self.sinks.push(Sink {
                 cell,
+                level,
                 entities,
                 bases: vec![],
                 t: 0.0,
@@ -533,6 +553,7 @@ pub fn advance(
             out.write(RiseMessage {
                 cell: *cell,
                 tile: r.tile.clone(),
+                level: r.level,
                 cue,
                 skipped: false,
             });
@@ -606,7 +627,7 @@ pub fn sink(
         }
         for (e, y) in &s.bases {
             if let Ok(mut t) = transforms.get_mut(*e) {
-                t.translation.y = y - RISE_DEPTH * u * u;
+                t.translation.y = y - rise_depth(s.level) * u * u;
             }
         }
         true
@@ -1001,6 +1022,15 @@ pub fn dust(
             ),
             Dust::Cloud => (cloud_layers().to_vec(), cloud(m.cell)),
         };
+        // A raised tile's dust rises from its level (P4).
+        let lift = Vec3::Y * (f32::from(m.level) * LEVEL_STEP);
+        let ps: Vec<Particle> = ps
+            .into_iter()
+            .map(|p| Particle {
+                origin: p.origin + lift,
+                ..p
+            })
+            .collect();
         let layers: Vec<(Handle<StandardMaterial>, Layer)> = layers
             .into_iter()
             .map(|l| {
@@ -1184,7 +1214,7 @@ mod tests {
         let mut out = vec![];
         rises.begin(
             c,
-            "road_straight",
+            ("road_straight", 0),
             &RiseTimeline::default(),
             false,
             &mut out,
@@ -1202,13 +1232,13 @@ mod tests {
         let mut rises = PlayRises::default();
         let (a, b) = (Axial::new(1, 0), Axial::new(2, 0));
         let mut out = vec![];
-        rises.begin(a, "forest", &RiseTimeline::default(), false, &mut out);
+        rises.begin(a, ("forest", 0), &RiseTimeline::default(), false, &mut out);
         let r = rises.cells.get_mut(&a).unwrap().as_mut().unwrap();
         r.t = 0.5;
         let early = r.due();
         assert_eq!(early.len(), 2, "column and cap");
         rises.fast_forward(&mut out);
-        rises.begin(b, "forest", &RiseTimeline::default(), false, &mut out);
+        rises.begin(b, ("forest", 0), &RiseTimeline::default(), false, &mut out);
         let names: Vec<_> = out.iter().map(|m| (m.cue.name(), m.skipped)).collect();
         assert_eq!(
             names,
@@ -1228,7 +1258,7 @@ mod tests {
         let mut rises = PlayRises::default();
         let mut out = vec![];
         let c = Axial::new(0, 1);
-        rises.begin(c, "meadow", &RiseTimeline::default(), true, &mut out);
+        rises.begin(c, ("meadow", 0), &RiseTimeline::default(), true, &mut out);
         assert!(rises.agents_ready(c));
         assert_eq!(out.len(), 6);
         assert!(out.iter().all(|m| m.skipped));
@@ -1261,6 +1291,46 @@ mod tests {
         assert!(floors_up(0.2, 3) < 1.0 / 3.0 + 0.05);
     }
 
+    /// A raised tile (P4) rises out of the ground and sinks back under it at every level: its cap
+    /// starts and ends below the level-0 floor, never a short pillar popping in or out.
+    #[test]
+    fn a_raised_tile_rises_from_and_sinks_under_the_ground() {
+        use bevy::ecs::system::RunSystemOnce;
+        for level in 0..=hex_core::MAX_LEVEL {
+            let rest = f32::from(level) * LEVEL_STEP;
+            let mut r = rise();
+            r.level = level;
+            let cap = rest + r.pose().column_y;
+            assert!(
+                cap <= -RISE_DEPTH + 1e-4,
+                "level {level}: rise starts at {cap}"
+            );
+
+            let mut world = World::new();
+            let root = world.spawn(Transform::from_xyz(0.0, rest, 0.0)).id();
+            let mut queue = bevy::ecs::world::CommandQueue::default();
+            let mut rises = PlayRises::default();
+            let mut commands = Commands::new(&mut queue, &world);
+            rises.remove(
+                Axial::new(1, 0),
+                ("meadow", level),
+                SinkKind::Undo,
+                vec![root],
+                false,
+                &mut commands,
+                &mut vec![],
+            );
+            queue.apply(&mut world);
+            let mut time = Time::<()>::default();
+            time.advance_by(std::time::Duration::from_secs_f32(0.97 * SINK_SECONDS));
+            world.insert_resource(time);
+            world.insert_resource(rises);
+            world.run_system_once(sink).unwrap();
+            let y = world.get::<Transform>(root).unwrap().translation.y;
+            assert!(y < -0.5 * RISE_DEPTH, "level {level}: the sink ends at {y}");
+        }
+    }
+
     /// Removes a tile of `kind` at (1, 0): the rises, the cues and whether its root still exists.
     fn removed(kind: SinkKind, reduced: bool) -> (PlayRises, Vec<RiseMessage>, bool) {
         let mut world = World::new();
@@ -1271,7 +1341,7 @@ mod tests {
         let mut commands = Commands::new(&mut queue, &world);
         rises.remove(
             Axial::new(1, 0),
-            "forest",
+            ("forest", 0),
             kind,
             vec![root],
             reduced,
@@ -1437,6 +1507,7 @@ mod tests {
         app.world_mut().write_message(RiseMessage {
             cell: Axial::new(1, 0),
             tile: "forest".into(),
+            level: 0,
             cue,
             skipped: false,
         });

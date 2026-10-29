@@ -1,0 +1,9 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-10-29",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/road_tunnel_portal/ref-2.jpg"
+  ],
+  "notes": "ref-2, the grey granite portal with lichen and moss, projecting keystone, coping with ferns and amber wall lanterns. Answered in chat (\"ref-2\") from docs/checkpoints/road-tunnel-portal-refs/refs-sheet.jpg. Build method per owner: high-res source, baked textures, reduced poly count."
+}

@@ -492,8 +492,13 @@ mod tests {
         let c = catalog();
         let mut w = World::new(1);
         for &(q, r, id, rot) in tiles {
-            w.place(&c, Axial::new(q, r), id, rot)
-                .unwrap_or_else(|e| panic!("{id} at {q},{r}: {e:?}"));
+            w.place(
+                &c,
+                Axial::new(q, r),
+                id,
+                crate::world::Orientation::new(rot, 0),
+            )
+            .unwrap_or_else(|e| panic!("{id} at {q},{r}: {e:?}"));
         }
         (c, w)
     }

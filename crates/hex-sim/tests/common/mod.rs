@@ -17,10 +17,13 @@ pub fn catalog() -> TileCatalog {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Edit {
     Place(Axial, &'static str, u8),
+    /// A placement at a level: cell, tile, rotation, level.
+    PlaceAt(Axial, &'static str, u8, u8),
     Bulldoze(Axial),
 }
 
-/// A `World` and a `Simulation` kept in step: each edit must succeed on the world first.
+/// A `World` and a `Simulation` kept in step: each edit must succeed on the world first, and the
+/// sim's tunnels are recomputed after it, as the app does.
 pub struct Scene {
     pub catalog: TileCatalog,
     pub world: World,
@@ -47,20 +50,61 @@ impl Scene {
 
     pub fn apply(&mut self, edit: &Edit) {
         match *edit {
-            Edit::Place(cell, id, rot) => {
+            Edit::Place(cell, id, rot) => self.apply(&Edit::PlaceAt(cell, id, rot, 0)),
+            Edit::PlaceAt(cell, id, rot, level) => {
                 self.world
-                    .place(&self.catalog, cell, id, rot)
-                    .unwrap_or_else(|e| panic!("place {id} at {cell:?} rot {rot}: {e}"));
+                    .place(
+                        &self.catalog,
+                        cell,
+                        id,
+                        hex_core::Orientation::new(rot, level),
+                    )
+                    .unwrap_or_else(|e| {
+                        panic!("place {id} at {cell:?} rot {rot} level {level}: {e}")
+                    });
                 let def = self.catalog.get(id).expect("placed above");
                 self.sim.apply_place(cell, def, rot);
+                self.sim.sync_tunnels(&self.world, &self.catalog);
             }
             Edit::Bulldoze(cell) => {
                 self.world
-                    .bulldoze(cell)
+                    .bulldoze(&self.catalog, cell)
                     .unwrap_or_else(|e| panic!("bulldoze {cell:?}: {e}"));
                 self.sim.apply_bulldoze(cell);
+                self.sim.sync_tunnels(&self.world, &self.catalog);
             }
         }
+    }
+
+    /// Undoes the world's latest edit and mirrors the change into the sim.
+    pub fn undo(&mut self) {
+        let before = self.world.tiles().clone();
+        assert!(self.world.undo(), "nothing to undo");
+        self.mirror(&before);
+    }
+
+    /// Redoes the world's latest undone edit and mirrors the change into the sim.
+    pub fn redo(&mut self) {
+        let before = self.world.tiles().clone();
+        assert!(self.world.redo(), "nothing to redo");
+        self.mirror(&before);
+    }
+
+    /// Brings the sim from the tiles in `before` to the world's: a tile gone is a bulldoze, a new
+    /// or changed one a place, then the tunnels are recomputed.
+    fn mirror(&mut self, before: &BTreeMap<Axial, hex_core::PlacedTile>) {
+        for cell in before.keys() {
+            if self.world.tile(*cell).is_none() {
+                self.sim.apply_bulldoze(*cell);
+            }
+        }
+        for (cell, tile) in self.world.tiles() {
+            if before.get(cell) != Some(tile) {
+                let def = self.catalog.get(&tile.def).expect("builtin tile");
+                self.sim.apply_place(*cell, def, tile.rotation);
+            }
+        }
+        self.sim.sync_tunnels(&self.world, &self.catalog);
     }
 
     pub fn apply_all(&mut self, edits: &[Edit]) {
@@ -134,6 +178,41 @@ pub fn ring_and_pair() -> Vec<Edit> {
     edits
 }
 
+/// The house at the west end of [`tunnel_layout`].
+pub const TUNNEL_HOUSE_A: Axial = Axial::new(1, 0);
+/// The house at the east end of [`tunnel_layout`].
+pub const TUNNEL_HOUSE_B: Axial = Axial::new(8, 0);
+/// The west portal of [`tunnel_layout`], its mouth facing east.
+pub const PORTAL_A: Axial = Axial::new(3, 0);
+/// The east portal of [`tunnel_layout`], its mouth facing west.
+pub const PORTAL_B: Axial = Axial::new(6, 0);
+
+/// Two houses joined only through a tunnel along r = 0: house (1,0), road (2,0), portal (3,0),
+/// level-1 meadow cover at (4,0) and (5,0), portal (6,0), road (7,0), house (8,0). The east half
+/// is reached first by a road-free meadow detour along r = 2, so the cover at (5,0) is the last
+/// edit and completes the tunnel.
+pub fn tunnel_layout() -> Vec<Edit> {
+    let mut edits = vec![
+        Edit::Place(TUNNEL_HOUSE_A, "house_cluster", 0),
+        Edit::Place(Axial::new(2, 0), "road_straight", 0),
+        Edit::Place(PORTAL_A, "road_tunnel_portal", 0),
+        Edit::Place(Axial::new(0, 1), "meadow", 0),
+    ];
+    for q in 0..=9 {
+        edits.push(Edit::Place(Axial::new(q, 2), "meadow", 0));
+    }
+    edits.extend([
+        Edit::Place(Axial::new(9, 1), "meadow", 0),
+        Edit::Place(Axial::new(9, 0), "meadow", 0),
+        Edit::Place(TUNNEL_HOUSE_B, "house_cluster", 3),
+        Edit::Place(Axial::new(7, 0), "road_straight", 0),
+        Edit::Place(PORTAL_B, "road_tunnel_portal", 3),
+        Edit::PlaceAt(Axial::new(4, 0), "meadow", 0, 1),
+        Edit::PlaceAt(Axial::new(5, 0), "meadow", 0, 1),
+    ]);
+    edits
+}
+
 /// SplitMix64 for test layouts, separate from the simulation's own generator.
 pub struct TestRng(pub u64);
 
@@ -157,11 +236,22 @@ pub fn random_edit(world: &World, cat: &TileCatalog, rng: &mut TestRng) -> Optio
     if world.tiles().len() > 8 && rng.below(10) == 0 {
         let cells: Vec<Axial> = world.tiles().keys().copied().collect();
         let cell = cells[rng.below(cells.len())];
-        return world.can_bulldoze(cell).ok().map(|_| Edit::Bulldoze(cell));
+        return world
+            .can_bulldoze(cat, cell)
+            .ok()
+            .map(|_| Edit::Bulldoze(cell));
     }
     let frontier = world.frontier();
     let cell = frontier[rng.below(frontier.len())];
-    let fits = world.inventory(cat, cell);
+    // The hillside family fits only raised levels, which these level-0 walks never place; leaving
+    // it out keeps every seeded walk as it was.
+    let fits: Vec<&hex_core::TileDef> = world
+        .inventory(cat, cell)
+        .into_iter()
+        .filter(|d| {
+            !(d.id.starts_with("hillside_") || d.id == "road_ramp" || d.id == "road_tunnel_portal")
+        })
+        .collect();
     let roads: Vec<_> = fits
         .iter()
         .filter(|d| d.id.starts_with("road") || d.id == "house_cluster")
@@ -173,7 +263,12 @@ pub fn random_edit(world: &World, cat: &TileCatalog, rng: &mut TestRng) -> Optio
     } else {
         return None;
     };
-    let rots = world.legal_rotations(cat, cell, def);
+    let rots: Vec<u8> = world
+        .legal_orientations(cat, cell, def)
+        .into_iter()
+        .filter(|o| o.level == 0)
+        .map(|o| o.rotation)
+        .collect();
     let rot = rots[rng.below(rots.len())];
     let (id, _) = hex_core::BUILTIN_TILES
         .iter()

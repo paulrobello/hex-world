@@ -6,7 +6,7 @@ This is the schema contract for Hex World saves (PRD §12.2, D9). The code is `c
 
 | Part | Contents |
 |---|---|
-| World | The world seed, and every placed tile with its cell, reserved elevation level, tile id, rotation and per-cell seed |
+| World | The world seed, and every placed tile with its cell, elevation level, tile id, rotation and per-cell seed |
 | History | The undo stack and the redo stack (PRD §4.2), so Ctrl+Z works after a load |
 | Unlocks | Unlocked content ids (P3). Always empty today |
 | Camera | Orbit focus point, yaw, pitch and distance |
@@ -70,7 +70,7 @@ Settings {
 Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 ```
 
-`q` and `r` are pointy-top axial coordinates. `level` is the tile's elevation level, reserved from day one (PRD D5 plans levels 0..=3). The MVP has a single level, so encoders write 0 and decoders reject anything else. P4 widens the accepted range to 0..=3 without a version bump, because a v1 file that uses levels is still a valid v1 file. A pre-P4 build reports such a file as `LevelOutOfRange` rather than `UnsupportedVersion`. Rotation `k` means local edge `e` faces world edge `e + k`. A `Place` action carries the tile it placed, and a `Bulldoze` action carries the tile it removed. A `Replace` action carries the tile it put down in `tile` and the tile it swapped out in `replaced`, on the same cell; `replaced` is `None` for the other kinds, and a record whose kind and `replaced` disagree, or whose two tiles sit on different cells, is `InvalidHistory` with `Mismatch`. Version 2 records (`HistoryAction { kind: ActionKind, tile: Tile }` with `ActionKind = Place (0) | Bulldoze (1)`) upgrade with `replaced: None`. Distances are in meters, angles are in radians, and volumes are linear gains.
+`q` and `r` are pointy-top axial coordinates. `level` is the tile's elevation level, reserved from day one (PRD D5) and live since P4: encoders write the tile's level and decoders accept 0..=3 (`MAX_LEVEL`). The format stays at version 3 (`SAVE_FORMAT_VERSION`) with no new field, because the level byte was always in the schema, so a file of any version that uses levels is still valid for that version. The same holds for tunnels: they are implied by the portal tiles and the raised cover, so a save stores nothing extra for them. Every save written before P4 holds 0 everywhere and loads unchanged. A pre-P4 build reports a file with levels as `LevelOutOfRange` rather than `UnsupportedVersion`. Rotation `k` means local edge `e` faces world edge `e + k`. A `Place` action carries the tile it placed, and a `Bulldoze` action carries the tile it removed. A `Replace` action carries the tile it put down in `tile` and the tile it swapped out in `replaced`, on the same cell; `replaced` is `None` for the other kinds, and a record whose kind and `replaced` disagree, or whose two tiles sit on different cells, is `InvalidHistory` with `Mismatch`. Version 2 records (`HistoryAction { kind: ActionKind, tile: Tile }` with `ActionKind = Place (0) | Bulldoze (1)`) upgrade with `replaced: None`. Distances are in meters, angles are in radians, and volumes are linear gains.
 
 ## Versions
 
@@ -93,7 +93,7 @@ Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 7. `Decode`: postcard rejects the payload, or bytes remain after the schema ends.
 8. Migration to the current schema (see below). Converting to runtime types rejects a duplicate cell (`InvalidWorld` with `DuplicateCell`) and a level above the supported maximum (`InvalidWorld` with `LevelOutOfRange` for a tile, or `InvalidHistory` with `InvalidState` for a history record).
 9. `InvalidValue`: a camera or settings float is non-finite, or a volume is outside `0.0..=1.0`. The error names the field.
-10. `InvalidWorld`, with a `WorldIssue`: the tile map is `Empty`, repeats a cell (`DuplicateCell`), carries a level above 0 (`LevelOutOfRange`, until P4 raises the maximum to 3), has a coordinate outside `-2^24..=2^24` (`OutOfRange`, checked before any neighbor arithmetic so extreme values cannot overflow), names a tile id the catalog lacks (`UnknownTile`), has a rotation of 6 or more (`BadRotation`), has a touching edge pair the socket table rejects (`Incompatible`), or is not one connected piece (`Disconnected`).
+10. `InvalidWorld`, with a `WorldIssue`: the tile map is `Empty`, repeats a cell (`DuplicateCell`), carries a level its tile may not stand at (`LevelOutOfRange`: above 0 for a tile that is not raisable, or `level + top` above 3), has a coordinate outside `-2^24..=2^24` (`OutOfRange`, checked before any neighbor arithmetic so extreme values cannot overflow), names a tile id the catalog lacks (`UnknownTile`), has a rotation of 6 or more (`BadRotation`), has a touching edge pair the socket table rejects (`Incompatible`), or is not one connected piece (`Disconnected`).
 11. `InvalidHistory`, with a `HistoryIssue`: undo plus redo exceeds the history depth of 128 (`TooDeep`), an action does not match the cell it applies to (`Mismatch`), or applying an action leaves a world that fails step 10 (`InvalidState`).
 
 The history check replays the whole undo stack backward and the whole redo stack forward from the saved world. `World::undo` and `World::redo` skip rule checks, so a tampered history would otherwise reach play. Every world that play can reach passes this check.

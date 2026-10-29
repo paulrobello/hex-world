@@ -8,7 +8,7 @@ pub struct PrismMesh {
 }
 
 /// Pointy-top corner `i` (0..6) at angle 30° + 60°·i, clockwise from +x viewed from +Y.
-fn corner(radius: f32, i: usize) -> [f32; 2] {
+pub(crate) fn corner(radius: f32, i: usize) -> [f32; 2] {
     let a = (30.0 + 60.0 * i as f32).to_radians();
     [radius * a.cos(), radius * a.sin()]
 }

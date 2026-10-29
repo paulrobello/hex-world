@@ -1366,8 +1366,9 @@ fn bucket(v: f32) -> usize {
 }
 
 /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
-/// on a centre piece. Nothing stands on them and the walker walks through them.
-pub const NOT_GROUND: &[&str] = &["wheat_field_wheat"];
+/// on a centre piece, the tunnel portal's fern cards over its coping. Nothing stands on them and the
+/// walker walks through them.
+pub const NOT_GROUND: &[&str] = &["wheat_field_wheat", "road_tunnel_portal_fern"];
 
 impl Surface {
     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
@@ -1462,10 +1463,12 @@ impl Surface {
 }
 
 /// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
-/// walker stands on and scatter keeps off. Each stands at the tile origin at a whole hex turn
+/// walker stands on and scatter keeps off, and the tunnel portal, whose 4 m wall top (coping and
+/// turf, where grass blades grow) the walker crosses from the cover meadow and whose face is a step
+/// it cannot climb into the arch. Each stands at the tile origin at a whole hex turn
 /// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
 /// as a centre piece does.
-pub const GROUND_PROPS: &[&str] = &["rail_station_platform"];
+pub const GROUND_PROPS: &[&str] = &["rail_station_platform", "road_tunnel_portal"];
 
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
 /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its
@@ -1764,18 +1767,14 @@ fn mask(
 }
 
 /// Builds a definition's ground from its ground pieces' LOD0 triangles (`tris_of`, tile-local
-/// before the piece's turn), or `None` while one is missing.
+/// before the piece's turn), or `None` while one is missing. A sloped definition stands on its
+/// runtime ground ([`super::slope_ground::tile_ground_tris`]).
 pub fn prepare(
     def: &TileDef,
     catalog: &TileCatalog,
     tris_of: &mut dyn FnMut(&str) -> Option<Vec<(Tri, String)>>,
 ) -> Option<Prepared> {
-    let mut all = vec![];
-    for (id, k) in ground_pieces(def, catalog) {
-        for (t, s) in tris_of(id)? {
-            all.push((t.map(|p| turn(k, p)), s));
-        }
-    }
+    let all = super::slope_ground::tile_ground_tris(def, catalog, tris_of)?;
     let surface = Surface::new(all);
     let raster: Vec<Option<(f32, u16)>> = (0..CELLS * CELLS)
         .map(|k| surface.top(cell_centre(k % CELLS), cell_centre(k / CELLS)))
@@ -2961,6 +2960,102 @@ mod tests {
         assert!(blades > 5000, "{blades} blades on the banks");
     }
 
+    /// A hillside's ground (P4) is the runtime cap over its slope field, not the flat baked
+    /// meadow cap: scatter, grass and walkers stand on the slope.
+    #[test]
+    fn sloped_ground_tris_match_the_field() {
+        let c = catalog();
+        let def = c.get("hillside_000111").unwrap();
+        let kit: HashMap<String, Vec<KitPart>> = ground_pieces(def, &c)
+            .into_iter()
+            .map(|(id, _)| (id.to_string(), vec![]))
+            .collect();
+        let g = PlayScatter::default()
+            .ground(def, &c, &kit, &mut |id| lod0(id))
+            .expect("meadow_base is in the kit");
+        let corners = def.corners(0);
+        let mut worst = 0.0f32;
+        for i in 0..4 {
+            for j in 0..4 {
+                let (x, z) = (-9.0 + 6.0 * i as f32, -9.0 + 6.0 * j as f32);
+                let (y, slot) = g.surface.at(x, z).expect("ground under an interior point");
+                let want = hex_core::field_at(def.ground, corners, x, z);
+                worst = worst.max((y - want).abs());
+                assert!((y - want).abs() < 0.05, "({x}, {z}): {y} vs field {want}");
+                assert_eq!(slot, "meadow_base_cap");
+            }
+        }
+        println!("hillside_000111 ground vs field: worst {worst:.4} m");
+    }
+
+    /// Visual standard (P4): a hillside carries the Meadow's scatter list, so over a few seeds
+    /// each rule places about as many props and the grass about as many blades as on the flat
+    /// Meadow beside it.
+    #[test]
+    fn hillsides_scatter_and_grass_like_the_meadow() {
+        let c = catalog();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let counts = |id: &str| {
+            let def = c.get(id).unwrap();
+            let g = prepared(def).unwrap();
+            let slots = crate::play::grass::grass_slots(&m, def, &c);
+            let mut per_rule = vec![0usize; def.props.scatter.len()];
+            let mut blades = 0;
+            for seed in 0..4u64 {
+                let l = layout(def, seed * 7919 + 3, &g);
+                for (i, n) in per_rule.iter_mut().enumerate() {
+                    *n += l.placed(i);
+                }
+                blades += crate::play::grass::layout(seed, &g.surface, &slots, &[])
+                    .blades
+                    .len();
+            }
+            (def.props.scatter.clone(), per_rule, blades)
+        };
+        let (rules, meadow, meadow_blades) = counts("meadow");
+        let mut rows = vec![];
+        for def in c.tiles().iter().filter(|d| d.id.starts_with("hillside_")) {
+            let (hill_rules, hill, blades) = counts(&def.id);
+            assert_eq!(
+                hill_rules.iter().map(|r| &r.piece).collect::<Vec<_>>(),
+                rules.iter().map(|r| &r.piece).collect::<Vec<_>>(),
+                "{}: the meadow's scatter list",
+                def.id
+            );
+            let ratio = |a: usize, b: usize| a as f32 / b.max(1) as f32;
+            let grass = ratio(blades, meadow_blades);
+            rows.push(format!("{} grass {grass:.3}", def.id));
+            assert!((0.85..1.15).contains(&grass), "{}: grass {grass}", def.id);
+            for (i, r) in rules.iter().enumerate() {
+                let k = ratio(hill[i], meadow[i]);
+                rows.push(format!(
+                    "  {} {}/{} = {k:.3}",
+                    r.piece.as_str(),
+                    hill[i],
+                    meadow[i]
+                ));
+                // Rules that place a handful per tile (granite outcrops, boulders) vary by
+                // whole props between seeds: compare those by count, the rest by ratio.
+                if meadow[i] >= 40 {
+                    assert!(
+                        (0.85..1.15).contains(&k),
+                        "{} {}: {k}",
+                        def.id,
+                        r.piece.as_str()
+                    );
+                } else {
+                    assert!(
+                        hill[i].abs_diff(meadow[i]) <= 6,
+                        "{} {}",
+                        def.id,
+                        r.piece.as_str()
+                    );
+                }
+            }
+        }
+        println!("hillside vs meadow (4 seeds):\n{}", rows.join("\n"));
+    }
+
     #[test]
     fn the_same_seed_gives_the_same_instances() {
         let c = catalog();
@@ -3003,15 +3098,8 @@ mod tests {
                 ];
             }
             let g = prepared(&def).unwrap_or_else(|| panic!("{}: ground pieces missing", def.id));
-            let local: Vec<(Tri, String)> = ground_pieces(&def, &c)
-                .into_iter()
-                .flat_map(|(id, k)| {
-                    lod0(id)
-                        .unwrap()
-                        .into_iter()
-                        .map(move |(t, s)| (t.map(|p| turn(k, p)), s))
-                })
-                .collect();
+            let local: Vec<(Tri, String)> =
+                crate::play::slope_ground::tile_ground_tris(&def, &c, &mut |id| lod0(id)).unwrap();
             let lanes = lanes(&def);
             for k in 0..6u8 {
                 let rot = piece_rotation(k);
@@ -3049,8 +3137,17 @@ mod tests {
                             // A water prop stands on the water, not the bed
                             // (`water_props_stand_on_the_water`).
                             if off == Vec3::ZERO && !water_prop(piece) {
+                                // It stands at the lowest point of its 0.3 m ring (`stand`),
+                                // which on a P4 slope may lie more than 0.1 m below its centre.
+                                let ring_low = (0..6u8)
+                                    .filter_map(|j| {
+                                        let d = hex_dir(j);
+                                        let q = rot * (inst.pos + Vec3::new(d.x, 0.0, d.y) * 0.3);
+                                        world.at(q.x, q.z).map(|(y, _)| y)
+                                    })
+                                    .fold(h - 0.1, f32::min);
                                 assert!(
-                                    inst.pos.y <= h + 1e-4 && inst.pos.y > h - 0.1,
+                                    inst.pos.y <= h + 1e-4 && inst.pos.y > ring_low - 1e-3,
                                     "{} {piece}: y {} vs surface {h}",
                                     def.id,
                                     inst.pos.y
@@ -3092,7 +3189,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 31, "every inventory tile ran");
+        assert_eq!(counts.len(), 45, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -3244,7 +3341,7 @@ mod tests {
         let mut w = World::new(42);
         let cell = Axial::new(1, 0);
         let k = w
-            .auto_rotate(&c, cell, def)
+            .auto_orient(&c, cell, def)
             .expect("a forest fits next to the meadow");
         w.place(&c, cell, "forest", k).unwrap();
         let scatter = |w: &World| {
@@ -3257,7 +3354,7 @@ mod tests {
         assert!(!w.tiles().contains_key(&cell));
         assert!(w.redo());
         assert_eq!(scatter(&w), first, "redo");
-        w.bulldoze(cell).unwrap();
+        w.bulldoze(&c, cell).unwrap();
         assert!(w.undo());
         assert_eq!(scatter(&w), first, "undo of a bulldoze");
     }
@@ -3357,6 +3454,8 @@ mod tests {
             "road_bend_60",
             "road_bend_120",
             "road_junction",
+            "road_ramp",
+            "road_tunnel_portal",
             "rail_straight",
             "rail_bend_60",
             "rail_bend_120",
@@ -3366,7 +3465,7 @@ mod tests {
         ] {
             assert!(verges.contains(&id), "{id} is a verge tile: {verges:?}");
         }
-        assert_eq!(verges.len(), 10, "{verges:?}");
+        assert_eq!(verges.len(), 12, "{verges:?}");
         for d in c.tiles() {
             let want = if verge_tile(d) {
                 [3, 3, 3, 3, 4]

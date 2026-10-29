@@ -37,6 +37,9 @@
         "rdo": 0.5,
         "normalize": false
       }
+    },
+    "pngFallbackSize": {
+      "normal": 512
     }
   },
   "textureEncodes": [
@@ -99,8 +102,9 @@
       "path": "assets/kit/p1/materials/asphalt/asphalt.normal.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 2604578,
-      "sha256": "645cc362f347f066c2cdfa27b292d41a7cb38161919b6c161a7dac97b6001c88"
+      "bytes": 629465,
+      "sha256": "a86ace91d1c84e994ba8c8546018d41254cf2c0efd931f9eef4a94036b714430",
+      "size": 512
     },
     {
       "channel": "orm",

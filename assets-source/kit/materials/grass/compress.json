@@ -1,0 +1,6 @@
+{
+  "pngFallbackSize": {
+    "normal": 512
+  },
+  "decision": "owner P2, 2026-10-29: the png fallback normal ships at 512\u00b2 (half the 1024\u00b2 source) to keep the png download family under 30 MiB; the KTX2 families keep the 1024\u00b2 source."
+}

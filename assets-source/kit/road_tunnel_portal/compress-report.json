@@ -1,0 +1,186 @@
+{
+  "name": "road_tunnel_portal",
+  "date": "2026-10-29T04:01:37.212Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    },
+    "pngFallbackSize": {
+      "albedo": 512
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 870502,
+      "sha256": "4a29f433c0cb51ccee86def7bcd0acec2708dcc4179c9aac8149d563c62f3a10"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 873221,
+      "sha256": "5eb867836d6d73ef85f8bfb3dbb8169cdb0ed8c5f06063d79e0a217462ed1036"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 507424,
+      "sha256": "cc31e4484652489f5f0c83249f56b865f03e502e4a605981f5d40c09de91bd0c",
+      "size": 512
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 5470,
+      "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 5322,
+      "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 6772,
+      "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 125964,
+      "sha256": "f49617bd670f6e8d961368c5689ef1d671820671b4f51082b75dda9b228d3552"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 123417,
+      "sha256": "576cd84df8374ece37132295915e292d9d9486163ccf6c4e6c8edce57ff7181e"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 267644,
+      "sha256": "cf0376fcc88f75ca4c5aec92031d0dc81946ff9b9ea0d4687132d42077047c38"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 71379,
+      "sha256": "e7180fcb73f4f34f4bcd1d5b3d954143e9fac2ed970fdd43ce16f74094b06347"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 69493,
+      "sha256": "78dc74584cec908fd095240ff40c100da2ef1d79e26591f4ff6b86dbcaeeb7ec"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 91306,
+      "sha256": "603f5f1fb06f2bbd9c984b35a2e5d5a714e686b215a2825a13e8db22d7d56c42"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1073315,
+      "astc": 1071453
+    },
+    "glbBytes": 129392
+  },
+  "glb": {
+    "bytes": 129392,
+    "sha256": "68d0ddcc7011fabd2988cf5916727f9f4768a6cab2a3107ec238b09867e06b6f"
+  }
+}

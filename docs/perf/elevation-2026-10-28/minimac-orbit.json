@@ -1,0 +1,247 @@
+{
+  "script": "e2e/perf-elevation-orbit.mjs",
+  "date": "2026-10-29T07:58:56.904Z",
+  "host": "MiniMac.attlocal.net",
+  "cpus": 10,
+  "adapter": "apple | metal-3 | ",
+  "dist": "dist-branch",
+  "viewport": [
+    2560,
+    1440
+  ],
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "tilt": "off",
+    "fps": "off",
+    "grass": "off",
+    "seed": "1"
+  },
+  "load_limit": 15,
+  "orbit": {
+    "ms": 8000,
+    "radius_m": 70,
+    "height_m": 30,
+    "period_s": 12,
+    "centre": [
+      95,
+      0,
+      -12
+    ]
+  },
+  "rounds": 5,
+  "warmup": 1,
+  "raised": {
+    "tiles": 36,
+    "levels": [
+      0,
+      1
+    ],
+    "rounds": 5,
+    "mean": 11.9,
+    "p95": 14.54,
+    "p99": 19.8,
+    "mean_range": [
+      11.32,
+      13.02
+    ]
+  },
+  "flat": {
+    "tiles": 36,
+    "levels": [
+      0
+    ],
+    "rounds": 5,
+    "mean": 11.8,
+    "p95": 13.7,
+    "p99": 15.32,
+    "mean_range": [
+      11.53,
+      12.7
+    ]
+  },
+  "ratio": {
+    "mean": 1.01,
+    "p95": 1.06,
+    "p99": 1.29
+  },
+  "control_note": "flat control holds meadows only; the raised world also carries roads, a ramp, portals, water and cars, so the ratio over-states elevation's own cost",
+  "runs": [
+    {
+      "round": 0,
+      "world": "raised",
+      "tiles": 36,
+      "levels": [
+        0,
+        1
+      ],
+      "frames": 707,
+      "mean": 11.33,
+      "p50": 11.4,
+      "p95": 13.3,
+      "p99": 14.3,
+      "max": 37.8,
+      "load_before": 2.4,
+      "load_after": 2.37,
+      "load_discarded": 0
+    },
+    {
+      "round": 0,
+      "world": "flat",
+      "tiles": 36,
+      "levels": [
+        0
+      ],
+      "frames": 691,
+      "mean": 11.58,
+      "p50": 11.5,
+      "p95": 13.1,
+      "p99": 16.7,
+      "max": 41,
+      "load_before": 2.74,
+      "load_after": 2.63,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "world": "flat",
+      "tiles": 36,
+      "levels": [
+        0
+      ],
+      "frames": 694,
+      "mean": 11.53,
+      "p50": 11.5,
+      "p95": 12.9,
+      "p99": 13.4,
+      "max": 41.9,
+      "load_before": 2.5,
+      "load_after": 2.51,
+      "load_discarded": 0
+    },
+    {
+      "round": 1,
+      "world": "raised",
+      "tiles": 36,
+      "levels": [
+        0,
+        1
+      ],
+      "frames": 707,
+      "mean": 11.32,
+      "p50": 11.3,
+      "p95": 13.3,
+      "p99": 14.2,
+      "max": 28.8,
+      "load_before": 2.47,
+      "load_after": 2.4,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "world": "raised",
+      "tiles": 36,
+      "levels": [
+        0,
+        1
+      ],
+      "frames": 707,
+      "mean": 11.34,
+      "p50": 11.3,
+      "p95": 13.3,
+      "p99": 14.4,
+      "max": 40.6,
+      "load_before": 2.44,
+      "load_after": 2.22,
+      "load_discarded": 0
+    },
+    {
+      "round": 2,
+      "world": "flat",
+      "tiles": 36,
+      "levels": [
+        0
+      ],
+      "frames": 694,
+      "mean": 11.54,
+      "p50": 11.4,
+      "p95": 13,
+      "p99": 13.5,
+      "max": 61.1,
+      "load_before": 2.04,
+      "load_after": 2.2,
+      "load_discarded": 0
+    },
+    {
+      "round": 3,
+      "world": "flat",
+      "tiles": 36,
+      "levels": [
+        0
+      ],
+      "frames": 687,
+      "mean": 11.65,
+      "p50": 11.4,
+      "p95": 13.1,
+      "p99": 15.4,
+      "max": 37.8,
+      "load_before": 2.19,
+      "load_after": 2.16,
+      "load_discarded": 0
+    },
+    {
+      "round": 3,
+      "world": "raised",
+      "tiles": 36,
+      "levels": [
+        0,
+        1
+      ],
+      "frames": 615,
+      "mean": 13.02,
+      "p50": 12.8,
+      "p95": 18.1,
+      "p99": 30.5,
+      "max": 50.8,
+      "load_before": 2.3,
+      "load_after": 5.38,
+      "load_discarded": 0
+    },
+    {
+      "round": 4,
+      "world": "raised",
+      "tiles": 36,
+      "levels": [
+        0,
+        1
+      ],
+      "frames": 642,
+      "mean": 12.47,
+      "p50": 12.2,
+      "p95": 14.7,
+      "p99": 25.6,
+      "max": 58.5,
+      "load_before": 6.15,
+      "load_after": 5.82,
+      "load_discarded": 0
+    },
+    {
+      "round": 4,
+      "world": "flat",
+      "tiles": 36,
+      "levels": [
+        0
+      ],
+      "frames": 630,
+      "mean": 12.7,
+      "p50": 12.7,
+      "p95": 16.4,
+      "p99": 17.6,
+      "max": 50.4,
+      "load_before": 6.31,
+      "load_after": 7.69,
+      "load_discarded": 0
+    }
+  ],
+  "errors": []
+}

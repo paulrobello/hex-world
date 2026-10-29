@@ -697,6 +697,7 @@ mod tests {
             cell: Axial::ORIGIN,
             tile: "meadow".into(),
             rotation: 0,
+            level: 0,
         };
         app.world_mut()
             .resource_mut::<PlayView>()
@@ -746,7 +747,7 @@ mod tests {
         let other = Axial::new(1, 0);
         app.world_mut().resource_mut::<PlayRises>().begin(
             other,
-            "meadow",
+            ("meadow", 0),
             &hex_core::RiseTimeline::default(),
             false,
             &mut vec![],
@@ -901,6 +902,7 @@ mod tests {
             cell,
             tile: "forest".into(),
             rotation: 0,
+            level: 0,
         };
         app.world_mut()
             .resource_mut::<PlayView>()

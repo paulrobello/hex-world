@@ -14,7 +14,7 @@ import {
 import { tileName } from "../src/words.ts";
 
 const world = (...t: [number, number, string, number][]) =>
-  tileMap(t.map(([q, r, tile, rotation]) => ({ q, r, tile, rotation })));
+  tileMap(t.map(([q, r, tile, rotation]) => ({ q, r, tile, rotation, level: 0 })));
 const curve = () => PICKER.find((e) => e.id === "beach_curve")!;
 
 test("the picker lists one Beach Curve and neither the headland nor the bay", () => {
@@ -31,7 +31,8 @@ test("the picker lists one Beach Curve and neither the headland nor the bay", ()
   assert.ok(!names.includes("Headland") && !names.includes("Bay"));
   // In the straight beach's place, after it; every other tile is its own entry.
   assert.equal(ids[ids.indexOf("beach_curve") - 1], "beach");
-  assert.equal(PICKER.length, TILES.length - 2);
+  // The Beach Curve folds two tiles into one entry, the river mouths two, the Hillside twelve.
+  assert.equal(PICKER.length, TILES.length - 1 - 1 - 11);
   assert.equal(entryOf("beach_inner")!.id, "beach_curve");
   assert.equal(entryOf("meadow")!.id, "meadow");
 });

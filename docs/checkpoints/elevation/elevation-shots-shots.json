@@ -1,0 +1,82 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/elevation/elevation-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        90.25,
+        182.39,
+        185.44
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 50.0,
+      "load_after": [
+        70.55,
+        162.82,
+        178.02
+      ],
+      "frames": {
+        "elevation-overview": {
+          "mean": 0.1041,
+          "problem": null
+        },
+        "elevation-ramp-low": {
+          "mean": 0.1433,
+          "problem": null
+        },
+        "elevation-car-portal-0": {
+          "mean": 0.2592,
+          "problem": null
+        },
+        "elevation-car-portal-1": {
+          "mean": 0.2604,
+          "problem": null
+        },
+        "elevation-car-portal-2": {
+          "mean": 0.2612,
+          "problem": null
+        },
+        "elevation-car-portal-3": {
+          "mean": 0.2594,
+          "problem": null
+        },
+        "elevation-car-portal-4": {
+          "mean": 0.2558,
+          "problem": null
+        },
+        "elevation-car-portal-5": {
+          "mean": 0.2498,
+          "problem": null
+        },
+        "elevation-car-portal-6": {
+          "mean": 0.2508,
+          "problem": null
+        },
+        "elevation-car-portal-7": {
+          "mean": 0.2577,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

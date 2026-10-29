@@ -64,7 +64,9 @@ const fn hero(piece: &'static str, q: i32, r: i32, at: [f32; 2], yaw_deg: f32) -
 }
 
 /// Two road-straight tiles meeting at (0,0) edge 0 / (1,0) edge 3, ringed by meadow at every
-/// rotation (Review Focus 1), and the hero tree on (0,1).
+/// rotation (Review Focus 1), and the hero tree on (0,1). `road_tunnel_portal` has no cell here: it
+/// is a ground hero on a straight-road tile that needs its cutting and the tunnel around it, so it
+/// is reviewed in the elevation shots (`docs/checkpoints/elevation/`) instead.
 pub fn kit_layout() -> Vec<Placement> {
     let mut v = vec![];
     for (q, r) in [(0, 0), (1, 0)] {

@@ -47,8 +47,8 @@
   },
   "compressReport": {
     "path": "assets-source/kit/materials/grass/compress-report.json",
-    "sha256": "e928f858e7d10b24e68de2727f98cd1acfe6d75cceecfa631b97686753bea87a",
-    "bytes": 3872
+    "sha256": "aa593135cdf1c5886e21316aada794e19ad8ce12d72875dc5a0dce6b60289dbf",
+    "bytes": 3942
   },
   "compression": {
     "budgets": {
@@ -119,8 +119,9 @@
         "path": "assets/kit/p1/materials/grass/grass.normal.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 3116798,
-        "sha256": "24d1d603ace85bf2f3c57bc5e07b27cff43f885ec08603672fc8d78d2c1ff3af"
+        "bytes": 671159,
+        "sha256": "3912b65c1869f53e9f016561b3fab9ff0b6ba392993b8bdb709c3b45e5a79851",
+        "size": 512
       },
       {
         "channel": "orm",
@@ -183,8 +184,8 @@
     },
     {
       "path": "assets/kit/p1/materials/grass/grass.normal.png",
-      "sha256": "24d1d603ace85bf2f3c57bc5e07b27cff43f885ec08603672fc8d78d2c1ff3af",
-      "bytes": 3116798
+      "sha256": "3912b65c1869f53e9f016561b3fab9ff0b6ba392993b8bdb709c3b45e5a79851",
+      "bytes": 671159
     },
     {
       "path": "assets/kit/p1/materials/grass/grass.orm.bc7.ktx2",
@@ -205,7 +206,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-16T18:17:49.759Z",
+    "date": "2026-10-29T04:15:34.041Z",
     "checks": [
       "kit-compress tileable budget",
       "kit_gate textures"

@@ -211,7 +211,7 @@ test("restores the walker; a bulldozed tile or a refused walk_to falls back to t
   const ok = run(play().tiles, null);
   assert.deepEqual(ok.sent, ["camera", "walk", "walk_to"]);
   assert.equal(ok.keeper.lastOutcome, "walk");
-  const gone = run([{ q: 0, r: 0, tile: "meadow", rotation: 0 }], null);
+  const gone = run([{ q: 0, r: 0, tile: "meadow", rotation: 0, level: 0 }], null);
   assert.deepEqual(gone.sent, ["camera"], "a bulldozed tile never enters walk mode");
   assert.equal(gone.keeper.lastOutcome, "fallback");
   const refused = run(play().tiles, "water");
