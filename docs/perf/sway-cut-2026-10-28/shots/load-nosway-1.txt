@@ -1,0 +1,2 @@
+load before: 17:13  up 29 days,  6:48, 3 users, load averages: 3.28 2.76 2.63
+load after: 17:15  up 29 days,  6:49, 3 users, load averages: 2.48 2.62 2.58

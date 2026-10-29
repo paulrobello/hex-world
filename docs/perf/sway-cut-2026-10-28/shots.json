@@ -1,0 +1,17 @@
+[
+  { "cmd": "hover", "q": 9, "r": -9 },
+  { "cmd": "toggle", "what": "photo" },
+  { "cmd": "photo", "dof": "off", "pause_agents": true },
+  { "cmd": "wait", "frames": 900 },
+  { "cmd": "camera", "pos": [10, 12, 40], "look_at": [0, 0, 0] },
+  { "cmd": "wait", "frames": 240 },
+  { "cmd": "screenshot", "name": "sway-close" },
+  { "cmd": "camera", "pos": [30, 60, 90], "look_at": [0, 0, 0] },
+  { "cmd": "wait", "frames": 240 },
+  { "cmd": "screenshot", "name": "sway-play" },
+  { "cmd": "camera", "pos": [20, 160, 150], "look_at": [20, 0, -5] },
+  { "cmd": "wait", "frames": 240 },
+  { "cmd": "screenshot", "name": "sway-overview" },
+  { "cmd": "wait", "frames": 30 },
+  { "cmd": "exit" }
+]

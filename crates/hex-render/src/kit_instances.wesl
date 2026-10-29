@@ -25,6 +25,9 @@ struct KitMeshMeta {
 
 @group(2) @binding(0) var<storage, read> kit_instances: array<GpuKitInstance>;
 @group(2) @binding(1) var<uniform> kit_meta: KitMeshMeta;
+// Each record's foliage wind field this frame (hex_render::foliage_wind::pack), written by
+// assets/shaders/kit_wind.wesl before any pass draws; read for tree slots only.
+@group(2) @binding(2) var<storage, read> kit_fields: array<vec4<f32>>;
 
 /// The record this draw's instance refers to. The record id arrives as an instanced
 /// vertex attribute (one u32 per instance, sliced per draw), because WebGPU's
@@ -33,6 +36,11 @@ struct KitMeshMeta {
 /// records on WebGPU.
 fn kit_instance(vid: u32) -> GpuKitInstance {
     return kit_instances[vid];
+}
+
+/// The packed foliage wind field of record `vid` (see `kit_fields`).
+fn kit_field(vid: u32) -> vec4<f32> {
+    return kit_fields[vid];
 }
 
 /// `world = translation · rotation · scale` from a record.

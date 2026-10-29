@@ -4,7 +4,10 @@
 // Vertex: Bevy 0.20's bevy_pbr prepass/prepass.wesl vertex plus the foliage wind
 // (hex_render::foliage_wind), the same call as kit_vertex.wesl, so depth, normals and shadows move
 // with the forward pass; the position is @invariant in both. The previous position for motion
-// vectors is the offset at the previous frame's wind clock under the previous transform.
+// vectors is the offset at the previous frame's wind clock, its sway phases evaluated at that clock
+// in the current frame's wind field (foliage_wind::offset_at): one field sample per vertex, not two.
+// The field moves a fraction of a millimetre of sway in a frame, so the motion vectors TAA reads
+// differ from two full samples by far less than a pixel.
 //
 // Fragment:
 // Tileable slots write the world-space tiled normal from hex_render::kit_common, the same one the
@@ -188,33 +191,48 @@ fn morph_prev_vertex(vertex_in: prepass_io::UncompressedVertex, instance_index: 
     return vertex;
 }
 
-// The wind offset of a vertex at rest world position `world` (zero on still slots and on meshes
-// without TEXCOORD_1), at wind time `t`, under the instance transform whose origin is `origin`.
-fn wind_offset(world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, t: f32) -> vec3<f32> {
-    let wind = kit_common::kit.flags & (kit_common::FLAG_WIND_TREE | kit_common::FLAG_WIND_PLANT);
-    if (wind == 0u) {
-        return vec3(0.0);
-    }
-    return foliage_wind::offset(world, origin, sway, kit_common::kit.wind_amp, wind == kit_common::FLAG_WIND_TREE, t);
+// The slot's wind flag (0 on still slots).
+fn wind_flag() -> u32 {
+    return kit_common::kit.flags & (kit_common::FLAG_WIND_TREE | kit_common::FLAG_WIND_PLANT);
 }
 
 // The shading tail both entries share: wind displacement, clip, varyings. Local
 // normal/tangent transforms (inverse-transpose) because bevy's mesh_functions helpers read the
-// per-mesh uniform, which the instanced path does not bind.
+// per-mesh uniform, which the instanced path does not bind. `field_in`/`has_field` as in
+// kit_vertex.wesl: tree slots on the instanced path sway in their part's field.
 fn shade_kit_prepass_vertex(
     vertex: KitPrepassUncompressed,
     world_from_local: mat4x4<f32>,
     wind_origin: vec3<f32>,
     tag: u32,
+    field_in: vec4<f32>,
+    has_field: bool,
 ) -> KitPrepassOutput {
     var out: KitPrepassOutput;
     let basis = mat3x3(world_from_local[0].xyz, world_from_local[1].xyz, world_from_local[2].xyz);
     let normal_basis = kit_common::kit_normal_basis(basis);
 
-    out.world_position = world_from_local * vec4<f32>(vertex.position, 1.0);
-@if(VERTEX_UVS_B)
-    out.world_position = vec4(out.world_position.xyz + wind_offset(
-        out.world_position.xyz, wind_origin, vertex.uv_b, prepass_globals.time), 1.0);
+    // The rest position, and the current and previous frames' wind offsets (zero on still slots and
+    // on meshes without TEXCOORD_1) from one field sample.
+    let rest = (world_from_local * vec4<f32>(vertex.position, 1.0)).xyz;
+    var offset = vec3(0.0);
+    var prev_offset = vec3(0.0);
+@if(VERTEX_UVS_B) {
+    let wind = wind_flag();
+    if (wind != 0u) {
+        let tree = wind == kit_common::FLAG_WIND_TREE;
+        let amp = kit_common::kit.wind_amp;
+        let t = prepass_globals.time;
+        var f = foliage_wind::unpack(field_in);
+        if (!(tree && has_field)) {
+            f = foliage_wind::field(rest, wind_origin, tree, t);
+        }
+        offset = foliage_wind::offset_at(f, rest, wind_origin, vertex.uv_b, amp, tree, t);
+@if(MOTION_VECTOR_PREPASS)
+        prev_offset = foliage_wind::offset_at(f, rest, wind_origin, vertex.uv_b, amp, tree, t - prepass_globals.delta_time);
+    }
+}
+    out.world_position = vec4(rest + offset, 1.0);
     out.position = position_world_to_clip(out.world_position.xyz);
 @if(UNCLIPPED_DEPTH_ORTHO_EMULATION) {
     out.unclipped_depth = out.position.z;
@@ -236,22 +254,9 @@ fn shade_kit_prepass_vertex(
 @if(VERTEX_COLORS)
     out.color = vertex.color;
 
-@if(MOTION_VECTOR_PREPASS) {
-    // Settled parts never move: the previous position is the position.
-    let prev_world_position = world_from_local * vec4<f32>(vertex.position, 1.0);
-    var prev_origin = wind_origin;
-    var prev_sway = vec2(0.0);
-@if(VERTEX_UVS_B) {
-    prev_sway = vertex.uv_b;
-@if(VERTEX_COLORS) {
-    if (vertex.color.a < 0.0) {
-        prev_origin = wind_origin;
-    }
-}
-}
-    out.previous_world_position = vec4(prev_world_position.xyz + wind_offset(
-        prev_world_position.xyz, prev_origin, prev_sway, prepass_globals.time - prepass_globals.delta_time), 1.0);
-}
+    // Settled parts never move: the previous rest position is the rest position.
+@if(MOTION_VECTOR_PREPASS)
+    out.previous_world_position = vec4(rest + prev_offset, 1.0);
 
 @if(VERTEX_OUTPUT_INSTANCE_INDEX)
     out.instance_index = tag;
@@ -287,7 +292,8 @@ fn vertex(v: KitPrepassIn) -> KitPrepassOutput {
 @if(VERTEX_COLORS)
     vertex.color = v.color;
     let inst = kit_instances::kit_instance(v.kit_record);
-    var out = shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    var out = shade_kit_prepass_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag,
+        kit_instances::kit_field(v.kit_record), true);
     // A band draw's cross-fade level, as kit_vertex.wesl writes it (the fragment dithers on it).
 @if(VISIBILITY_RANGE_DITHER)
     out.visibility_range_dither = kit_instances::kit_lod_dither_level(inst.translation, view.lod_view_world_position);
@@ -338,7 +344,8 @@ fn vertex(vertex_no_morph: prepass_io::Vertex) -> KitPrepassOutput {
         local.tangent = vec4(posed.tangent, local.tangent.w);
     }
 }
-    var out = shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    var out = shade_kit_prepass_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index,
+        vec4(0.0), false);
     // The LOD cross-fade level, as bevy's prepass.wesl writes it (the fragment dithers on it).
 @if(VISIBILITY_RANGE_DITHER)
     out.visibility_range_dither = mesh_functions::get_visibility_range_dither_level(

@@ -15,6 +15,11 @@
 // The instance origin hashes to a phase offset so neighbours never sway in lockstep. The offset is
 // horizontal except the cards' flutter, and exactly zero at a plant's base (U = 0) and at a tree's
 // trunk base and roots (height 0 or below, U = 0).
+//
+// `field` (the wind sample and the phase, the costly part) and `offset_at` (the sway at a time) are
+// split so the prepass can place the previous frame for motion vectors from the current frame's field:
+// only the sway phases are re-evaluated at the earlier time. Every pass places the current frame
+// through `offset`, the same two calls, so the forward and prepass positions stay identical.
 
 import hex_render::wind;
 
@@ -44,12 +49,38 @@ fn swayed(push: vec2<f32>, ph: f32, depth: f32) -> vec2<f32> {
     return push + dir * (sin(TAU * ph) * depth * (0.12 + strength));
 }
 
-// World-space offset of a vertex at rest position `world` (see the header).
-fn offset(world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, amp: f32, tree: bool, t: f32) -> vec3<f32> {
-    let u = clamp(sway.x, 0.0, 1.0);
-    let ip = instance_phase(origin);
+// The field a vertex sways in: the wind at the trunk base (tree) or at the vertex (plant) at time
+// `t`, and the instance's phase offset.
+struct Field {
+    w: wind::Wind,
+    ip: f32,
+}
+
+fn field(world: vec3<f32>, origin: vec3<f32>, tree: bool, t: f32) -> Field {
+    var p = world.xz;
     if (tree) {
-        let w = wind::sample(origin.xz, t);
+        p = origin.xz;
+    }
+    return Field(wind::sample(p, t), instance_phase(origin));
+}
+
+// A field packed in a vec4 (push, gust, phase): a tree's field, sampled at its trunk base, is the
+// same for every vertex, so the instanced path evaluates it once per part per frame
+// (assets/shaders/kit_wind.wesl) and every pass unpacks it.
+fn pack(f: Field) -> vec4<f32> {
+    return vec4(f.w.push, f.w.gust, f.ip);
+}
+
+fn unpack(v: vec4<f32>) -> Field {
+    return Field(wind::Wind(v.xy, v.z), v.w);
+}
+
+// World-space offset at time `t` of a vertex at rest position `world` in field `f` (see the header).
+fn offset_at(f: Field, world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, amp: f32, tree: bool, t: f32) -> vec3<f32> {
+    let u = clamp(sway.x, 0.0, 1.0);
+    let w = f.w;
+    let ip = f.ip;
+    if (tree) {
         let h = max(world.y - origin.y, 0.0) / TREE_REF_M;
         let lean = swayed(w.push, TREE_SWAY_HZ * t + ip, TREE_SWAY) * (amp * h * h);
         let flex = swayed(w.push, TREE_FLEX_HZ * t + ip + sway.y, TREE_SWAY) * (amp * TREE_FLEX * u * u);
@@ -59,7 +90,11 @@ fn offset(world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, amp: f32, tree: 
         let d = lean + flex + across * card;
         return vec3(d.x, 0.6 * card, d.y);
     }
-    let w = wind::sample(world.xz, t);
     let d = swayed(w.push, PLANT_SWAY_HZ * t + ip + sway.y, PLANT_SWAY) * (amp * u * u);
     return vec3(d.x, 0.0, d.y);
+}
+
+// World-space offset at time `t` of a vertex at rest position `world` (see the header).
+fn offset(world: vec3<f32>, origin: vec3<f32>, sway: vec2<f32>, amp: f32, tree: bool, t: f32) -> vec3<f32> {
+    return offset_at(field(world, origin, tree, t), world, origin, sway, amp, tree, t);
 }

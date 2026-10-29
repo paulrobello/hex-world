@@ -26,6 +26,7 @@ use bevy::{
             AlphaMask3dPrepass, Opaque3dPrepass, OpaqueNoLightmap3dBatchSetKey,
             OpaqueNoLightmap3dBinKey, prepass_target_descriptors,
         },
+        schedule::camera_driver,
     },
     ecs::system::{
         SystemParamItem,
@@ -42,11 +43,12 @@ use bevy::{
     },
     prelude::*,
     render::{
-        Render, RenderApp, RenderSystems,
+        Render, RenderApp, RenderStartup, RenderSystems,
         camera::ExtractedCamera,
         erased_render_asset::ErasedRenderAssets,
         extract_component::{ExtractComponent, ExtractComponentPlugin},
         extract_resource::{ExtractResource, ExtractResourcePlugin},
+        globals::{GlobalsBuffer, GlobalsUniform},
         material_bind_groups::MaterialBindGroupAllocators,
         mesh::allocator::{MeshAllocator, MeshSlabs},
         mesh::{MeshVertexBufferLayoutRef, RenderMesh, RenderMeshBufferInfo},
@@ -57,10 +59,13 @@ use bevy::{
             TrackedRenderPass, ViewBinnedRenderPhases,
         },
         render_resource::{
-            binding_types::{storage_buffer_read_only_sized, uniform_buffer_sized},
+            binding_types::{
+                storage_buffer_read_only_sized, storage_buffer_sized, uniform_buffer,
+                uniform_buffer_sized,
+            },
             *,
         },
-        renderer::{RenderDevice, RenderQueue},
+        renderer::{RenderContext, RenderDevice, RenderGraph, RenderQueue},
         settings::WgpuFeatures,
         sync_world::MainEntity,
         view::ExtractedView,
@@ -71,6 +76,12 @@ use bevy::{
 use bytemuck::{Pod, Zeroable};
 
 use crate::kit_material::{KitMaterial, PREPASS_SHADER, SHADER, VERTEX_SHADER};
+
+/// Per-frame compute pass writing each record's foliage wind field (`kit_fields`).
+const WIND_SHADER: &str = "shaders/kit_wind.wesl";
+const WIND_WORKGROUP: u32 = 64;
+/// Bytes per record in the field buffer (`vec4<f32>`).
+const FIELD_SIZE: u64 = 16;
 
 /// One settled kit part on the GPU: `world = translation · rotation · scale`. Layout matches
 /// `hex_render::kit_instances`' `GpuKitInstance` (48 bytes, translation at 16, tag at 28).
@@ -829,6 +840,8 @@ impl Plugin for KitInstancesPlugin {
         };
         render_app
             .init_resource::<KitGpu>()
+            .add_systems(RenderStartup, init_wind_pipeline)
+            .add_systems(RenderGraph, dispatch_kit_wind.before(camera_driver))
             .init_resource::<SpecializedMeshPipelines<KitMainPipeline>>()
             .init_resource::<SpecializedMeshPipelines<KitPrepassPipeline>>()
             .add_render_command::<Opaque3d, DrawKitMain>()
@@ -841,6 +854,7 @@ impl Plugin for KitInstancesPlugin {
                 (
                     prepare_kit.in_set(RenderSystems::PrepareResources),
                     prepare_kit_bind_group.in_set(RenderSystems::PrepareBindGroups),
+                    prepare_wind_bind_group.in_set(RenderSystems::PrepareBindGroups),
                     // The slot entities carry `MeshMaterial3d` only to resolve their bind group, so
                     // bevy's own queue systems treat a material edited this frame (the wet band,
                     // every frame) as a changed renderable and `remove` it from each phase. Queue
@@ -858,6 +872,8 @@ impl Plugin for KitInstancesPlugin {
 struct KitGpu {
     scene: Option<Arc<KitInstanceSetData>>,
     pieces: Option<Buffer>,
+    /// One packed wind field per record, rewritten every frame by `dispatch_kit_wind`.
+    fields: Option<Buffer>,
     meta: Option<Buffer>,
     /// Byte stride between (slot, LOD) meta entries (device alignment).
     meta_stride: u32,
@@ -886,6 +902,7 @@ impl Default for KitGpu {
         Self {
             scene: None,
             pieces: None,
+            fields: None,
             meta: None,
             meta_stride: 0,
             meta_tint: false,
@@ -1274,6 +1291,8 @@ fn prepare_kit(
             (
                 storage_buffer_read_only_sized(false, None),
                 uniform_buffer_sized(false, std::num::NonZeroU64::new(META_SIZE)),
+                storage_buffer_read_only_sized(false, std::num::NonZeroU64::new(FIELD_SIZE))
+                    .visibility(ShaderStages::VERTEX),
             ),
         ),
     );
@@ -1305,6 +1324,13 @@ fn prepare_kit(
         label: Some("kit_instances_records"),
         contents: &records,
         usage: BufferUsages::STORAGE,
+    }));
+    let count = (records.len() / size_of::<GpuKitInstance>()).max(1) as u64;
+    gpu.fields = Some(device.create_buffer(&BufferDescriptor {
+        label: Some("kit_instances_fields"),
+        size: count * FIELD_SIZE,
+        usage: BufferUsages::STORAGE,
+        mapped_at_creation: false,
     }));
     // One metadata entry per (slot, LOD), padded to the device's uniform offset alignment.
     let align = device.limits().min_uniform_buffer_offset_alignment;
@@ -1355,8 +1381,12 @@ fn prepare_kit_bind_group(
     pipeline_cache: Res<PipelineCache>,
     device: Res<RenderDevice>,
 ) {
-    let (Some(pipeline), Some(pieces), Some(meta)) = (main, gpu.pieces.as_ref(), gpu.meta.as_ref())
-    else {
+    let (Some(pipeline), Some(pieces), Some(meta), Some(fields)) = (
+        main,
+        gpu.pieces.as_ref(),
+        gpu.meta.as_ref(),
+        gpu.fields.as_ref(),
+    ) else {
         return;
     };
     // The bind groups bind only the record and metadata buffers, so they hold until either is
@@ -1382,6 +1412,10 @@ fn prepare_kit_bind_group(
                     size: std::num::NonZeroU64::new(META_SIZE),
                 }),
             },
+            BindGroupEntry {
+                binding: 2,
+                resource: fields.as_entire_binding(),
+            },
         ]
     };
     let count = (meta.size() / gpu.meta_stride as u64) as usize;
@@ -1396,6 +1430,107 @@ fn prepare_kit_bind_group(
         .collect();
     gpu.bound = Some(key);
     gpu.bind_groups_made = gpu.bind_groups.len() as u32;
+}
+
+/// The wind compute pipeline (`assets/shaders/kit_wind.wesl`).
+#[derive(Resource)]
+struct KitWindPipeline {
+    layout: BindGroupLayoutDescriptor,
+    id: CachedComputePipelineId,
+}
+
+/// The wind pass's bind group, the (records, fields, globals) buffers it binds, and its records.
+#[derive(Resource)]
+struct KitWindBindGroup {
+    key: (BufferId, BufferId, BufferId),
+    group: BindGroup,
+    count: u32,
+}
+
+fn init_wind_pipeline(
+    mut commands: Commands,
+    server: Res<AssetServer>,
+    pipeline_cache: Res<PipelineCache>,
+) {
+    let layout = BindGroupLayoutDescriptor::new(
+        "kit_wind",
+        &BindGroupLayoutEntries::sequential(
+            ShaderStages::COMPUTE,
+            (
+                storage_buffer_read_only_sized(false, None),
+                storage_buffer_sized(false, None),
+                uniform_buffer::<GlobalsUniform>(false),
+            ),
+        ),
+    );
+    let id = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
+        label: Some("kit_wind".into()),
+        layout: vec![layout.clone()],
+        shader: server.load(WIND_SHADER),
+        entry_point: Some("main".into()),
+        ..default()
+    });
+    commands.insert_resource(KitWindPipeline { layout, id });
+}
+
+/// Binds the record and field buffers and the globals (the clock the vertex stages read) for the
+/// wind pass; kept until one of them is recreated.
+fn prepare_wind_bind_group(
+    mut commands: Commands,
+    gpu: Res<KitGpu>,
+    pipeline: Option<Res<KitWindPipeline>>,
+    globals: Res<GlobalsBuffer>,
+    current: Option<Res<KitWindBindGroup>>,
+    pipeline_cache: Res<PipelineCache>,
+    device: Res<RenderDevice>,
+) {
+    let (Some(pipeline), Some(pieces), Some(fields), Some(globals)) = (
+        pipeline,
+        gpu.pieces.as_ref(),
+        gpu.fields.as_ref(),
+        globals.buffer.buffer(),
+    ) else {
+        return;
+    };
+    let key = (pieces.id(), fields.id(), globals.id());
+    if current.is_some_and(|c| c.key == key) {
+        return;
+    }
+    let group = device.create_bind_group(
+        "kit_wind",
+        &pipeline_cache.get_bind_group_layout(&pipeline.layout),
+        &BindGroupEntries::sequential((
+            pieces.as_entire_binding(),
+            fields.as_entire_binding(),
+            globals.as_entire_binding(),
+        )),
+    );
+    let count = (fields.size() / FIELD_SIZE) as u32;
+    commands.insert_resource(KitWindBindGroup { key, group, count });
+}
+
+/// Writes every record's wind field before the camera passes draw. Until the pipeline compiles
+/// the fields stay zero: trees on the instanced path stand still for those frames.
+fn dispatch_kit_wind(
+    mut render_context: RenderContext,
+    bind_group: Option<Res<KitWindBindGroup>>,
+    pipeline: Option<Res<KitWindPipeline>>,
+    pipeline_cache: Res<PipelineCache>,
+) {
+    let (Some(bind_group), Some(pipeline)) = (bind_group, pipeline) else {
+        return;
+    };
+    let Some(compute) = pipeline_cache.get_compute_pipeline(pipeline.id) else {
+        return;
+    };
+    let encoder = render_context.command_encoder();
+    let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor {
+        label: Some("kit_wind"),
+        ..default()
+    });
+    pass.set_pipeline(compute);
+    pass.set_bind_group(0, &bind_group.group, &[]);
+    pass.dispatch_workgroups(bind_group.count.div_ceil(WIND_WORKGROUP), 1, 1);
 }
 // ---------------------------------------------------------------------------------------------
 // Queue.

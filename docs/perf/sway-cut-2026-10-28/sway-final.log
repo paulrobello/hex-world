@@ -1,0 +1,15 @@
+warm-up main world2066 discarded (load 2.62 -> 2.72)
+main world2066 round 0: close p50 34.1 p95 35.7 mean 34.28 cpu 12.69/13.3 draws 1490 kit 1337 | overview p50 39 p95 40.6 mean 39.01 cpu 12.03/12.8 draws 962 kit 881 errors 0 (load 2.72 -> 2.03)
+noskip world2066 round 0: close p50 32 p95 33.2 mean 31.98 cpu 12.54/13.2 draws 1492 kit 1337 | overview p50 37.5 p95 39.2 mean 37.57 cpu 12.03/12.6 draws 962 kit 881 errors 0 (load 2.03 -> 2.00)
+cand2 world2066 round 0: close p50 31.1 p95 32.7 mean 31.14 cpu 12.36/13 draws 1490 kit 1337 | overview p50 37.4 p95 38.7 mean 37.35 cpu 11.99/12.6 draws 962 kit 881 errors 0 (load 2.00 -> 2.19)
+nosway world2066 round 0: close p50 30.6 p95 32.4 mean 30.64 cpu 12.55/13.2 draws 1492 kit 1337 | overview p50 37 p95 38.7 mean 37.07 cpu 12.14/12.8 draws 962 kit 881 errors 0 (load 2.19 -> 1.95)
+noskip world2066 round 1: close p50 31.7 p95 32.9 mean 31.53 cpu 12.69/13.3 draws 1490 kit 1337 | overview p50 37.3 p95 39.1 mean 37.48 cpu 12.24/12.9 draws 962 kit 881 errors 0 (load 1.95 -> 3.03)
+cand2 world2066 round 1: close p50 30.9 p95 32.8 mean 31.08 cpu 12.47/13.2 draws 1490 kit 1337 | overview p50 37.2 p95 38.8 mean 37.24 cpu 12.11/12.7 draws 962 kit 881 errors 0 (load 3.03 -> 2.64)
+nosway world2066 round 1: close p50 30.4 p95 31.9 mean 30.38 cpu 12.33/13.1 draws 1490 kit 1337 | overview p50 37 p95 38.8 mean 37.13 cpu 12.03/12.7 draws 962 kit 881 errors 0 (load 2.64 -> 2.91)
+main world2066 round 1: close p50 34 p95 35.8 mean 34.25 cpu 12.91/13.5 draws 1490 kit 1337 | overview p50 38.5 p95 40.6 mean 38.73 cpu 12.29/13 draws 962 kit 881 errors 0 (load 2.91 -> 2.39)
+cand2 world2066 round 2: close p50 30.8 p95 32.8 mean 31.09 cpu 12.43/13.1 draws 1490 kit 1337 | overview p50 37.1 p95 39.1 mean 37.29 cpu 12.07/12.7 draws 962 kit 881 errors 0 (load 2.39 -> 2.25)
+nosway world2066 round 2: close p50 30.3 p95 31.6 mean 30.34 cpu 12.36/13 draws 1490 kit 1337 | overview p50 37 p95 38.8 mean 37.08 cpu 12.03/12.7 draws 962 kit 881 errors 0 (load 2.25 -> 1.93)
+main world2066 round 2: close p50 34.1 p95 35.9 mean 34.32 cpu 12.83/13.5 draws 1490 kit 1337 | overview p50 38.6 p95 40.5 mean 38.8 cpu 12.16/12.8 draws 962 kit 881 errors 0 (load 1.93 -> 2.69)
+noskip world2066 round 2: close p50 32 p95 33.1 mean 31.96 cpu 12.41/13 draws 1492 kit 1337 | overview p50 37.4 p95 39.1 mean 37.57 cpu 12.08/12.7 draws 962 kit 881 errors 0 (load 2.69 -> 3.23)
+wrote results/sway-final.json
+EXIT=0

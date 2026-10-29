@@ -120,12 +120,17 @@ fn morph_vertex(vertex_in: UncompressedVertex, instance_index: u32) -> Uncompres
 
 // The shading tail both entries share: normals, wind displacement, clip, varyings. Local
 // normal/tangent transforms (inverse-transpose) because bevy's mesh_functions helpers read the
-// per-mesh uniform, which the instanced path does not bind.
+// per-mesh uniform, which the instanced path does not bind. `field_in` is the part's packed wind
+// field when `has_field` (the instanced path, hex_render::kit_instances::kit_field); tree slots
+// sway in it instead of sampling the field per vertex. kit_prepass.wesl places a vertex with the
+// same calls, so both depths agree.
 fn shade_kit_vertex(
     vertex: KitUncompressed,
     world_from_local: mat4x4<f32>,
     wind_origin_in: vec3<f32>,
     tag: u32,
+    field_in: vec4<f32>,
+    has_field: bool,
 ) -> KitVertexOutput {
     var out: KitVertexOutput;
     var wind_origin = wind_origin_in;
@@ -151,9 +156,15 @@ fn shade_kit_vertex(
 @if(VERTEX_UVS_B) {
     let wind = kit_common::kit.flags & (kit_common::FLAG_WIND_TREE | kit_common::FLAG_WIND_PLANT);
     if (wind != 0u) {
-        out.world_position = vec4(out.world_position.xyz + foliage_wind::offset(
-            out.world_position.xyz, wind_origin, vertex.uv_b, kit_common::kit.wind_amp,
-            wind == kit_common::FLAG_WIND_TREE, globals.time), 1.0);
+        let rest = out.world_position.xyz;
+        let tree = wind == kit_common::FLAG_WIND_TREE;
+        let t = globals.time;
+        var f = foliage_wind::unpack(field_in);
+        if (!(tree && has_field)) {
+            f = foliage_wind::field(rest, wind_origin, tree, t);
+        }
+        out.world_position = vec4(rest + foliage_wind::offset_at(
+            f, rest, wind_origin, vertex.uv_b, kit_common::kit.wind_amp, tree, t), 1.0);
     }
 }
     out.position = position_world_to_clip(out.world_position.xyz);
@@ -201,7 +212,8 @@ fn vertex(vertex_no_morph: KitVertexIn) -> KitVertexOutput {
 @if(VERTEX_COLORS)
     vertex.color = vertex_no_morph.color;
     let inst = kit_instances::kit_instance(vertex_no_morph.kit_record);
-    var out = shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag);
+    var out = shade_kit_vertex(vertex, kit_instances::kit_world_from_local(inst), inst.translation, inst.tag,
+        kit_instances::kit_field(vertex_no_morph.kit_record), true);
     // A band draw (crates/hex-render/src/kit_instances.rs, `KitSlotDraw::band`): the part's level in
     // its LOD's cross-fade band, as the per-entity entry below writes it from the VisibilityRange.
 @if(VISIBILITY_RANGE_DITHER)
@@ -255,7 +267,8 @@ fn vertex(vertex_no_morph: Vertex) -> KitVertexOutput {
         local.tangent = vec4(posed.tangent, local.tangent.w);
     }
 }
-    var out = shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index);
+    var out = shade_kit_vertex(local, mesh_world_from_local, wind_origin, vertex_no_morph.instance_index,
+        vec4(0.0), false);
     // The LOD cross-fade level of this entity's VisibilityRange band, as bevy's mesh.wesl writes it;
     // kit_material.wesl dithers on it like the prepass, so two LODs split the band pixel for pixel.
 @if(VISIBILITY_RANGE_DITHER)
