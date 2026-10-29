@@ -20,8 +20,9 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
   Deferred by the owner: rivers, waterfalls and rail at levels; other raised tile types (only Meadow rises); portal lamps stay inert until P5.
 
   Open:
-  - KTX2 re-encode drift card 01a185e1f1a6 (high);
+  - KTX2 re-encode drift card 01a185e1f1a6: root cause found 2026-10-29. It is the b6cd857/6e96b12 encoder settings change, not drift: the old flags reproduce the committed core-set bytes. kit-compress now warns on legacy re-encodes (`171d4e6`). Blocked on the owner: re-encode the 95 legacy items now, or with the KTX-Software 5.x upgrade (recommended, card 01a179379e46);
   - back-to-back portals with no cover count as a tunnel (owner question).
+- 2026-10-29: P2 MVP card 01a131b7cbb8 closed (all PRD §15 P2 boxes checked; checkall-ci and kit-check green on main `171d4e6`, web-smoke green on MiniMac). P3's open boxes wait on the deferred recipe system. The P4 deferred minors (card 01a186acf224) are being worked.
 - Later 2026-10-28: the shots-photo tree click moved to the forked oak at 35.84 m (`8dd98cb`/`683eb8c`, card closed), `e2e/persist.mjs` reads only a settled save state (`d1b16b0`, flake card closed), and the close-camera regression since c032d97 is noise (paired c032d97/4897f2e/main run, card closed; `docs/perf/close-camera-regression-2026-10-28/`).
 - A45 O1 (owner 2026-10-28): shared scatter is parked on branch `worktree-agent-abbcb3566f8fc0322` (it failed the no-camera-slower bar at 2,048, 1,536 and 1,024: the 2,066-tile overview is about 0.1 ms slower); 6235e5e is kept, the farms world stays tracked.
 - Grass cost on MiniMac web (`docs/perf/grass-cost-2026-10-28/`, 31.34 ms with grass off): Sparse +2.1, Normal +4.2, Lush +6.4 ms; sway +3.7 ms at the close camera. The base M4 is GPU-bound, so the p95 16.6 ms target cannot hold there. Owner A46 O1 accepted it as the P2 result (grass box checked, card 01a13c876aaf closed); the sway cut has its own card 01a183f767ec. The 12 matte-foliage pieces are owner-approved, so the approvals and open-questions pages are empty.
