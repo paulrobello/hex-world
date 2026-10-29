@@ -38,7 +38,21 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-SECTIONS = []
+SECTIONS = [
+    ("A53", "Mega tiles: massif_granite reference (checkpoint C1)", [
+        ("Q1", "Which reference should the massif be built from? Modelling starts only after you pick one. ref-1 is a low granite dome with tors; ref-2 is a craggy peak of about 36 m with cliffs, scree fans and a few pines; ref-3 is a low heather and boulder-field hill; ref-4 is a second roll of ref-2's prompt from a low camera, to judge the seam and silhouette. The meadow_base refs are there for the grass colour only (the massif's walls use the O4 dark-earth skirt)."),
+        ("Q2", "Peak height. Height sets bird clearance, the walker collider and the picker thumbnail frame."),
+        ("Q3", "Scree and boulders. Your rule is that rocks are runtime scatter, never baked."),
+    ], [
+        ("Q1 O1", "ref-2 (recommended: its rock is landform, cliffs and scree, not loose scatter; ref-1 and ref-3 carry loose boulders across the ring that would be baked scatter)."),
+        ("Q1 O2", "ref-1, the tor dome."),
+        ("Q1 O3", "ref-3, the heather hill."),
+        ("Q2 O1", "About 36 m, as drawn in ref-2 (recommended)."),
+        ("Q2 O2", "Lower, about 24 m."),
+        ("Q3 O1", "Cliffs and scree fans on the peak are sculpted into the piece as landform; loose boulders on the ring stay runtime scatter (recommended)."),
+        ("Q3 O2", "No scree in the piece; all loose rock is runtime scatter."),
+    ], [(ROOT / "docs/checkpoints/massif_granite/reference/refs-sheet.jpg", "massif_granite ref-1 to ref-4 above the approved meadow_base ref-1 and ref-2")]),
+]
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -59,7 +73,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). No question is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). A53 (the massif reference, checkpoint C1) is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
