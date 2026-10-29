@@ -330,7 +330,7 @@
   - `walker_stands_on_a_raised_meadow`: `stand` at a level-1 meadow centre gives y ≈ 4.0.
   - `cliff_blocks_a_step`: a step from a level-0 cell onto an adjacent level-1 cell is refused.
   - `hillside_is_walkable`: a walk across `road_ramp` from edge 3 to edge 0 never exceeds `MAX_STEP` per 0.25 m.
-  - `car_pitches_on_a_ramp`: `grounded_transform` on the ramp centreline gives pitch ≈ atan(0.144) within 0.02 rad.
+  - `car_pitches_on_a_ramp`: `grounded_transform` on the ramp centreline mid-slope gives pitch ≈ atan(4/(2·13.8564−4)) ≈ atan(0.169) within 0.02 rad, and ≈ 0 at the ramp's road edges (vertical curves, Task 4 ruling).
   - `pick_hits_the_raised_top_first`: a ray at 25° elevation aimed at a level-2 cell's top returns that cell, not the level-0 cell its y = 0 hit lies in.
 
 - [ ] **Step 2: Run** `cargo test -p hex-play walk cars boids && cargo test -p hex-app camera`. Expected: FAIL.
