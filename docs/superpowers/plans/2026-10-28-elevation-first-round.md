@@ -25,6 +25,7 @@
 - Flat worlds are unchanged: `make thumbs` dirties only the new tiles' thumbnails plus the contact sheet.
 - New pipelines stay within WebGPU's 16 sampled textures per stage.
 - The HUD rules mirror (`web/ui/src/rules.ts`, parity-tested) must agree with Rust after every task, so each task that changes placement updates `rules.ts` and runs `make ui-schema` in the same commit.
+- Visual standard (owner, 2026-10-29: "the visuals of this project are amazing and must be held to the established standard"). Runtime hillside ground and cliff columns must be indistinguishable in material, shading, AO and grass/scatter density from the baked Meadow beside them. The portal must match its owner-approved reference and the approved kit's quality (bridges, walls and hedges, the well). Every visible change gets in-engine review shots beside the existing look, and the owner sees them before the merge to main. A green gate is not a visual pass.
 - Every task ends green on `make checkall` (redirect to a file and read the real exit code, never pipe). The last task runs `make checkall-ci`. Any bridge or catalog change runs `make ui-schema`.
 - Sub-agents run no `kanban` command. GPU captures and perf runs happen only inside windows the orchestrator books.
 
@@ -308,6 +309,7 @@
 
 - [ ] **Step 4: Run** `make checkall > /tmp/elev-t7.log 2>&1; echo EXIT=$?`. Expected: `EXIT=0`. Run `make run ARGS="--scenario play"` and place a raised meadow and a hillside to confirm they render. Capture screenshots only inside a booked window (orchestrator).
 
+- [ ] **Step 4b: Visual parity check.** In a booked load-sensitive window, the controller captures, through `make shots-piece`-style scripts into `docs/checkpoints/elevation/visual-parity/`, a raised Meadow and a hillside ring beside flat Meadow at the play camera and a low camera, plus a cliff edge, at the same light. The hillside cap must show the same grass colour, normal detail, AO and blade and scatter density as the flat Meadow, with no seam, shading crease or facet lines at shared edges. Any visible difference is a finding for this task, not a later one. The owner reviews these shots.
 - [ ] **Step 5: Commit** `feat(play): raised tiles, cliff columns and runtime hillside ground (P4)`.
 
 ### Task 8: Walkers, cars, camera picking and boids over raised ground
