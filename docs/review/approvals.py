@@ -2,7 +2,7 @@
 
 Run from the repo root: python3 docs/review/approvals.py
 The page reads the tree as it is: a piece is listed while its newest piece-gate decision in
-approvals.json is not an owner approval (a rebuild's pending re-approval request lists it again),
+approvals.json is not an owner approval, or while a manifest piece has no approvals.json at all (a rebuild's pending re-approval request lists it again),
 a cue until its provenance records the owner's approval. Decisions made on the
 page stay in the browser; "Copy answers" puts them on the clipboard to paste into chat, and the
 orchestrator records them. Rerun after each landing to drop what was approved.
@@ -57,12 +57,16 @@ def owner_approved(rows: list) -> bool:
 def pending_pieces() -> list[dict]:
     manifest = {p["id"]: p for p in json.loads((ROOT / "assets/kit/manifest.json").read_text())["pieces"]}
     out = []
-    for f in sorted((ROOT / "assets-source/kit").glob("*/approvals.json")):
-        pid = f.parent.name
-        rows = json.loads(f.read_text())
+    kit = ROOT / "assets-source/kit"
+    # A shipped piece with no approvals.json was never put to the owner, so it is listed too.
+    ids = sorted({f.parent.name for f in kit.glob("*/approvals.json")} | set(manifest))
+    for pid in ids:
+        f = kit / pid / "approvals.json"
+        rows = json.loads(f.read_text()) if f.exists() else []
         if owner_approved(rows):
             continue
-        note = next((r.get("notes", "") for r in reversed(rows) if r.get("gate") == "piece"), "")
+        note = next((r.get("notes", "") for r in reversed(rows) if r.get("gate") == "piece"),
+                    "" if f.exists() else "No approvals.json: this shipped piece has no owner piece approval on record.")
         prov = f.parent / "provenance.json"
         lods = json.loads(prov.read_text()).get("lods", []) if prov.exists() else []
         images = []
