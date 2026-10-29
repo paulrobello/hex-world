@@ -40,15 +40,15 @@ B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/wa
 
 SECTIONS = [
     ("A54", "Mega tiles: massif_granite rock texture and pines", [
-        ("Q1", "Texture route for the 36 m peak. The kit gate asks for 256 px/m on a unique bake; one 2048 px rock map over a peak this size reaches about 32 px/m (31.8 px/m rock, 30.8 px/m scree), so the cliffs read soft up close (sheet: the cliff foot at ~30 m). The first build's shape is a smooth cone and is being reworked toward ref-2's buttresses and slabs now; this question is only about texturing."),
+        ("Q1", "Texture route for the 36 m peak. The kit gate asks for 256 px/m on a unique bake; one 2048 px rock map over a peak this size reaches about 21.5 px/m now that the rock is true 3-D slabs (it was 32 px/m on the first, smoother build), so the cliffs read soft up close (sheet: the cliff foot at ~30 m). The shape is still being reworked toward ref-2 (a broader mountain with ribs running into the ring); this question is only about texturing."),
         ("Q2", "The few pines on the lower slopes in ref-2."),
     ], [
-        ("Q1 O1", "Unique bake for rock and scree with a gate floor scoped to this piece at 30 px/m, like the boulders' scoped floor of 100 (recommended by the asset agent: simplest, one material, no new texture set; soft at walk-mode distance)."),
+        ("Q1 O1", "Unique bake for rock and scree with a gate floor scoped to this piece at 20 px/m, like the boulders' scoped floor of 100 (recommended by the asset agent: simplest, one material, no new texture set; soft at walk-mode distance)."),
         ("Q1 O2", "Unique bake for the rock, scree on the existing gravel texture set (same rock softness, crisper scree)."),
         ("Q1 O3", "A new tileable world-space granite set for the cliffs, sharp at any distance (orchestrator's pick if close-up quality matters: one more texture set and a new material path, a larger change)."),
         ("Q2 O1", "Runtime scatter rule on the lower slopes, like every other tree and rock (recommended: your rule that scatter is never baked)."),
         ("Q2 O2", "Baked into the piece."),
-    ], [(ROOT / "docs/checkpoints/massif_granite/texture-routes-sheet.jpg", "First build, headless EEVEE (Blender's view transform; no runtime grass or pines): ref-2 and ref-4, the play and low cameras, the cliff foot at ~30 m, and the three texture routes")]),
+    ], [(ROOT / "docs/checkpoints/massif_granite/texture-routes-sheet.jpg", "Second (column-rock) pass, headless EEVEE, texture route O1 (Blender's view transform; no runtime grass or pines): ref-2 and ref-4, the play and low cameras, the cliff foot at ~30 m, and the first pass for comparison")]),
 ]
 
 CSS = """
