@@ -1,6 +1,6 @@
 # Mega tiles, first round (P4 massifs): design
 
-Status: **draft, not approved.** Written 2026-10-29 from the read-only scoping in card `01a13bcc6f8d` and the recommended options of open question A52 (`docs/review/2026-10-26-open-questions.html`). Each decision marked *(A52 Qn O1, provisional)* is the recommendation and stands until the owner answers A52. Nothing is built until the owner approves this document.
+Status: **approved by the owner 2026-10-29 ("approved"), with A52 answered O1 for every question.** Written 2026-10-29 from the read-only scoping in card `01a13bcc6f8d`. Decisions marked *(A52 Qn O1)* are the owner's answers. The plan corrects "12 outer edges" to 18 outer edges facing 12 neighbour cells (Goal 2 already says so).
 
 ## Intent
 
@@ -9,17 +9,17 @@ A40 O1 (owner, 2026-10-27) gives single-tile hills and peaks, and says "bigger m
 ## Goals
 
 1. One tile type, the **massif**, occupies 7 cells: a centre and its ring. It places, rotates, undoes, saves and bulldozes as a single tile.
-2. Its 18 outer edges (three on each ring cell, facing the 12 cells around the footprint) sit flat at the tile's own level, the way a raised Meadow's edges do. The peak rises inside the footprint, so neighbours meet it with today's seam, cliff and hillside rules *(A52 Q1 O1, provisional)*.
+2. Its 18 outer edges (three on each ring cell, facing the 12 cells around the footprint) sit flat at the tile's own level, the way a raised Meadow's edges do. The peak rises inside the footprint, so neighbours meet it with today's seam, cliff and hillside rules *(A52 Q1 O1)*.
 3. Its ground is visually continuous with the baked Meadow beside it: the same grass, shading, blade and scatter density at the outer ring (the owner's visual standard, memory `visual-standard.md`).
-4. Placement needs all 7 cells empty and at least one placed neighbour outside the footprint. The ghost shows the whole footprint, and R turns it about the centre (six rotations) *(A52 Q4 O1, provisional)*.
+4. Placement needs all 7 cells empty and at least one placed neighbour outside the footprint. The ghost shows the whole footprint, and R turns it about the centre (six rotations) *(A52 Q4 O1)*.
 5. Saves keep one entry per mega tile, at the centre cell, whose definition implies the footprint. No format bump: the wire `Tile` (`hex-core/src/save.rs`) already carries `q, r, level, def, rotation, seed`. Decode expands the footprint and validates it.
-6. The HUD learns whether a mega tile fits by asking the engine through the bridge (a published `mega_slots` state field), instead of mirroring the 7-cell rules in `rules.ts` *(A52 Q6 O1, provisional)*.
+6. The HUD learns whether a mega tile fits by asking the engine through the bridge (a published `mega_slots` state field), instead of mirroring the 7-cell rules in `rules.ts` *(A52 Q6 O1)*.
 
 ## Non-goals (this round)
 
-- Roads, rails and rivers on or across a massif: every outer edge is plain ground *(A52 Q2 O1, provisional)*.
-- Tunnels under a massif: refused *(A52 Q3 O1, provisional)*.
-- Replacing a massif with single tiles, or the reverse: refused. Bulldoze and undo remove the whole footprint *(A52 Q5 O1, provisional)*.
+- Roads, rails and rivers on or across a massif: every outer edge is plain ground *(A52 Q2 O1)*.
+- Tunnels under a massif: refused *(A52 Q3 O1)*.
+- Replacing a massif with single tiles, or the reverse: refused. Bulldoze and undo remove the whole footprint *(A52 Q5 O1)*.
 - Outer edges at more than one level (A52 Q1 O2).
 - Other mega-tile features (lakes, castles, towns). The footprint machinery is general, but only the massif ships.
 - Scatter or walkers on the slopes beyond what the ring cells' Meadow ground already carries.

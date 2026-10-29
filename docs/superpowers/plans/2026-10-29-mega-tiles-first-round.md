@@ -1,6 +1,6 @@
 # Mega Tiles First Round (P4 massifs) Implementation Plan
 
-Status: **draft, pending owner approval of the spec and A52.** Nothing is executed until both are approved.
+Status: **approved by the owner 2026-10-29 ("approved"); A52 resolved O1 for Q1 to Q6.**
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,7 +10,7 @@ Status: **draft, pending owner approval of the spec and A52.** Nothing is execut
 
 **Tech Stack:** Rust workspace (hex-core, hex-sim, hex-play-state, hex-play, hex-render, hex-app), Bevy 0.20, TypeScript HUD (`web/ui`), headless Blender generators (`blender-asset` skill).
 
-**Spec:** `docs/superpowers/specs/2026-10-29-mega-tiles-design.md` (draft). Decisions marked provisional there are A52's recommended options (`docs/review/2026-10-26-open-questions.html`). This plan assumes A52 Q1 to Q6 all resolve to O1. If the owner picks any O2, the plan is rewritten before execution.
+**Spec:** `docs/superpowers/specs/2026-10-29-mega-tiles-design.md` (approved). A52 Q1 to Q6 resolved O1.
 
 ## Corrections to the spec this plan makes
 
