@@ -38,18 +38,7 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-SECTIONS = [
-    ("A54", "Mega tiles: massif_granite rock texture and pines", [
-        ("Q1", "Texture route for the 36 m peak. The kit gate asks for 256 px/m on a unique bake; one 2048 px rock map over a peak this size reaches about 21.5 px/m now that the rock is true 3-D slabs (it was 32 px/m on the first, smoother build), so the cliffs read soft up close (sheet: the cliff foot at ~30 m). The shape is still being reworked toward ref-2 (a broader mountain with ribs running into the ring); this question is only about texturing."),
-        ("Q2", "The few pines on the lower slopes in ref-2."),
-    ], [
-        ("Q1 O1", "Unique bake for rock and scree with a gate floor scoped to this piece at 20 px/m, like the boulders' scoped floor of 100 (recommended by the asset agent: simplest, one material, no new texture set; soft at walk-mode distance)."),
-        ("Q1 O2", "Unique bake for the rock, scree on the existing gravel texture set (same rock softness, crisper scree)."),
-        ("Q1 O3", "A new tileable world-space granite set for the cliffs, sharp at any distance (orchestrator's pick if close-up quality matters: one more texture set and a new material path, a larger change)."),
-        ("Q2 O1", "Runtime scatter rule on the lower slopes, like every other tree and rock (recommended: your rule that scatter is never baked)."),
-        ("Q2 O2", "Baked into the piece."),
-    ], [(ROOT / "docs/checkpoints/massif_granite/texture-routes-sheet.jpg", "Second (column-rock) pass, headless EEVEE, texture route O1 (Blender's view transform; no runtime grass or pines): ref-2 and ref-4, the play and low cameras, the cliff foot at ~30 m, and the first pass for comparison")]),
-]
+SECTIONS = []
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -70,7 +59,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). A53 answered 2026-10-29 (ref-2, as drawn). A54 (massif texture route and pines) is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). A53 answered 2026-10-29 (ref-2, as drawn). A54 answered 2026-10-29 (O1, O1). No question is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
