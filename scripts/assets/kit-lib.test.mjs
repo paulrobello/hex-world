@@ -1,7 +1,7 @@
 // node --test scripts/assets/kit-lib.test.mjs (run by make ui-test, so CI runs it). Node builtins and kit-lib only.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { kitItemDir, ktxPlatformError } from "./kit-lib.mjs";
+import { encodeSettingsDrift, kitItemDir, ktxPlatformError } from "./kit-lib.mjs";
 
 const manifest = {
   version: 1,
@@ -49,4 +49,29 @@ test("kit-compress states its platform limit up front on any host but macOS arm6
     assert.match(e, new RegExp(`macOS arm64 only .*this host is ${platform} ${arch}`));
     assert.match(e, /Apple Silicon Mac/);
   }
+});
+
+test("encodeSettingsDrift names each encoder setting a re-encode changes, and the legacy encodes by commit", () => {
+  const now = { toolVersions: { ktxSoftware: "ktx version: v4.4.2" },
+    settings: { uastcQuality: 4, uastcThreads: 1, uastcAslrOff: true, zstd: 18, rdo: { normal: { srgb: false, rdo: 0.25 } } } };
+  assert.deepEqual(encodeSettingsDrift(now, structuredClone(now)), []);
+  // Key order inside a setting is not a change.
+  const reordered = structuredClone(now);
+  reordered.settings.rdo = { normal: { rdo: 0.25, srgb: false } };
+  assert.deepEqual(encodeSettingsDrift(reordered, now), []);
+  // The core material sets' committed reports (2026-10-16): neither the thread pin nor the ASLR-off spawn.
+  const legacy = structuredClone(now);
+  delete legacy.settings.uastcThreads;
+  delete legacy.settings.uastcAslrOff;
+  assert.deepEqual(encodeSettingsDrift(legacy, now), [
+    "settings.uastcAslrOff: absent (encoded before 6e96b12, 2026-10-26, with ASLR on) -> true",
+    "settings.uastcThreads: absent (encoded before b6cd857, 2026-10-21, with the RDO pass split across up to 4 threads) -> 1",
+  ]);
+  const other = structuredClone(now);
+  other.settings.zstd = 20;
+  other.toolVersions.ktxSoftware = "ktx version: v5.0.0";
+  assert.deepEqual(encodeSettingsDrift(now, other),
+    ["settings.zstd: 18 -> 20", "toolVersions.ktxSoftware: ktx version: v4.4.2 -> ktx version: v5.0.0"]);
+  // No committed report (a first compress): every current setting is new, which the caller skips.
+  assert.equal(encodeSettingsDrift(undefined, now).length, 6);
 });

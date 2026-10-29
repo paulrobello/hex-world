@@ -54,3 +54,27 @@ export function kitItemDir(manifest, kind, id) {
   throw new Error(`${id}: cannot derive its output folder from the manifest (${why}); pass --out`);
 }
 export const fullLevels = (w, h) => Math.floor(Math.log2(Math.max(w, h))) + 1;
+
+// Why a re-encode's KTX2 bytes can differ from the committed ones: each encoder setting or ktx version
+// that differs between the item's committed compress report and the new one. A report with no
+// uastcThreads predates b6cd857 (2026-10-21: the RDO pass split across up to 4 threads); one with no
+// uastcAslrOff predates 6e96b12 (2026-10-26: the encode ran with ASLR on). Both encoded the same PNG to
+// other bytes than today's encoder does, so a recompress of those items changes their KTX2 files.
+const LEGACY = {
+  uastcThreads: "absent (encoded before b6cd857, 2026-10-21, with the RDO pass split across up to 4 threads)",
+  uastcAslrOff: "absent (encoded before 6e96b12, 2026-10-26, with ASLR on)",
+};
+export function encodeSettingsDrift(committed, current) {
+  const canon = (v) => JSON.stringify(v, (_, x) => (x && typeof x === "object" && !Array.isArray(x)
+    ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => a.localeCompare(b))) : x));
+  const was = committed?.settings ?? {}, now = current?.settings ?? {};
+  const out = [];
+  for (const k of [...new Set([...Object.keys(was), ...Object.keys(now)])].sort()) {
+    if (canon(was[k]) === canon(now[k])) continue;
+    const from = k in was ? canon(was[k]) : (LEGACY[k] ?? "absent");
+    out.push(`settings.${k}: ${from} -> ${k in now ? canon(now[k]) : "absent"}`);
+  }
+  const [kv, kn] = [committed?.toolVersions?.ktxSoftware, current?.toolVersions?.ktxSoftware];
+  if (kv !== kn) out.push(`toolVersions.ktxSoftware: ${kv ?? "absent"} -> ${kn ?? "absent"}`);
+  return out;
+}

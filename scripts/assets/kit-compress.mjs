@@ -11,7 +11,7 @@ import { reorder } from "@gltf-transform/functions";
 import { MeshoptEncoder } from "meshoptimizer";
 import validator from "gltf-validator";
 import sharp from "sharp";
-import { CHANNELS, GLB_MAX, KTX_BUDGETS, VK, fullLevels, kitItemDir, ktx2Header, ktxPlatformError, sha256 } from "./kit-lib.mjs";
+import { CHANNELS, GLB_MAX, KTX_BUDGETS, VK, encodeSettingsDrift, fullLevels, kitItemDir, ktx2Header, ktxPlatformError, sha256 } from "./kit-lib.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const KTX = join(ROOT, "tools/ktx-4.4.2");
@@ -175,7 +175,7 @@ async function compressInto({ stageDir, work, outDir, name, budgetClass, ktxMax,
   };
   const report = { name, date: new Date().toISOString(), toolVersions: {
       gltfTransform: "4.3.0", meshoptimizer: "0.25.0", ktxSoftware: ktx("--version").trim(), node: process.version },
-    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, uastcThreads: UASTC_THREADS, zstd: 18, rdo: CHANNELS,
+    settings: { meshopt: "EXT_meshopt_compression QUANTIZE (FLOAT attributes)", uastcQuality: 4, uastcThreads: UASTC_THREADS, uastcAslrOff: true, zstd: 18, rdo: CHANNELS,
       ...(Object.keys(pngSizes).length ? { pngFallbackSize: pngSizes } : {}) },
     textureEncodes: [], budgets: { class: budgetClass, ktxMax, ktxBytes: { bc7: 0, astc: 0 } } };
   await mkdir(work, { recursive: true });
@@ -220,6 +220,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const cfg = await readFile(resolve(ROOT, `assets-source/kit/${sub}/compress.json`), "utf8").then(JSON.parse, () => ({}));
   const budgetClass = opt("class", "") || (exp.budgetClass ?? (kind === "material" ? "tileable" : "piece"));
   const pngSizes = { ...(cfg.pngFallbackSize ?? {}), ...(exp.pngFallbackSize ?? {}) };
+  const reportPath = resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`));
+  const committed = await readFile(reportPath, "utf8").then(JSON.parse, () => undefined);
   let rep;
   try {
     // Default output: the item's folder under assets/kit as the runtime manifest lays it out.
@@ -227,10 +229,17 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       kitItemDir(JSON.parse(await readFile(join(ROOT, "assets/kit/manifest.json"), "utf8")), kind, name));
     rep = await compressDir({ name, budgetClass, stageDir, piece: kind === "piece", pngSizes,
       outDir: resolve(ROOT, out),
-      reportPath: resolve(ROOT, opt("report", `assets-source/kit/${sub}/compress-report.json`)) });
+      reportPath });
   } catch (e) {
     console.error(`kit-compress: ${e.message}`);
     process.exit(1);
   }
+  // Non-blocking: a deliberate re-encode is legitimate, but its KTX2 bytes change for these reasons,
+  // not drift, and its provenance needs rewriting.
+  const drift = committed ? encodeSettingsDrift(committed, rep) : [];
+  const ktxSha = (r) => new Map((r?.textureEncodes ?? []).filter((t) => t.family !== "png").map((t) => [`${t.channel}.${t.family}`, t.sha256]));
+  const changed = [...ktxSha(rep)].filter(([k, h]) => ktxSha(committed).get(k) !== h).length;
+  if (committed && drift.length)
+    console.warn(`kit-compress: warning: ${name} was encoded with other settings than today's, so its KTX2 bytes change on re-encode (${changed} files changed):\n  ${drift.join("\n  ")}`);
   console.log(`${name} [${rep.budgets.class}]: glb ${rep.glb?.bytes ?? "-"} B, ktx bc7 ${rep.budgets.ktxBytes.bc7} B, astc ${rep.budgets.ktxBytes.astc} B`);
 }
