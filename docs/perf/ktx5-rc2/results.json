@@ -1,0 +1,5496 @@
+{
+ "summary": {
+  "maps": 391,
+  "ktx": "5.0.0-rc2",
+  "changed": {
+   "bc7": 391,
+   "astc": 391
+  },
+  "bytes": {
+   "bc7": {
+    "old": 94838565,
+    "new": 94705110
+   },
+   "astc": {
+    "old": 94657380,
+    "new": 94493705
+   }
+  }
+ },
+ "results": [
+  {
+   "item": "animal_cow_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 155379,
+    "newBytes": 160683,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 153620,
+    "newBytes": 158164,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 4182,
+    "newBytes": 4000,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 4551,
+    "newBytes": 4344,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 80268,
+    "newBytes": 80199,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 76591,
+    "newBytes": 76575,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 94221,
+    "newBytes": 92967,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 99804,
+    "newBytes": 98708,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 138255,
+    "newBytes": 142382,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 137187,
+    "newBytes": 140878,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5680,
+    "newBytes": 5306,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 6074,
+    "newBytes": 5687,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 79065,
+    "newBytes": 78985,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 75431,
+    "newBytes": 75343,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 93661,
+    "newBytes": 92954,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 98844,
+    "newBytes": 98174,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 154952,
+    "newBytes": 160931,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 152562,
+    "newBytes": 157385,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5680,
+    "newBytes": 5306,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 6074,
+    "newBytes": 5687,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 79065,
+    "newBytes": 78985,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 75431,
+    "newBytes": 75343,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_cow",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 91508,
+    "newBytes": 90643,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 96663,
+    "newBytes": 95622,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 303951,
+    "newBytes": 306872,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 304336,
+    "newBytes": 306199,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7218,
+    "newBytes": 6932,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7796,
+    "newBytes": 7462,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 179763,
+    "newBytes": 179644,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 181863,
+    "newBytes": 181743,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 88904,
+    "newBytes": 88468,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 90908,
+    "newBytes": 90483,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 298179,
+    "newBytes": 301482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 299028,
+    "newBytes": 301600,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5431,
+    "newBytes": 5236,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 5827,
+    "newBytes": 5660,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 175915,
+    "newBytes": 175455,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 178347,
+    "newBytes": 177886,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 77978,
+    "newBytes": 77650,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 80037,
+    "newBytes": 79635,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 292822,
+    "newBytes": 295211,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 293914,
+    "newBytes": 295394,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7045,
+    "newBytes": 6745,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7526,
+    "newBytes": 7240,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 176682,
+    "newBytes": 176436,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 178605,
+    "newBytes": 178599,
+    "changed": true
+   }
+  },
+  {
+   "item": "animal_sheep",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 85660,
+    "newBytes": 85137,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 87441,
+    "newBytes": 86900,
+    "changed": true
+   }
+  },
+  {
+   "item": "asphalt",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 806406,
+    "newBytes": 805178,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 852656,
+    "newBytes": 851313,
+    "changed": true
+   }
+  },
+  {
+   "item": "asphalt",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 531726,
+    "newBytes": 530409,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 508672,
+    "newBytes": 507542,
+    "changed": true
+   }
+  },
+  {
+   "item": "bakery_pad",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 12573,
+    "newBytes": 12491,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 12000,
+    "newBytes": 11915,
+    "changed": true
+   }
+  },
+  {
+   "item": "bakery_shop_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 392976,
+    "newBytes": 391870,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 370586,
+    "newBytes": 369398,
+    "changed": true
+   }
+  },
+  {
+   "item": "bakery_shop",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 432658,
+    "newBytes": 431308,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 406675,
+    "newBytes": 405449,
+    "changed": true
+   }
+  },
+  {
+   "item": "bark",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 552533,
+    "newBytes": 547171,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 578841,
+    "newBytes": 572749,
+    "changed": true
+   }
+  },
+  {
+   "item": "bark",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 1212717,
+    "newBytes": 1213239,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1182632,
+    "newBytes": 1183937,
+    "changed": true
+   }
+  },
+  {
+   "item": "bark",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 275094,
+    "newBytes": 269675,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 281572,
+    "newBytes": 275194,
+    "changed": true
+   }
+  },
+  {
+   "item": "barn_red_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 292731,
+    "newBytes": 291365,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 278116,
+    "newBytes": 276666,
+    "changed": true
+   }
+  },
+  {
+   "item": "barn_red",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 254886,
+    "newBytes": 253237,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 242691,
+    "newBytes": 241081,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 12584,
+    "newBytes": 11841,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 12715,
+    "newBytes": 12076,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 128599,
+    "newBytes": 127954,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 131717,
+    "newBytes": 131001,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 44657,
+    "newBytes": 45082,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 45964,
+    "newBytes": 46403,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 36613,
+    "newBytes": 36213,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 39202,
+    "newBytes": 38777,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 147175,
+    "newBytes": 147036,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 149409,
+    "newBytes": 149186,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 53317,
+    "newBytes": 53854,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 54553,
+    "newBytes": 55039,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 43908,
+    "newBytes": 43864,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 45727,
+    "newBytes": 45687,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 195104,
+    "newBytes": 194299,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 201020,
+    "newBytes": 199882,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 66121,
+    "newBytes": 66694,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 68140,
+    "newBytes": 68764,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_driftwood",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 55629,
+    "newBytes": 55103,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 58392,
+    "newBytes": 57889,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 705134,
+    "newBytes": 704441,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 689715,
+    "newBytes": 689123,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 775,
+    "newBytes": 689,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 742,
+    "newBytes": 676,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 155818,
+    "newBytes": 156277,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 161324,
+    "newBytes": 162109,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 132238,
+    "newBytes": 132947,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 141788,
+    "newBytes": 143097,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 717189,
+    "newBytes": 716416,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 696038,
+    "newBytes": 695416,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 775,
+    "newBytes": 689,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 742,
+    "newBytes": 676,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 155663,
+    "newBytes": 156033,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 161418,
+    "newBytes": 162098,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 131327,
+    "newBytes": 132222,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 141304,
+    "newBytes": 142113,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 740992,
+    "newBytes": 740139,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 720721,
+    "newBytes": 719722,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 775,
+    "newBytes": 689,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 742,
+    "newBytes": 676,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 162151,
+    "newBytes": 162977,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 168058,
+    "newBytes": 168977,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_dunegrass",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 132800,
+    "newBytes": 133534,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 142083,
+    "newBytes": 143088,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_inner_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 14200,
+    "newBytes": 14095,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 13956,
+    "newBytes": 13943,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_outer_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 14272,
+    "newBytes": 14332,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 13922,
+    "newBytes": 13926,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_pebbles_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_pebbles_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   }
+  },
+  {
+   "item": "beach_pebbles",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_goldfinch",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 76270,
+    "newBytes": 75504,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 75792,
+    "newBytes": 74964,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_goldfinch",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 3200,
+    "newBytes": 3123,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 3200,
+    "newBytes": 3161,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_goldfinch",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 51480,
+    "newBytes": 51066,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 51895,
+    "newBytes": 51683,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_goldfinch",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 54161,
+    "newBytes": 53901,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 56744,
+    "newBytes": 56461,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_starling",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 73389,
+    "newBytes": 72347,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 72824,
+    "newBytes": 71976,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_starling",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 3237,
+    "newBytes": 3148,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 3218,
+    "newBytes": 3163,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_starling",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 54832,
+    "newBytes": 53751,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 55678,
+    "newBytes": 54651,
+    "changed": true
+   }
+  },
+  {
+   "item": "bird_starling",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 52721,
+    "newBytes": 52293,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 54930,
+    "newBytes": 54588,
+    "changed": true
+   }
+  },
+  {
+   "item": "boat_rowing",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 331030,
+    "newBytes": 329616,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320273,
+    "newBytes": 318954,
+    "changed": true
+   }
+  },
+  {
+   "item": "boat_sail",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 265185,
+    "newBytes": 264448,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 256174,
+    "newBytes": 255542,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 715462,
+    "newBytes": 713798,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 739544,
+    "newBytes": 737871,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 13847,
+    "newBytes": 13769,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 13317,
+    "newBytes": 13235,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 123672,
+    "newBytes": 123672,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 126550,
+    "newBytes": 126430,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 128969,
+    "newBytes": 128318,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 131619,
+    "newBytes": 130946,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 676391,
+    "newBytes": 673732,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 695478,
+    "newBytes": 692792,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 11543,
+    "newBytes": 11413,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 11093,
+    "newBytes": 10931,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 114491,
+    "newBytes": 114243,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 117264,
+    "newBytes": 117039,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 107781,
+    "newBytes": 106932,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 109683,
+    "newBytes": 108778,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_d",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 767300,
+    "newBytes": 765969,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 778716,
+    "newBytes": 777219,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_d",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 17689,
+    "newBytes": 17637,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 16936,
+    "newBytes": 16901,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_d",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 109104,
+    "newBytes": 109247,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 110636,
+    "newBytes": 110526,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite_d",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 127559,
+    "newBytes": 127300,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 129039,
+    "newBytes": 128728,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 208490,
+    "newBytes": 207628,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 213022,
+    "newBytes": 212034,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 12217,
+    "newBytes": 12108,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 11930,
+    "newBytes": 11800,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 144841,
+    "newBytes": 144380,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 148551,
+    "newBytes": 147976,
+    "changed": true
+   }
+  },
+  {
+   "item": "boulder_granite",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 131138,
+    "newBytes": 130602,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 136671,
+    "newBytes": 136094,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 554193,
+    "newBytes": 553457,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 562472,
+    "newBytes": 561602,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 147454,
+    "newBytes": 147689,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 146274,
+    "newBytes": 146454,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 201248,
+    "newBytes": 200976,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 196046,
+    "newBytes": 195793,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 526045,
+    "newBytes": 525263,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 526643,
+    "newBytes": 525748,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 151904,
+    "newBytes": 152095,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 150849,
+    "newBytes": 151119,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 215648,
+    "newBytes": 215853,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 209776,
+    "newBytes": 209922,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 472077,
+    "newBytes": 471590,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 479677,
+    "newBytes": 478933,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 150367,
+    "newBytes": 150491,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 149423,
+    "newBytes": 149556,
+    "changed": true
+   }
+  },
+  {
+   "item": "bush_verge",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 205201,
+    "newBytes": 205205,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 200216,
+    "newBytes": 200159,
+    "changed": true
+   }
+  },
+  {
+   "item": "car_pickup",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 128399,
+    "newBytes": 127837,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 124071,
+    "newBytes": 123482,
+    "changed": true
+   }
+  },
+  {
+   "item": "car_sedan",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 126338,
+    "newBytes": 125754,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 122681,
+    "newBytes": 121907,
+    "changed": true
+   }
+  },
+  {
+   "item": "car_van",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 113962,
+    "newBytes": 113487,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 110295,
+    "newBytes": 109740,
+    "changed": true
+   }
+  },
+  {
+   "item": "fence_paddock",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 836,
+    "newBytes": 800,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 824,
+    "newBytes": 780,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 419028,
+    "newBytes": 417362,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 421859,
+    "newBytes": 420142,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 111222,
+    "newBytes": 111493,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 110938,
+    "newBytes": 111122,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 226356,
+    "newBytes": 225883,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 234693,
+    "newBytes": 233826,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 413141,
+    "newBytes": 411867,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 415009,
+    "newBytes": 413773,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 111877,
+    "newBytes": 111839,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 111676,
+    "newBytes": 111838,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 228693,
+    "newBytes": 228572,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 237529,
+    "newBytes": 237325,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 414375,
+    "newBytes": 413234,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 416936,
+    "newBytes": 415842,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 109757,
+    "newBytes": 109715,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 109456,
+    "newBytes": 109472,
+    "changed": true
+   }
+  },
+  {
+   "item": "fern_clump",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 227556,
+    "newBytes": 226177,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 235794,
+    "newBytes": 234784,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_mackerel",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 64108,
+    "newBytes": 63783,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 63685,
+    "newBytes": 63310,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_mackerel",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_mackerel",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 21957,
+    "newBytes": 21873,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 21972,
+    "newBytes": 21916,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_mackerel",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 55691,
+    "newBytes": 55480,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 57495,
+    "newBytes": 57215,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_trout",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 90021,
+    "newBytes": 88777,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 90205,
+    "newBytes": 88939,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_trout",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_trout",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 25977,
+    "newBytes": 25852,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 25933,
+    "newBytes": 25846,
+    "changed": true
+   }
+  },
+  {
+   "item": "fish_trout",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 69252,
+    "newBytes": 68670,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 70713,
+    "newBytes": 70002,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 173337,
+    "newBytes": 171946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 177592,
+    "newBytes": 175963,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e0",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7214,
+    "newBytes": 6970,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7134,
+    "newBytes": 6896,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e1",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 8513,
+    "newBytes": 8125,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 8371,
+    "newBytes": 8019,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e2",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 8712,
+    "newBytes": 8324,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 8634,
+    "newBytes": 8276,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e3",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7291,
+    "newBytes": 7054,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7172,
+    "newBytes": 6946,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e4",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 8975,
+    "newBytes": 8624,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 8842,
+    "newBytes": 8499,
+    "changed": true
+   }
+  },
+  {
+   "item": "forest_forest_edge_e5",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 9106,
+    "newBytes": 8754,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 9087,
+    "newBytes": 8742,
+    "changed": true
+   }
+  },
+  {
+   "item": "grass",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 1040725,
+    "newBytes": 1040758,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1062926,
+    "newBytes": 1062994,
+    "changed": true
+   }
+  },
+  {
+   "item": "grass",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 543099,
+    "newBytes": 537260,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 560563,
+    "newBytes": 553109,
+    "changed": true
+   }
+  },
+  {
+   "item": "gravel",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 931194,
+    "newBytes": 931451,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 946373,
+    "newBytes": 946128,
+    "changed": true
+   }
+  },
+  {
+   "item": "gravel",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 1219394,
+    "newBytes": 1221354,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1148530,
+    "newBytes": 1148567,
+    "changed": true
+   }
+  },
+  {
+   "item": "gravel",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 580703,
+    "newBytes": 579482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 578256,
+    "newBytes": 577133,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 626478,
+    "newBytes": 625754,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 622513,
+    "newBytes": 621513,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 165707,
+    "newBytes": 165054,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 167592,
+    "newBytes": 167218,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 113772,
+    "newBytes": 112346,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 114023,
+    "newBytes": 112594,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 496395,
+    "newBytes": 495374,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 496644,
+    "newBytes": 495292,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 129152,
+    "newBytes": 128618,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 131665,
+    "newBytes": 131285,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_round",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 72171,
+    "newBytes": 71019,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 71697,
+    "newBytes": 70426,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 638965,
+    "newBytes": 635864,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 658217,
+    "newBytes": 654696,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 185353,
+    "newBytes": 184868,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 190691,
+    "newBytes": 190227,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 158483,
+    "newBytes": 156832,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 162422,
+    "newBytes": 160729,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 649893,
+    "newBytes": 647270,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 669949,
+    "newBytes": 667161,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 641,
+    "newBytes": 655,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 194235,
+    "newBytes": 193408,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 198430,
+    "newBytes": 197631,
+    "changed": true
+   }
+  },
+  {
+   "item": "hay_bale_stack",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 164437,
+    "newBytes": 162498,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 168712,
+    "newBytes": 166601,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_bend",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 469499,
+    "newBytes": 468628,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 477798,
+    "newBytes": 476829,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_bend",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_bend",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 148346,
+    "newBytes": 148540,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 147240,
+    "newBytes": 147391,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_bend",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 201553,
+    "newBytes": 201456,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 196511,
+    "newBytes": 196454,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_end",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471920,
+    "newBytes": 471405,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 479979,
+    "newBytes": 479214,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_end",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_end",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 151010,
+    "newBytes": 151118,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 149908,
+    "newBytes": 150138,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_end",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 207359,
+    "newBytes": 207302,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 202249,
+    "newBytes": 202124,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_junction",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 465596,
+    "newBytes": 465275,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 473365,
+    "newBytes": 472963,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_junction",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_junction",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 147584,
+    "newBytes": 147750,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 146478,
+    "newBytes": 146558,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_junction",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 201449,
+    "newBytes": 201411,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 196402,
+    "newBytes": 196427,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_oak",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 469051,
+    "newBytes": 468857,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 477372,
+    "newBytes": 477128,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_oak",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_oak",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 149431,
+    "newBytes": 149656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 148388,
+    "newBytes": 148652,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_oak",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 205509,
+    "newBytes": 205689,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 200725,
+    "newBytes": 200735,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 470443,
+    "newBytes": 470093,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 478098,
+    "newBytes": 477318,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 149926,
+    "newBytes": 150027,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 148660,
+    "newBytes": 148755,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 207456,
+    "newBytes": 207290,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 202697,
+    "newBytes": 202442,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 474329,
+    "newBytes": 473815,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 483252,
+    "newBytes": 482392,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 946,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 948,
+    "newBytes": 903,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 150200,
+    "newBytes": 150352,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 148896,
+    "newBytes": 149092,
+    "changed": true
+   }
+  },
+  {
+   "item": "hedge_run",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 205543,
+    "newBytes": 205644,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 200515,
+    "newBytes": 200538,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_cottage_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 353812,
+    "newBytes": 353185,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 339426,
+    "newBytes": 338597,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_cottage",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 347365,
+    "newBytes": 346193,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 327581,
+    "newBytes": 326300,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_longhouse",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 361882,
+    "newBytes": 360870,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 341045,
+    "newBytes": 339727,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_pad",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 17535,
+    "newBytes": 17320,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 16780,
+    "newBytes": 16548,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_twostorey_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 315394,
+    "newBytes": 314218,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 296915,
+    "newBytes": 295729,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_twostorey_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 340476,
+    "newBytes": 339378,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 322093,
+    "newBytes": 320967,
+    "changed": true
+   }
+  },
+  {
+   "item": "house_twostorey",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 338367,
+    "newBytes": 337397,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 321430,
+    "newBytes": 320319,
+    "changed": true
+   }
+  },
+  {
+   "item": "landing_stage",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 292267,
+    "newBytes": 291563,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 282511,
+    "newBytes": 281755,
+    "changed": true
+   }
+  },
+  {
+   "item": "lily_cluster_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "lily_cluster_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "lily_cluster",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "litter",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 1039971,
+    "newBytes": 1039572,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1053821,
+    "newBytes": 1053211,
+    "changed": true
+   }
+  },
+  {
+   "item": "litter",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 983748,
+    "newBytes": 994247,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 995386,
+    "newBytes": 1002376,
+    "changed": true
+   }
+  },
+  {
+   "item": "litter",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 421255,
+    "newBytes": 419937,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 427819,
+    "newBytes": 427034,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 401579,
+    "newBytes": 401066,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 411870,
+    "newBytes": 411069,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 4893,
+    "newBytes": 4828,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 4708,
+    "newBytes": 4662,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 152186,
+    "newBytes": 152302,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 146838,
+    "newBytes": 146919,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 122876,
+    "newBytes": 122665,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 126673,
+    "newBytes": 126406,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 444706,
+    "newBytes": 444003,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 461869,
+    "newBytes": 460779,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 3980,
+    "newBytes": 3936,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 3863,
+    "newBytes": 3819,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 187016,
+    "newBytes": 187157,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 181363,
+    "newBytes": 181456,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 143393,
+    "newBytes": 142841,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 146800,
+    "newBytes": 146167,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 593379,
+    "newBytes": 592540,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 610956,
+    "newBytes": 609377,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 6331,
+    "newBytes": 6231,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 6334,
+    "newBytes": 6247,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 221748,
+    "newBytes": 221951,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 213750,
+    "newBytes": 213842,
+    "changed": true
+   }
+  },
+  {
+   "item": "log_fallen",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 177357,
+    "newBytes": 176998,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 182961,
+    "newBytes": 182478,
+    "changed": true
+   }
+  },
+  {
+   "item": "meadow_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 195040,
+    "newBytes": 194027,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 199088,
+    "newBytes": 197459,
+    "changed": true
+   }
+  },
+  {
+   "item": "ocean_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 95873,
+    "newBytes": 95209,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 99234,
+    "newBytes": 98489,
+    "changed": true
+   }
+  },
+  {
+   "item": "outcrop_granite",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 811101,
+    "newBytes": 807671,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 819025,
+    "newBytes": 815578,
+    "changed": true
+   }
+  },
+  {
+   "item": "outcrop_granite",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 30825,
+    "newBytes": 30551,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 29280,
+    "newBytes": 29049,
+    "changed": true
+   }
+  },
+  {
+   "item": "outcrop_granite",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 162386,
+    "newBytes": 161714,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 168160,
+    "newBytes": 167355,
+    "changed": true
+   }
+  },
+  {
+   "item": "outcrop_granite",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 169641,
+    "newBytes": 168696,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 173664,
+    "newBytes": 172768,
+    "changed": true
+   }
+  },
+  {
+   "item": "plaster",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 357672,
+    "newBytes": 358629,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 360904,
+    "newBytes": 360282,
+    "changed": true
+   }
+  },
+  {
+   "item": "plaster",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 818862,
+    "newBytes": 816735,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 822545,
+    "newBytes": 820088,
+    "changed": true
+   }
+  },
+  {
+   "item": "plaster",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 179625,
+    "newBytes": 180895,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 185056,
+    "newBytes": 185058,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_bend_120_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 15387,
+    "newBytes": 15230,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 14224,
+    "newBytes": 14080,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_bend_60_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 12222,
+    "newBytes": 12203,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 11184,
+    "newBytes": 11169,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_buffer_stop",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 123888,
+    "newBytes": 123408,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 119172,
+    "newBytes": 118783,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_junction_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 14570,
+    "newBytes": 14573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 13486,
+    "newBytes": 13455,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_road_crossing_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 12692,
+    "newBytes": 12751,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 12149,
+    "newBytes": 12280,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_station_platform",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 175371,
+    "newBytes": 175077,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 170254,
+    "newBytes": 170005,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_station_shelter",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 380177,
+    "newBytes": 379407,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 363481,
+    "newBytes": 362720,
+    "changed": true
+   }
+  },
+  {
+   "item": "rail_straight_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5190,
+    "newBytes": 5226,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 4812,
+    "newBytes": 4848,
+    "changed": true
+   }
+  },
+  {
+   "item": "reed_bed",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_bend_60_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 119932,
+    "newBytes": 119325,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 116622,
+    "newBytes": 116049,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_bend_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 153897,
+    "newBytes": 152680,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 150527,
+    "newBytes": 149591,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_edge",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 3828,
+    "newBytes": 3796,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 3602,
+    "newBytes": 3573,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_fork_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 215937,
+    "newBytes": 215323,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 210639,
+    "newBytes": 210113,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_mouth_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 44569,
+    "newBytes": 43824,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 45545,
+    "newBytes": 44810,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_mouth_l_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 54875,
+    "newBytes": 53840,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 55664,
+    "newBytes": 54653,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_rail_bridge_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 19463,
+    "newBytes": 19372,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 19025,
+    "newBytes": 18952,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_reeds_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_reeds",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_road_bridge_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 19198,
+    "newBytes": 18831,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 19053,
+    "newBytes": 18716,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_spring_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 151416,
+    "newBytes": 150991,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 147869,
+    "newBytes": 147493,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_spring_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 4513,
+    "newBytes": 4371,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 4210,
+    "newBytes": 4074,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_stones_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_stones_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_stones",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 468,
+    "newBytes": 482,
+    "changed": true
+   }
+  },
+  {
+   "item": "river_straight_base",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 145903,
+    "newBytes": 145706,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 141907,
+    "newBytes": 141718,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_bend_120_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 16607,
+    "newBytes": 16132,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 16159,
+    "newBytes": 15796,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_bend_60_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 13208,
+    "newBytes": 12856,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 12939,
+    "newBytes": 12630,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_bend_60_edge_e0",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7202,
+    "newBytes": 7162,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7085,
+    "newBytes": 7040,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_bend_60_edge_e1",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7268,
+    "newBytes": 7220,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7122,
+    "newBytes": 7091,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_junction_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 20839,
+    "newBytes": 20532,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 20176,
+    "newBytes": 19947,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_straight_center",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 8252,
+    "newBytes": 8258,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 8122,
+    "newBytes": 8091,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_straight_edge",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7042,
+    "newBytes": 6998,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 6923,
+    "newBytes": 6876,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_tunnel_portal",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5470,
+    "newBytes": 5328,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 5322,
+    "newBytes": 5207,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_tunnel_portal",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 125964,
+    "newBytes": 125761,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 123417,
+    "newBytes": 123169,
+    "changed": true
+   }
+  },
+  {
+   "item": "road_tunnel_portal",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 71379,
+    "newBytes": 70762,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 69493,
+    "newBytes": 68665,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 744987,
+    "newBytes": 742162,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 772644,
+    "newBytes": 769500,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 18459,
+    "newBytes": 18079,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 18465,
+    "newBytes": 18102,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 153822,
+    "newBytes": 150568,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 158631,
+    "newBytes": 155185,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 140942,
+    "newBytes": 139075,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 145667,
+    "newBytes": 143459,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 780772,
+    "newBytes": 780230,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 807300,
+    "newBytes": 806096,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 22925,
+    "newBytes": 22542,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 22629,
+    "newBytes": 22211,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 247970,
+    "newBytes": 247240,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 255765,
+    "newBytes": 254904,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 217578,
+    "newBytes": 216686,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 224815,
+    "newBytes": 223825,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 208975,
+    "newBytes": 207101,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 216220,
+    "newBytes": 214416,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7633,
+    "newBytes": 7382,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7570,
+    "newBytes": 7323,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 171806,
+    "newBytes": 169973,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 177403,
+    "newBytes": 175577,
+    "changed": true
+   }
+  },
+  {
+   "item": "rock_small",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 169600,
+    "newBytes": 167976,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 177939,
+    "newBytes": 176356,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5655,
+    "newBytes": 5501,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 5548,
+    "newBytes": 5409,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323137,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320844,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5771,
+    "newBytes": 5553,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 5667,
+    "newBytes": 5507,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323136,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320847,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 5785,
+    "newBytes": 5617,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 5654,
+    "newBytes": 5516,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "sapling_spruce",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323137,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320844,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "seabed_pebbles",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   }
+  },
+  {
+   "item": "seabed_rock",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 525,
+    "newBytes": 539,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 500793,
+    "newBytes": 499609,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 508234,
+    "newBytes": 506699,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 149226,
+    "newBytes": 149122,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 148142,
+    "newBytes": 148005,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 210721,
+    "newBytes": 209295,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 205447,
+    "newBytes": 203975,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 558858,
+    "newBytes": 557975,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 567616,
+    "newBytes": 566700,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 148804,
+    "newBytes": 148935,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 147935,
+    "newBytes": 148074,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 207116,
+    "newBytes": 207082,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 201676,
+    "newBytes": 201669,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 529446,
+    "newBytes": 528351,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 538462,
+    "newBytes": 537375,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 983,
+    "newBytes": 945,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 950,
+    "newBytes": 900,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 147686,
+    "newBytes": 147835,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 146726,
+    "newBytes": 146931,
+    "changed": true
+   }
+  },
+  {
+   "item": "shrub_forest",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 203469,
+    "newBytes": 203780,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 198331,
+    "newBytes": 198386,
+    "changed": true
+   }
+  },
+  {
+   "item": "soil",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 359337,
+    "newBytes": 361757,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 359315,
+    "newBytes": 360445,
+    "changed": true
+   }
+  },
+  {
+   "item": "soil",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 366771,
+    "newBytes": 367460,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 392721,
+    "newBytes": 392711,
+    "changed": true
+   }
+  },
+  {
+   "item": "train_carriage_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 330718,
+    "newBytes": 329986,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 322185,
+    "newBytes": 321296,
+    "changed": true
+   }
+  },
+  {
+   "item": "train_carriage",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 314377,
+    "newBytes": 313395,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 307675,
+    "newBytes": 306562,
+    "changed": true
+   }
+  },
+  {
+   "item": "train_engine",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 354126,
+    "newBytes": 353456,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 345015,
+    "newBytes": 344247,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 9612,
+    "newBytes": 9451,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 9348,
+    "newBytes": 9185,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323137,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320844,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 7630,
+    "newBytes": 7427,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 7439,
+    "newBytes": 7308,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323137,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320844,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 471880,
+    "newBytes": 471656,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 471786,
+    "newBytes": 471549,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 9467,
+    "newBytes": 9269,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 9181,
+    "newBytes": 9059,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 509072,
+    "newBytes": 510392,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 497317,
+    "newBytes": 497455,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_forest",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 323137,
+    "newBytes": 322573,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 320844,
+    "newBytes": 320060,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 950759,
+    "newBytes": 950171,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 952451,
+    "newBytes": 951347,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 1298277,
+    "newBytes": 1297427,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1283420,
+    "newBytes": 1282154,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 1961085,
+    "newBytes": 1957257,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1974015,
+    "newBytes": 1973484,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 1708756,
+    "newBytes": 1708609,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1718820,
+    "newBytes": 1719304,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 949896,
+    "newBytes": 949015,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 951574,
+    "newBytes": 950209,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 1298556,
+    "newBytes": 1297590,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1283474,
+    "newBytes": 1282597,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 1958794,
+    "newBytes": 1955207,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1972096,
+    "newBytes": 1972107,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 1707190,
+    "newBytes": 1706879,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1718658,
+    "newBytes": 1718834,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 949926,
+    "newBytes": 949351,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 951541,
+    "newBytes": 950400,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 1388960,
+    "newBytes": 1387742,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1374584,
+    "newBytes": 1373430,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 1957363,
+    "newBytes": 1955054,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1970353,
+    "newBytes": 1971506,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_hero_oak",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 1703989,
+    "newBytes": 1703799,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1714250,
+    "newBytes": 1715009,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 340154,
+    "newBytes": 340086,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 336873,
+    "newBytes": 336599,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 95630,
+    "newBytes": 95360,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 96510,
+    "newBytes": 96172,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 598851,
+    "newBytes": 599308,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 590710,
+    "newBytes": 591549,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 140076,
+    "newBytes": 140107,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 143934,
+    "newBytes": 143890,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 340007,
+    "newBytes": 339966,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 336652,
+    "newBytes": 336544,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 104062,
+    "newBytes": 103571,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 104605,
+    "newBytes": 104206,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 598740,
+    "newBytes": 598773,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 590443,
+    "newBytes": 590788,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 140078,
+    "newBytes": 140122,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 143898,
+    "newBytes": 143948,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 340302,
+    "newBytes": 340208,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 337088,
+    "newBytes": 336889,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 101250,
+    "newBytes": 100870,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 102144,
+    "newBytes": 101580,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 598357,
+    "newBytes": 598566,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 590629,
+    "newBytes": 591170,
+    "changed": true
+   }
+  },
+  {
+   "item": "tree_oak",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 140119,
+    "newBytes": 140048,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 144003,
+    "newBytes": 143832,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_bend",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 697945,
+    "newBytes": 695489,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 656020,
+    "newBytes": 653564,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_bend",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 2123,
+    "newBytes": 1837,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 2175,
+    "newBytes": 1873,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_bend",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 235613,
+    "newBytes": 234988,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 229840,
+    "newBytes": 228608,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_bend",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 141015,
+    "newBytes": 140299,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 144184,
+    "newBytes": 143453,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_end",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 422424,
+    "newBytes": 419461,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 397562,
+    "newBytes": 394499,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_end",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 2123,
+    "newBytes": 1837,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 2175,
+    "newBytes": 1873,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_end",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 140794,
+    "newBytes": 139577,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 138507,
+    "newBytes": 136906,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_end",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 83723,
+    "newBytes": 82951,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 85946,
+    "newBytes": 85072,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_gate",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 368572,
+    "newBytes": 367369,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 346492,
+    "newBytes": 345297,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_gate",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 2401,
+    "newBytes": 2006,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 2443,
+    "newBytes": 2036,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_gate",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 122689,
+    "newBytes": 122444,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 121769,
+    "newBytes": 121111,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_gate",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 69674,
+    "newBytes": 69321,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 71827,
+    "newBytes": 71432,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_junction",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 834001,
+    "newBytes": 832233,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 782635,
+    "newBytes": 780862,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_junction",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 1931,
+    "newBytes": 1721,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 1964,
+    "newBytes": 1746,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_junction",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 270735,
+    "newBytes": 270624,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 262327,
+    "newBytes": 261275,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_junction",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 168327,
+    "newBytes": 168158,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 171563,
+    "newBytes": 171375,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 687207,
+    "newBytes": 685237,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 645100,
+    "newBytes": 643006,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 2123,
+    "newBytes": 1837,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 2175,
+    "newBytes": 1873,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 227652,
+    "newBytes": 227226,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 221689,
+    "newBytes": 220694,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 137605,
+    "newBytes": 137050,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 141115,
+    "newBytes": 140342,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 690045,
+    "newBytes": 687394,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 647637,
+    "newBytes": 644787,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 2123,
+    "newBytes": 1837,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 2175,
+    "newBytes": 1873,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 227684,
+    "newBytes": 227215,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 222825,
+    "newBytes": 221742,
+    "changed": true
+   }
+  },
+  {
+   "item": "wall_run",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 137911,
+    "newBytes": 137189,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 141560,
+    "newBytes": 140670,
+    "changed": true
+   }
+  },
+  {
+   "item": "well_stone_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 414552,
+    "newBytes": 413722,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 393348,
+    "newBytes": 392640,
+    "changed": true
+   }
+  },
+  {
+   "item": "well_stone",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 411673,
+    "newBytes": 410740,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 390073,
+    "newBytes": 389049,
+    "changed": true
+   }
+  },
+  {
+   "item": "wheat_field",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 744123,
+    "newBytes": 740564,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 743434,
+    "newBytes": 739984,
+    "changed": true
+   }
+  },
+  {
+   "item": "wheat_field",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wheat_field",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 195934,
+    "newBytes": 198090,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 201770,
+    "newBytes": 203926,
+    "changed": true
+   }
+  },
+  {
+   "item": "wheat_field",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 18177,
+    "newBytes": 18373,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 18068,
+    "newBytes": 18016,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 759490,
+    "newBytes": 759163,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 757565,
+    "newBytes": 757438,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 182530,
+    "newBytes": 183439,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 188511,
+    "newBytes": 189508,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 130895,
+    "newBytes": 131505,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 139342,
+    "newBytes": 139388,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 758168,
+    "newBytes": 758240,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 754976,
+    "newBytes": 754921,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 184545,
+    "newBytes": 185673,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 189798,
+    "newBytes": 190985,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 127473,
+    "newBytes": 127918,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 135232,
+    "newBytes": 135637,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 754896,
+    "newBytes": 754731,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 753518,
+    "newBytes": 753136,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 181884,
+    "newBytes": 182859,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 187689,
+    "newBytes": 188626,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_clump",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 128731,
+    "newBytes": 128972,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 136776,
+    "newBytes": 136636,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_b",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 97260,
+    "newBytes": 96877,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 95181,
+    "newBytes": 94553,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_b",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 21310,
+    "newBytes": 21408,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 21637,
+    "newBytes": 21705,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_b",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 20659,
+    "newBytes": 20278,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 21629,
+    "newBytes": 21182,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_c",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 107977,
+    "newBytes": 107684,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 105443,
+    "newBytes": 104941,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_c",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_c",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 24304,
+    "newBytes": 24344,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 24552,
+    "newBytes": 24634,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_c",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 23277,
+    "newBytes": 22903,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 24158,
+    "newBytes": 23807,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_d",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 106978,
+    "newBytes": 106246,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 105909,
+    "newBytes": 105064,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_d",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_d",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 25069,
+    "newBytes": 25064,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 25550,
+    "newBytes": 25568,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_d",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 20520,
+    "newBytes": 20114,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 21451,
+    "newBytes": 20976,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_e",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 119698,
+    "newBytes": 118762,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 118495,
+    "newBytes": 117606,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_e",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_e",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 23998,
+    "newBytes": 23971,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 24736,
+    "newBytes": 24510,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single_e",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 22702,
+    "newBytes": 22302,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 24068,
+    "newBytes": 23493,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single",
+   "channel": "albedo",
+   "bc7": {
+    "oldBytes": 107533,
+    "newBytes": 106511,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 105099,
+    "newBytes": 104045,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 583,
+    "newBytes": 597,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single",
+   "channel": "normal",
+   "bc7": {
+    "oldBytes": 24548,
+    "newBytes": 24522,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 24815,
+    "newBytes": 24848,
+    "changed": true
+   }
+  },
+  {
+   "item": "wildflower_single",
+   "channel": "orm",
+   "bc7": {
+    "oldBytes": 25270,
+    "newBytes": 24810,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 26291,
+    "newBytes": 25749,
+    "changed": true
+   }
+  },
+  {
+   "item": "windmill_b",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 237548,
+    "newBytes": 236758,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 225073,
+    "newBytes": 224308,
+    "changed": true
+   }
+  },
+  {
+   "item": "windmill",
+   "channel": "masks",
+   "bc7": {
+    "oldBytes": 241888,
+    "newBytes": 241373,
+    "changed": true
+   },
+   "astc": {
+    "oldBytes": 230014,
+    "newBytes": 229414,
+    "changed": true
+   }
+  }
+ ]
+}

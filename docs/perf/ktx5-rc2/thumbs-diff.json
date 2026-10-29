@@ -1,0 +1,1082 @@
+[
+{
+"thumb": "rail_station-r4.webp",
+"psnr": 35.95,
+"maxDiff": 42
+},
+{
+"thumb": "hillside_001111-r1.webp",
+"psnr": 36.52,
+"maxDiff": 37
+},
+{
+"thumb": "road_straight-r0.webp",
+"psnr": 36.82,
+"maxDiff": 39
+},
+{
+"thumb": "road_junction-r0.webp",
+"psnr": 36.84,
+"maxDiff": 39
+},
+{
+"thumb": "river_bend_60-r2.webp",
+"psnr": 37.01,
+"maxDiff": 38
+},
+{
+"thumb": "road_bend_120-r4.webp",
+"psnr": 37.24,
+"maxDiff": 41
+},
+{
+"thumb": "hillside_001101-r0.webp",
+"psnr": 37.41,
+"maxDiff": 39
+},
+{
+"thumb": "hillside_001111-r0.webp",
+"psnr": 37.55,
+"maxDiff": 39
+},
+{
+"thumb": "rail_bend_60-r3.webp",
+"psnr": 37.56,
+"maxDiff": 38
+},
+{
+"thumb": "road_bend_60-r0.webp",
+"psnr": 37.74,
+"maxDiff": 34
+},
+{
+"thumb": "rail_junction-r3.webp",
+"psnr": 37.89,
+"maxDiff": 37
+},
+{
+"thumb": "hillside_000001-r2.webp",
+"psnr": 38.25,
+"maxDiff": 45
+},
+{
+"thumb": "rail_straight-r1.webp",
+"psnr": 38.37,
+"maxDiff": 39
+},
+{
+"thumb": "road_bend_120-r2.webp",
+"psnr": 38.58,
+"maxDiff": 37
+},
+{
+"thumb": "wheat_field-r1.webp",
+"psnr": 38.63,
+"maxDiff": 35
+},
+{
+"thumb": "forest-r0.webp",
+"psnr": 38.73,
+"maxDiff": 35
+},
+{
+"thumb": "hillside_000111-r1.webp",
+"psnr": 38.75,
+"maxDiff": 39
+},
+{
+"thumb": "hillside_011111-r1.webp",
+"psnr": 38.9,
+"maxDiff": 34
+},
+{
+"thumb": "farm-r1.webp",
+"psnr": 38.92,
+"maxDiff": 36
+},
+{
+"thumb": "hillside_010111-r5.webp",
+"psnr": 38.96,
+"maxDiff": 33
+},
+{
+"thumb": "hillside_000011-r2.webp",
+"psnr": 39.0,
+"maxDiff": 37
+},
+{
+"thumb": "hillside_001111-r2.webp",
+"psnr": 39.14,
+"maxDiff": 37
+},
+{
+"thumb": "hillside_001111-r5.webp",
+"psnr": 39.36,
+"maxDiff": 38
+},
+{
+"thumb": "beach-r1.webp",
+"psnr": 39.45,
+"maxDiff": 49
+},
+{
+"thumb": "hillside_011111-r5.webp",
+"psnr": 39.8,
+"maxDiff": 29
+},
+{
+"thumb": "rail_bend_120-r3.webp",
+"psnr": 39.82,
+"maxDiff": 37
+},
+{
+"thumb": "hillside_001101-r4.webp",
+"psnr": 39.83,
+"maxDiff": 32
+},
+{
+"thumb": "rail_bend_120-r4.webp",
+"psnr": 39.87,
+"maxDiff": 38
+},
+{
+"thumb": "hillside_011111-r4.webp",
+"psnr": 40.01,
+"maxDiff": 32
+},
+{
+"thumb": "hillside_000111-r4.webp",
+"psnr": 40.06,
+"maxDiff": 33
+},
+{
+"thumb": "rail_road_crossing-r1.webp",
+"psnr": 40.11,
+"maxDiff": 22
+},
+{
+"thumb": "wheat_field-r2.webp",
+"psnr": 40.12,
+"maxDiff": 17
+},
+{
+"thumb": "oak-r4.webp",
+"psnr": 40.22,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_010111-r0.webp",
+"psnr": 40.22,
+"maxDiff": 39
+},
+{
+"thumb": "oak-r1.webp",
+"psnr": 40.28,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_001111-r4.webp",
+"psnr": 40.32,
+"maxDiff": 29
+},
+{
+"thumb": "river_mouth_l-r5.webp",
+"psnr": 40.32,
+"maxDiff": 20
+},
+{
+"thumb": "river_spring-r2.webp",
+"psnr": 40.38,
+"maxDiff": 35
+},
+{
+"thumb": "house_cluster-r4.webp",
+"psnr": 40.5,
+"maxDiff": 29
+},
+{
+"thumb": "hillside_010101-r0.webp",
+"psnr": 40.52,
+"maxDiff": 32
+},
+{
+"thumb": "wheat_field-r0.webp",
+"psnr": 40.54,
+"maxDiff": 26
+},
+{
+"thumb": "road_ramp-r4.webp",
+"psnr": 40.54,
+"maxDiff": 28
+},
+{
+"thumb": "oak-r0.webp",
+"psnr": 40.55,
+"maxDiff": 19
+},
+{
+"thumb": "river_mouth_l-r3.webp",
+"psnr": 40.68,
+"maxDiff": 22
+},
+{
+"thumb": "rail_bend_120-r0.webp",
+"psnr": 40.75,
+"maxDiff": 34
+},
+{
+"thumb": "river_bend-r1.webp",
+"psnr": 40.77,
+"maxDiff": 25
+},
+{
+"thumb": "river_mouth_l-r2.webp",
+"psnr": 40.77,
+"maxDiff": 18
+},
+{
+"thumb": "rail_station-r5.webp",
+"psnr": 40.78,
+"maxDiff": 21
+},
+{
+"thumb": "beach-r5.webp",
+"psnr": 40.88,
+"maxDiff": 20
+},
+{
+"thumb": "beach-r3.webp",
+"psnr": 40.91,
+"maxDiff": 20
+},
+{
+"thumb": "house_cluster-r5.webp",
+"psnr": 40.98,
+"maxDiff": 19
+},
+{
+"thumb": "oak-r2.webp",
+"psnr": 41.08,
+"maxDiff": 18
+},
+{
+"thumb": "rail_straight-r2.webp",
+"psnr": 41.13,
+"maxDiff": 26
+},
+{
+"thumb": "oak-r5.webp",
+"psnr": 41.18,
+"maxDiff": 21
+},
+{
+"thumb": "river_mouth-r5.webp",
+"psnr": 41.2,
+"maxDiff": 21
+},
+{
+"thumb": "rail_junction-r2.webp",
+"psnr": 41.26,
+"maxDiff": 22
+},
+{
+"thumb": "rail_station-r3.webp",
+"psnr": 41.31,
+"maxDiff": 28
+},
+{
+"thumb": "oak-r3.webp",
+"psnr": 41.37,
+"maxDiff": 19
+},
+{
+"thumb": "road_tunnel_portal-r1.webp",
+"psnr": 41.37,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_001101-r1.webp",
+"psnr": 41.39,
+"maxDiff": 22
+},
+{
+"thumb": "house_cluster-r0.webp",
+"psnr": 41.42,
+"maxDiff": 20
+},
+{
+"thumb": "river_mouth-r2.webp",
+"psnr": 41.43,
+"maxDiff": 19
+},
+{
+"thumb": "house_cluster-r1.webp",
+"psnr": 41.47,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_001011-r4.webp",
+"psnr": 41.49,
+"maxDiff": 33
+},
+{
+"thumb": "house_cluster-r2.webp",
+"psnr": 41.5,
+"maxDiff": 19
+},
+{
+"thumb": "river_mouth-r0.webp",
+"psnr": 41.67,
+"maxDiff": 19
+},
+{
+"thumb": "beach_outer-r3.webp",
+"psnr": 41.69,
+"maxDiff": 16
+},
+{
+"thumb": "windmill-r3.webp",
+"psnr": 41.74,
+"maxDiff": 18
+},
+{
+"thumb": "house_cluster-r3.webp",
+"psnr": 41.76,
+"maxDiff": 17
+},
+{
+"thumb": "beach_outer-r5.webp",
+"psnr": 41.78,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_001011-r1.webp",
+"psnr": 41.78,
+"maxDiff": 23
+},
+{
+"thumb": "river_mouth-r3.webp",
+"psnr": 41.79,
+"maxDiff": 19
+},
+{
+"thumb": "rail_road_crossing-r2.webp",
+"psnr": 41.8,
+"maxDiff": 21
+},
+{
+"thumb": "river_mouth_l-r0.webp",
+"psnr": 41.81,
+"maxDiff": 19
+},
+{
+"thumb": "road_ramp-r1.webp",
+"psnr": 41.82,
+"maxDiff": 20
+},
+{
+"thumb": "rail_station-r0.webp",
+"psnr": 41.82,
+"maxDiff": 27
+},
+{
+"thumb": "rail_bend_120-r5.webp",
+"psnr": 41.82,
+"maxDiff": 26
+},
+{
+"thumb": "hillside_001111-r3.webp",
+"psnr": 41.82,
+"maxDiff": 20
+},
+{
+"thumb": "river_road_bridge-r0.webp",
+"psnr": 41.82,
+"maxDiff": 24
+},
+{
+"thumb": "river_rail_bridge-r1.webp",
+"psnr": 41.83,
+"maxDiff": 21
+},
+{
+"thumb": "road_ramp-r0.webp",
+"psnr": 41.84,
+"maxDiff": 21
+},
+{
+"thumb": "road_tunnel_portal-r4.webp",
+"psnr": 41.88,
+"maxDiff": 24
+},
+{
+"thumb": "river_rail_bridge-r0.webp",
+"psnr": 41.89,
+"maxDiff": 26
+},
+{
+"thumb": "road_tunnel_portal-r2.webp",
+"psnr": 41.92,
+"maxDiff": 19
+},
+{
+"thumb": "beach_outer-r1.webp",
+"psnr": 41.93,
+"maxDiff": 19
+},
+{
+"thumb": "road_straight-r2.webp",
+"psnr": 42.02,
+"maxDiff": 21
+},
+{
+"thumb": "river_bend-r5.webp",
+"psnr": 42.02,
+"maxDiff": 24
+},
+{
+"thumb": "rail_station-r1.webp",
+"psnr": 42.04,
+"maxDiff": 20
+},
+{
+"thumb": "beach_inner-r2.webp",
+"psnr": 42.04,
+"maxDiff": 33
+},
+{
+"thumb": "beach-r0.webp",
+"psnr": 42.05,
+"maxDiff": 20
+},
+{
+"thumb": "river_fork-r0.webp",
+"psnr": 42.05,
+"maxDiff": 17
+},
+{
+"thumb": "farm-r5.webp",
+"psnr": 42.08,
+"maxDiff": 20
+},
+{
+"thumb": "river_mouth_l-r4.webp",
+"psnr": 42.08,
+"maxDiff": 19
+},
+{
+"thumb": "river_fork-r1.webp",
+"psnr": 42.09,
+"maxDiff": 23
+},
+{
+"thumb": "river_mouth_l-r1.webp",
+"psnr": 42.1,
+"maxDiff": 17
+},
+{
+"thumb": "river_road_bridge-r1.webp",
+"psnr": 42.1,
+"maxDiff": 25
+},
+{
+"thumb": "hillside_011111-r2.webp",
+"psnr": 42.13,
+"maxDiff": 22
+},
+{
+"thumb": "road_ramp-r2.webp",
+"psnr": 42.14,
+"maxDiff": 26
+},
+{
+"thumb": "bakery-r5.webp",
+"psnr": 42.15,
+"maxDiff": 20
+},
+{
+"thumb": "bakery-r1.webp",
+"psnr": 42.15,
+"maxDiff": 19
+},
+{
+"thumb": "beach-r2.webp",
+"psnr": 42.15,
+"maxDiff": 18
+},
+{
+"thumb": "bakery-r4.webp",
+"psnr": 42.23,
+"maxDiff": 25
+},
+{
+"thumb": "beach_outer-r0.webp",
+"psnr": 42.25,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_001011-r3.webp",
+"psnr": 42.25,
+"maxDiff": 17
+},
+{
+"thumb": "beach_outer-r2.webp",
+"psnr": 42.25,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_000001-r5.webp",
+"psnr": 42.3,
+"maxDiff": 25
+},
+{
+"thumb": "bakery-r2.webp",
+"psnr": 42.32,
+"maxDiff": 28
+},
+{
+"thumb": "windmill-r2.webp",
+"psnr": 42.32,
+"maxDiff": 19
+},
+{
+"thumb": "beach_outer-r4.webp",
+"psnr": 42.33,
+"maxDiff": 21
+},
+{
+"thumb": "rail_road_crossing-r0.webp",
+"psnr": 42.33,
+"maxDiff": 24
+},
+{
+"thumb": "hillside_000011-r0.webp",
+"psnr": 42.34,
+"maxDiff": 19
+},
+{
+"thumb": "road_bend_60-r3.webp",
+"psnr": 42.35,
+"maxDiff": 23
+},
+{
+"thumb": "hillside_000011-r1.webp",
+"psnr": 42.35,
+"maxDiff": 21
+},
+{
+"thumb": "river_spring-r1.webp",
+"psnr": 42.37,
+"maxDiff": 27
+},
+{
+"thumb": "beach_inner-r0.webp",
+"psnr": 42.38,
+"maxDiff": 17
+},
+{
+"thumb": "windmill-r1.webp",
+"psnr": 42.42,
+"maxDiff": 24
+},
+{
+"thumb": "road_tunnel_portal-r3.webp",
+"psnr": 42.42,
+"maxDiff": 16
+},
+{
+"thumb": "river_bend_60-r3.webp",
+"psnr": 42.44,
+"maxDiff": 20
+},
+{
+"thumb": "beach_inner-r4.webp",
+"psnr": 42.46,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_001101-r2.webp",
+"psnr": 42.47,
+"maxDiff": 19
+},
+{
+"thumb": "road_bend_60-r1.webp",
+"psnr": 42.48,
+"maxDiff": 27
+},
+{
+"thumb": "river_bend-r0.webp",
+"psnr": 42.5,
+"maxDiff": 29
+},
+{
+"thumb": "hillside_000111-r0.webp",
+"psnr": 42.51,
+"maxDiff": 18
+},
+{
+"thumb": "river_straight-r1.webp",
+"psnr": 42.52,
+"maxDiff": 18
+},
+{
+"thumb": "road_tunnel_portal-r0.webp",
+"psnr": 42.53,
+"maxDiff": 17
+},
+{
+"thumb": "road_bend_120-r0.webp",
+"psnr": 42.55,
+"maxDiff": 37
+},
+{
+"thumb": "hillside_000101-r5.webp",
+"psnr": 42.56,
+"maxDiff": 21
+},
+{
+"thumb": "farm-r3.webp",
+"psnr": 42.57,
+"maxDiff": 26
+},
+{
+"thumb": "river_mouth-r4.webp",
+"psnr": 42.58,
+"maxDiff": 21
+},
+{
+"thumb": "hillside_010111-r3.webp",
+"psnr": 42.59,
+"maxDiff": 18
+},
+{
+"thumb": "beach_inner-r5.webp",
+"psnr": 42.61,
+"maxDiff": 18
+},
+{
+"thumb": "road_tunnel_portal-r5.webp",
+"psnr": 42.62,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_000101-r2.webp",
+"psnr": 42.64,
+"maxDiff": 20
+},
+{
+"thumb": "windmill-r5.webp",
+"psnr": 42.65,
+"maxDiff": 18
+},
+{
+"thumb": "windmill-r4.webp",
+"psnr": 42.65,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_000111-r2.webp",
+"psnr": 42.66,
+"maxDiff": 20
+},
+{
+"thumb": "rail_junction-r4.webp",
+"psnr": 42.67,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_001011-r0.webp",
+"psnr": 42.67,
+"maxDiff": 16
+},
+{
+"thumb": "hillside_001011-r5.webp",
+"psnr": 42.68,
+"maxDiff": 27
+},
+{
+"thumb": "beach_inner-r1.webp",
+"psnr": 42.69,
+"maxDiff": 22
+},
+{
+"thumb": "rail_junction-r1.webp",
+"psnr": 42.73,
+"maxDiff": 20
+},
+{
+"thumb": "rail_bend_120-r1.webp",
+"psnr": 42.73,
+"maxDiff": 27
+},
+{
+"thumb": "river_bend-r2.webp",
+"psnr": 42.73,
+"maxDiff": 15
+},
+{
+"thumb": "river_mouth-r1.webp",
+"psnr": 42.73,
+"maxDiff": 13
+},
+{
+"thumb": "hillside_000001-r0.webp",
+"psnr": 42.73,
+"maxDiff": 24
+},
+{
+"thumb": "river_bend-r3.webp",
+"psnr": 42.74,
+"maxDiff": 19
+},
+{
+"thumb": "road_junction-r1.webp",
+"psnr": 42.74,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_001011-r2.webp",
+"psnr": 42.76,
+"maxDiff": 19
+},
+{
+"thumb": "river_spring-r3.webp",
+"psnr": 42.76,
+"maxDiff": 25
+},
+{
+"thumb": "hillside_001001-r0.webp",
+"psnr": 42.76,
+"maxDiff": 19
+},
+{
+"thumb": "road_bend_120-r5.webp",
+"psnr": 42.77,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_011011-r0.webp",
+"psnr": 42.77,
+"maxDiff": 29
+},
+{
+"thumb": "ocean-r0.webp",
+"psnr": 42.81,
+"maxDiff": 19
+},
+{
+"thumb": "river_bend_60-r1.webp",
+"psnr": 42.81,
+"maxDiff": 25
+},
+{
+"thumb": "hillside_011111-r0.webp",
+"psnr": 42.83,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_001101-r3.webp",
+"psnr": 42.85,
+"maxDiff": 25
+},
+{
+"thumb": "road_bend_120-r1.webp",
+"psnr": 42.86,
+"maxDiff": 25
+},
+{
+"thumb": "road_bend_60-r4.webp",
+"psnr": 42.87,
+"maxDiff": 15
+},
+{
+"thumb": "hillside_000011-r5.webp",
+"psnr": 42.88,
+"maxDiff": 17
+},
+{
+"thumb": "hillside_000101-r0.webp",
+"psnr": 42.9,
+"maxDiff": 24
+},
+{
+"thumb": "hillside_000011-r3.webp",
+"psnr": 42.91,
+"maxDiff": 19
+},
+{
+"thumb": "river_rail_bridge-r2.webp",
+"psnr": 42.91,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_011011-r1.webp",
+"psnr": 42.97,
+"maxDiff": 20
+},
+{
+"thumb": "farm-r4.webp",
+"psnr": 43.01,
+"maxDiff": 18
+},
+{
+"thumb": "rail_junction-r5.webp",
+"psnr": 43.03,
+"maxDiff": 21
+},
+{
+"thumb": "hillside_000111-r3.webp",
+"psnr": 43.03,
+"maxDiff": 22
+},
+{
+"thumb": "hillside_010111-r2.webp",
+"psnr": 43.03,
+"maxDiff": 16
+},
+{
+"thumb": "hillside_001001-r2.webp",
+"psnr": 43.04,
+"maxDiff": 17
+},
+{
+"thumb": "hillside_001101-r5.webp",
+"psnr": 43.05,
+"maxDiff": 15
+},
+{
+"thumb": "river_road_bridge-r2.webp",
+"psnr": 43.05,
+"maxDiff": 21
+},
+{
+"thumb": "hillside_000111-r5.webp",
+"psnr": 43.06,
+"maxDiff": 27
+},
+{
+"thumb": "farm-r0.webp",
+"psnr": 43.09,
+"maxDiff": 17
+},
+{
+"thumb": "hillside_000101-r3.webp",
+"psnr": 43.09,
+"maxDiff": 21
+},
+{
+"thumb": "rail_bend_120-r2.webp",
+"psnr": 43.09,
+"maxDiff": 25
+},
+{
+"thumb": "road_bend_120-r3.webp",
+"psnr": 43.11,
+"maxDiff": 27
+},
+{
+"thumb": "river_bend-r4.webp",
+"psnr": 43.12,
+"maxDiff": 17
+},
+{
+"thumb": "hillside_000101-r1.webp",
+"psnr": 43.13,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_000001-r4.webp",
+"psnr": 43.16,
+"maxDiff": 25
+},
+{
+"thumb": "beach-r4.webp",
+"psnr": 43.17,
+"maxDiff": 19
+},
+{
+"thumb": "rail_station-r2.webp",
+"psnr": 43.18,
+"maxDiff": 21
+},
+{
+"thumb": "hillside_000001-r3.webp",
+"psnr": 43.21,
+"maxDiff": 19
+},
+{
+"thumb": "meadow-r0.webp",
+"psnr": 43.23,
+"maxDiff": 21
+},
+{
+"thumb": "road_bend_60-r2.webp",
+"psnr": 43.23,
+"maxDiff": 21
+},
+{
+"thumb": "rail_junction-r0.webp",
+"psnr": 43.23,
+"maxDiff": 26
+},
+{
+"thumb": "farm-r2.webp",
+"psnr": 43.25,
+"maxDiff": 20
+},
+{
+"thumb": "river_straight-r0.webp",
+"psnr": 43.25,
+"maxDiff": 23
+},
+{
+"thumb": "hillside_010111-r1.webp",
+"psnr": 43.25,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_011011-r2.webp",
+"psnr": 43.27,
+"maxDiff": 18
+},
+{
+"thumb": "road_ramp-r3.webp",
+"psnr": 43.28,
+"maxDiff": 22
+},
+{
+"thumb": "beach_inner-r3.webp",
+"psnr": 43.3,
+"maxDiff": 16
+},
+{
+"thumb": "rail_straight-r0.webp",
+"psnr": 43.3,
+"maxDiff": 21
+},
+{
+"thumb": "road_straight-r1.webp",
+"psnr": 43.3,
+"maxDiff": 24
+},
+{
+"thumb": "river_spring-r0.webp",
+"psnr": 43.31,
+"maxDiff": 26
+},
+{
+"thumb": "river_spring-r5.webp",
+"psnr": 43.33,
+"maxDiff": 16
+},
+{
+"thumb": "road_ramp-r5.webp",
+"psnr": 43.43,
+"maxDiff": 20
+},
+{
+"thumb": "hillside_010101-r1.webp",
+"psnr": 43.44,
+"maxDiff": 16
+},
+{
+"thumb": "river_bend_60-r5.webp",
+"psnr": 43.45,
+"maxDiff": 18
+},
+{
+"thumb": "hillside_000001-r1.webp",
+"psnr": 43.49,
+"maxDiff": 17
+},
+{
+"thumb": "bakery-r3.webp",
+"psnr": 43.51,
+"maxDiff": 19
+},
+{
+"thumb": "river_spring-r4.webp",
+"psnr": 43.53,
+"maxDiff": 14
+},
+{
+"thumb": "river_bend_60-r0.webp",
+"psnr": 43.56,
+"maxDiff": 21
+},
+{
+"thumb": "hillside_011111-r3.webp",
+"psnr": 43.58,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_000011-r4.webp",
+"psnr": 43.59,
+"maxDiff": 26
+},
+{
+"thumb": "road_bend_60-r5.webp",
+"psnr": 43.62,
+"maxDiff": 17
+},
+{
+"thumb": "hillside_000101-r4.webp",
+"psnr": 43.64,
+"maxDiff": 20
+},
+{
+"thumb": "rail_bend_60-r2.webp",
+"psnr": 43.79,
+"maxDiff": 30
+},
+{
+"thumb": "rail_bend_60-r5.webp",
+"psnr": 43.84,
+"maxDiff": 26
+},
+{
+"thumb": "windmill-r0.webp",
+"psnr": 43.88,
+"maxDiff": 19
+},
+{
+"thumb": "hillside_001001-r1.webp",
+"psnr": 43.89,
+"maxDiff": 26
+},
+{
+"thumb": "hillside_010111-r4.webp",
+"psnr": 43.95,
+"maxDiff": 18
+},
+{
+"thumb": "river_straight-r2.webp",
+"psnr": 44.02,
+"maxDiff": 19
+},
+{
+"thumb": "rail_bend_60-r1.webp",
+"psnr": 44.27,
+"maxDiff": 30
+},
+{
+"thumb": "rail_bend_60-r4.webp",
+"psnr": 44.28,
+"maxDiff": 21
+},
+{
+"thumb": "rail_bend_60-r0.webp",
+"psnr": 44.3,
+"maxDiff": 32
+},
+{
+"thumb": "river_bend_60-r4.webp",
+"psnr": 44.57,
+"maxDiff": 16
+},
+{
+"thumb": "bakery-r0.webp",
+"psnr": 44.83,
+"maxDiff": 16
+}
+]
