@@ -38,38 +38,7 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-BAKERY_PAD = ROOT / "assets-source/kit/bakery_pad/renders/three_quarter.jpg"
-
-SECTIONS = [
-    ("A47", "Back-to-back tunnel portals (P4)", [
-        ("Q1", "Two road tunnel portals placed face to face with no cover tile between them form a complete tunnel of zero length: cars enter one portal and leave the other at once. It is harmless and the spec does not set a minimum length. Keep it, or refuse a tunnel with no cover?"),
-    ], [
-        ("O1", "Keep it as is (recommended: no visual or routing fault, and changing it touches hex-core tunnel.rs, the HUD rules mirror and the parity tests)."),
-        ("O2", "Refuse it: a tunnel needs at least one cover tile, and the HUD hint says why."),
-    ], []),
-    ("A48", "When to re-encode the legacy KTX2 files", [
-        ("Q1", "95 of the 160 committed kit items were compressed before the encode was pinned to one thread with ASLR off (2026-10-21 and 26). Their files are valid and reproducible with the old flags, but each changes bytes once on its next re-encode, which dirties thumbnails and needs a look check. kit-compress now warns when it happens (card 01a185e1f1a6)."),
-    ], [
-        ("O1", "Re-encode all 95 together with the KTX-Software 5.x upgrade, as one byte change, one thumbs pass and one review (recommended: the upgrade re-encodes everything anyway)."),
-        ("O2", "Re-encode all 95 now and again at the upgrade."),
-        ("O3", "Leave them; each re-encodes at its next real rebuild."),
-    ], []),
-    ("A49", "bakery_pad piece approval", [
-        ("Q1", "bakery_pad, the asphalt forecourt and two pickup spots beside the bakery, has shipped since 2026-10-19 with only its reference approved: it had no approvals.json, so the approvals page never listed it (fixed 2026-10-29). It is on docs/review/approvals.html now. Approve it?"),
-    ], [], [(BAKERY_PAD, "bakery_pad, three-quarter render.")]),
-    ("A50", "KTX-Software 5.0.0-rc2 measurement", [
-        ("Q1", "KTX-Software 5.0 is still a release candidate (rc2, 2026-08-17). May I download rc2's macOS arm64 tools and library from the KhronosGroup/KTX-Software GitHub releases, into tools/ beside 4.4.2, to measure without shipping anything: whether the ASLR-off workaround can go, and how many KTX2 files and thumbnails the upgrade changes?"),
-    ], [
-        ("O1", "Yes, measure with rc2 now (recommended: it informs A48 and the upgrade card)."),
-        ("O2", "No, wait for the 5.0 release."),
-    ], []),
-    ("A51", "Far shadow cascades on large worlds", [
-        ("Q1", "On the 2,066-tile world the close camera draws about 1,328 after the per-cell cascade skip, mostly shadow cascades 2 and 3. Both ways of casting fewer LODs there were built and measured slower on MiniMac (the one-LOD pin by 4-7 ms, the LOD clamp by about 1 ms) and reverted (card 01a1781dfe02). The card's remaining idea is a coarser per-chunk shadow mesh built offline: several days of work and a new asset pass. Start it, or leave the card parked?"),
-    ], [
-        ("O1", "Leave it parked until large-world frame time is a problem again (recommended: the 2,066-tile world is within its budget on the reference machine)."),
-        ("O2", "Start the per-chunk offline shadow LOD, measured on MiniMac against main."),
-    ], []),
-]
+SECTIONS = []
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -90,7 +59,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A47 to A51 are open (2026-10-29).</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). Nothing is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
