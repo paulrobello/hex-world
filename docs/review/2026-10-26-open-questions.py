@@ -63,6 +63,12 @@ SECTIONS = [
         ("O1", "Yes, measure with rc2 now (recommended: it informs A48 and the upgrade card)."),
         ("O2", "No, wait for the 5.0 release."),
     ], []),
+    ("A51", "Far shadow cascades on large worlds", [
+        ("Q1", "On the 2,066-tile world the close camera draws about 1,328 after the per-cell cascade skip, mostly shadow cascades 2 and 3. Both ways of casting fewer LODs there were built and measured slower on MiniMac (the one-LOD pin by 4-7 ms, the LOD clamp by about 1 ms) and reverted (card 01a1781dfe02). The card's remaining idea is a coarser per-chunk shadow mesh built offline: several days of work and a new asset pass. Start it, or leave the card parked?"),
+    ], [
+        ("O1", "Leave it parked until large-world frame time is a problem again (recommended: the 2,066-tile world is within its budget on the reference machine)."),
+        ("O2", "Start the per-chunk offline shadow LOD, measured on MiniMac against main."),
+    ], []),
 ]
 
 CSS = """
@@ -84,7 +90,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A47 to A50 are open (2026-10-29).</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A47 to A51 are open (2026-10-29).</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
