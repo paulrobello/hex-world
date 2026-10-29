@@ -258,8 +258,8 @@ case "$id" in
   # that string is local to its case). $toprail names six hexagon edges and $style a 35 degree view, so
   # both cameras are their own strings. ref-1..ref-3 differ in massif character and height: a tor-crowned
   # dome, a craggy pine-skirted peak and a low heather massif; ref-4 is ref-2's crag from a low camera
-  # (about 15 degrees) across the foot, to judge the seam and silhouette. $flower, $ring, $granite and
-  # $dome pair with cached images, so re-roll wording goes in the failing slot only. First rolls
+  # (about 15 degrees) across the foot, to judge the seam and silhouette. Every string in this case pairs
+  # with a kept image, so re-roll wording goes in the failing slot only. First rolls
   # (2026-10-29): ref-1 kept. ref-2's hillside grass came back paler olive than the bright flat band, a
   # colour ring at the foot, so $foot asks the meadow grass to carry on up the lower slopes. ref-3 came back
   # about 6 m high, with a raised lip inset along the rim and short mossy lawn on the band, so $heath asks
