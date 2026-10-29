@@ -9,11 +9,11 @@ A40 O1 (owner, 2026-10-27) gives single-tile hills and peaks, and says "bigger m
 ## Goals
 
 1. One tile type, the **massif**, occupies 7 cells: a centre and its ring. It places, rotates, undoes, saves and bulldozes as a single tile.
-2. Its 12 outer edges sit flat at the tile's own level, the way a raised Meadow's edges do. The peak rises inside the footprint, so neighbours meet it with today's seam, cliff and hillside rules *(A52 Q1 O1, provisional)*.
+2. Its 18 outer edges (three on each ring cell, facing the 12 cells around the footprint) sit flat at the tile's own level, the way a raised Meadow's edges do. The peak rises inside the footprint, so neighbours meet it with today's seam, cliff and hillside rules *(A52 Q1 O1, provisional)*.
 3. Its ground is visually continuous with the baked Meadow beside it: the same grass, shading, blade and scatter density at the outer ring (the owner's visual standard, memory `visual-standard.md`).
 4. Placement needs all 7 cells empty and at least one placed neighbour outside the footprint. The ghost shows the whole footprint, and R turns it about the centre (six rotations) *(A52 Q4 O1, provisional)*.
 5. Saves keep one entry per mega tile, at the centre cell, whose definition implies the footprint. No format bump: the wire `Tile` (`hex-core/src/save.rs`) already carries `q, r, level, def, rotation, seed`. Decode expands the footprint and validates it.
-6. The HUD learns whether a mega tile fits by asking the engine through the bridge (a new query command returning the legal orientations at a centre cell), instead of mirroring the 7-cell rules in `rules.ts` *(A52 Q6 O1, provisional)*.
+6. The HUD learns whether a mega tile fits by asking the engine through the bridge (a published `mega_slots` state field), instead of mirroring the 7-cell rules in `rules.ts` *(A52 Q6 O1, provisional)*.
 
 ## Non-goals (this round)
 
@@ -34,9 +34,9 @@ A40 O1 (owner, 2026-10-27) gives single-tile hills and peaks, and says "bigger m
 
 ### hex-core
 
-- `TileDef` gains an optional `footprint: Ring1` (centre plus six neighbours, in local coordinates rotated with the tile). The 6 `edges` of a single tile become the footprint's **12 outer edges** for a mega tile, listed clockwise from the ring cell at local edge 0. The data validator checks the count.
+- `TileDef` gains an optional `footprint: Ring1` (centre plus six neighbours, in local coordinates rotated with the tile). The centre keeps its 6 `edges`; the footprint lists the **18 outer edges** clockwise from the ring cell at local edge 0, and the data validator checks the count.
 - `World` keeps `tiles: BTreeMap<Axial, PlacedTile>` for the anchor (centre). A second map `members: BTreeMap<Axial, Axial>` (member cell → anchor) makes every cell of the footprint occupied. `tile(cell)` answers for any member cell with the anchor's `PlacedTile`. A new `anchors()` is for callers that want each tile once.
-- `fits`, `is_slot`, `frontier`, `legal_orientations`, `edge_status`, `cliff_edges` and `clashes` test the footprint's cells and its 12 outer edges. Each outer edge faces exactly one neighbour cell, and `placement_meets` / `meet_kind` run per (outer edge, neighbour) pair unchanged.
+- `fits`, `is_slot`, `frontier`, `legal_orientations`, `edge_status`, `cliff_edges` and `clashes` test the footprint's cells and its 18 outer edges. Each outer edge faces exactly one neighbour cell, and `placement_meets` / `meet_kind` run per (outer edge, neighbour) pair unchanged.
 - `can_bulldoze`, `connected_without` and the split rule treat the footprint as one node. Undo/redo already store a whole `PlacedTile`, so they insert or remove all members together.
 - Tunnels: `tunnel::walk` treats a member cell as an obstacle, so no tunnel forms under a massif.
 - `cell_seed` seeds from the anchor.
@@ -58,7 +58,7 @@ The massif carries no lanes, so `insert_tile` adds nothing to the road graph. Ne
 
 ### HUD
 
-- A bridge query `mega_fits { q, r }` returns the legal orientations at a centre cell. The inventory shows the massif when any frontier cell can take it. The picker thumbnail uses a wider camera (`thumbs.rs` gains a footprint-aware frame).
+- The engine publishes `mega_slots` (centre cell, tile and legal orientations) in its state, next to `frontier` and `inventory`, since bridge commands return nothing. The inventory shows the massif when a legal footprint covers some frontier cell; the ghost then anchors at that footprint's centre (a centre cell itself can never be a frontier cell). The picker thumbnail uses a wider camera (`thumbs.rs` gains a footprint-aware frame).
 - `rules.ts` keeps single-tile rules only. The parity tests gain a case asserting that the HUD never lists the massif where the engine query refuses it.
 
 ### Kit piece

@@ -47,7 +47,7 @@ SECTIONS = [
         ("Q5", "Replace and bulldoze: what happens when a mega tile is replaced or removed?"),
         ("Q6", "Rules: the HUD mirrors the engine's placement rules in TypeScript, the biggest drift risk the scoping found. Mirror the 7-cell rules too, or have the HUD ask the engine?"),
     ], [
-        ("Q1 O1", "Its 12 outer edges sit flat at the tile's own level, like a raised Meadow, and the peak rises inside the footprint (recommended: neighbours keep today's seam rules; only the interior is new ground)."),
+        ("Q1 O1", "Its 18 outer edges (facing the 12 cells around it) sit flat at the tile's own level, like a raised Meadow, and the peak rises inside the footprint (recommended: neighbours keep today's seam rules; only the interior is new ground)."),
         ("Q1 O2", "A height field across the 7 cells, with outer edges at several levels."),
         ("Q2 O1", "No roads or rivers in the first round: every outer edge is plain ground (recommended: road and river stitching stay per cell)."),
         ("Q2 O2", "Roads may cross on a pass or end at the foot."),
