@@ -38,21 +38,7 @@ B2 = CP / "walls-hedges-refs/refs-sheet.jpg"
 B3 = CP / "water-props/sheet.jpg"
 B2_SHEET = ROOT / ".claude/worktrees/agent-a166db2800bc9c429/docs/checkpoints/walls-hedges/sheet.jpg"
 
-SECTIONS = [
-    ("A55", "Mega tiles: massif_granite piece review (checkpoint C2)", [
-        ("Q1", "The piece in engine (sheet: ref-2, then the play camera, eye level, both sides of the rock foot, the ring-to-Meadow seam, a raised massif's cliff, the overview, the bulldoze sink and the six picker thumbnails). The seam with Meadow is invisible and every gate passes. Against ref-2, at the play camera the rock reads as a smaller lump on a wide flat ring: ref-2's grassy flanks climb well above the rim before the rock starts, and ours rise only a few metres. Close up the scree reads soft (20 px/m, A54)."),
-        ("Q2", "Pines on the lower slopes (runtime scatter, A54): spruces and saplings at 0.3 per 100 m\u00b2 each, 17 to 28 m from the centre, a first value."),
-        ("Q3", "Rock colour in engine: pale granite with grey-green moss and yellow lichen patches."),
-    ], [
-        ("Q1 O1", "One more form pass: taller grassy flanks (rising about 8 to 10 m from the rim to the rock foot, as in ref-2) so the mountain fills the footprint at the play camera; the rock itself stays (recommended)."),
-        ("Q1 O2", "Approve the piece as it is."),
-        ("Q2 O1", "Keep the pine density (recommended)."),
-        ("Q2 O2", "More pines, about twice as many."),
-        ("Q2 O3", "Fewer pines."),
-        ("Q3 O1", "Keep the rock colour (recommended)."),
-        ("Q3 O2", "Darker joints and more contrast, closer to ref-2."),
-    ], [(ROOT / "docs/checkpoints/massif_granite/c2-sheet.jpg", "massif_granite in engine (mega-tiles branch 0176c72) beside the approved ref-2")]),
-]
+SECTIONS = []
 
 CSS = """
 :root{--bg:#f6f5f2;--fg:#1d1d1b;--muted:#5d5b55;--line:#d9d6cf;--card:#fff;--accent:#2f6f4f}
@@ -73,7 +59,7 @@ def main() -> None:
              f"<meta name=viewport content='width=device-width,initial-scale=1'>"
              f"<title>Hex World open questions</title><style>{CSS}</style></head><body><main>",
              "<h1>Hex World: open questions</h1>",
-             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). A53 answered 2026-10-29 (ref-2, as drawn). A54 answered 2026-10-29 (O1, O1). A55 (massif piece review, checkpoint C2) is open.</p>"]
+             "<p class=sub>2026-10-27, sixth round. A19 to A36 are answered (A35 O1 and A36 O1 on 2026-10-27). A19 to A42 are answered (A37 to A42 O1 on 2026-10-27). A19 to A44 are answered (A43 O1, A44 Q1 O1 and Q2 O3 on 2026-10-28). A19 to A46 are answered (A45 O1 and A46 O1 on 2026-10-28). A19 to A51 are answered (A47 to A51 O1 on 2026-10-29; A49 approved). A19 to A52 are answered (A52 O1 for every question, 2026-10-29). A53 answered 2026-10-29 (ref-2, as drawn). A54 answered 2026-10-29 (O1, O1). A55 answered 2026-10-29 (Q1 O1 form pass, Q2 O1, Q3 O1). No question is open.</p>"]
     for code, title, questions, options, figures in SECTIONS:
         parts.append(f"<section><h2><span>{code}</span>{html.escape(title)}</h2><dl>")
         parts += [f"<dt>{q}</dt><dd>{html.escape(t)}</dd>" for q, t in questions]
