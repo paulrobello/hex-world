@@ -76,8 +76,8 @@ use bevy::{
     prelude::*,
 };
 use hex_core::{
-    Axial, Endpoint, HEX_RADIUS, LEVEL_STEP, NetworkKind, ScatterRule, SocketKind, TileCatalog,
-    TileDef, cell_seed,
+    Axial, Endpoint, HEX_RADIUS, LEVEL_STEP, NetworkKind, ScatterRule, TileCatalog, TileDef,
+    cell_seed,
 };
 
 use super::{
@@ -1472,7 +1472,8 @@ pub const GROUND_PROPS: &[&str] = &["rail_station_platform", "road_tunnel_portal
 
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
 /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its
-/// lanes' edge pieces, and its [`GROUND_PROPS`] heroes (a yaw of 60 k degrees is turn k).
+/// drawn edge pieces ([`TileDef::draws_edge_piece`]), and its [`GROUND_PROPS`] heroes (a yaw of
+/// 60 k degrees is turn k).
 pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a str, u8)> {
     let mut v = vec![(def.base.as_str(), 0)];
     for h in &def.props.hero {
@@ -1488,9 +1489,7 @@ pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a
     }
     let pieces = def.edge_pieces(catalog.sockets());
     for e in 0..6u8 {
-        let s = &def.edges[e as usize];
-        if s.lane.is_some()
-            && matches!(s.kind, SocketKind::Road | SocketKind::River)
+        if def.draws_edge_piece(e as usize)
             && let Some(p) = pieces[e as usize]
         {
             v.push((p.as_str(), e));
@@ -2792,7 +2791,7 @@ mod tests {
     use std::sync::{Mutex, OnceLock};
 
     use hex_assets::parse_manifest;
-    use hex_core::{AgentKind, World};
+    use hex_core::{AgentKind, SocketKind, World};
 
     use super::*;
     use crate::kit_scene::{MANIFEST, piece_rotation};
@@ -2986,6 +2985,34 @@ mod tests {
             }
         }
         println!("hillside_000111 ground vs field: worst {worst:.4} m");
+    }
+
+    /// Owner report 2026-10-30: the tunnel portal's road ended short of the arch, with grass
+    /// between its end and the mouth. The road piece listed on its lane-less edge 0 is ground,
+    /// so from the centre piece's end to the portal face (x = apothem − 2.2) the corridor is road
+    /// at the cutting's level 0, and no grass or scatter grows there.
+    #[test]
+    fn the_portal_road_runs_on_to_the_arch() {
+        let c = catalog();
+        let def = c.get("road_tunnel_portal").unwrap();
+        assert!(ground_pieces(def, &c).contains(&("road_straight_edge", 0)));
+        let kit: HashMap<String, Vec<KitPart>> = ground_pieces(def, &c)
+            .into_iter()
+            .map(|(id, _)| (id.to_string(), vec![]))
+            .collect();
+        let g = PlayScatter::default()
+            .ground(def, &c, &kit, &mut |id| lod0(id))
+            .expect("the portal's ground pieces are in the kit");
+        for x in [7.5f32, 9.0, 10.5, 11.4] {
+            for z in [-2.5f32, 0.0, 2.5] {
+                let (y, slot) = g.surface.at(x, z).expect("ground in the corridor");
+                assert!(
+                    matches!(slot, "road_asphalt" | "road_paint"),
+                    "({x}, {z}): {slot}"
+                );
+                assert!(y > 0.0 && y < 0.2, "({x}, {z}): {y} m above the corridor");
+            }
+        }
     }
 
     /// Visual standard (P4): a hillside carries the Meadow's scatter list, so over a few seeds

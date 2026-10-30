@@ -408,22 +408,27 @@ fn ghost_pieces<'a>(
         ));
     }
     if center_kit {
+        let lane_kind = def.edges.iter().find(|s| s.lane.is_some()).map(|s| s.kind);
         if let Some(center) = &def.center {
-            let lane_kind = def.edges.iter().find(|s| s.lane.is_some()).map(|s| s.kind);
             let role = lane_kind.map_or(Role::Centre, Role::Lane);
             out.push((center.as_str(), Transform::IDENTITY, role));
         }
         let pieces = def.edge_pieces(catalog.sockets());
         for e in 0..6u8 {
-            let s = &def.edges[e as usize];
-            if s.lane.is_none() || !matches!(s.kind, SocketKind::Road | SocketKind::River) {
+            if !def.draws_edge_piece(e as usize) {
                 continue;
             }
+            // A piece listed on a lane-less edge carries the tile's lane on (the tunnel portal).
+            let s = &def.edges[e as usize];
+            let kind = match s.lane {
+                Some(_) => s.kind,
+                None => lane_kind.unwrap_or(s.kind),
+            };
             if let Some(piece) = pieces[e as usize] {
                 out.push((
                     piece.as_str(),
                     Transform::from_rotation(piece_rotation(e)),
-                    Role::Lane(s.kind),
+                    Role::Lane(kind),
                 ));
             }
         }

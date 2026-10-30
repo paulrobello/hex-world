@@ -460,6 +460,18 @@ impl TileDef {
         }
     }
 
+    /// Whether the tile draws a ground edge piece on local edge `e`: a road or river lane edge
+    /// does, and a lane-less edge does only where the definition lists a piece for it
+    /// ([`EdgePieces::Explicit`]). The tunnel portal's road runs on under its arch that way, on
+    /// its grass edge 0.
+    pub fn draws_edge_piece(&self, e: usize) -> bool {
+        let s = &self.edges[e];
+        match s.lane {
+            Some(_) => matches!(s.kind, SocketKind::Road | SocketKind::River),
+            None => matches!(&self.edge_pieces, EdgePieces::Explicit(p) if p[e].is_some()),
+        }
+    }
+
     /// The car cap of the tile's [`AgentKind::Car`] spawn rules, 0 without one.
     pub fn car_cap(&self) -> usize {
         self.agents
@@ -1300,6 +1312,19 @@ mod tests {
         let mut t = bend60();
         t.edge_pieces = EdgePieces::Explicit(Default::default());
         assert!(t.edge_pieces(&sockets()).iter().all(Option::is_none));
+    }
+
+    /// Owner report 2026-10-30: the tunnel portal's road stopped short of the arch. Its explicit
+    /// road piece on the lane-less edge 0 is drawn; a lane-less edge with no listed piece is not.
+    #[test]
+    fn a_listed_piece_on_a_lane_less_edge_is_drawn() {
+        let c = crate::TileCatalog::builtin().unwrap();
+        let portal = c.get("road_tunnel_portal").unwrap();
+        let drawn: Vec<usize> = (0..6).filter(|&e| portal.draws_edge_piece(e)).collect();
+        assert_eq!(drawn, [0, 3]);
+        let bend = bend60();
+        let drawn: Vec<usize> = (0..6).filter(|&e| bend.draws_edge_piece(e)).collect();
+        assert_eq!(drawn, [0, 1]);
     }
 
     #[test]

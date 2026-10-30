@@ -787,6 +787,18 @@ fn tile_children(
                 );
             }
         }
+        for e in (0..6u8).filter(|&e| def.edges[e as usize].lane.is_none()) {
+            if def.draws_edge_piece(e as usize)
+                && let Some(piece) = pieces[e as usize]
+            {
+                kit_piece(
+                    p,
+                    piece.as_str(),
+                    e,
+                    Transform::from_rotation(piece_rotation(e)),
+                );
+            }
+        }
     } else {
         // A pending centre: plain lane strips meeting at a hub, or a pad for a lane-less centre.
         for &(e, kind) in &lanes {
