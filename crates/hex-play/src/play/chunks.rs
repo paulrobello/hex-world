@@ -161,7 +161,8 @@ impl KitFamilies {
 const RING_REACH: i32 = 2;
 
 /// Restore the original hierarchy before the normal tile sync starts a sink or replaces children.
-/// A single tile change restores the tiles beside it; a footprint tile change restores every tile
+/// A single tile change restores the tiles beside it, and the field tiles within two cells while
+/// boundaries are drawn (`sync`'s `near_fields`); a footprint tile change restores every tile
 /// within [`RING_REACH`] of its ring cells.
 pub(super) fn restore(
     mut commands: Commands,
@@ -170,6 +171,7 @@ pub(super) fn restore(
     spawned: Option<ResMut<PlaySpawned>>,
     mut chunks: ResMut<PlayChunks>,
     parents: Query<(), With<Transform>>,
+    no_bounds: Option<Res<super::NoBoundaries>>,
 ) {
     let Some(mut spawned) = spawned else { return };
     let refresh = !spawned.refresh.is_empty() || spawned.rebuild || spawned.epoch != view.epoch;
@@ -193,6 +195,11 @@ pub(super) fn restore(
         .filter(|&&c| view.is_footprint(c) || mega(old.get(&c)))
         .flat_map(|&c| hex_core::footprint::members(c))
         .collect();
+    let field_tile = |c: Axial| {
+        no_bounds.is_none()
+            && super::occupant_def(&view, &catalog.0, c)
+                .is_some_and(|(def, ..)| hex_core::boundary::FIELD_TILES.contains(&def.id.as_str()))
+    };
     let roots: Vec<_> = chunks
         .tiles
         .iter()
@@ -201,6 +208,7 @@ pub(super) fn restore(
                 || !parents.contains(**root)
                 || changed.iter().any(|c| c.distance(tile.cell) <= 1)
                 || rings.iter().any(|c| c.distance(tile.cell) <= RING_REACH)
+                || (field_tile(tile.cell) && changed.iter().any(|c| c.distance(tile.cell) <= 2))
         })
         .map(|(root, _)| *root)
         .collect();
@@ -1018,6 +1026,12 @@ mod tests {
     /// rested before settling, and a kit holding only the `forest_grass_edge` pair piece (every
     /// tile body draws placeholders, which never settle).
     fn sync_app(catalog: hex_core::TileCatalog) -> App {
+        sync_app_with(catalog, &["forest_grass_edge"], false)
+    }
+
+    /// [`sync_app`] with a kit holding `pieces` (each its own meshes), drawing field boundaries
+    /// when `boundaries`.
+    fn sync_app_with(catalog: hex_core::TileCatalog, pieces: &[&str], boundaries: bool) -> App {
         fn rest_all(mut rises: ResMut<PlayRises>, spawned: Res<PlaySpawned>) {
             for c in spawned.tiles.keys() {
                 rises.rest(*c);
@@ -1041,8 +1055,10 @@ mod tests {
             .init_resource::<super::super::scatter::ScatterReport>()
             .init_resource::<super::super::SlopeMeshes>()
             .init_resource::<super::super::NoBufferStops>()
-            .init_resource::<super::super::NoBoundaries>()
             .add_message::<super::super::RiseMessage>();
+        if !boundaries {
+            app.init_resource::<super::super::NoBoundaries>();
+        }
         let world = app.world_mut();
         let plain = world.resource_scope(|world, mut meshes: Mut<Assets<Mesh>>| {
             let mut mats = world.resource_mut::<Assets<StandardMaterial>>();
@@ -1054,18 +1070,23 @@ mod tests {
                 base: StandardMaterial::default(),
                 extension: Default::default(),
             });
-        let parts: Vec<KitPart> = (0..3)
-            .map(|lod| KitPart {
-                lod,
-                mesh: world
-                    .resource_mut::<Assets<Mesh>>()
-                    .add(Cuboid::new(1.0, 1.0, 1.0)),
-                material: material.clone(),
-                slot: "edge".into(),
-                rotor: None,
+        let kit: HashMap<String, Vec<KitPart>> = pieces
+            .iter()
+            .map(|piece| {
+                let parts = (0..3)
+                    .map(|lod| KitPart {
+                        lod,
+                        mesh: world
+                            .resource_mut::<Assets<Mesh>>()
+                            .add(Cuboid::new(1.0, 1.0, 1.0)),
+                        material: material.clone(),
+                        slot: "edge".into(),
+                        rotor: None,
+                    })
+                    .collect();
+                ((*piece).to_owned(), parts)
             })
             .collect();
-        let kit = HashMap::from([("forest_grass_edge".to_owned(), parts)]);
         world.insert_resource(KitFamilies::build(&kit, &HashMap::new()));
         world.insert_resource(super::super::PlayKit::Ready(kit));
         world.insert_resource(plain);
@@ -1077,28 +1098,35 @@ mod tests {
     }
 
     /// What `app` draws of the kit at `cell`: its live kit parts and its settled (cached) ones,
-    /// each as (LOD, placement), sorted.
-    fn drawn_at(app: &mut App, cell: Axial) -> Vec<(u8, [u32; 10])> {
+    /// each as (piece, LOD, placement), sorted.
+    fn drawn_at(app: &mut App, cell: Axial) -> Vec<(Arc<str>, u8, [u32; 10])> {
         let root = app.world().resource::<PlaySpawned>().tiles[&cell].1;
-        let mut out: Vec<(u8, [u32; 10])> = app
-            .world()
-            .resource::<PlayChunks>()
-            .tiles
-            .get(&root)
-            .map_or(vec![], |t| {
+        let mut q = app.world_mut().query_filtered::<
+            (&Mesh3d, &Lod, &Transform, &ChildOf),
+            With<MeshMaterial3d<KitMaterial>>,
+        >();
+        let mut drawn: Vec<(AssetId<Mesh>, u8, [u32; 10])> = q
+            .iter(app.world())
+            .filter(|(.., p)| p.parent() == root)
+            .map(|(m, lod, t, _)| (m.0.id(), lod.0, placement_bits(t)))
+            .collect();
+        if let Some(t) = app.world().resource::<PlayChunks>().tiles.get(&root) {
+            drawn.extend(
                 t.parts
                     .iter()
-                    .map(|p| (p.lod, placement_bits(&p.local)))
-                    .collect()
-            });
-        let mut q = app
-            .world_mut()
-            .query_filtered::<(&Lod, &Transform, &ChildOf), With<MeshMaterial3d<KitMaterial>>>();
-        out.extend(
-            q.iter(app.world())
-                .filter(|(_, _, p)| p.parent() == root)
-                .map(|(lod, t, _)| (lod.0, placement_bits(t))),
-        );
+                    .map(|p| (p.mesh.id(), p.lod, placement_bits(&p.local))),
+            );
+        }
+        let families = app.world().resource::<KitFamilies>();
+        let mut out: Vec<(Arc<str>, u8, [u32; 10])> = drawn
+            .into_iter()
+            .map(|(mesh, lod, t)| {
+                let piece = families
+                    .family_of(mesh)
+                    .map_or_else(|| Arc::from(""), |(f, _)| families.piece_of(f));
+                (piece, lod, t)
+            })
+            .collect();
         out.sort();
         out
     }
@@ -1154,6 +1182,68 @@ mod tests {
         assert_eq!(drawn_at(&mut app, forest), without, "after removing");
         show(&mut app, view_of(&w, anchor, true));
         assert_eq!(drawn_at(&mut app, forest), with, "after placing again");
+    }
+
+    /// A meadow set down two cells from a farm moves the farm's boundaries (it changes the gate
+    /// of the farm between them). With the farm's boundary pieces already settled into instance
+    /// records, restore must hand them back to the sync, so the farm then draws exactly what a
+    /// fresh spawn of the same world draws, before and after the meadow comes and goes.
+    #[test]
+    fn a_single_tile_change_restores_settled_boundaries_of_a_field_two_cells_away() {
+        let farm = Axial::ORIGIN;
+        let gate_farm = farm.neighbor(0);
+        let meadow = Axial::new(2, -1);
+        assert_eq!(farm.distance(meadow), 2);
+        assert_eq!(gate_farm.distance(meadow), 1);
+        let view = |with_meadow: bool| {
+            let mut tiles: Vec<(Axial, &str, u8)> = vec![(farm, "farm", 0), (gate_farm, "farm", 1)];
+            tiles.extend((1..6).map(|e| (farm.neighbor(e), "meadow", 0)));
+            if with_meadow {
+                tiles.push((meadow, "meadow", 0));
+            }
+            let mut v = PlayView {
+                tiles: tiles
+                    .into_iter()
+                    .map(|(cell, tile, rotation)| PlayTile {
+                        cell,
+                        tile: tile.into(),
+                        rotation,
+                        level: 0,
+                    })
+                    .collect(),
+                ..default()
+            };
+            v.index_tiles();
+            v
+        };
+        let pieces: Vec<&str> = hex_core::boundary::PIECES
+            .iter()
+            .copied()
+            .chain([hex_core::boundary::HEDGEROW_OAK])
+            .collect();
+        let catalog = hex_core::TileCatalog::builtin().unwrap();
+        let fresh = |with_meadow: bool| {
+            let mut app = sync_app_with(catalog.clone(), &pieces, true);
+            show(&mut app, view(with_meadow));
+            drawn_at(&mut app, farm)
+        };
+        let (with, without) = (fresh(true), fresh(false));
+        assert!(!without.is_empty(), "the farm draws boundaries");
+        assert_ne!(with, without, "the meadow moves the farm's boundaries");
+
+        let mut app = sync_app_with(catalog.clone(), &pieces, true);
+        show(&mut app, view(false));
+        let root = app.world().resource::<PlaySpawned>().tiles[&farm].1;
+        assert!(
+            !app.world().resource::<PlayChunks>().tiles[&root]
+                .parts
+                .is_empty(),
+            "the boundaries settled"
+        );
+        show(&mut app, view(true));
+        assert_eq!(drawn_at(&mut app, farm), with, "after placing the meadow");
+        show(&mut app, view(false));
+        assert_eq!(drawn_at(&mut app, farm), without, "after removing it");
     }
 
     /// A single tile change still restores only the settled tiles beside it: a settled tile two
