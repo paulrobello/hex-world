@@ -244,6 +244,14 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -2, 0, at, yaw_deg)
         });
     }
+    // The second outcrop on its own meadow at (-3, 0), beside the first: the (-2, 0) meadow has no
+    // room for another 8 m stone. Same spot, yaw and relief as outcrop_granite there, so the two
+    // compare one to one.
+    v.push(place("meadow_base", -3, 0, 0));
+    v.push(Placement {
+        y: 0.0,
+        ..hero("outcrop_granite_b", -3, 0, [3.0, 4.5], 25.0)
+    });
     // The windmill (P3, refs approved under A17) alone on a meadow at (3, -1), the one water-patch
     // cell the layout left free (so `water_kit` keeps its 12 cells), its sails turned toward the
     // overview camera. Its rotor turns (`spin_rotors`).
@@ -1455,6 +1463,7 @@ mod tests {
         ] {
             assert!(on(piece, (-2, 0)) && on("meadow_base", (-2, 0)), "{piece}");
         }
+        assert!(on("outcrop_granite_b", (-3, 0)) && on("meadow_base", (-3, 0)));
         for piece in [
             "river_stones",
             "river_stones_b",

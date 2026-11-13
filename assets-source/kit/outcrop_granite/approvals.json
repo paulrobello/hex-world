@@ -14,5 +14,22 @@
     "gate": "piece",
     "status": "approved",
     "notes": "Approved in chat (\"all approved\", 2026-10-27, A30 on the open-questions page, every recommended default): the piece; Q2 O1 the boulders and outcrop lead their tiles' scatter rules; Q3 the thumbnail shifts and the 2 m higher thumbnail look-at; Q4 O1 tiles added to the mixed world so every scatter piece draws; Q5 no outcrop on the coast band, no boulders on beach_outer, the outcrop's 109 px/m bake, small boulders ending at 400 m. Review sheets in docs/checkpoints/boulders/."
+  },
+  {
+    "who": "pending (owner)",
+    "when": null,
+    "gate": "piece",
+    "status": "pending",
+    "revision": "stamped-lines redo (owner 2026-10-30, C3 review: \"the lines on it make it too recognizable as stamped\")",
+    "requested": "2026-11-12",
+    "notes": "Pending owner review; not an approval. The three straight joint grooves (a T on every instance) are now four wandering fractures (a main joint, two oblique branches, a hairline) whose width, depth and slab step vary along their length and fade out unevenly; a low swell breaks the flat top facets; lichen varies (pale sage rosette colonies, ochre crusts on the flanks, the small rosettes and the moss thinning and thickening across the stone) and fracture floors darken. Plan size and LOD budgets unchanged (7.94 x 4.96 m above ground, LOD tris 1370/587/175); the top sits 5.8 cm lower (1.21 m, was 1.268 m) because the fractures cut the crest; the scatter footprint still fits (collider reach 4.242, FOOTPRINTS 4.25); the grass ROCK_BASES outline needs the refit in docs/checkpoints/outcrop_granite/integration.patch. Review the before/after sheet docs/checkpoints/outcrop_granite/redo-sheet.jpg and the six-view renders in assets-source/kit/outcrop_granite/renders/; in-engine shots are taken by the orchestrator. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-11-13",
+    "gate": "piece",
+    "status": "approved",
+    "revision": "stamped-lines redo",
+    "notes": "Approved in chat (\"OC yes to all\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: OC-Q1 the stamped-lines redo reads natural; OC-Q2 keep outcrop_granite_b; OC-Q3 a/b 50/50; OC-Q4 the extra showcase meadow at (-3, 0); OC-Q5 move the shared fracture code into a _outcrop.py helper (a and b rebuild and re-check)."
   }
 ]

@@ -1,0 +1,138 @@
+{
+  "aoDistanceM": 0.5,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.4734705984592438,
+      "min": 0.20444446802139282,
+      "p01": 0.2886274755001068,
+      "p05": 0.3054640591144562,
+      "texels": 666030
+    },
+    "ao": {
+      "mean": 0.9155762791633606,
+      "min": 0.1568627506494522,
+      "p01": 0.3450980484485626,
+      "p05": 0.529411792755127,
+      "texels": 666030
+    },
+    "mossFraction": 0.07177604612404846,
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.7665614485740662,
+      "min": 0.7215686440467834,
+      "p01": 0.7215686440467834,
+      "p05": 0.7215686440467834,
+      "texels": 666030
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.08,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "colliderReach": 3.918,
+  "device": "CPU",
+  "joints": [
+    {
+      "a": [
+        1.45,
+        2.1
+      ],
+      "b": [
+        2.1,
+        -1.95
+      ],
+      "depth": 0.13,
+      "step": 0.09
+    },
+    {
+      "a": [
+        0.739,
+        0.58
+      ],
+      "b": [
+        -3.05,
+        0.55
+      ],
+      "depth": 0.1,
+      "step": 0.045
+    },
+    {
+      "a": [
+        -0.641,
+        1.09
+      ],
+      "b": [
+        -0.95,
+        -1.7
+      ],
+      "depth": 0.065,
+      "step": 0.03
+    },
+    {
+      "a": [
+        -1.7,
+        1.25
+      ],
+      "b": [
+        0.15,
+        1.75
+      ],
+      "depth": 0.035,
+      "step": 0.0
+    }
+  ],
+  "lod2Drops": {},
+  "marginPx": 8,
+  "maxRayDistanceM": 0.25,
+  "receiverSignature": "1100fc729fb4f15b9a7a5a79e8da31f08aec36fbe8ee869788b0702ee37ecc6e",
+  "samples": 32,
+  "shape": {
+    "groundReach": 3.871,
+    "sizeAboveGround": [
+      7.429,
+      5.339,
+      1.242
+    ],
+    "z": [
+      -0.415,
+      1.242
+    ]
+  },
+  "skipped": false,
+  "stones": [
+    {
+      "centre": [
+        0.0,
+        0.0,
+        -0.15
+      ],
+      "semi": [
+        3.95,
+        2.75,
+        1.36
+      ]
+    }
+  ],
+  "texelDensityPxPerM": {
+    "max": 128.45508040721123,
+    "median": 122.35828199755113,
+    "min": 83.97732713712934
+  },
+  "texelMinPxPerM": 104.0
+}

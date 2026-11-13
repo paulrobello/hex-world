@@ -115,6 +115,7 @@ pub const OBSTACLES: &[&str] = &[
     "boulder_granite_c",
     "boulder_granite_d",
     "outcrop_granite",
+    "outcrop_granite_b",
     "river_stones",
     "river_stones_b",
     "river_stones_c",
@@ -1818,7 +1819,7 @@ pub(crate) mod tests {
                 piece.starts_with("rock_")
                     || piece.starts_with("river_stones")
                     || piece.starts_with("boulder_granite")
-                    || piece == "outcrop_granite",
+                    || piece.starts_with("outcrop_granite"),
                 "{piece} reports {}",
                 prop_kind(piece)
             );

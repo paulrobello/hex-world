@@ -2,7 +2,7 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/outcrop_granite.py",
-    "sha256": "868a76d94592be0b9ff9edab8b02d8e3b6feeeb781e701c1b0a7af79f97f57d9"
+    "sha256": "cd6e7f91ee157c04a5fa15215ffdfa346194d963690f459e7620da40780b2047"
   },
   "generatorDeps": [
     {
@@ -15,9 +15,9 @@
     }
   ],
   "lodTris": {
-    "outcrop_granite_lod0": 1371,
+    "outcrop_granite_lod0": 1370,
     "outcrop_granite_lod1": 587,
-    "outcrop_granite_lod2": 176
+    "outcrop_granite_lod2": 175
   },
   "nodes": [
     "outcrop_granite",

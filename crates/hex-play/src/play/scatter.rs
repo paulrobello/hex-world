@@ -204,6 +204,8 @@ pub const VARIANTS: &[(&str, &[&str])] = &[
             "boulder_granite_d",
         ],
     ),
+    // A second outcrop, so two in one view differ (outcrop redo Q2): half the picks each.
+    ("outcrop_granite", &["outcrop_granite_b"]),
     (
         "wildflower_clump",
         &["wildflower_clump_b", "wildflower_clump_c"],
@@ -795,6 +797,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "outcrop_granite",
         Footprint {
             ground: 4.25,
+            crown: 0.0,
+        },
+    ),
+    (
+        "outcrop_granite_b",
+        Footprint {
+            ground: 3.92,
             crown: 0.0,
         },
     ),
@@ -3712,7 +3721,8 @@ mod tests {
             let g = prepared(def).unwrap();
             let piece = def.props.scatter[rule].piece.as_str();
             let mut seen = std::collections::BTreeSet::new();
-            for seed in 0..12u64 {
+            // 24 seeds: the forest's outcrop rule places one on only a few tiles in 12.
+            for seed in 0..24u64 {
                 let l = layout(def, seed, &g);
                 assert_eq!(l, layout(def, seed, &g), "{id}: same seed");
                 for i in l.instances.iter().filter(|i| i.rule as usize == rule) {

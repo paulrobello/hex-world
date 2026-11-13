@@ -1,0 +1,60 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/boulders/boulders-kit.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        4.94,
+        7.26,
+        12.7
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 13.9,
+      "load_after": [
+        5.02,
+        7.2,
+        12.62
+      ],
+      "frames": {
+        "b1-kit-play": {
+          "mean": 0.2281,
+          "problem": null
+        },
+        "b1-kit-sun": {
+          "mean": 0.2617,
+          "problem": null
+        },
+        "b1-kit-shade": {
+          "mean": 0.1982,
+          "problem": null
+        },
+        "b1-kit-outcrop": {
+          "mean": 0.2922,
+          "problem": null
+        },
+        "b1-kit-small": {
+          "mean": 0.2445,
+          "problem": null
+        },
+        "b1-kit-eye": {
+          "mean": 0.213,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

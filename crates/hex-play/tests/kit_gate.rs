@@ -552,6 +552,7 @@ const BOULDER_PIECES: &[&str] = &[
     "boulder_granite_c",
     "boulder_granite_d",
     "outcrop_granite",
+    "outcrop_granite_b",
 ];
 
 /// The massif's unique rock and scree (owner A54 Q1 O1, 2026-10-29: a unique bake with this scoped

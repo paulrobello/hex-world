@@ -1,0 +1,183 @@
+{
+  "name": "outcrop_granite_b",
+  "date": "2026-11-13T09:03:47.099Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 835740,
+      "sha256": "05e3680852d5f32090696000c9214ad7e97e8002577dc345bed8c23a6a4495c5"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 842942,
+      "sha256": "949fbb98bb1558cb4ebcc8d685453d08b7f8e2c40234ba6413a1bd3ccdc497a6"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1530896,
+      "sha256": "73f135e410e6bb2a923669dfbc998ab29812605f6139f11e4249fc4fddee33b9"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 26654,
+      "sha256": "3d29fbadeeb20fbb96eefb505a7add80fbf353a1a013641fbaacc463f078daba"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 25375,
+      "sha256": "62ffc84e653cbc867b333ad4325efb2e271763987e473464a767037446a52bfb"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 37508,
+      "sha256": "228185fc44c560fafc7d846d9bd6c3d1be8629986f5f5384d6e4fa0be6c9f652"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 164755,
+      "sha256": "445cbc53f9a9068a5b13728dc75b656eb87ba9be22cf841b2a7bedef32189d2c"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 170486,
+      "sha256": "4d0494b0dc307dc3ef6c29d3563e59967f557288390c38351d01f4b8be62d1ad"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 287894,
+      "sha256": "e82d0a350f0b93aa44ecf1546e49228ddd948006e6a52f690c9d332c91ef9e39"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 151249,
+      "sha256": "98266ff8570d019f7698642d7a136cc4310256ca13d2aec88d58cb42bf7e4d67"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 155160,
+      "sha256": "b9f0f49d7b04eb2536e08303416035194e42d9eaeaedcbc25dfba0b346f3bf87"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/outcrop_granite_b/outcrop_granite_b.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 230328,
+      "sha256": "fa6b3cd2582de5bbf5de8e3e42ef178ac90ef16e6135b3d931e99400383b09c6"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1178398,
+      "astc": 1193963
+    },
+    "glbBytes": 91956
+  },
+  "glb": {
+    "bytes": 91956,
+    "sha256": "b50e074ca9039a8ebdb1b118ba62d4412c90ff5f13bd2455beb248513f13a6db"
+  }
+}
