@@ -359,8 +359,8 @@ mod tests {
         assert_eq!(groups.len(), 1);
         let g = &groups[0];
         assert_eq!(g.members, [red.id(), blue.id()]);
-        for lod in 0..3 {
-            let m = k.meshes.get(g.meshes[lod].as_ref().unwrap()).unwrap();
+        for mesh in &g.meshes {
+            let m = k.meshes.get(mesh.as_ref().unwrap()).unwrap();
             assert_eq!(m.count_vertices(), 6);
             assert_eq!(m.indices().unwrap().len(), 6);
             let idx: Vec<usize> = m.indices().unwrap().iter().collect();
