@@ -218,3 +218,19 @@ test("the build id changes when any site file, Trunk's output or the page change
     rmSync(base, { recursive: true, force: true });
   }
 });
+
+test("a comment mentioning script-src survives byte for byte while the CSP meta tag is rewritten", () => {
+  const dir = site();
+  try {
+    const comment = "<!-- CSP note: script-src 'self' 'sha256-keep=' 'unsafe-inline'; stays as written -->";
+    const meta = `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-stale='; object-src 'none'" />`;
+    writeFileSync(join(dir, "index.html"), read(dir, "index.html").replace("<head>", `<head>${comment}\n${meta}`));
+    versionDist(dir);
+    const page = read(dir, "index.html");
+    assert.ok(page.includes(comment), "comment mutated");
+    assert.ok(!page.includes("sha256-stale="), "meta tag was not rewritten");
+    assert.match(/<meta[^>]*Content-Security-Policy[^>]*>/.exec(page)[0], /script-src 'self' 'sha256-/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

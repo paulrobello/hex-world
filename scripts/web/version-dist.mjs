@@ -59,12 +59,17 @@ function resolveRef(from, ref) {
   return p.startsWith("..") || p === "." ? null : p;
 }
 
+/** `html` with `fn` applied to each script-src directive, only inside the Content-Security-Policy meta tag (never comments or body text). */
+function mapScriptSrc(html, fn) {
+  return html.replace(/<meta\b[^>]*http-equiv="Content-Security-Policy"[^>]*>/gi, (meta) =>
+    meta.replace(/script-src\s+[^;"<>]+/g, fn),
+  );
+}
+
 /** The build id: the map, Trunk's hashed names and the page without its map script. */
 export function buildId(map, trunkFiles, html) {
   // Generated CSP hashes include the map's build id, so exclude them from its own input.
-  const stableHtml = html.replace(/script-src\s+[^;"<>]+/g, (directive) =>
-    directive.replace(/\s+'sha256-[A-Za-z0-9+/=]+'/g, ""),
-  );
+  const stableHtml = mapScriptSrc(html, (directive) => directive.replace(/\s+'sha256-[A-Za-z0-9+/=]+'/g, ""));
   return contentHash(Buffer.from(JSON.stringify([map, [...trunkFiles].sort(), stableHtml]), "utf8"));
 }
 
@@ -77,7 +82,7 @@ export function hashInlineScripts(page) {
   const scriptHashes = [...page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
     .filter(([, attrs]) => !/\bsrc\s*=/i.test(attrs))
     .map(([, , body]) => `'sha256-${createHash("sha256").update(body).digest("base64")}'`);
-  return page.replace(/script-src\s+[^;"<>]+/g, (directive) => {
+  return mapScriptSrc(page, (directive) => {
     const sources = directive.replace(/\s+'(?:sha256-[A-Za-z0-9+/=]+|unsafe-inline)'/g, "");
     return `${sources} ${[...new Set(scriptHashes)].join(" ")}`;
   });
