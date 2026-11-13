@@ -17,6 +17,7 @@ import {
   entryReadout,
   fit,
   fitEntry,
+  refusedWhy,
   needsAt,
   rotationReadout,
   tileDef,
@@ -27,7 +28,7 @@ import {
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
-import { SheetController } from "./sheet-controller.ts";
+import { SheetController, ghostCovers } from "./sheet-controller.ts";
 import { Walk } from "./walk.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
@@ -438,16 +439,7 @@ export class Hud {
         break;
       }
       case "placementRefused": {
-        const def = tileDef(e.tile);
-        // A refused replace on a tunnel's cover: the tile stays and says why (hex-core `ReplaceError::TunnelCover`).
-        const why = this.coverCells().has(cellKey(e))
-          ? "This tile covers a tunnel."
-          : e.reason.includes("cannot stand at level")
-            ? `${e.reason[0]!.toUpperCase()}${e.reason.slice(1)}.`
-            : def
-              ? fit(def, needsAt(e, this.map), e.level).why
-              : "";
-        const text = why || "An edge doesn't match its neighbour.";
+        const text = refusedWhy(e, this.map, this.coverCells().has(cellKey(e)));
         this.refusal = { cell: e, tile: e.tile, text, until: now + 2000 };
         if (!reduceMotion()) retrigger(this.tag, "is-pulse");
         this.say(`${tileName(e.tile)} doesn't fit here. ${text}`);
@@ -570,12 +562,18 @@ export class Hud {
       cell = g;
       level = g.level;
       const def = tileDef(g.tile);
-      const f = def ? fit(def, needsAt(g, this.map), g.level) : null;
+      const needs = needsAt(g, this.map);
+      const f = def ? fit(def, needs, g.level) : null;
+      const entry = entryOf(g.tile);
+      // A footprint ghost stands on its centre, which fits where the engine lists it in `mega_slots`.
+      const entryFit =
+        entry && (def?.footprint || f?.ok)
+          ? fitEntry(entry, needs, { slot: g, megaSlots: st.mega_slots, tiles: this.map })
+          : null;
+      const ok = def?.footprint ? !!entryFit?.ok : !!f?.ok;
       const name = tileName(g.tile);
-      if (f?.ok && g.valid) {
+      if (ok && g.valid) {
         // A group (the Beach Curve) counts every member's orientations together, as R walks them.
-        const entry = entryOf(g.tile);
-        const entryFit = entry ? fitEntry(entry, needsAt(g, this.map)) : null;
         const { index, count } =
           entry && entryFit && entry.tiles.length > 1
             ? entryReadout(entryFit, g.tile, g.rotation, g.level)
@@ -583,7 +581,7 @@ export class Hud {
         // R steps every level too, so the hint shows while any orientation is left to turn to.
         const canTurn = turnHint(count, entryFit?.seq.length ?? 0);
         const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
-        const pinned = sameCell(st.pinned, g);
+        const pinned = ghostCovers(g, st.pinned);
         sig = `ok|${cellKey(g)}|${g.tile}|${text}|${g.level}|${canTurn}|${pinned}`;
         parts.push(h("span", {}, name), h("span", { class: "ghost-tag__fit" }, text));
         if (g.level > 0) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, `Level ${g.level}`));
@@ -591,16 +589,18 @@ export class Hud {
         if (pinned) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, "Pinned · click to place"));
       } else {
         bad = true;
-        const clashes = g.edges.filter((e) => e === "Incompatible").length;
+        const clashes = (g.outer_edges ?? g.edges).filter((e) => e === "Incompatible").length;
         const why =
           this.refusal && sameCell(this.refusal.cell, g)
             ? this.refusal.text
-            : f && !f.ok
-              ? f.why
+            : !ok && f
+              ? def?.footprint && entryFit
+                ? entryFit.why
+                : f.why
               : `${plural(clashes, "edge")} clash`;
         sig = `bad|${cellKey(g)}|${g.tile}|${why}|${g.level}`;
         parts.push(icon("alert"), h("span", {}, name), h("span", { class: "ghost-tag__fit is-bad" }, why));
-        if (f?.ok) parts.push(h("kbd", {}, "R"));
+        if (ok) parts.push(h("kbd", {}, "R"));
       }
     }
     if (!cell) {

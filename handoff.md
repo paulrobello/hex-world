@@ -1,9 +1,24 @@
-# Hex World handoff (2026-10-28)
+# Hex World handoff (2026-10-29)
 
 Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
+- In flight 2026-10-29: P4 mega tiles, first round. This work is on branch `mega-tiles` (worktree `.claude/worktrees/mega-tiles`) and has not been merged.
+  - **Docs:** spec `docs/superpowers/specs/2026-10-29-mega-tiles-design.md`, plan `docs/superpowers/plans/2026-10-29-mega-tiles-first-round.md`. The ledger is in `.superpowers/sdd/2026-10-29-mega-tiles-first-round/progress.md`, a gitignored workspace in the worktree.
+  - **Status:** all plan tasks are done, along with the final whole-branch review and its fix wave (`63b2064`..`baf543e`).
+  - **Scope:** one 7-cell `massif_granite` tile places, turns (24 orientations), undoes, saves (format v3) and bulldozes as a single tile. The HUD reads `mega_slots` from the engine state.
+  - **Evidence:**
+    - `docs/checkpoints/massif_granite/` holds the C2 sheet and the massif shots.
+    - `docs/perf/mega-tiles-2026-10-29/` measured `0176c72`, before the fix wave. `docs/perf/mega-tiles-2026-10-30/` re-ran it on MiniMac at the fix-wave head: flat-world perf matches main within noise (close 27.34 against 27.34 ms, overview 37.09 against 37.18 ms, equal draws). The slowest massif grass unit builds in 2.3 ms against the 4 ms budget.
+    - Thumbnails changed for the massif only.
+    - Flat-world pixel parity **fails**. At the play camera about 300k of 1.6M pixels differ (max 47/255), as speckle on LOD1 swaying foliage and the river. It bisects to `151b3a1` (lazy massif peak in an existing material); its parent `b1ef668` matches main. A debug agent is finding the cause in its own worktree.
+    - 2026-11-13: the play speckle is fixed by the quantized hold (`a09e359`). The remaining overview residual was the boid compute pass's peak lift (`6942098`), not `151b3a1`. It is fixed on `worktree-agent-a1afa85caad816d27`, with flat-world parity at the noise floor on every camera (`docs/perf/mega-tiles-2026-11-13-overview/`).
+    - A55 answered 2026-10-29: one more form pass with grassy flanks rising 8–10 m to the rock foot, pines and rock colour kept. Form pass 3 is in progress on an agent branch.
+  - **Before merge:**
+    - the parity fix, re-reviewed, with a fresh native capture matching main;
+    - form pass 3 merged, then `make thumbs` and the massif shots re-run;
+    - C3, the owner's in-engine approval.
 - `main` holds P4 elevation's first round (squash-merged 2026-10-29) and everything before it. Pushed with the P4 merge (CI watched) and deployed; `dist/` rebuilt.
 - P4 elevation first round is complete (plan `docs/superpowers/plans/2026-10-28-elevation-first-round.md`, ledger rulings listed for the owner at close-out). It covers:
   - the level byte live in saves (0..=3, format v3 unchanged);
@@ -87,7 +102,7 @@ No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. 
 
 ## Waiting on Paul
 
-- The P4 elevation brainstorm: the first-round scope playback (my guesses: road ramps and flat roads on raised ground, levels 0-3, direct raised-lower contact shows a soil cliff, raised rivers/waterfalls and rail deferred, hillside ground built at runtime rather than as Blender pieces).
+- C3: the owner approves the massif in engine before mega-tiles merges, once form pass 3 and the parity fix land.
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups

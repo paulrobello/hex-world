@@ -1,6 +1,7 @@
 //! Play-scenario game state (PRD §4.1–4.2, D20): the hex-core world plus the player's selection,
 //! ghost rotation and tool. [`GameState::apply`] is the only way an action changes it.
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::sync::{Arc, Mutex};
 
 use bevy::prelude::*;
 use hex_core::{
@@ -233,7 +234,13 @@ pub struct GameState {
     /// The cell the latest world change bulldozed, so the renderer raises a dust cloud over its
     /// sink; any other world change (a placement, undo, redo, a replaced world) clears it.
     pub last_bulldoze: Option<Axial>,
+    /// Per footprint tile id, its [`World::mega_slots`] and the [`World::stamp`] they were found
+    /// at: a hover and the world state read them instead of searching the world again.
+    mega_slots: Mutex<HashMap<String, (u64, MegaSlots)>>,
 }
+
+/// A footprint tile's legal centres, sorted, each with its legal orientations.
+type MegaSlots = Arc<Vec<(Axial, Vec<Orientation>)>>;
 
 impl GameState {
     pub fn new(seed: u64) -> Self {
@@ -260,7 +267,42 @@ impl GameState {
             world_rev: 0,
             epoch: 0,
             last_bulldoze: None,
+            mega_slots: Mutex::default(),
         }
+    }
+
+    /// [`World::mega_slots`] of the footprint tile `d` in the current world, found once per world
+    /// state.
+    fn mega_slots_of(&self, d: &TileDef) -> MegaSlots {
+        let stamp = self.world.stamp();
+        let mut cache = self.mega_slots.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some((at, slots)) = cache.get(&d.id)
+            && *at == stamp
+        {
+            return slots.clone();
+        }
+        let slots = Arc::new(self.world.mega_slots(&self.catalog, d));
+        cache.insert(d.id.clone(), (stamp, slots.clone()));
+        slots
+    }
+
+    /// The legal orientations of `d` with its anchor at `cell`, as
+    /// [`World::legal_orientations`] gives them; a footprint tile's from [`Self::mega_slots_of`].
+    fn legal_at(&self, cell: Axial, d: &TileDef) -> Vec<Orientation> {
+        if !d.is_mega() {
+            return self.world.legal_orientations(&self.catalog, cell, d);
+        }
+        let slots = self.mega_slots_of(d);
+        slots
+            .binary_search_by_key(&cell, |(c, _)| *c)
+            .map_or_else(|_| vec![], |i| slots[i].1.clone())
+    }
+
+    /// Whether `cell` is a legal centre of the footprint tile `d`.
+    fn is_mega_centre(&self, cell: Axial, d: &TileDef) -> bool {
+        self.mega_slots_of(d)
+            .binary_search_by_key(&cell, |(c, _)| *c)
+            .is_ok()
     }
 
     fn selected_def(&self) -> &TileDef {
@@ -269,16 +311,38 @@ impl GameState {
             .expect("selected is a catalog id")
     }
 
+    /// Whether `cell` is a placement slot for the selection: a free cell beside the world, or,
+    /// with a footprint tile selected, a legal centre for it (two steps from the world).
+    fn is_slot(&self, cell: Axial) -> bool {
+        let d = self.selected_def();
+        self.world.is_slot(cell) || (d.is_mega() && self.is_mega_centre(cell, d))
+    }
+
     /// The hovered cell when it is a placement slot.
     pub fn hovered_slot(&self) -> Option<Axial> {
-        self.hovered.filter(|&c| self.world.is_slot(c))
+        self.hovered.filter(|&c| self.is_slot(c))
     }
 
     /// The slot the ghost, rotation and inventory follow: the pinned slot, else the hovered one.
     pub fn target_slot(&self) -> Option<Axial> {
         self.pinned
-            .filter(|&c| self.world.is_slot(c))
+            .filter(|&c| self.is_slot(c))
             .or_else(|| self.hovered_slot())
+    }
+
+    /// Where `d` stands when put down for the free cell `slot`: a footprint tile at the centre
+    /// [`World::mega_centre_for`] picks (at `slot` when no footprint covers it, refused there), any
+    /// other tile at `slot`.
+    fn anchor_for(&self, slot: Axial, d: &TileDef) -> Axial {
+        if d.is_mega() && !self.world.occupied(slot) {
+            // `World::mega_centre_for` over the cached centres.
+            std::iter::once(slot)
+                .chain((0..6).map(|e| slot.neighbor(e)))
+                .find(|&a| self.is_mega_centre(a, d))
+                .unwrap_or(slot)
+        } else {
+            slot
+        }
     }
 
     /// Sets the pin, returning its event when it changed.
@@ -296,17 +360,21 @@ impl GameState {
     /// Drops a pin whose cell is no longer a slot (after a world change).
     fn drop_stale_pin(&mut self) -> Vec<GameEvent> {
         match self.pinned {
-            Some(c) if !self.world.is_slot(c) => self.set_pin(None),
+            Some(c) if !self.is_slot(c) => self.set_pin(None),
             _ => vec![],
         }
     }
 
-    /// The top (m) of the tile placed at `cell`, `(level + def.top()) * LEVEL_STEP`; `None` on an
-    /// empty cell. Pointer picking and the orbit pivot stand on it (`camera::pick_cell`).
+    /// The top (m) of the tile covering `cell`, `(level + def.top()) * LEVEL_STEP`, and over a
+    /// footprint tile's anchor its peak too (`hex_play::play::MASSIF_PEAK`); `None` on an empty
+    /// cell. Pointer picking and the orbit pivot stand on it (`camera::pick_cell`).
     pub fn top_of(&self, cell: Axial) -> Option<f32> {
         let t = self.world.tile(cell)?;
-        let top = self.catalog.get(&t.def).map_or(0, |d| d.top());
-        Some(f32::from(t.level + top) * hex_core::LEVEL_STEP)
+        let def = self.catalog.get(&t.def);
+        let top = def.map_or(0, |d| d.top());
+        let peak = (def.is_some_and(TileDef::is_mega) && self.world.anchor_of(cell) == Some(cell))
+            .then_some(hex_play::play::MASSIF_PEAK);
+        Some(f32::from(t.level + top) * hex_core::LEVEL_STEP + peak.unwrap_or(0.0))
     }
 
     /// The level each free slot's outline sits on, where it is not 0 ([`PlayView::slot_levels`]):
@@ -340,9 +408,10 @@ impl GameState {
             .collect()
     }
 
+    /// The selected tile's legal orientations where it stands for the slot `cell`.
     fn legal_here(&self, cell: Axial) -> Vec<Orientation> {
-        self.world
-            .legal_orientations(&self.catalog, cell, self.selected_def())
+        let d = self.selected_def();
+        self.legal_at(self.anchor_for(cell, d), d)
     }
 
     /// The orientation `d` takes at `cell` among `legal` (cliff-free first): `preferred` where it
@@ -359,8 +428,9 @@ impl GameState {
         let first = *legal.first()?;
         let cliff = |o: Orientation| {
             self.world
-                .cliff_edges(&self.catalog, cell, d, o)
-                .contains(&true)
+                .faces(&self.catalog, cell, d, o)
+                .iter()
+                .any(|f| f.cliff)
         };
         let fits = |o: &Orientation| legal.contains(o) && cliff(*o) == cliff(first);
         preferred
@@ -386,8 +456,9 @@ impl GameState {
         let start = members.iter().position(|d| &d.id == preferred).unwrap_or(0);
         let n = members.len();
         (0..n).map(|i| members[(start + i) % n]).find_map(|d| {
-            let legal = self.world.legal_orientations(&self.catalog, cell, d);
-            self.pick(cell, d, &legal, self.chosen_orientation.get(&d.id).copied())
+            let at = self.anchor_for(cell, d);
+            let legal = self.legal_at(at, d);
+            self.pick(at, d, &legal, self.chosen_orientation.get(&d.id).copied())
                 .map(|k| (d.id.clone(), k))
         })
     }
@@ -419,20 +490,22 @@ impl GameState {
         self.photo_mode || self.walk_mode
     }
 
-    /// The ghost at the target slot, with the rotations legal at the ghost's level (ascending);
-    /// none in bulldoze mode, photo mode or walk mode.
+    /// The ghost for the target slot: where it stands (the slot, or a footprint tile's covering
+    /// centre), the rotations legal at the ghost's level (ascending), its edge glow and whether it
+    /// fits; none in bulldoze mode, photo mode or walk mode.
     pub fn ghost(&self) -> Option<(Axial, Vec<u8>, [EdgeStatus; 6], bool)> {
         if self.tool != Tool::Place || self.viewing() {
             return None;
         }
-        let cell = self.target_slot()?;
+        let slot = self.target_slot()?;
         let def = self.selected_def();
+        let cell = self.anchor_for(slot, def);
         let edges = self
             .world
             .edge_status(&self.catalog, cell, def, self.chosen);
         let valid = self.world.fits(&self.catalog, cell, def, self.chosen);
         let mut legal: Vec<u8> = self
-            .legal_here(cell)
+            .legal_here(slot)
             .into_iter()
             .filter(|o| o.level == self.chosen.level)
             .map(|o| o.rotation)
@@ -441,12 +514,29 @@ impl GameState {
         Some((cell, legal, edges, valid))
     }
 
-    /// The hovered tile in bulldoze mode, with the refusal reason when removing it is blocked.
+    /// The glow of each outer edge of a footprint ghost standing at `cell`, in local outer-index
+    /// order; `None` for a single tile.
+    fn ghost_outer(&self, cell: Axial) -> Option<[EdgeStatus; 18]> {
+        let def = self.selected_def();
+        if !def.is_mega() {
+            return None;
+        }
+        let status: Vec<EdgeStatus> = self
+            .world
+            .faces(&self.catalog, cell, def, self.chosen)
+            .iter()
+            .map(|f| f.status)
+            .collect();
+        status.try_into().ok()
+    }
+
+    /// The hovered tile in bulldoze mode, at its anchor (a footprint goes whole), with the refusal
+    /// reason when removing it is blocked.
     pub fn bulldoze_target(&self) -> Option<(Axial, Option<String>)> {
         if self.tool != Tool::Bulldoze || self.viewing() {
             return None;
         }
-        let cell = self.hovered.filter(|c| self.world.tile(*c).is_some())?;
+        let cell = self.hovered.and_then(|c| self.world.anchor_of(c))?;
         Some((
             cell,
             self.world
@@ -602,19 +692,22 @@ impl GameState {
         };
         self.selected = tile;
         self.resnap(true);
+        // A pinned legal centre is a slot only for a footprint tile.
+        let mut events = self.drop_stale_pin();
         self.result("select_tile", None, None);
-        vec![GameEvent::TileSelected {
+        events.push(GameEvent::TileSelected {
             tile: self.selected.clone(),
-        }]
+        });
+        events
     }
 
     fn rotate(&mut self, dir: RotateDir) -> Vec<GameEvent> {
-        let cycled = self.target_slot().and_then(|cell| {
+        let cycled = self.target_slot().and_then(|slot| {
             let members = self.catalog.siblings(&self.selected);
             self.world
                 .cycle_group(
                     &self.catalog,
-                    cell,
+                    self.anchor_for(slot, self.selected_def()),
                     &members,
                     (&self.selected, self.chosen),
                     dir,
@@ -669,7 +762,12 @@ impl GameState {
         let def = self.selected_def().clone();
         // `pick` keeps the ghost's rotation only when it is as cliff-free as the first entry.
         let o = self
-            .pick(cell, &def, &on_level, Some(preferred))
+            .pick(
+                self.anchor_for(cell, &def),
+                &def,
+                &on_level,
+                Some(preferred),
+            )
             .unwrap_or(preferred);
         let tile = self.selected.clone();
         let placed = self.place_with(cell, tile, o);
@@ -685,7 +783,7 @@ impl GameState {
     }
 
     fn pin_action(&mut self, cell: Axial) -> Vec<GameEvent> {
-        if self.tool != Tool::Place || self.photo_mode || !self.world.is_slot(cell) {
+        if self.tool != Tool::Place || self.photo_mode || !self.is_slot(cell) {
             return self.refuse(
                 "pin",
                 format!("({}, {}) is not a free slot", cell.q, cell.r),
@@ -709,7 +807,7 @@ impl GameState {
     }
 
     fn undo(&mut self) -> Vec<GameEvent> {
-        if !self.world.undo() {
+        if !self.world.undo(&self.catalog) {
             return self.refuse("undo", "nothing to undo".into());
         }
         let mut events = vec![GameEvent::Undone];
@@ -722,7 +820,7 @@ impl GameState {
     }
 
     fn redo(&mut self) -> Vec<GameEvent> {
-        if !self.world.redo() {
+        if !self.world.redo(&self.catalog) {
             return self.refuse("redo", "nothing to redo".into());
         }
         let mut events = vec![GameEvent::Redone];
@@ -770,7 +868,7 @@ impl GameState {
         match (self.tool, self.hovered) {
             (Tool::Place, _) if self.pinned.is_some() => self.click_while_pinned(),
             (_, None) => self.refuse("primary", "no cell hovered".into()),
-            (Tool::Place, Some(cell)) if self.world.is_slot(cell) => self.pin(cell),
+            (Tool::Place, Some(cell)) if self.is_slot(cell) => self.pin(cell),
             (Tool::Place, Some(cell)) => self.place(cell),
             (Tool::Bulldoze, Some(cell)) => self.bulldoze(cell),
         }
@@ -778,9 +876,7 @@ impl GameState {
 
     fn quick_place_action(&mut self) -> Vec<GameEvent> {
         match self.hovered {
-            Some(cell) if self.tool == Tool::Place && self.world.is_slot(cell) => {
-                self.quick_place(cell)
-            }
+            Some(cell) if self.tool == Tool::Place && self.is_slot(cell) => self.quick_place(cell),
             _ => self.primary(),
         }
     }
@@ -797,7 +893,7 @@ impl GameState {
     fn click_while_pinned(&mut self) -> Vec<GameEvent> {
         match self.hovered {
             Some(cell) if Some(cell) == self.pinned => self.place(cell),
-            Some(cell) if self.world.is_slot(cell) => self.pin(cell),
+            Some(cell) if self.is_slot(cell) => self.pin(cell),
             _ => self.unpin(),
         }
     }
@@ -831,9 +927,11 @@ impl GameState {
         if self.tool != Tool::Place || self.photo_mode {
             return self.refuse("replace", "replacing needs the place tool".into());
         }
-        if self.world.is_slot(cell) {
+        if self.is_slot(cell) {
             return self.quick_place(cell);
         }
+        // A footprint answers at its anchor, so the events name the tile where it is saved.
+        let cell = self.world.anchor_of(cell).unwrap_or(cell);
         // The selected tile first, then the rest of its picker group, so a Beach Curve replace
         // takes whichever of headland and bay fits. The ghost sits on a free slot, never on this
         // cell, so the cell's own cliff-free-first order decides the level; the ghost's rotation
@@ -895,7 +993,12 @@ impl GameState {
         }
     }
 
+    /// Places `tile` for the free cell `cell`, at the centre covering it for a footprint tile.
     fn place_with(&mut self, cell: Axial, tile: String, o: Orientation) -> Vec<GameEvent> {
+        let cell = self
+            .catalog
+            .get(&tile)
+            .map_or(cell, |d| self.anchor_for(cell, d));
         let (rotation, level) = (o.rotation, o.level);
         match self.world.place(&self.catalog, cell, &tile, o) {
             Ok(()) => {
@@ -930,6 +1033,8 @@ impl GameState {
     }
 
     fn bulldoze(&mut self, cell: Axial) -> Vec<GameEvent> {
+        // Resolved first: once the footprint is gone its members no longer name the anchor.
+        let cell = self.world.anchor_of(cell).unwrap_or(cell);
         match self.world.bulldoze(&self.catalog, cell) {
             Ok(tile) => {
                 let mut events = vec![GameEvent::TileBulldozed {
@@ -995,9 +1100,24 @@ impl GameState {
             .iter()
             .map(|(c, t)| json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation, "level": t.level }))
             .collect();
+        // Per footprint tile in the catalog, every legal centre: the HUD lists a massif from these
+        // instead of mirroring the seven-cell rules (A52 Q6 O1).
+        let mega_slots: Vec<Value> = self
+            .catalog
+            .tiles()
+            .iter()
+            .filter(|d| d.is_mega())
+            .flat_map(|d| {
+                self.mega_slots_of(d)
+                    .iter()
+                    .map(|(c, legal)| mega_slot_json(*c, &d.id, legal))
+                    .collect::<Vec<_>>()
+            })
+            .collect();
         json!({
             "tiles": tiles,
             "frontier": self.world.frontier(),
+            "mega_slots": mega_slots,
             "can_undo": self.world.can_undo(),
             "can_redo": self.world.can_redo(),
         })
@@ -1008,15 +1128,18 @@ impl GameState {
         let hovered_kind = self.hovered.map(|c| {
             if self.world.tile(c).is_some() {
                 "tile"
-            } else if self.world.is_slot(c) {
+            } else if self.is_slot(c) {
                 "slot"
             } else {
                 "empty"
             }
         });
         let ghost = self.ghost().map(|(c, legal, edges, valid)| {
+            let outer = self.ghost_outer(c);
+            let footprint = outer.map(|_| hex_core::footprint::members(c));
             json!({ "q": c.q, "r": c.r, "tile": self.selected, "rotation": self.chosen.rotation,
-                    "level": self.chosen.level, "valid": valid, "legal_rotations": legal, "edges": edges })
+                    "level": self.chosen.level, "valid": valid, "legal_rotations": legal, "edges": edges,
+                    "outer_edges": outer, "footprint": footprint })
         });
         let inventory: Vec<&str> = self
             .target_slot()
@@ -1053,6 +1176,40 @@ impl GameState {
         })
     }
 
+    /// Whether a footprint tile is selected for placing.
+    fn footprint_selected(&self) -> bool {
+        self.selected_def().is_mega() && self.tool == Tool::Place && !self.viewing()
+    }
+
+    /// The legal centres of the selected footprint tile, each with the level of its first legal
+    /// orientation; empty unless a footprint tile is selected for placing.
+    fn mega_centres(&self) -> Vec<(Axial, u8)> {
+        let def = self.selected_def();
+        if !self.footprint_selected() {
+            return vec![];
+        }
+        self.mega_slots_of(def)
+            .iter()
+            .map(|(c, legal)| (*c, legal.first().map_or(0, |o| o.level)))
+            .collect()
+    }
+
+    /// The free slot the pointer would pin: with a footprint tile selected, the legal centre
+    /// whose footprint covers it (`None` where none does).
+    fn pointer_slot(&self, centres: &[(Axial, u8)]) -> Option<Axial> {
+        if self.tool != Tool::Place || self.viewing() {
+            return None;
+        }
+        let pinned = self.pinned?;
+        let c = self.hovered_slot().filter(|&c| c != pinned)?;
+        let def = self.selected_def();
+        if !def.is_mega() {
+            return Some(c);
+        }
+        let a = self.anchor_for(c, def);
+        (a != self.anchor_for(pinned, def) && centres.iter().any(|&(m, _)| m == a)).then_some(a)
+    }
+
     /// What `hex_play::play` draws.
     pub fn view(&self) -> PlayView {
         let frontier = if self.viewing() {
@@ -1060,8 +1217,14 @@ impl GameState {
         } else {
             self.world.frontier()
         };
+        let centres = self.mega_centres();
+        let mut slot_levels = self.slot_levels(&frontier);
+        slot_levels.extend(centres.iter().copied().filter(|&(_, l)| l > 0));
         let mut view = PlayView {
-            slot_levels: self.slot_levels(&frontier),
+            slot_levels,
+            members: self.world.members().iter().map(|(m, a)| (*m, *a)).collect(),
+            footprint_selected: self.footprint_selected(),
+            mega_slots: centres.iter().map(|&(c, _)| c).collect(),
             frontier,
             tiles: self
                 .world
@@ -1080,8 +1243,10 @@ impl GameState {
                 rotation: self.chosen.rotation,
                 level: self.chosen.level,
                 edges,
+                outer: self.ghost_outer(cell),
                 valid,
-                pinned: self.pinned == Some(cell),
+                // The ghost of a footprint tile stands on the centre, not on the pinned slot.
+                pinned: self.pinned.is_some() && self.pinned == self.target_slot(),
                 tunnel: hex_core::tunnel::preview(
                     &self.world,
                     &self.catalog,
@@ -1091,12 +1256,11 @@ impl GameState {
                 )
                 .cells,
             }),
-            pointer_slot: self.hovered_slot().filter(|&c| {
-                self.tool == Tool::Place && !self.viewing() && self.pinned.is_some_and(|p| p != c)
-            }),
-            pointer_tile: self.hovered.filter(|&c| {
-                self.tool == Tool::Place && !self.viewing() && self.world.tile(c).is_some()
-            }),
+            pointer_slot: self.pointer_slot(&centres),
+            pointer_tile: self
+                .hovered
+                .filter(|_| self.tool == Tool::Place && !self.viewing())
+                .and_then(|c| self.world.anchor_of(c)),
             bulldoze: self
                 .bulldoze_target()
                 .map(|(c, reason)| (c, reason.is_none())),
@@ -1114,6 +1278,16 @@ impl GameState {
         view.index_tiles();
         view
     }
+}
+
+/// One `mega_slots` entry: a legal centre of footprint tile `tile` and its legal orientations, in
+/// hex-core order. `bridge::schema` records the same shape for the parity worlds.
+pub fn mega_slot_json(centre: Axial, tile: &str, legal: &[Orientation]) -> Value {
+    let orientations: Vec<Value> = legal
+        .iter()
+        .map(|o| json!({ "rotation": o.rotation, "level": o.level }))
+        .collect();
+    json!({ "q": centre.q, "r": centre.r, "tile": tile, "orientations": orientations })
 }
 
 /// Events not yet drained by `hex_world_events`; nothing drains natively, so the oldest drop.
@@ -2299,5 +2473,385 @@ mod tests {
         assert_eq!(g.recent.len(), 2);
         let e = serde_json::to_value(&g.recent[1]).unwrap();
         assert_eq!(e, json!({ "type": "photoModeToggled", "on": true }));
+    }
+
+    const MASSIF: &str = "massif_granite";
+
+    fn massif(g: &GameState) -> TileDef {
+        g.catalog.get(MASSIF).unwrap().clone()
+    }
+
+    #[test]
+    fn selecting_the_massif_anchors_the_ghost_at_a_covering_centre() {
+        let mut g = game();
+        g.apply(Action::SelectTile(MASSIF.into()));
+        let slot = ax(1, 0);
+        g.apply(Action::Hover(Some(slot)));
+        let centre = g
+            .world
+            .mega_centre_for(&g.catalog, slot, &massif(&g))
+            .unwrap();
+        assert_ne!(centre, slot, "a massif centre is never a frontier cell");
+        let (cell, legal, _, valid) = g.ghost().unwrap();
+        assert_eq!(cell, centre);
+        assert!(valid);
+        assert_eq!(legal, [0, 1, 2, 3, 4, 5]);
+        let s = g.state_json();
+        assert_eq!(s["ghost"]["q"], centre.q);
+        assert_eq!(s["ghost"]["outer_edges"].as_array().unwrap().len(), 18);
+        let footprint: Vec<Axial> =
+            serde_json::from_value(s["ghost"]["footprint"].clone()).unwrap();
+        assert_eq!(footprint, hex_core::footprint::members(centre));
+        let ghost = g.view().ghost.unwrap();
+        let outer = ghost.outer.unwrap();
+        assert!(
+            outer.contains(&EdgeStatus::Compatible),
+            "it touches the start meadow"
+        );
+        assert!(!outer.contains(&EdgeStatus::Incompatible));
+        assert!(!ghost.pinned);
+        // A click pins the frontier slot, the ghost stays on the centre, and a second click places
+        // the anchor there.
+        g.apply(Action::Primary);
+        assert_eq!(g.pinned, Some(slot));
+        let ghost = g.view().ghost.unwrap();
+        assert!(ghost.pinned && ghost.cell == centre);
+        let e = g.apply(Action::Primary);
+        assert!(
+            e.contains(&GameEvent::TilePlaced {
+                q: centre.q,
+                r: centre.r,
+                tile: MASSIF.into(),
+                rotation: 0,
+                level: 0,
+            }),
+            "{e:?}"
+        );
+        assert_eq!(g.world.tiles()[&centre].def, MASSIF);
+        assert_eq!(g.world.anchor_of(slot), Some(centre));
+        // A single tile's ghost keeps its own six edges and no outer ring.
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Hover(Some(ax(-1, 0))));
+        let s = g.state_json();
+        assert!(s["ghost"]["outer_edges"].is_null() && s["ghost"]["footprint"].is_null());
+        assert!(g.view().ghost.unwrap().outer.is_none());
+    }
+
+    #[test]
+    fn rotate_turns_the_massif_through_six_rotations() {
+        let mut g = game();
+        g.apply(Action::SelectTile(MASSIF.into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        let start = g.chosen;
+        assert_eq!(start, Orientation::new(0, 0));
+        let mut seen = vec![start.rotation];
+        for _ in 0..5 {
+            g.apply(Action::Rotate(RotateDir::Forward));
+            assert_eq!(g.chosen.level, 0, "the ground turns come first");
+            assert_eq!(
+                g.ghost().unwrap().0,
+                ax(2, 0),
+                "R turns it about the centre"
+            );
+            seen.push(g.chosen.rotation);
+        }
+        seen.sort();
+        assert_eq!(seen, [0, 1, 2, 3, 4, 5]);
+        // The ghost's outer glow is in local outer-index order at every turn, as
+        // `catalog.footprint_outer` numbers it, so entry j lights outer edge j.
+        let def = massif(&g);
+        let faces = g
+            .world
+            .faces(&g.catalog, ax(2, 0), &def, Orientation::new(2, 0));
+        let pin = hex_core::footprint::outer_faces(ax(2, 0), 2);
+        assert_eq!(faces.len(), 18);
+        for (j, f) in faces.iter().enumerate() {
+            assert_eq!(
+                (f.cell, f.w, usize::from(pin[j].2)),
+                (pin[j].0, pin[j].1, j)
+            );
+        }
+        // Every orientation R reaches (six per level, cliffs after the ground), then back to the
+        // start.
+        let n = g
+            .world
+            .group_orientations(&g.catalog, ax(2, 0), &[&def])
+            .len();
+        assert_eq!(n, 24);
+        for _ in 5..n {
+            g.apply(Action::Rotate(RotateDir::Forward));
+        }
+        assert_eq!(g.chosen, start);
+    }
+
+    #[test]
+    fn state_publishes_mega_slots() {
+        let mut g = game();
+        place(&mut g, "meadow", ax(1, 0));
+        place(&mut g, "forest", ax(-1, 0));
+        let def = massif(&g);
+        let want: Vec<Value> = g
+            .world
+            .mega_slots(&g.catalog, &def)
+            .into_iter()
+            .map(|(c, legal)| {
+                let orientations: Vec<Value> = legal
+                    .iter()
+                    .map(|o| json!({ "rotation": o.rotation, "level": o.level }))
+                    .collect();
+                json!({ "q": c.q, "r": c.r, "tile": MASSIF, "orientations": orientations })
+            })
+            .collect();
+        assert!(!want.is_empty());
+        let s = g.state_json();
+        assert_eq!(s["mega_slots"], Value::Array(want.clone()));
+        let centres: std::collections::BTreeSet<(i64, i64)> = want
+            .iter()
+            .map(|m| (m["q"].as_i64().unwrap(), m["r"].as_i64().unwrap()))
+            .collect();
+        assert_eq!(centres.len(), want.len(), "one entry per legal centre");
+        // A legal centre reads as a slot while the massif is selected, as empty ground otherwise.
+        let centre = Axial::new(
+            want[0]["q"].as_i64().unwrap() as i32,
+            want[0]["r"].as_i64().unwrap() as i32,
+        );
+        g.apply(Action::Hover(Some(centre)));
+        assert_eq!(g.state_json()["hovered_kind"], "empty");
+        g.apply(Action::SelectTile(MASSIF.into()));
+        assert_eq!(g.state_json()["hovered_kind"], "slot");
+        assert_eq!(g.ghost().unwrap().0, centre);
+    }
+
+    /// The ghost's outer glow at rotation 2 lights the one face that meets the start meadow at
+    /// its local outer index: the massif centred two east of the origin has the origin at its ring
+    /// cell 3's corner, which rotation 2 numbers outer edge 4 (ring 1, local edge 1), not edge 10.
+    #[test]
+    fn the_ghost_outer_glow_lights_the_face_at_its_local_index() {
+        let mut g = game();
+        g.apply(Action::SelectTile(MASSIF.into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        g.chosen = Orientation::new(2, 0);
+        let ghost = g.view().ghost.unwrap();
+        assert_eq!((ghost.cell, ghost.rotation), (ax(2, 0), 2));
+        let outer = ghost.outer.unwrap();
+        for (j, s) in outer.iter().enumerate() {
+            let want = if j == 4 {
+                EdgeStatus::Compatible
+            } else {
+                EdgeStatus::Neutral
+            };
+            assert_eq!(*s, want, "outer edge {j}");
+        }
+    }
+
+    /// The view carries the footprints: ring cells map to their anchor, the bulldoze target and
+    /// the hovered-tile rim on a ring cell name the anchor, and with the massif selected the legal
+    /// centres are listed and a hovered centre off the frontier is the pointer slot.
+    #[test]
+    fn the_view_carries_footprints_and_targets_their_anchor() {
+        let mut g = game();
+        place(&mut g, MASSIF, ax(1, 0));
+        let centre = ax(2, 0);
+        let v = g.view();
+        assert_eq!(v.members.len(), 6);
+        assert!(v.members.values().all(|&a| a == centre));
+        g.apply(Action::SelectTile("meadow".into()));
+        assert!(g.view().mega_slots.is_empty(), "a single tile is selected");
+        assert!(!g.view().footprint_selected);
+        let ring = centre.neighbor(1);
+        g.apply(Action::Hover(Some(ring)));
+        assert_eq!(g.view().pointer_tile, Some(centre));
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        assert_eq!(g.bulldoze_target().map(|(c, _)| c), Some(centre));
+        assert_eq!(g.view().bulldoze, Some((centre, true)));
+        assert_eq!(g.state_json()["bulldoze"]["q"], centre.q);
+        g.apply(Action::SetTool(Tool::Place));
+        g.apply(Action::SelectTile(MASSIF.into()));
+        let def = massif(&g);
+        let want: Vec<Axial> = g
+            .world
+            .mega_slots(&g.catalog, &def)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect();
+        assert!(!want.is_empty());
+        assert_eq!(g.view().mega_slots, want);
+        assert!(g.view().footprint_selected);
+        // Pinned at one centre, hovering another (two steps out, not a frontier cell) makes it the
+        // pointer slot, whose footprint the hover draws.
+        g.apply(Action::Pin(want[0]));
+        g.apply(Action::Hover(Some(want[1])));
+        let v = g.view();
+        assert!(!v.frontier.contains(&want[1]));
+        assert_eq!(v.pointer_slot, Some(want[1]));
+        // Hovering a frontier cell outlines the footprint a click there would pin.
+        let edge = g
+            .world
+            .frontier()
+            .into_iter()
+            .find(|&c| {
+                g.world
+                    .mega_centre_for(&g.catalog, c, &def)
+                    .is_some_and(|a| a != want[0])
+            })
+            .unwrap();
+        g.apply(Action::Hover(Some(edge)));
+        assert_eq!(
+            g.view().pointer_slot,
+            g.world.mega_centre_for(&g.catalog, edge, &def)
+        );
+    }
+
+    #[test]
+    fn bulldozing_or_replacing_a_massif_from_a_ring_cell_names_the_centre() {
+        let mut g = game();
+        place(&mut g, MASSIF, ax(1, 0));
+        let centre = ax(2, 0);
+        assert_eq!(g.world.anchor_of(ax(1, 0)), Some(centre));
+        let ring = centre.neighbor(1);
+        // A turn of the massif, asked for at a ring cell.
+        g.chosen = Orientation::new(2, 0);
+        let e = g.apply(Action::Replace(ring));
+        assert!(
+            matches!(e.first(), Some(GameEvent::TileReplaced { q, r, .. }) if (*q, *r) == (centre.q, centre.r)),
+            "{e:?}"
+        );
+        assert_eq!(g.last.as_ref().unwrap().cell, Some(centre));
+        g.apply(Action::SetTool(Tool::Bulldoze));
+        let e = g.apply(Action::Bulldoze(ring));
+        assert_eq!(
+            e.first(),
+            Some(&GameEvent::TileBulldozed {
+                q: centre.q,
+                r: centre.r,
+                tile: MASSIF.into(),
+            })
+        );
+        assert_eq!(g.last_bulldoze, Some(centre));
+        assert_eq!(g.last.as_ref().unwrap().cell, Some(centre));
+    }
+
+    /// With the massif selected, `view` and the world state read the massif's legal centres after
+    /// every change to the world, however it was made: by a game action, directly on
+    /// `GameState::world`, by undo and by a replaced world.
+    #[test]
+    fn mega_slots_follow_every_world_change() {
+        let mut g = game();
+        g.apply(Action::SelectTile(MASSIF.into()));
+        let def = massif(&g);
+        let check = |g: &GameState, what: &str| {
+            let want: Vec<Axial> = g
+                .world
+                .mega_slots(&g.catalog, &def)
+                .into_iter()
+                .map(|(c, _)| c)
+                .collect();
+            assert_eq!(g.view().mega_slots, want, "{what}: view");
+            let n = g.world_state_json()["mega_slots"].as_array().unwrap().len();
+            assert_eq!(n, want.len(), "{what}: state");
+            for c in hex_core::boundary::within(Axial::ORIGIN, 4) {
+                let legal = g.world.legal_orientations(&g.catalog, c, &def);
+                assert_eq!(
+                    g.is_slot(c),
+                    g.world.is_slot(c) || !legal.is_empty(),
+                    "{what}: {c:?}"
+                );
+                assert_eq!(
+                    g.anchor_for(c, &def),
+                    if g.world.occupied(c) {
+                        c
+                    } else {
+                        g.world.mega_centre_for(&g.catalog, c, &def).unwrap_or(c)
+                    },
+                    "{what}: anchor for {c:?}"
+                );
+            }
+            want
+        };
+        let first = check(&g, "start");
+        place(&mut g, "meadow", ax(1, 0));
+        g.apply(Action::SelectTile(MASSIF.into()));
+        let placed = check(&g, "a placement");
+        assert_ne!(first, placed);
+        g.world
+            .place(&g.catalog, ax(-1, 0), "forest", Orientation::new(0, 0))
+            .unwrap();
+        let direct = check(&g, "a direct placement");
+        assert_ne!(placed, direct);
+        assert!(g.world.undo(&g.catalog));
+        assert_eq!(check(&g, "a direct undo"), placed);
+        g.replace_world(
+            World::new(1),
+            GameEvent::Loaded {
+                tiles: 1,
+                version: hex_core::SAVE_FORMAT_VERSION,
+                settings: None,
+            },
+        );
+        g.apply(Action::SelectTile(MASSIF.into()));
+        assert_eq!(check(&g, "a replaced world"), first);
+    }
+
+    /// I2 timing on the 2,066-tile save (`docs/perf/post-arc001-2026-10-16/local-world.hexworld`)
+    /// with the massif selected: the mean cost of one hover (the action, `view` and the state
+    /// fields, as a frame with a moved pointer pays) over a sweep of frontier cells and massif
+    /// centres, and of one world change's `world_state_json`. Run by hand in the dev profile
+    /// (workspace crates at opt-level 1, dependencies at 3), under the load guard:
+    /// `cargo test -p hex-app --lib massif_hover_cost -- --ignored --nocapture`.
+    #[test]
+    #[ignore = "timing; run by hand under the load guard"]
+    fn massif_hover_cost_on_a_large_world() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/perf/post-arc001-2026-10-16/local-world.hexworld"
+        );
+        let mut g = game();
+        let save = hex_core::SaveData::decode(&std::fs::read(path).unwrap(), &g.catalog).unwrap();
+        let tiles = save.world.tiles().len();
+        g.replace_world(
+            save.world,
+            GameEvent::Loaded {
+                tiles: tiles as u32,
+                version: hex_core::SAVE_FORMAT_VERSION,
+                settings: None,
+            },
+        );
+        g.apply(Action::SelectTile(MASSIF.into()));
+        let def = massif(&g);
+        let centres: Vec<Axial> = g
+            .world
+            .mega_slots(&g.catalog, &def)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect();
+        let frontier = g.world.frontier();
+        let sweep: Vec<Axial> = frontier
+            .iter()
+            .step_by(7)
+            .chain(centres.iter().step_by(3))
+            .copied()
+            .collect();
+        let started = std::time::Instant::now();
+        let mut hovers = 0u32;
+        for _ in 0..3 {
+            for &c in &sweep {
+                g.apply(Action::Hover(Some(c)));
+                std::hint::black_box(g.view());
+                std::hint::black_box(g.state_fields_json());
+                hovers += 1;
+            }
+        }
+        let hover_ms = started.elapsed().as_secs_f64() * 1000.0 / f64::from(hovers);
+        let started = std::time::Instant::now();
+        for _ in 0..5 {
+            std::hint::black_box(g.world_state_json());
+        }
+        let state_ms = started.elapsed().as_secs_f64() * 1000.0 / 5.0;
+        println!(
+            "massif_hover_cost: {tiles} tiles, {} frontier, {} centres, {hovers} hovers: \
+             {hover_ms:.3} ms per hover, {state_ms:.3} ms per world_state_json",
+            frontier.len(),
+            centres.len()
+        );
     }
 }

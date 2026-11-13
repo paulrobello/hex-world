@@ -1,0 +1,13 @@
+warm-up main world2066 discarded (load 2.04 -> 3.02)
+main world2066 round 0: close p50 26.2 p95 28 mean 26.27 cpu 11.93/12.5 draws 1472 kit 1337 | overview p50 36 p95 37.2 mean 35.95 cpu 11.86/12.4 draws 962 kit 881 errors 0 (load 3.02 -> 3.21)
+branch world2066 round 0: close p50 26.3 p95 28.2 mean 26.49 cpu 12/12.7 draws 1472 kit 1337 | overview p50 36.4 p95 38 mean 36.46 cpu 11.96/12.5 draws 962 kit 881 errors 0 (load 3.21 -> 2.67)
+branch world2066 round 1: close p50 27.2 p95 29.2 mean 27.28 cpu 12.09/12.7 draws 1472 kit 1337 | overview p50 36.7 p95 38.5 mean 36.91 cpu 12.04/12.7 draws 962 kit 881 errors 0 (load 2.67 -> 1.84)
+main world2066 round 1: close p50 27.4 p95 29.3 mean 27.52 cpu 12/12.6 draws 1472 kit 1337 | overview p50 37.1 p95 38.9 mean 37.22 cpu 12.15/12.8 draws 962 kit 881 errors 0 (load 1.84 -> 2.01)
+main world2066 round 2: close p50 27.5 p95 29.7 mean 27.65 cpu 12.12/12.8 draws 1472 kit 1337 | overview p50 37.2 p95 39 mean 37.34 cpu 12.23/12.8 draws 962 kit 881 errors 0 (load 2.01 -> 1.85)
+branch world2066 round 2: close p50 27.6 p95 29.6 mean 27.6 cpu 12.23/12.8 draws 1472 kit 1337 | overview p50 37.5 p95 39.3 mean 37.66 cpu 12.25/13 draws 962 kit 881 errors 0 (load 1.85 -> 2.42)
+branch world2066 round 3: close p50 27.5 p95 29.8 mean 27.69 cpu 12.18/12.8 draws 1472 kit 1337 | overview p50 37.1 p95 39 mean 37.24 cpu 12.25/12.9 draws 962 kit 881 errors 0 (load 2.42 -> 2.63)
+main world2066 round 3: close p50 27.6 p95 29.8 mean 27.65 cpu 12.07/12.7 draws 1472 kit 1337 | overview p50 37.3 p95 39.1 mean 37.4 cpu 12.22/12.9 draws 962 kit 881 errors 0 (load 2.63 -> 2.87)
+main world2066 round 4: close p50 27.6 p95 29.4 mean 27.6 cpu 12.76/13.5 draws 1472 kit 1337 | overview p50 37.5 p95 39 mean 37.54 cpu 12.61/13.2 draws 962 kit 881 errors 0 (load 2.87 -> 2.61)
+branch world2066 round 4: close p50 27.5 p95 29.6 mean 27.62 cpu 12.12/12.8 draws 1472 kit 1337 | overview p50 37.5 p95 39.2 mean 37.62 cpu 12.18/12.9 draws 962 kit 881 errors 0 (load 2.61 -> 2.96)
+wrote results/close-camera.json
+EXIT=0

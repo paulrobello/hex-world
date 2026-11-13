@@ -41,8 +41,9 @@
 //!   height, the shared wind of `wind.wesl`, bent by the square of the height along the blade) and
 //!   shrinks it to nothing by [`FADE_END`] m from the camera, after thinning it by rank from
 //!   [`THIN_START`]. Only tiles within [`BUILD_RADIUS`] of the camera hold a group, at most
-//!   [`BUILDS_PER_FRAME`] new ones a frame within [`BUILD_BUDGET_MS`], nearest first; beyond
-//!   [`DROP_RADIUS`] they are dropped. Those are the Near distances: the [`GrassDistance`]
+//!   [`BUILDS_PER_FRAME`] new build units a frame within [`BUILD_BUDGET_MS`], nearest first (a
+//!   single tile is one unit, a footprint tile one a cell, [`build_units`], each its own group);
+//!   beyond [`DROP_RADIUS`] they are dropped. Those are the Near distances: the [`GrassDistance`]
 //!   (`grass_distance`, `set_grass_distance`, Settings → Graphics → Grass distance) multiplies all
 //!   six ([`Distances`]), so a farther stop builds the newly reached tiles under the same per-frame
 //!   budget and a nearer one drops the tiles past its drop radius.
@@ -97,9 +98,9 @@ pub const FADE_END: f32 = 58.0;
 /// they drop it.
 pub const BUILD_RADIUS: f32 = FADE_END + 2.0;
 pub const DROP_RADIUS: f32 = BUILD_RADIUS + 12.0;
-/// New tile groups per frame, nearest first, and the frame's grass build budget (ms): a further one
-/// starts only while the time spent so far plus the frame's slowest tile so far fits in it (the
-/// first always starts), so walking into new tiles never hitches a frame.
+/// New build units ([`build_units`]) per frame, nearest tile first, and the frame's grass build
+/// budget (ms): a further one starts only while the time spent so far plus the frame's slowest unit
+/// so far fits in it (the first always starts), so walking into new tiles never hitches a frame.
 pub const BUILDS_PER_FRAME: usize = 3;
 pub const BUILD_BUDGET_MS: f32 = 4.0;
 /// Scale on the shared wind's push for grass.
@@ -712,6 +713,69 @@ pub fn layout(
     slots: &HashMap<String, [f32; 3]>,
     excluded: &[Clear],
 ) -> GrassLayout {
+    layout_at(seed, surface, slots, excluded, None)
+}
+
+/// The Lush blades of a tile on its prepared ground: a footprint tile's on each of its seven cells,
+/// each on its own ground and seed ([`scatter::ring_seed`]), in the tile frame. Its
+/// [`build_units`] in order.
+pub fn tile_layout(
+    seed: u64,
+    ground: &scatter::Prepared,
+    slots: &HashMap<String, [f32; 3]>,
+    excluded: &[Clear],
+) -> GrassLayout {
+    let mut out = GrassLayout::default();
+    for unit in 0..build_units(ground) {
+        let l = unit_layout(seed, ground, slots, excluded, unit);
+        out.blades.extend(l.blades);
+        out.area_m2 += l.area_m2;
+    }
+    out
+}
+
+/// The units a tile's grass builds in, one a cell, so no single build costs more than a meadow's
+/// (PRD §10, 4 ms a tile on the web): a single tile's one, a footprint tile's seven.
+pub fn build_units(ground: &scatter::Prepared) -> usize {
+    1 + ground.ring.len()
+}
+
+/// Build unit `unit` of [`tile_layout`]: the centre cell's blades for 0, else ring member
+/// `unit - 1`'s, in the tile frame.
+pub fn unit_layout(
+    seed: u64,
+    ground: &scatter::Prepared,
+    slots: &HashMap<String, [f32; 3]>,
+    excluded: &[Clear],
+    unit: usize,
+) -> GrassLayout {
+    match unit.checked_sub(1) {
+        None => layout(seed, &ground.surface, slots, excluded),
+        Some(k) => {
+            let (m, at, g) = &ground.ring[k];
+            layout_at(
+                scatter::ring_seed(seed, *m),
+                &g.surface,
+                slots,
+                excluded,
+                Some(*at),
+            )
+        }
+    }
+}
+
+/// [`layout`] on a footprint member's ground, `at` from the tile's centre: the clears and the blades
+/// are in the tile frame.
+fn layout_at(
+    seed: u64,
+    surface: &Surface,
+    slots: &HashMap<String, [f32; 3]>,
+    excluded: &[Clear],
+    at: Option<Vec2>,
+) -> GrassLayout {
+    // `None` keeps a single tile's points exactly as they are (no `+ 0.0` turning a -0 into a 0).
+    let tile = |p: Vec2| at.map_or(p, |a| p + a);
+    let dz = at.map_or(0.0, |a| a.y);
     let mut rng = Rng(seed ^ SALT);
     let step = 1.0 / (DENSITY * LUSH).sqrt();
     let n = (2.0 * HEX_RADIUS / step).ceil() as i32;
@@ -738,8 +802,8 @@ pub fn layout(
     // The clears whose bounds reach the current grid row, with their x extent.
     let mut row: Vec<(f32, f32, &Clear)> = Vec::with_capacity(bounds.len());
     for j in 0..n {
-        let z0 = -HEX_RADIUS + j as f32 * step - BOUNDS_MARGIN;
-        let z1 = -HEX_RADIUS + (j + 1) as f32 * step + BOUNDS_MARGIN;
+        let z0 = -HEX_RADIUS + j as f32 * step - BOUNDS_MARGIN + dz;
+        let z1 = -HEX_RADIUS + (j + 1) as f32 * step + BOUNDS_MARGIN + dz;
         row.clear();
         row.extend(
             bounds
@@ -757,10 +821,11 @@ pub fn layout(
                 -HEX_RADIUS + (i as f32 + r(0)) * step,
                 -HEX_RADIUS + (j as f32 + r(1)) * step,
             );
+            let q = tile(p);
             if scatter::hex_reach(p) >= APOTHEM
                 || row
                     .iter()
-                    .any(|&(x0, x1, c)| p.x >= x0 && p.x <= x1 && c.contains(p))
+                    .any(|&(x0, x1, c)| q.x >= x0 && q.x <= x1 && c.contains(q))
             {
                 continue;
             }
@@ -782,7 +847,7 @@ pub fn layout(
             }
             let scale = lerp(SCALE, r(10));
             out.blades.push(Blade {
-                root: Vec3::new(p.x, y, p.y),
+                root: Vec3::new(q.x, y, q.y),
                 yaw_deg: ((r(3) * 360.0) as u16).min(359),
                 rank: 0.9 * r(4),
                 height: lerp(st.height, r(5)) * scale,
@@ -948,12 +1013,37 @@ struct Key {
 struct Built {
     key: Key,
     cell: Axial,
-    /// The tile's Lush set, kept so a density change only changes the drawn count.
+    /// One per build unit built so far ([`build_units`]): a footprint tile builds a cell a unit
+    /// and may take several frames, each part its own group.
+    parts: Vec<Part>,
+    /// How many build units the tile takes; it is whole when `parts` holds them all.
+    units: usize,
+}
+
+impl Built {
+    fn whole(&self) -> bool {
+        self.parts.len() >= self.units
+    }
+
+    /// The report's fingerprint of the tile's Lush set: its one part's, else the parts' folded.
+    fn fingerprint(&self) -> u64 {
+        match self.parts.as_slice() {
+            [one] => one.fingerprint,
+            parts => parts.iter().fold(0xCBF2_9CE4_8422_2325, |h: u64, p| {
+                (h ^ p.fingerprint).wrapping_mul(0x0100_0000_01B3)
+            }),
+        }
+    }
+}
+
+/// One build unit's blades and group.
+struct Part {
+    /// The unit's Lush set, kept so a density change only changes the drawn count.
     layout: Arc<GrassLayout>,
     /// `layout`'s fingerprint for the report, found once: hashing a tile's blades takes about as
     /// long as building them, too long to repeat for every tile every frame.
     fingerprint: u64,
-    /// The group and its instances; `None` when the tile has no blade (no grass ground).
+    /// The group and its instances; `None` when the unit has no blade (no grass ground).
     group: Option<(Entity, Arc<GrassInstances>)>,
     /// Blades drawn at the current density.
     blades: usize,
@@ -966,8 +1056,8 @@ pub struct PlayGrass {
     built: HashMap<Entity, Built>,
     /// The density the groups' drawn counts are set for.
     density: Option<Density>,
-    /// The slowest single tile build (seeded set and instances, ms) in the latest frame that built
-    /// one.
+    /// The slowest single build unit (seeded set and instances, ms: a single tile's whole build, a
+    /// footprint tile's cell) in the latest frame that built one.
     last_build_ms: f32,
     /// The whole grass work (ms) of the latest frame that built a tile: every tile's ground,
     /// exclusions, build, group and fingerprint, the span the per-frame budget holds.
@@ -1012,11 +1102,17 @@ pub fn report(
     let mut rows: BTreeMap<(i32, i32), String> = BTreeMap::new();
     let (mut blades, mut instances, mut bytes) = (0usize, 0usize, 0usize);
     for b in state.built.values() {
-        blades += b.blades;
-        if let Some((_, i)) = &b.group {
-            instances += i.blades.len();
-            bytes += i.bytes();
+        let mut area = 0.0;
+        let mut drawn = 0;
+        for p in &b.parts {
+            drawn += p.blades;
+            area += p.layout.area_m2;
+            if let Some((_, i)) = &p.group {
+                instances += i.blades.len();
+                bytes += i.bytes();
+            }
         }
+        blades += drawn;
         rows.insert(
             (b.cell.q, b.cell.r),
             format!(
@@ -1024,9 +1120,9 @@ pub fn report(
                 b.cell.q,
                 b.cell.r,
                 b.key.tile,
-                b.blades,
-                b.layout.area_m2.round(),
-                b.fingerprint
+                drawn,
+                area.round(),
+                b.fingerprint()
             ),
         );
     }
@@ -1121,7 +1217,7 @@ pub fn sync(
         .and(spawned.as_deref().zip(kit.as_deref()).zip(packs.as_deref()));
     let Some(((spawned, PlayKit::Ready(kit)), packs)) = ready else {
         for (_, b) in state.built.drain() {
-            if let Some((g, _)) = b.group {
+            for (g, _) in b.parts.into_iter().filter_map(|p| p.group) {
                 commands.entity(g).try_despawn();
             }
         }
@@ -1141,15 +1237,22 @@ pub fn sync(
         .iter()
         .find(|(c, _)| c.is_active)
         .map(|(_, g)| g.translation());
-    // A tile's nearest point from the camera (m), at rest, its cap at its level (P4).
+    // A tile's nearest point from the camera (m), at rest, its cap at its level (P4); a footprint
+    // tile's ring reaches two apothems and a hex radius from its centre.
     let reach = |cell: Axial| {
-        let y0 = spawned
-            .tiles
-            .get(&cell)
-            .map_or(0.0, |(t, _)| f32::from(t.level) * LEVEL_STEP);
+        let tile = spawned.tiles.get(&cell).map(|(t, _)| t);
+        let y0 = tile.map_or(0.0, |t| f32::from(t.level) * LEVEL_STEP);
+        let radius = if tile
+            .and_then(|t| catalog.0.get(&t.tile))
+            .is_some_and(TileDef::is_mega)
+        {
+            2.0 * APOTHEM + HEX_RADIUS
+        } else {
+            HEX_RADIUS
+        };
         camera.map_or(f32::MAX, |c| {
             let [x, z] = cell.to_world(HEX_RADIUS);
-            let flat = (Vec2::new(c.x - x, c.z - z).length() - HEX_RADIUS).max(0.0);
+            let flat = (Vec2::new(c.x - x, c.z - z).length() - radius).max(0.0);
             Vec2::new(flat, c.y - y0).length()
         })
     };
@@ -1174,9 +1277,13 @@ pub fn sync(
         };
         let keep = *key == b.key
             && reach(*cell) <= reach_m.drop_radius
-            && b.group.as_ref().is_none_or(|(g, _)| groups.contains(*g));
-        if !keep && let Some((g, _)) = b.group {
-            commands.entity(g).try_despawn();
+            && b.parts
+                .iter()
+                .all(|p| p.group.as_ref().is_none_or(|(g, _)| groups.contains(*g)));
+        if !keep {
+            for (g, _) in b.parts.iter().filter_map(|p| p.group.as_ref()) {
+                commands.entity(*g).try_despawn();
+            }
         }
         keep
     });
@@ -1184,16 +1291,16 @@ pub fn sync(
     if state.density != Some(density) {
         state.density = Some(density);
         let mut slowest_swap: Option<f32> = None;
-        for b in state.built.values_mut() {
+        for p in state.built.values_mut().flat_map(|b| &mut b.parts) {
             let started = bevy::platform::time::Instant::now();
-            let Some((g, instances)) = &b.group else {
+            let Some((g, instances)) = &p.group else {
                 continue;
             };
             let drawn = instances.drawn(density);
             if let Ok(mut group) = groups.get_mut(*g) {
                 group.drawn = drawn;
             }
-            b.blades = drawn as usize;
+            p.blades = drawn as usize;
             let ms = started.elapsed().as_secs_f32() * 1000.0;
             slowest_swap = Some(slowest_swap.map_or(ms, |m: f32| m.max(ms)));
         }
@@ -1203,8 +1310,8 @@ pub fn sync(
     }
     let mut builds = 0;
     let frame = bevy::platform::time::Instant::now();
-    // The slowest tile's whole work this frame (ms): a further build starts only if one more like
-    // it still ends inside the budget (the first always starts).
+    // The slowest build unit's whole work this frame (ms): a further unit starts only if one more
+    // like it still ends inside the budget (the first always starts).
     let mut worst_tile: f32 = 0.0;
     let spent = |builds: usize, worst_tile: f32| {
         builds >= BUILDS_PER_FRAME
@@ -1212,7 +1319,7 @@ pub fn sync(
     };
     let mut todo: Vec<(f32, Entity, Axial, Key)> = wanted
         .iter()
-        .filter(|(root, _)| !state.built.contains_key(root))
+        .filter(|(root, _)| !state.built.get(root).is_some_and(Built::whole))
         .map(|(root, (cell, key))| (reach(*cell), *root, *cell, key.clone()))
         .filter(|(d, ..)| *d <= reach_m.build_radius)
         .collect();
@@ -1221,7 +1328,7 @@ pub fn sync(
             .then((a.2.q, a.2.r).cmp(&(b.2.q, b.2.r)))
     });
     let mut slowest: Option<f32> = None;
-    for (_, root, cell, key) in todo {
+    'tiles: for (_, root, cell, key) in todo {
         if spent(builds, worst_tile) || density.is_off() {
             break;
         }
@@ -1254,24 +1361,40 @@ pub fn sync(
             .clone();
         let mut excluded = exclusions(def, cell, &instances, &pieces);
         excluded.extend(boundary_clears(&fences));
-        let started = bevy::platform::time::Instant::now();
-        let l = Arc::new(layout(key.seed, &prepared.surface, &slots, &excluded));
-        let (group, blades) = spawn_group(&mut commands, root, &l, density);
-        let ms = started.elapsed().as_secs_f32() * 1000.0;
-        slowest = Some(slowest.map_or(ms, |m: f32| m.max(ms)));
-        builds += 1;
-        state.built.insert(
-            root,
-            Built {
-                key,
-                cell,
+        let units = build_units(&prepared);
+        let b = state.built.entry(root).or_insert_with(|| Built {
+            key: key.clone(),
+            cell,
+            parts: vec![],
+            units,
+        });
+        // The first unit's work includes the tile's ground, scatter and clears above.
+        let mut unit = tile;
+        while !b.whole() {
+            let started = bevy::platform::time::Instant::now();
+            let l = Arc::new(unit_layout(
+                key.seed,
+                &prepared,
+                &slots,
+                &excluded,
+                b.parts.len(),
+            ));
+            let (group, blades) = spawn_group(&mut commands, root, &l, density);
+            let ms = started.elapsed().as_secs_f32() * 1000.0;
+            slowest = Some(slowest.map_or(ms, |m: f32| m.max(ms)));
+            builds += 1;
+            b.parts.push(Part {
                 fingerprint: l.fingerprint(),
                 layout: l,
                 group,
                 blades,
-            },
-        );
-        worst_tile = worst_tile.max(tile.elapsed().as_secs_f32() * 1000.0);
+            });
+            worst_tile = worst_tile.max(unit.elapsed().as_secs_f32() * 1000.0);
+            unit = bevy::platform::time::Instant::now();
+            if !b.whole() && spent(builds, worst_tile) {
+                break 'tiles;
+            }
+        }
     }
     if let Some(ms) = slowest {
         state.last_build_ms = ms;
@@ -1288,6 +1411,156 @@ mod tests {
     use hex_assets::parse_manifest;
 
     use super::*;
+
+    /// The massif grows its grass on all seven cells, each from its own ground and seed: on a ring
+    /// cell's flat outer band (no rock or slope there) at a meadow's blade density within 5%, and
+    /// never on the rock or the scree.
+    #[test]
+    fn ring_grass_matches_meadow_density() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("massif_granite").unwrap();
+        let tris = |id: &str| crate::walk::tests::mesh_tris(id, "lod0");
+        let g = scatter::prepare(def, &c, &mut |id| tris(id)).unwrap();
+        assert_eq!(g.ring.len(), 6);
+        let slots = grass_slots(&m, def, &c);
+        assert!(slots.contains_key(scatter::MASSIF_CAP), "{slots:?}");
+        let meadow_slots = grass_slots(&m, c.get("meadow").unwrap(), &c);
+        let meadow = meadow_surface();
+        // The ring cells' outer band: past the pines' band and the scree, short of the border.
+        let band = |p: Vec2, at: Vec2| {
+            (APOTHEM - 6.0..APOTHEM - 1.0).contains(&scatter::hex_reach(p - at))
+                && (p - at).dot(at) > 0.0
+        };
+        for seed in [1u64, 2] {
+            let l = tile_layout(seed, &g, &slots, &[]);
+            for b in &l.blades {
+                let p = b.root.xz();
+                let (_, s) = g
+                    .ring
+                    .iter()
+                    .map(|(_, at, g)| (p - *at, g))
+                    .chain([(p, &g)])
+                    .find(|(q, _)| scatter::hex_reach(*q) < APOTHEM)
+                    .and_then(|(q, g)| g.surface.at(q.x, q.y))
+                    .expect("a blade over its cell's ground");
+                assert_eq!(s, scatter::MASSIF_CAP, "a blade on {s} at {p}");
+            }
+            for (k, (_, at, _)) in g.ring.iter().enumerate() {
+                let n = l.blades.iter().filter(|b| band(b.root.xz(), *at)).count() as f32;
+                // The same band on a meadow, its outward half taken along the same direction.
+                let ml = layout(
+                    scatter::ring_seed(seed, g.ring[k].0),
+                    &meadow,
+                    &meadow_slots,
+                    &[],
+                );
+                let mn = ml
+                    .blades
+                    .iter()
+                    .filter(|b| band(b.root.xz() + *at, *at))
+                    .count() as f32;
+                assert!(
+                    (n / mn - 1.0).abs() < 0.05,
+                    "seed {seed} ring cell {k}: {n} blades against a meadow's {mn}"
+                );
+            }
+            assert!(
+                l.blades
+                    .iter()
+                    .any(|b| scatter::hex_reach(b.root.xz()) < APOTHEM),
+                "the centre cell's grass slopes grow blades"
+            );
+        }
+    }
+    /// The massif's ring blades root on the piece's own ground, not at the tile's level: each
+    /// sampled blade's root is the top of the whole LOD0 mesh under it within 1 cm, and the flanks
+    /// (owner A55 Q1 O1, rising to a rock foot about 8-10 m up) carry ring blades metres up.
+    #[test]
+    fn massif_ring_blades_sit_on_the_piece_ground() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("massif_granite").unwrap();
+        let lod0 = crate::walk::tests::mesh_tris("massif_granite", "lod0").unwrap();
+        let g =
+            scatter::prepare(def, &c, &mut |id| crate::walk::tests::mesh_tris(id, "lod0")).unwrap();
+        let top = |x: f32, z: f32| -> Option<f32> {
+            let mut best: Option<f32> = None;
+            for ([a, b, c], _) in &lod0 {
+                let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+                if d.abs() < 1e-9 {
+                    continue;
+                }
+                let u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
+                let v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+                if u < -1e-5 || v < -1e-5 || u + v > 1.0 + 1e-5 {
+                    continue;
+                }
+                let y = a[1] + u * (b[1] - a[1]) + v * (c[1] - a[1]);
+                best = Some(best.map_or(y, |h| h.max(y)));
+            }
+            best
+        };
+        let l = tile_layout(1, &g, &grass_slots(&m, def, &c), &[]);
+        let ring: Vec<&Blade> = l
+            .blades
+            .iter()
+            .filter(|b| scatter::hex_reach(b.root.xz()) >= APOTHEM)
+            .collect();
+        assert!(ring.len() > 1000, "{} ring blades", ring.len());
+        let (mut checked, mut raised) = (0, 0);
+        for b in ring.iter().step_by(97) {
+            let want = top(b.root.x, b.root.z).expect("ground under a ring blade");
+            assert!(
+                (b.root.y - want).abs() < 0.01,
+                "a ring blade at {} over the piece's ground {want}",
+                b.root
+            );
+            checked += 1;
+            raised += usize::from(b.root.y > 2.0);
+        }
+        assert!(
+            raised * 5 > checked,
+            "{raised} of {checked} sampled ring blades stand over 2 m up the flanks"
+        );
+    }
+
+    /// The massif's grass builds as seven units the scheduler spreads over frames, one per cell,
+    /// each no bigger than a meadow's whole build (PRD §10: 4 ms a tile on the web), and together
+    /// they are exactly `tile_layout`. A single tile is one unit.
+    #[test]
+    fn a_massif_grass_build_is_seven_meadow_sized_units() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let tris = |id: &str| crate::walk::tests::mesh_tris(id, "lod0");
+        let def = c.get("massif_granite").unwrap();
+        let g = scatter::prepare(def, &c, &mut |id| tris(id)).unwrap();
+        let meadow_def = c.get("meadow").unwrap();
+        let meadow = scatter::prepare(meadow_def, &c, &mut |id| tris(id)).unwrap();
+        assert_eq!(build_units(&g), 7);
+        assert_eq!(build_units(&meadow), 1);
+        let slots = grass_slots(&m, def, &c);
+        let meadow_slots = grass_slots(&m, meadow_def, &c);
+        for seed in [1u64, 2] {
+            let whole = tile_layout(seed, &g, &slots, &[]);
+            let one = tile_layout(seed, &meadow, &meadow_slots, &[]);
+            assert_eq!(unit_layout(seed, &meadow, &meadow_slots, &[], 0), one);
+            let mut joined = GrassLayout::default();
+            for u in 0..7 {
+                let l = unit_layout(seed, &g, &slots, &[], u);
+                assert!(
+                    l.blades.len() as f32 <= 1.05 * one.blades.len() as f32,
+                    "seed {seed} unit {u}: {} blades against a meadow's {}",
+                    l.blades.len(),
+                    one.blades.len()
+                );
+                joined.blades.extend(l.blades);
+                joined.area_m2 += l.area_m2;
+            }
+            assert_eq!(joined, whole, "seed {seed}");
+        }
+    }
+
     use crate::kit_scene::MANIFEST;
 
     #[test]
@@ -1308,6 +1581,7 @@ mod tests {
                 "beach_grass",
                 "forest_base_edge",
                 "forest_base_rim",
+                "massif_granite_cap",
                 "meadow_base_cap",
                 "river_grass",
                 "road_tunnel_portal_turf",

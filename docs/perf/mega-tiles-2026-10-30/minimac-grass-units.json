@@ -1,0 +1,2019 @@
+{
+  "date": "2026-10-30T01:50:38.737Z",
+  "host": "MiniMac.attlocal.net",
+  "cpu": "Apple M4",
+  "dist": "dist-branch",
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "tilt": "off",
+    "fps": "off",
+    "grass": "normal",
+    "seed": "1"
+  },
+  "viewport": "2560x1440",
+  "load_limit": 15,
+  "worlds": {
+    "massif": {
+      "script": [
+        {
+          "cmd": "select_tile",
+          "id": "meadow"
+        },
+        {
+          "cmd": "place",
+          "q": 1,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 2,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 3,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 4,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 5,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 6,
+          "r": 0
+        },
+        {
+          "cmd": "select_tile",
+          "id": "massif_granite"
+        },
+        {
+          "cmd": "place",
+          "q": 8,
+          "r": 0
+        }
+      ],
+      "target": {
+        "q": 8,
+        "r": 0,
+        "tile": "massif_granite",
+        "units": 7
+      },
+      "eye": [
+        259.7024,
+        20,
+        0
+      ]
+    },
+    "meadow": {
+      "script": [
+        {
+          "cmd": "select_tile",
+          "id": "meadow"
+        },
+        {
+          "cmd": "place",
+          "q": 1,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 2,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 3,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 4,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 5,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 6,
+          "r": 0
+        },
+        {
+          "cmd": "place",
+          "q": 7,
+          "r": 0
+        },
+        {
+          "cmd": "select_tile",
+          "id": "meadow"
+        },
+        {
+          "cmd": "place",
+          "q": 8,
+          "r": 0
+        }
+      ],
+      "target": {
+        "q": 8,
+        "r": 0,
+        "tile": "meadow",
+        "units": 1
+      },
+      "eye": [
+        277.7024,
+        20,
+        0
+      ]
+    }
+  },
+  "home": {
+    "cmd": "camera",
+    "pos": [
+      0,
+      20,
+      40
+    ],
+    "look_at": [
+      0,
+      0,
+      0
+    ]
+  },
+  "rows": [
+    {
+      "repeat": 0,
+      "world": "massif",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "massif_granite"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 445,
+            "units": 2,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 446,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.7,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 447,
+            "units": 1,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.6,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 448,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 2.8,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 449,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.9,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 450,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.9,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 644,
+            "units": 2,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 645,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.7,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 646,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 647,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 648,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 649,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "console_errors": [],
+      "load_before": 2.48779296875,
+      "load_after": 2.52587890625,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 0,
+      "world": "meadow",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 7,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 459,
+            "units": 1,
+            "last_build_ms": 2.6,
+            "last_frame_build_ms": 3.4,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 655,
+            "units": 1,
+            "last_build_ms": 3,
+            "last_frame_build_ms": 4.1,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "console_errors": [],
+      "load_before": 2.52587890625,
+      "load_after": 2.51806640625,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 1,
+      "world": "meadow",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 7,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 455,
+            "units": 1,
+            "last_build_ms": 2.6,
+            "last_frame_build_ms": 3.4,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 649,
+            "units": 1,
+            "last_build_ms": 2.9,
+            "last_frame_build_ms": 4.1,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "console_errors": [],
+      "load_before": 2.51806640625,
+      "load_after": 2.4443359375,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 1,
+      "world": "massif",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "massif_granite"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 451,
+            "units": 2,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.7,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 452,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.7,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 453,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.7,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 454,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 2.9,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 455,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 456,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 650,
+            "units": 2,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3.1,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 651,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 652,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 653,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 654,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 655,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "console_errors": [],
+      "load_before": 2.4443359375,
+      "load_after": 2.57958984375,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 2,
+      "world": "massif",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "massif_granite"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 458,
+            "units": 2,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 459,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.7,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 460,
+            "units": 1,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.7,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 461,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 2.9,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 462,
+            "units": 1,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 463,
+            "units": 1,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 657,
+            "units": 2,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3.1,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 658,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 659,
+            "units": 1,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 660,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 661,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3.1,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 662,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3.1,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "console_errors": [],
+      "load_before": 2.57958984375,
+      "load_after": 2.65966796875,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 2,
+      "world": "meadow",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 7,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 453,
+            "units": 1,
+            "last_build_ms": 2.5,
+            "last_frame_build_ms": 3.5,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 647,
+            "units": 1,
+            "last_build_ms": 2.9,
+            "last_frame_build_ms": 3.9,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "console_errors": [],
+      "load_before": 2.65966796875,
+      "load_after": 2.85888671875,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 3,
+      "world": "meadow",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 7,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 455,
+            "units": 1,
+            "last_build_ms": 3.3,
+            "last_frame_build_ms": 4.2,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 648,
+            "units": 1,
+            "last_build_ms": 3.1,
+            "last_frame_build_ms": 4.2,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "console_errors": [],
+      "load_before": 2.85888671875,
+      "load_after": 2.57275390625,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 3,
+      "world": "massif",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "massif_granite"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 460,
+            "units": 2,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.7,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 461,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.8,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 462,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 463,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 464,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 465,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 657,
+            "units": 2,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3.2,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 658,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 659,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.9,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 660,
+            "units": 1,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3.1,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 661,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 662,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 3,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "console_errors": [],
+      "load_before": 2.57275390625,
+      "load_after": 2.85791015625,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 4,
+      "world": "massif",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "massif_granite"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 445,
+            "units": 2,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.7,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 446,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.7,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 447,
+            "units": 1,
+            "last_build_ms": 1.9,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 448,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.8,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 449,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 450,
+            "units": 1,
+            "last_build_ms": 2.1,
+            "last_frame_build_ms": 2.9,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 642,
+            "units": 2,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3,
+            "groups": 2,
+            "target_blades": 32887
+          },
+          {
+            "frame": 4,
+            "engine_frame": 643,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3.1,
+            "groups": 3,
+            "target_blades": 46818
+          },
+          {
+            "frame": 5,
+            "engine_frame": 644,
+            "units": 1,
+            "last_build_ms": 2,
+            "last_frame_build_ms": 2.8,
+            "groups": 4,
+            "target_blades": 61473
+          },
+          {
+            "frame": 6,
+            "engine_frame": 645,
+            "units": 1,
+            "last_build_ms": 2.2,
+            "last_frame_build_ms": 3,
+            "groups": 5,
+            "target_blades": 76263
+          },
+          {
+            "frame": 7,
+            "engine_frame": 646,
+            "units": 1,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3.1,
+            "groups": 6,
+            "target_blades": 92877
+          },
+          {
+            "frame": 8,
+            "engine_frame": 647,
+            "units": 1,
+            "last_build_ms": 2.3,
+            "last_frame_build_ms": 3.1,
+            "groups": 7,
+            "target_blades": 92877
+          }
+        ],
+        "units": 7,
+        "expected_units": 7,
+        "units_ok": true,
+        "read_frames": 98,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "massif_granite",
+          "blades": 92877,
+          "area_m2": 3311,
+          "layout": "a78fb1389108cdb0"
+        },
+        "groups_end": 7
+      },
+      "console_errors": [],
+      "load_before": 2.85791015625,
+      "load_after": 3.48583984375,
+      "load_discarded": 0
+    },
+    {
+      "repeat": 4,
+      "world": "meadow",
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "tiles": [
+        {
+          "level": 0,
+          "q": 0,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 1,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 2,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 3,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 4,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 5,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 6,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 7,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        },
+        {
+          "level": 0,
+          "q": 8,
+          "r": 0,
+          "rotation": 0,
+          "tile": "meadow"
+        }
+      ],
+      "home": {
+        "status": "on",
+        "groups": 3,
+        "uploads": 3,
+        "tiles": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "cold": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 454,
+            "units": 1,
+            "last_build_ms": 2.5,
+            "last_frame_build_ms": 3.5,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "warm": {
+        "frames": [
+          {
+            "frame": 3,
+            "engine_frame": 646,
+            "units": 1,
+            "last_build_ms": 3,
+            "last_frame_build_ms": 4,
+            "groups": 1,
+            "target_blades": 18330
+          }
+        ],
+        "units": 1,
+        "expected_units": 1,
+        "units_ok": true,
+        "read_frames": 93,
+        "target_row": {
+          "q": 8,
+          "r": 0,
+          "tile": "meadow",
+          "blades": 18330,
+          "area_m2": 657,
+          "layout": "7185beca6e6491eb"
+        },
+        "groups_end": 1
+      },
+      "console_errors": [],
+      "load_before": 3.48583984375,
+      "load_after": 3.484375,
+      "load_discarded": 0
+    }
+  ]
+}

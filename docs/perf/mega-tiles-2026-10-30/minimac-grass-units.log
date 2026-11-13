@@ -1,0 +1,11 @@
+massif rep 0: cold 7 units in 6 frames, unit max 2.2 ms, frame max 2.9 ms | warm 7 units in 6 frames, unit max 2.1 ms, frame max 3 ms | load 2.49->2.53 
+meadow rep 0: cold 1 units in 1 frames, unit max 2.6 ms, frame max 3.4 ms | warm 1 units in 1 frames, unit max 3 ms, frame max 4.1 ms | load 2.53->2.52 
+meadow rep 1: cold 1 units in 1 frames, unit max 2.6 ms, frame max 3.4 ms | warm 1 units in 1 frames, unit max 2.9 ms, frame max 4.1 ms | load 2.52->2.44 
+massif rep 1: cold 7 units in 6 frames, unit max 2.2 ms, frame max 2.9 ms | warm 7 units in 6 frames, unit max 2.2 ms, frame max 3.1 ms | load 2.44->2.58 
+massif rep 2: cold 7 units in 6 frames, unit max 2.3 ms, frame max 3 ms | warm 7 units in 6 frames, unit max 2.2 ms, frame max 3.1 ms | load 2.58->2.66 
+meadow rep 2: cold 1 units in 1 frames, unit max 2.5 ms, frame max 3.5 ms | warm 1 units in 1 frames, unit max 2.9 ms, frame max 3.9 ms | load 2.66->2.86 
+meadow rep 3: cold 1 units in 1 frames, unit max 3.3 ms, frame max 4.2 ms | warm 1 units in 1 frames, unit max 3.1 ms, frame max 4.2 ms | load 2.86->2.57 
+massif rep 3: cold 7 units in 6 frames, unit max 2.2 ms, frame max 3 ms | warm 7 units in 6 frames, unit max 2.3 ms, frame max 3.2 ms | load 2.57->2.86 
+massif rep 4: cold 7 units in 6 frames, unit max 2.1 ms, frame max 2.9 ms | warm 7 units in 6 frames, unit max 2.3 ms, frame max 3.1 ms | load 2.86->3.49 
+meadow rep 4: cold 1 units in 1 frames, unit max 2.5 ms, frame max 3.5 ms | warm 1 units in 1 frames, unit max 3 ms, frame max 4 ms | load 3.49->3.48 
+EXIT=0

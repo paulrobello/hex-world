@@ -8,6 +8,7 @@ use std::ops::RangeInclusive;
 
 use serde::{Deserialize, Serialize};
 
+use crate::footprint;
 use crate::socket::{EdgeProfile, EdgeSocket, SocketKind, SocketTable};
 
 /// Id of a kit piece in `assets/kit/manifest.json` (or `data/pending-pieces.ron` until it is built).
@@ -348,6 +349,15 @@ pub struct TunnelEnd {
     pub edge: u8,
 }
 
+/// The footprint of a mega tile: the anchor cell and its six ring cells (`footprint.rs`). The
+/// tile's own `edges` are the centre's, which face members only.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Ring1 {
+    /// Indexed by local outer index ([`crate::footprint::outer_edge`]); 18 entries, checked by the
+    /// validator rather than the type so a wrong count is a rule issue, not a parse error.
+    pub outer: Vec<EdgeSocket>,
+}
+
 /// One tile type, loaded from `data/tiles/<id>.ron` (PRD §5.3).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TileDef {
@@ -397,12 +407,34 @@ pub struct TileDef {
     /// Set on a tunnel portal: where its tunnel starts.
     #[serde(default)]
     pub tunnel: Option<TunnelEnd>,
+    /// Set on a mega tile: it covers its cell and the six around it.
+    #[serde(default)]
+    pub footprint: Option<Ring1>,
 }
 
 impl TileDef {
     /// The socket facing world edge `world` when the tile is placed with `rotation`.
     pub fn edge(&self, world: u8, rotation: u8) -> &EdgeSocket {
         &self.edges[local_edge(world, rotation) as usize]
+    }
+
+    /// Whether the tile covers a seven-cell footprint.
+    pub fn is_mega(&self) -> bool {
+        self.footprint.is_some()
+    }
+
+    /// The socket a neighbour sees across world edge `w` of the member at world direction `ring`
+    /// from the anchor (`None`: the anchor cell), with the tile placed at `rotation`. `None` where
+    /// the edge faces another member, or names a ring cell of a single tile.
+    pub fn socket_toward(&self, rotation: u8, ring: Option<u8>, w: u8) -> Option<&EdgeSocket> {
+        match (&self.footprint, ring) {
+            (None, None) => Some(self.edge(w, rotation)),
+            (None, Some(_)) | (Some(_), None) => None,
+            (Some(f), Some(r)) => {
+                let j = footprint::outer_index(local_edge(r, rotation), local_edge(w, rotation))?;
+                f.outer.get(usize::from(j))
+            }
+        }
     }
 
     /// Relative corner heights in world corner order when placed with `rotation`. Edge `e`'s
@@ -438,6 +470,12 @@ impl TileDef {
     pub fn same_orientation(&self, a: u8, b: u8) -> bool {
         (i16::from(a % 6) - i16::from(b % 6)) % i16::from(self.orientation_period()) == 0
             && (0..6).all(|w| self.edge(w, a) == self.edge(w, b))
+            && self.footprint.as_ref().is_none_or(|f| {
+                let n = f.outer.len();
+                // World outer index `p` under rotation `k` shows local index `(p - 3k) % 18`.
+                let at = |p: usize, k: u8| &f.outer[(p + 3 * (6 - usize::from(k % 6))) % n];
+                (0..n).all(|p| at(p, a) == at(p, b))
+            })
     }
 
     /// Rotations after which the tile's look repeats, whatever its sockets do: 6 with hero props
@@ -615,6 +653,7 @@ impl TileDef {
         self.validate_destinations(&mut issue);
         self.validate_parking(&mut issue);
         self.validate_rail(&mut issue);
+        self.validate_footprint(sockets, &mut issue);
 
         if let Some(p) = self.look_period
             && !matches!(p, 1 | 2 | 3 | 6)
@@ -639,6 +678,68 @@ impl TileDef {
         }
 
         issues
+    }
+
+    /// Footprint rules (mega tiles): 18 outer sockets, none with a lane or a land side, all flat at
+    /// height 0 so [`TileDef::corners`] still describes the whole footprint; centre edges Grass,
+    /// flat, height 0; and nothing a network or agent could route through.
+    fn validate_footprint(&self, sockets: &SocketTable, issue: &mut impl FnMut(String)) {
+        let Some(f) = &self.footprint else {
+            return;
+        };
+        if f.outer.len() != footprint::OUTER_EDGES {
+            issue(format!(
+                "footprint has {} outer sockets, needs {}",
+                f.outer.len(),
+                footprint::OUTER_EDGES
+            ));
+        }
+        let lane = |s: &EdgeSocket| s.lane.is_some() || sockets.lane(s.kind).is_some();
+        for (e, edge) in self.edges.iter().enumerate() {
+            if lane(edge) {
+                issue(format!(
+                    "footprint edges carry no lane: centre edge {e} is {:?}",
+                    edge.kind
+                ));
+            }
+            if *edge != EdgeSocket::new(SocketKind::Grass) {
+                issue(format!(
+                    "footprint centre edge {e} must be Grass, Flat, height 0, not {edge:?}"
+                ));
+            }
+        }
+        for (j, outer) in f.outer.iter().enumerate() {
+            if lane(outer) {
+                issue(format!(
+                    "footprint edges carry no lane: outer {j} is {:?}",
+                    outer.kind
+                ));
+            }
+            if outer.land.is_some() || sockets.directional(outer.kind) {
+                issue(format!(
+                    "footprint outer {j} {:?} cannot be directional",
+                    outer.kind
+                ));
+            }
+            if outer.profile != EdgeProfile::Flat || outer.height != 0 {
+                issue(format!(
+                    "footprint outer {j} must be Flat at height 0, not {:?} at {}",
+                    outer.profile, outer.height
+                ));
+            }
+        }
+        for (what, empty) in [
+            ("nodes", self.nodes.is_empty()),
+            ("networks", self.networks.is_empty()),
+            ("switches", self.switches.is_empty()),
+            ("stops", self.stops.is_empty()),
+            ("parking", self.parking.is_empty()),
+            ("a tunnel", self.tunnel.is_none()),
+        ] {
+            if !empty {
+                issue(format!("footprint tile carries {what}"));
+            }
+        }
     }
 
     /// Rail rules (P3): a rail node joins two rail segments (a plain joint) or three at a declared
@@ -1032,6 +1133,7 @@ mod tests {
             raisable: false,
             ground: Ground::Plain,
             tunnel: None,
+            footprint: None,
         }
     }
 
@@ -1548,6 +1650,147 @@ mod tests {
                 .iter()
                 .any(|i| i.contains("needs a level section"))
         );
+    }
+
+    /// A seven-cell massif: Grass all round, centre and 18 outer sockets, nothing on it.
+    fn massif() -> TileDef {
+        let mut t = bend60();
+        t.id = "massif".into();
+        t.edges = std::array::from_fn(|_| EdgeSocket::new(Grass));
+        t.center = None;
+        t.networks.clear();
+        t.footprint = Some(Ring1 {
+            outer: vec![EdgeSocket::new(Grass); crate::footprint::OUTER_EDGES],
+        });
+        t
+    }
+
+    fn has(issues: &[String], needle: &str) -> bool {
+        issues.iter().any(|i| i.contains(needle))
+    }
+
+    #[test]
+    fn validate_footprint_rules() {
+        let s = sockets();
+        assert_eq!(massif().validate(&s), Vec::<String>::new());
+        assert!(massif().is_mega());
+        assert!(!bend60().is_mega());
+
+        let mut t = massif();
+        t.footprint.as_mut().unwrap().outer.pop();
+        let issues = t.validate(&s);
+        assert!(has(&issues, "17 outer sockets"), "{issues:?}");
+
+        let mut t = massif();
+        t.footprint.as_mut().unwrap().outer[4] = EdgeSocket::new(Road);
+        let issues = t.validate(&s);
+        assert!(has(&issues, "footprint edges carry no lane"), "{issues:?}");
+
+        let mut t = massif();
+        t.edges[2] = EdgeSocket {
+            lane: road_lane(),
+            ..EdgeSocket::new(Road)
+        };
+        let issues = t.validate(&s);
+        assert!(has(&issues, "footprint edges carry no lane"), "{issues:?}");
+
+        let mut t = massif();
+        t.footprint.as_mut().unwrap().outer[0] = EdgeSocket {
+            land: Some(Side::Left),
+            ..EdgeSocket::new(Beach)
+        };
+        let issues = t.validate(&s);
+        assert!(has(&issues, "footprint outer 0"), "{issues:?}");
+
+        let mut t = massif();
+        t.footprint.as_mut().unwrap().outer[7].height = 1;
+        let issues = t.validate(&s);
+        assert!(has(&issues, "footprint outer 7"), "{issues:?}");
+
+        let mut t = massif();
+        t.edges[1] = EdgeSocket::new(Forest);
+        let issues = t.validate(&s);
+        assert!(has(&issues, "footprint centre edge 1"), "{issues:?}");
+
+        let mut t = massif();
+        t.networks = bend60().networks;
+        let issues = t.validate(&s);
+        assert!(
+            has(&issues, "footprint tile carries networks"),
+            "{issues:?}"
+        );
+
+        let mut t = massif();
+        t.nodes = vec![NetworkNode {
+            id: "mouth".into(),
+            at: [0.0, 0.0],
+            destination: None,
+        }];
+        t.tunnel = Some(TunnelEnd {
+            node: "mouth".into(),
+            edge: 0,
+        });
+        let issues = t.validate(&s);
+        assert!(
+            has(&issues, "footprint tile carries a tunnel"),
+            "{issues:?}"
+        );
+        assert!(has(&issues, "footprint tile carries nodes"), "{issues:?}");
+    }
+
+    #[test]
+    fn socket_toward_answers_outer_edges_only() {
+        use crate::footprint::outer_faces;
+        let mut t = massif();
+        for (j, s) in t.footprint.as_mut().unwrap().outer.iter_mut().enumerate() {
+            s.height = j as u8;
+        }
+        let a = crate::axial::Axial::new(-1, 4);
+        for w in 0..6u8 {
+            assert_eq!(t.socket_toward(2, None, w), None, "anchor edge {w}");
+            for ring in 0..6u8 {
+                for k in 2..5u8 {
+                    let w = (ring + k) % 6;
+                    assert_eq!(
+                        t.socket_toward(2, Some(ring), w),
+                        None,
+                        "ring {ring} edge {w}"
+                    );
+                }
+            }
+        }
+        for (cell, w, j) in outer_faces(a, 2) {
+            let ring = (0..6u8)
+                .find(|&r| a.neighbor(r) == cell)
+                .expect("ring cell");
+            let got = t.socket_toward(2, Some(ring), w);
+            assert_eq!(got.map(|s| s.height), Some(j), "ring {ring} edge {w}");
+        }
+
+        let single = bend60();
+        for w in 0..6u8 {
+            assert_eq!(single.socket_toward(2, None, w), Some(single.edge(w, 2)));
+            assert_eq!(single.socket_toward(2, Some(w), w), None);
+        }
+    }
+
+    #[test]
+    fn mega_turns_are_distinct_with_look_period_six() {
+        let mut t = massif();
+        t.look_period = Some(6);
+        for k in 1..6u8 {
+            assert!(!t.same_orientation(0, k), "rotation {k}");
+        }
+
+        let mut t = massif();
+        assert!((1..6u8).all(|k| t.same_orientation(0, k)));
+        t.footprint.as_mut().unwrap().outer[0] = EdgeSocket::new(Forest);
+        for k in 1..6u8 {
+            assert!(
+                !t.same_orientation(0, k),
+                "one Forest outer edge, rotation {k}"
+            );
+        }
     }
 
     #[test]

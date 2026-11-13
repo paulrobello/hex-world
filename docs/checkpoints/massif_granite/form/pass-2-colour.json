@@ -1,0 +1,24 @@
+{
+ "ref-2": {
+  "lumaMean": 0.523,
+  "lumaStd": 0.236,
+  "lumaP05": 0.147,
+  "lumaP95": 0.86,
+  "satMean": 0.14,
+  "lichenGreen": 0.027,
+  "mustard": 0.056,
+  "dark": 0.21,
+  "moss": 0.007
+ },
+ "ref2cam-o1.png": {
+  "lumaMean": 0.549,
+  "lumaStd": 0.141,
+  "lumaP05": 0.274,
+  "lumaP95": 0.71,
+  "satMean": 0.106,
+  "lichenGreen": 0.149,
+  "mustard": 0.07,
+  "dark": 0.071,
+  "moss": 0.032
+ }
+}

@@ -15,7 +15,14 @@ import {
   tunnelCover,
   heightsMeet,
   isSlot,
+  isSheetSlot,
+  refusedWhy,
+  swapRefusal,
+  FOOTPRINT_OUTER,
+  facingAt,
   laneMeets,
+  megaFit,
+  neighbor,
   legalOrientations,
   legalRotations,
   meets,
@@ -30,7 +37,16 @@ import {
   turnHint,
   placementMeets,
 } from "../src/rules.ts";
-import { TILE_NAMES, actionText, bulldozeRefusal, coord } from "../src/words.ts";
+import {
+  FOOTPRINT_EDGES,
+  FOOTPRINT_REFUSAL,
+  MASSIF_SWAP,
+  SINGLE_SWAP,
+  TILE_NAMES,
+  actionText,
+  bulldozeRefusal,
+  coord,
+} from "../src/words.ts";
 import parity from "./rules-parity.json" with { type: "json" };
 
 const def = (id: string) => tileDef(id)!;
@@ -382,4 +398,196 @@ test("the R hint shows while any rotation or orientation is left to turn to", ()
   assert.equal(turnHint(2, 0), true, "several rotations");
   assert.equal(turnHint(1, 2), true, "one rotation but another level or group member");
   assert.equal(turnHint(3, 5), true);
+});
+
+const MASSIF = "massif_granite";
+const massifWorld = parity.worlds.find((w) => w.tiles.some((t) => t[2] === MASSIF))!;
+const sameAt = (a: { q: number; r: number }, b: { q: number; r: number }) => a.q === b.q && a.r === b.r;
+
+test("single tiles beside a massif match hex-core", () => {
+  const tiles = world(...(massifWorld.tiles as [number, number, string, number, number][]));
+  const [cq, cr] = massifWorld.tiles.find((t) => t[2] === MASSIF)! as [number, number];
+  const members = [0, 1, 2, 3, 4, 5].map((d) => neighbor({ q: cq, r: cr }, d));
+  let beside = 0;
+  for (const [slot, perTile] of Object.entries(massifWorld.slots)) {
+    const [q, r] = slot.split(",").map(Number) as [number, number];
+    assert.ok(isSlot({ q, r }, tiles), `${slot} is a slot`);
+    const needs = needsAt({ q, r }, tiles);
+    if ([0, 1, 2, 3, 4, 5].some((w) => members.some((m) => sameAt(m, neighbor({ q, r }, w))))) beside++;
+    for (const [id, legal] of Object.entries(perTile as Record<string, number[][]>))
+      assert.deepEqual(
+        legalOrientations(def(id), needs).map((o) => [o.rotation, o.level]),
+        legal,
+        `${id} at ${slot}`,
+      );
+  }
+  assert.ok(beside >= 6, `slots beside a member: ${beside}`);
+});
+
+test("the massif is listed only where a footprint covers the slot", () => {
+  const entry = entryOf(MASSIF)!;
+  let covered = 0;
+  let refused = 0;
+  for (const w of parity.worlds) {
+    const tiles = world(...(w.tiles as [number, number, string, number, number][]));
+    const centres = w.mega_centres as Record<string, Record<string, [number, number]>>;
+    for (const slot of Object.keys(w.slots)) {
+      const [q, r] = slot.split(",").map(Number) as [number, number];
+      const cell = { q, r };
+      const engine = w.mega_slots.some(
+        (s) =>
+          s.tile === MASSIF && [cell, ...[0, 1, 2, 3, 4, 5].map((e) => neighbor(cell, e))].some((c) => sameAt(s, c)),
+      );
+      const got = megaFit(cell, w.mega_slots, MASSIF);
+      assert.equal(got !== null, engine, `listed at ${slot}`);
+      // Rust `World::mega_centre_for`: the slot itself, then its neighbours in edge order.
+      const want = centres[slot]?.[MASSIF];
+      assert.deepEqual(got?.centre ?? null, want ? { q: want[0], r: want[1] } : null, `centre for ${slot}`);
+      const f = fitEntry(entry, needsAt(cell, tiles), { slot: cell, megaSlots: w.mega_slots });
+      assert.equal(f.ok, engine, `entry fit at ${slot}`);
+      if (engine) {
+        covered++;
+        const at = w.mega_slots.find((s) => s.tile === MASSIF && sameAt(s, got!.centre))!;
+        assert.deepEqual(
+          f.seq.map((t) => [t.k, t.level]),
+          at.orientations.map((o) => [o.rotation, o.level]),
+          `R walks the engine's orientations at ${slot}`,
+        );
+      } else {
+        refused++;
+        assert.equal(f.why, FOOTPRINT_REFUSAL);
+      }
+    }
+  }
+  assert.ok(covered > 10 && refused > 10, `covered ${covered}, refused ${refused}`);
+  assert.equal(FOOTPRINT_REFUSAL, "Needs seven free cells beside the world.");
+  assert.equal(fit(def(MASSIF), needsAt({ q: 1, r: 0 }, start)).why, FOOTPRINT_REFUSAL);
+});
+
+test("cutOff treats a massif as one tile", () => {
+  const tiles = world(...(massifWorld.tiles as [number, number, string, number, number][]));
+  const [cq, cr] = massifWorld.tiles.find((t) => t[2] === MASSIF)! as [number, number];
+  const centre = { q: cq, r: cr };
+  for (const target of [centre, ...[0, 1, 2, 3, 4, 5].map((d) => neighbor(centre, d))]) {
+    const cut = cutOff(tiles, target);
+    assert.deepEqual(
+      cut.map((t) => [t.q, t.r, t.tile]),
+      [[4, 0, "river_mouth"]],
+      `bulldozing the massif at ${target.q},${target.r}`,
+    );
+  }
+  assert.equal(
+    bulldozeRefusal("removing this tile splits the world", cutOff(tiles, centre)).sub,
+    "1 river mouth tile would be cut off",
+  );
+  assert.deepEqual(cutOff(tiles, { q: 4, r: 0 }), []);
+  assert.deepEqual(cutOff(tiles, { q: 1, r: -1 }), []);
+  // A massif comes and goes as one tile in the undo and redo words.
+  const before = world([0, 0, "meadow", 0]);
+  const after = world([0, 0, "meadow", 0], [2, 0, MASSIF, 2, 1]);
+  assert.equal(actionText(diffTiles(after, before), false), "placed Granite massif at (2, 0)");
+  assert.equal(tunnelCover(tiles).size, 0);
+});
+
+test("facingAt follows the outer edge pin", () => {
+  assert.equal(FOOTPRINT_OUTER.length, 18);
+  const massif = def(MASSIF);
+  const original = massif.outer!;
+  // Each outer socket at its own height, so the face read back names its outer index.
+  massif.outer = original.map((s, j) => ({ ...s, heights: [j, j] as [number, number] }));
+  try {
+    const anchor = { q: 1, r: 2 };
+    for (const k of [0, 2]) {
+      const tiles = world([anchor.q, anchor.r, MASSIF, k, 1]);
+      for (const [j, [ring, edge]] of FOOTPRINT_OUTER.entries()) {
+        // At rotation 2, local outer edge j faces where rotation 0 shows outer edge (j + 6) % 18.
+        const cell = neighbor(anchor, (ring! + 2) % 6);
+        const w = (edge! + 2) % 6;
+        const f = facingAt(tiles, cell, w);
+        const want = k === 2 ? j : (j + 6) % 18;
+        assert.deepEqual(f && [f.kind, f.heights, f.level], ["Grass", [want + 1, want + 1], 1], `k ${k}, j ${j}`);
+        assert.deepEqual(f && [f.land, f.lane, f.stopped, f.rail], [null, null, false, false]);
+      }
+      for (let d = 0; d < 6; d++) {
+        assert.equal(facingAt(tiles, anchor, d), null, `centre edge ${d}`);
+        for (const e of [2, 3, 4])
+          assert.equal(
+            facingAt(tiles, neighbor(anchor, d), (d + e) % 6),
+            null,
+            `ring ${d} interior edge ${(d + e) % 6}`,
+          );
+      }
+    }
+  } finally {
+    massif.outer = original;
+  }
+  // A single tile faces with its own rotated edge, as before.
+  const road = facingAt(world([0, 0, "road_straight", 1, 2]), { q: 0, r: 0 }, 1);
+  assert.deepEqual(road && [road.kind, road.level], ["Road", 2]);
+});
+
+test("the sheet keeps a legal massif centre that is not a frontier slot", () => {
+  const tiles = world(...(massifWorld.tiles as [number, number, string, number, number][]));
+  const inner = massifWorld.mega_slots.find((s) => s.tile === MASSIF && !isSlot(s, tiles));
+  assert.ok(inner, "a legal centre that is no frontier cell");
+  const cell = { q: inner.q, r: inner.r };
+  assert.equal(isSheetSlot(cell, tiles, massifWorld.mega_slots, MASSIF), true);
+  assert.equal(isSheetSlot(cell, tiles, massifWorld.mega_slots, "meadow"), false);
+  assert.equal(isSheetSlot(cell, tiles, [], MASSIF), false);
+  const f = fitEntry(entryOf(MASSIF)!, needsAt(cell, tiles), { slot: cell, megaSlots: massifWorld.mega_slots, tiles });
+  assert.equal(f.ok, true);
+  const ctx = { slot: cell, megaSlots: massifWorld.mega_slots, tiles };
+  const meadow = fitEntry(entryOf("meadow")!, needsAt(cell, tiles), ctx);
+  assert.equal(meadow.ok, false, "no single tile fits a cell only a massif is offered");
+  assert.equal(meadow.seq.length, 0);
+});
+
+test("a swap between a single tile and a massif says why in words", () => {
+  const tiles = world(...(massifWorld.tiles as [number, number, string, number, number][]));
+  const [cq, cr] = massifWorld.tiles.find((t) => t[2] === MASSIF)! as [number, number];
+  const centre = { q: cq, r: cr };
+  for (const target of [centre, neighbor(centre, 2)]) {
+    assert.equal(swapRefusal("meadow", target, tiles), MASSIF_SWAP, `${target.q},${target.r}`);
+    assert.equal(swapRefusal(MASSIF, target, tiles), null);
+  }
+  assert.equal(MASSIF_SWAP, "A massif can only be swapped for another massif.");
+  const single = massifWorld.tiles.find((t) => t[2] !== MASSIF)! as [number, number, string, number, number];
+  assert.equal(swapRefusal(MASSIF, { q: single[0], r: single[1] }, tiles), SINGLE_SWAP);
+  assert.equal(swapRefusal("meadow", { q: single[0], r: single[1] }, tiles), null);
+});
+
+test("a massif refusal says edges when seven free cells touch the world, else the seven cells", () => {
+  const entry = entryOf(MASSIF)!;
+  const tiles = world([0, 0, "meadow", 0]);
+  const at = (cell: { q: number; r: number }) =>
+    fitEntry(entry, needsAt(cell, tiles), { slot: cell, megaSlots: [], tiles }).why;
+  // The footprint centred on (2, 0) is free and touches the meadow, so only its edges can refuse it.
+  assert.equal(at({ q: 1, r: 0 }), FOOTPRINT_EDGES);
+  // Nothing is placed within reach of this slot: no candidate touches the world.
+  assert.equal(at({ q: 9, r: 0 }), FOOTPRINT_REFUSAL);
+  // An occupied footprint cell leaves no free candidate.
+  const crowded = world(
+    [0, 0, "meadow", 0],
+    [1, 0, "meadow", 0],
+    [-1, 0, "meadow", 0],
+    [0, 1, "meadow", 0],
+    [0, -1, "meadow", 0],
+    [1, -1, "meadow", 0],
+    [-1, 1, "meadow", 0],
+  );
+  assert.equal(
+    fitEntry(entry, needsAt({ q: 0, r: 0 }, crowded), { slot: { q: 0, r: 0 }, megaSlots: [], tiles: crowded }).why,
+    FOOTPRINT_REFUSAL,
+  );
+  assert.equal(FOOTPRINT_EDGES, "Its edges don't meet the tiles beside it.");
+});
+
+test("the swap tag text for a single tile aimed at a massif member is the massif words", () => {
+  const tiles = world(...(massifWorld.tiles as [number, number, string, number, number][]));
+  const [cq, cr] = massifWorld.tiles.find((t) => t[2] === MASSIF)! as [number, number];
+  const member = neighbor({ q: cq, r: cr }, 3);
+  const refused = { ...member, tile: "meadow", level: 0, reason: "edges clash" };
+  assert.equal(refusedWhy(refused, tiles, false), MASSIF_SWAP);
+  assert.equal(refusedWhy({ ...refused, q: cq, r: cr }, tiles, false), MASSIF_SWAP);
+  assert.equal(refusedWhy(refused, tiles, true), "This tile covers a tunnel.");
 });

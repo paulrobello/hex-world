@@ -1,7 +1,7 @@
 //! The tile catalog loaded from `data/` (embedded, so the wasm build needs no filesystem) and the
 //! pending kit-piece list (plan F4).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 use std::fmt;
 
 use serde::{Deserialize, Serialize};
@@ -11,8 +11,8 @@ use crate::socket::{EdgeSocket, HeightMeet, SocketTable, SocketTableError, heigh
 use crate::tile::{KitRef, TileDef, local_edge, opposite_edge};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
-/// coast corners after the straight beach, as PRD §5.4 lists them, and the windmill, the farm and
-/// the wheat field after the oak).
+/// coast corners after the straight beach, as PRD §5.4 lists them, the windmill, the farm and the
+/// wheat field after the oak, and the massif after the hillsides, its own picker entry, A52 Q4 O1).
 pub const BUILTIN_TILES: &[(&str, &str)] = &[
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
@@ -91,6 +91,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
     (
         "hillside_011111",
         include_str!("../../../data/tiles/hillside_011111.ron"),
+    ),
+    (
+        "massif_granite",
+        include_str!("../../../data/tiles/massif_granite.ron"),
     ),
     (
         "road_ramp",
@@ -250,6 +254,36 @@ pub struct TileCatalog {
     tiles: Vec<TileDef>,
     /// Per tile, in `tiles` order: its [`stopped_edges`] mask and whether it [`carries_rail`].
     rail_ends: Vec<(u8, bool)>,
+    /// Each tile id's index in `tiles`.
+    index: HashMap<String, usize>,
+}
+
+/// One side of a seam: the tile, the socket it shows across the seam, and its level. `local` is
+/// the tile's local edge for a single tile (the rail stop mask needs it) and `None` for a mega
+/// tile's outer face.
+#[derive(Clone, Copy, Debug)]
+pub struct Facing<'a> {
+    pub def: &'a TileDef,
+    pub socket: &'a EdgeSocket,
+    pub local: Option<u8>,
+    pub level: u8,
+}
+
+impl<'a> Facing<'a> {
+    /// Single tile `def` turned by `rotation` at `level`, across its world edge `w`.
+    pub fn single(def: &'a TileDef, rotation: u8, level: u8, w: u8) -> Self {
+        Self {
+            def,
+            socket: def.edge(w, rotation),
+            local: Some(local_edge(w, rotation)),
+            level,
+        }
+    }
+
+    /// How this face and `other` meet in height ([`heights_meet`]).
+    pub fn meet(self, other: Facing) -> HeightMeet {
+        heights_meet(self.socket, self.level, other.socket, other.level)
+    }
 }
 
 impl TileCatalog {
@@ -269,10 +303,16 @@ impl TileCatalog {
             .iter()
             .map(|t| (stopped_edges(t), carries_rail(t)))
             .collect();
+        let index = tiles
+            .iter()
+            .enumerate()
+            .map(|(i, t)| (t.id.clone(), i))
+            .collect();
         Ok(Self {
             sockets,
             tiles,
             rail_ends,
+            index,
         })
     }
 
@@ -303,7 +343,7 @@ impl TileCatalog {
 
     /// Looks up a definition by id, or returns `None` when absent.
     pub fn get(&self, id: &str) -> Option<&TileDef> {
-        self.tiles.iter().find(|t| t.id == id)
+        self.index.get(id).map(|&i| &self.tiles[i])
     }
 
     /// Tiles in inventory order.
@@ -318,18 +358,34 @@ impl TileCatalog {
 
     /// `def`'s [`stopped_edges`] mask and whether it [`carries_rail`], cached for catalog tiles.
     pub fn rail_ends(&self, def: &TileDef) -> (u8, bool) {
-        self.tiles.iter().position(|t| t.id == def.id).map_or_else(
+        self.index.get(&def.id).map_or_else(
             || (stopped_edges(def), carries_rail(def)),
-            |i| self.rail_ends[i],
+            |&i| self.rail_ends[i],
         )
     }
 
-    /// Whether `def` turned by `rotation` at height `level` may be placed with its world edge `w`
-    /// against the placed `neighbour` turned by `nrot` at `nlevel` (owner, 2026-10-25): the sockets meet
-    /// ([`SocketTable::edges_compatible`]), or `def` carries no rail at all and the neighbour's
-    /// facing edge is a rail end that gets a buffer stop, which closes the line, so `def` meets it
-    /// as [`STOPPED_END_GROUND`]. A tile that carries rail gets the socket rule alone: it continues
+    /// Whether `mine` may be placed against the placed `theirs` (owner, 2026-10-25): the sockets
+    /// meet ([`SocketTable::edges_compatible`]), or `mine` carries no rail at all and `theirs` is a
+    /// rail end that gets a buffer stop, which closes the line, so `mine` meets it as
+    /// [`STOPPED_END_GROUND`]. A tile that carries rail gets the socket rule alone: it continues
     /// the line, and it never turns an end toward a placed tile without rail.
+    pub fn facing_meets(&self, mine: Facing, theirs: Facing) -> bool {
+        self.sockets
+            .edges_compatible(mine.socket, mine.level, theirs.socket, theirs.level)
+            || self.stop_closes(theirs, mine)
+    }
+
+    /// [`TileCatalog::facing_meets`] in either placement order. Loading checks this, as a world
+    /// holds the pair however it was built (a station placed before the meadow beyond its end looks
+    /// the same as one placed after). It is symmetric and depends only on the two faces, so no
+    /// third tile's placement or removal can change it.
+    pub fn facings_meet(&self, a: Facing, b: Facing) -> bool {
+        self.facing_meets(a, b) || self.facing_meets(b, a)
+    }
+
+    /// Whether `def` turned by `rotation` at height `level` may be placed with its world edge `w`
+    /// against the placed single tile `neighbour` turned by `nrot` at `nlevel`
+    /// ([`TileCatalog::facing_meets`]).
     #[allow(clippy::too_many_arguments)]
     pub fn placement_meets(
         &self,
@@ -342,19 +398,15 @@ impl TileCatalog {
         nlevel: u8,
     ) -> bool {
         let back = opposite_edge(w);
-        let (mine, theirs) = (def.edge(w, rotation), neighbour.edge(back, nrot));
-        self.sockets.edges_compatible(mine, level, theirs, nlevel)
-            || self.stop_closes(
-                (neighbour, local_edge(back, nrot), theirs, nlevel),
-                (def, mine, level),
-            )
+        self.facing_meets(
+            Facing::single(def, rotation, level, w),
+            Facing::single(neighbour, nrot, nlevel, back),
+        )
     }
 
-    /// Whether placed tiles `a` (turned by `ra`, at level `la`) and `b` (turned by `rb`, at level
-    /// `lb`) may touch across `a`'s world edge `w`, in either placement order: [`TileCatalog::placement_meets`] one way or the
-    /// other. Loading checks this, as a world holds the pair however it was built (a station placed
-    /// before the meadow beyond its end looks the same as one placed after). It is symmetric and
-    /// depends only on the two tiles, so no third tile's placement or removal can change it.
+    /// Whether placed single tiles `a` (turned by `ra`, at level `la`) and `b` (turned by `rb`, at
+    /// level `lb`) may touch across `a`'s world edge `w`, in either placement order
+    /// ([`TileCatalog::facings_meet`]).
     #[allow(clippy::too_many_arguments)]
     pub fn edges_meet(
         &self,
@@ -366,12 +418,14 @@ impl TileCatalog {
         rb: u8,
         lb: u8,
     ) -> bool {
-        self.placement_meets(a, ra, la, w, b, rb, lb)
-            || self.placement_meets(b, rb, lb, opposite_edge(w), a, ra, la)
+        self.facings_meet(
+            Facing::single(a, ra, la, w),
+            Facing::single(b, rb, lb, opposite_edge(w)),
+        )
     }
 
-    /// How the facing sockets of `a` and `b` meet in height across `a`'s world edge `w`
-    /// ([`heights_meet`]): `Cliff` seams are the ones a cliff skirt is drawn on.
+    /// How the facing sockets of single tiles `a` and `b` meet in height across `a`'s world edge
+    /// `w` ([`heights_meet`]): `Cliff` seams are the ones a cliff skirt is drawn on.
     #[allow(clippy::too_many_arguments)]
     pub fn meet_kind(
         &self,
@@ -383,27 +437,26 @@ impl TileCatalog {
         rb: u8,
         lb: u8,
     ) -> HeightMeet {
-        heights_meet(a.edge(w, ra), la, b.edge(opposite_edge(w), rb), lb)
+        Facing::single(a, ra, la, w).meet(Facing::single(b, rb, lb, opposite_edge(w)))
     }
 
-    /// Whether local edge `edge` (socket `own`) of `def` is a stopped rail end that meets `other`'s
-    /// socket `theirs` as [`STOPPED_END_GROUND`], `other` carrying no rail.
-    fn stop_closes(
-        &self,
-        (def, edge, own, own_level): (&TileDef, u8, &EdgeSocket, u8),
-        (other, theirs, their_level): (&TileDef, &EdgeSocket, u8),
-    ) -> bool {
-        let stopped = self.rail_ends(def).0 & (1 << edge) != 0;
+    /// Whether `stopped` is a stopped rail end that meets `other`'s socket as
+    /// [`STOPPED_END_GROUND`], `other` carrying no rail. A mega outer face has no local edge and
+    /// never carries a stop.
+    fn stop_closes(&self, stopped: Facing, other: Facing) -> bool {
+        let Some(edge) = stopped.local else {
+            return false;
+        };
         let ground = EdgeSocket {
-            height: own.height,
-            profile: own.profile,
+            height: stopped.socket.height,
+            profile: stopped.socket.profile,
             ..EdgeSocket::new(STOPPED_END_GROUND)
         };
-        stopped
-            && !self.rail_ends(other).1
+        self.rail_ends(stopped.def).0 & (1 << edge) != 0
+            && !self.rail_ends(other.def).1
             && self
                 .sockets
-                .edges_compatible(&ground, own_level, theirs, their_level)
+                .edges_compatible(&ground, stopped.level, other.socket, other.level)
     }
 
     /// The picker group `id` belongs to, when it is a member of one in this catalog.
@@ -579,6 +632,17 @@ mod tests {
         assert_eq!(c.siblings("river_mouth_l").len(), 2);
     }
 
+    /// A52 Q4 O1: the massif has its own Tiles sheet entry, right after the hillside group.
+    #[test]
+    fn picker_lists_the_massif_alone_after_the_hillsides() {
+        let c = TileCatalog::builtin().unwrap();
+        let p = c.picker();
+        let i = p.iter().position(|e| e.id == "hillside").unwrap();
+        assert_eq!(p[i + 1].id, "massif_granite");
+        assert_eq!(p[i + 1].tiles, ["massif_granite"]);
+        assert_eq!(c.siblings("massif_granite").len(), 1);
+    }
+
     #[test]
     fn portal_and_ramp_share_the_straight_bank() {
         let c = TileCatalog::builtin().unwrap();
@@ -613,6 +677,64 @@ mod tests {
         assert!(c.placement_meets(straight, 0, 2, 0, straight, 0, 2));
         assert!(!c.placement_meets(straight, 0, 1, 0, straight, 0, 2));
         assert!(!c.placement_meets(straight, 0, 2, 0, straight, 0, 1));
+    }
+
+    /// `facing_meets` and `placement_meets` both match the single-tile rule written out here:
+    /// the sockets meet, or the neighbour's facing edge is a stopped rail end and `def` carries
+    /// no rail, so it meets the stop's lane-free ground. Single tiles only: a mega tile shows no
+    /// socket at its anchor.
+    #[test]
+    fn facing_rules_match_placement_meets() {
+        use crate::rail_end::{carries_rail, stopped_edges};
+        let c = TileCatalog::builtin().unwrap();
+        let singles: Vec<&TileDef> = c.tiles().iter().filter(|t| !t.is_mega()).collect();
+        let rail: Vec<(u8, bool)> = singles
+            .iter()
+            .map(|t| (stopped_edges(t), carries_rail(t)))
+            .collect();
+        let s = c.sockets();
+        for (&a, &(_, a_rail)) in singles.iter().zip(&rail) {
+            for (&b, &(b_stops, _)) in singles.iter().zip(&rail) {
+                for (ra, rb, w) in
+                    (0..216u16).map(|i| ((i / 36) as u8, (i / 6 % 6) as u8, (i % 6) as u8))
+                {
+                    let back = opposite_edge(w);
+                    let (mine, theirs) = (a.edge(w, ra), b.edge(back, rb));
+                    for (la, lb) in [(0, 0), (0, 1), (1, 0), (1, 1)] {
+                        let ground = EdgeSocket {
+                            height: theirs.height,
+                            profile: theirs.profile,
+                            ..EdgeSocket::new(STOPPED_END_GROUND)
+                        };
+                        let want = s.edges_compatible(mine, la, theirs, lb)
+                            || (b_stops & (1 << local_edge(back, rb)) != 0
+                                && !a_rail
+                                && s.edges_compatible(&ground, lb, mine, la));
+                        let fa = Facing {
+                            def: a,
+                            socket: a.socket_toward(ra, None, w).unwrap(),
+                            local: Some(local_edge(w, ra)),
+                            level: la,
+                        };
+                        let fb = Facing {
+                            def: b,
+                            socket: b.socket_toward(rb, None, back).unwrap(),
+                            local: Some(local_edge(back, rb)),
+                            level: lb,
+                        };
+                        let seam =
+                            format!("{} r{ra} l{la} | {} r{rb} l{lb} across {w}", a.id, b.id);
+                        assert_eq!(c.facing_meets(fa, fb), want, "{seam}");
+                        assert_eq!(c.placement_meets(a, ra, la, w, b, rb, lb), want, "{seam}");
+                        assert_eq!(
+                            c.facings_meet(fa, fb),
+                            c.edges_meet(a, ra, la, w, b, rb, lb),
+                            "{seam}"
+                        );
+                    }
+                }
+            }
+        }
     }
 
     #[test]

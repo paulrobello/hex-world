@@ -173,6 +173,131 @@ pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
     ],
 )];
 
+/// Footprint tiles' standing parts that block the walker, as (tile, part, convex parts of its
+/// footprint in the tile frame, x and z). The massif's is its rock foot as measured top-down on its
+/// LOD0: the outermost rock along each 5-degree bearing from the anchor (the spines reach 14-20 m,
+/// just into every ring cell), split into convex fans from the anchor
+/// (`docs/checkpoints/massif_granite/walk_parts.py` over `form/form-measure.json`). The grass
+/// slopes and scree fans below it are walkable ground.
+pub const FOOTPRINT_OBSTACLES: &[(&str, &str, &[&[[f32; 2]]])] =
+    &[("massif_granite", "massif_granite", MASSIF_ROCK_FOOT)];
+
+/// The massif's rock foot: 20 convex parts, 543 m² (the rock's top-down cover measures 544 m²;
+/// form pass 3, the rock half buried in the raised grass).
+const MASSIF_ROCK_FOOT: &[&[[f32; 2]]] = &[
+    &[
+        [0.00, 0.00],
+        [3.35, -5.80],
+        [4.10, -8.79],
+        [4.10, -11.28],
+        [3.70, -13.81],
+        [2.43, -13.79],
+        [1.04, -11.85],
+    ],
+    &[
+        [0.00, 0.00],
+        [1.04, -11.85],
+        [0.00, -11.30],
+        [-0.92, -10.56],
+        [-1.68, -9.55],
+        [-1.84, -6.86],
+    ],
+    &[[0.00, 0.00], [-1.84, -6.86], [-2.50, -6.86]],
+    &[[0.00, 0.00], [-2.50, -6.86], [-3.55, -7.61], [-4.95, -8.57]],
+    &[[0.00, 0.00], [-4.95, -8.57], [-7.05, -10.08]],
+    &[
+        [0.00, 0.00],
+        [-7.05, -10.08],
+        [-12.02, -14.33],
+        [-14.35, -14.35],
+        [-13.87, -11.63],
+        [-11.96, -8.37],
+    ],
+    &[
+        [0.00, 0.00],
+        [-11.96, -8.37],
+        [-12.82, -7.40],
+        [-13.59, -6.34],
+        [-13.34, -4.86],
+        [-13.04, -3.49],
+        [-12.31, -2.17],
+        [-10.86, -0.95],
+    ],
+    &[
+        [0.00, 0.00],
+        [-10.86, -0.95],
+        [-13.30, -0.00],
+        [-15.34, 1.34],
+        [-16.05, 2.83],
+        [-16.03, 4.30],
+        [-15.32, 5.57],
+        [-14.59, 6.80],
+    ],
+    &[
+        [0.00, 0.00],
+        [-14.59, 6.80],
+        [-16.80, 9.70],
+        [-16.30, 11.41],
+        [-12.95, 10.86],
+        [-10.11, 10.11],
+        [-7.84, 9.35],
+        [-5.85, 8.36],
+    ],
+    &[
+        [0.00, 0.00],
+        [-5.85, 8.36],
+        [-5.60, 9.70],
+        [-4.94, 10.60],
+        [-4.21, 11.56],
+        [-3.36, 12.56],
+    ],
+    &[
+        [0.00, 0.00],
+        [-3.36, 12.56],
+        [-2.83, 16.05],
+        [-1.58, 18.03],
+        [-0.00, 16.10],
+        [1.26, 14.35],
+        [2.08, 11.82],
+    ],
+    &[
+        [0.00, 0.00],
+        [2.08, 11.82],
+        [3.11, 11.59],
+        [3.86, 10.62],
+        [3.59, 7.70],
+    ],
+    &[[0.00, 0.00], [3.59, 7.70], [4.10, 7.10], [4.36, 6.23]],
+    &[[0.00, 0.00], [4.36, 6.23], [6.17, 7.35], [7.57, 7.57]],
+    &[
+        [0.00, 0.00],
+        [7.57, 7.57],
+        [9.96, 8.36],
+        [11.55, 8.09],
+        [12.56, 7.25],
+        [13.59, 6.34],
+        [14.10, 5.13],
+        [14.30, 3.83],
+        [14.28, 2.52],
+        [13.05, 1.14],
+        [10.30, -0.00],
+        [6.87, -0.60],
+    ],
+    &[[0.00, 0.00], [6.87, -0.60], [7.58, -1.34]],
+    &[[0.00, 0.00], [7.58, -1.34], [8.60, -2.30]],
+    &[
+        [0.00, 0.00],
+        [8.60, -2.30],
+        [12.12, -4.41],
+        [14.14, -6.59],
+        [15.33, -8.85],
+        [11.96, -8.37],
+        [7.89, -6.62],
+    ],
+    &[[0.00, 0.00], [7.89, -6.62], [6.36, -6.36], [4.89, -5.82]],
+    &[[0.00, 0.00], [4.89, -5.82], [4.07, -5.82], [3.35, -5.80]],
+];
+
 /// Parts of obstacle pieces that stand outside the piece's collider, as (piece, footprint corners
 /// in the piece frame); they block the walker as the piece. house_cottage_b's box collider is its
 /// walls' (LOD2), so its porch posts get their own squares (`_house_slate.py` `porch`: 0.12 m oak
@@ -272,6 +397,44 @@ impl Blocked {
             Blocked::Obstacle(p) => Some(p),
             _ => None,
         }
+    }
+}
+
+/// A tile definition's walk ground, tile frame: its centre cell's [`Surface`] and, for a
+/// footprint tile, each ring member's centre offset from it with that member's surface in its own
+/// frame (`scatter::member_tris`), since a surface spans one hex.
+pub struct TileSurface {
+    pub centre: Arc<Surface>,
+    pub ring: Vec<(Vec2, Arc<Surface>)>,
+}
+
+impl TileSurface {
+    /// Builds a definition's walk ground from its ground pieces' LOD0 triangles (`tris_of`), or
+    /// `None` while one is missing.
+    pub fn new(
+        def: &TileDef,
+        catalog: &TileCatalog,
+        tris_of: &mut dyn FnMut(&str) -> Option<Vec<(Tri, String)>>,
+    ) -> Option<Self> {
+        let all = crate::play::slope_ground::tile_ground_tris(def, catalog, tris_of)?;
+        if !def.is_mega() {
+            return Some(Self {
+                centre: Arc::new(Surface::new(all)),
+                ring: vec![],
+            });
+        }
+        let ring = hex_core::footprint::members(Axial::ORIGIN)
+            .into_iter()
+            .skip(1)
+            .map(|m| {
+                let at = Vec2::from(m.to_world(HEX_RADIUS));
+                (at, Arc::new(Surface::new(scatter::member_tris(&all, at))))
+            })
+            .collect();
+        Some(Self {
+            centre: Arc::new(Surface::new(scatter::member_tris(&all, Vec2::ZERO))),
+            ring,
+        })
     }
 }
 
@@ -951,7 +1114,7 @@ impl WalkGround {
         catalog: &TileCatalog,
         world_seed: u64,
         hidden: &[Axial],
-        surface_of: &mut dyn FnMut(&TileDef) -> Option<(Arc<Surface>, f32)>,
+        surface_of: &mut dyn FnMut(&TileDef) -> Option<(Arc<TileSurface>, f32)>,
         shape_of: &mut dyn FnMut(&str) -> PieceShape,
         scatter: &BTreeMap<Axial, TileScatter>,
     ) -> Self {
@@ -960,6 +1123,7 @@ impl WalkGround {
             .iter()
             .filter_map(|t| Some((t.cell, (catalog.get(&t.tile)?, t.rotation))))
             .collect();
+        let at = crate::play::covering(|c: Axial| tile_at.get(&c).copied());
         for piece in ["boat_rowing", "boat_sail", "landing_stage"] {
             out.boat_shapes
                 .insert(piece.to_owned(), Arc::new(shape_of(piece)));
@@ -977,45 +1141,71 @@ impl WalkGround {
             };
             let [x, z] = t.cell.to_world(HEX_RADIUS);
             let (surface, ride_max) = surface_of(def).unzip();
-            out.cells.insert(
-                t.cell,
-                CellGround {
-                    tile: t.tile.clone(),
-                    centre: Vec2::new(x, z),
-                    rotation: t.rotation,
-                    y0: f32::from(t.level) * LEVEL_STEP,
-                    surface,
-                    car_paths: !def.parking.is_empty()
-                        || def.networks.iter().any(|n| n.kind == NetworkKind::Road),
-                    ride_max: ride_max.unwrap_or(f32::MIN),
-                    water: water_kind(def, t.rotation).is_some(),
-                    ford: matches!(
-                        water_kind(def, t.rotation),
-                        Some(WaterKind::River | WaterKind::Spring(_))
-                    ),
-                },
-            );
+            let ground = CellGround {
+                tile: t.tile.clone(),
+                centre: Vec2::new(x, z),
+                rotation: t.rotation,
+                y0: f32::from(t.level) * LEVEL_STEP,
+                surface: surface.as_ref().map(|s| s.centre.clone()),
+                car_paths: !def.parking.is_empty()
+                    || def.networks.iter().any(|n| n.kind == NetworkKind::Road),
+                ride_max: ride_max.unwrap_or(f32::MIN),
+                water: water_kind(def, t.rotation).is_some(),
+                ford: matches!(
+                    water_kind(def, t.rotation),
+                    Some(WaterKind::River | WaterKind::Spring(_))
+                ),
+            };
+            if def.is_mega() {
+                // Each ring cell stands on its own member's ground; until the piece loads, flat at
+                // the footprint's level.
+                for m in hex_core::footprint::members(t.cell).into_iter().skip(1) {
+                    let mid = Vec2::from(m.to_world(HEX_RADIUS));
+                    let d = mid - ground.centre;
+                    let l = turn((6 - t.rotation % 6) % 6, [d.x, 0.0, d.y]);
+                    let own = surface.as_ref().and_then(|s| {
+                        s.ring
+                            .iter()
+                            .find(|(o, _)| o.distance(Vec2::new(l[0], l[2])) < 1.0)
+                            .map(|(_, s)| s.clone())
+                    });
+                    out.cells.insert(
+                        m,
+                        CellGround {
+                            centre: mid,
+                            surface: own,
+                            ride_max: f32::MIN,
+                            ..ground.clone()
+                        },
+                    );
+                }
+            }
+            out.cells.insert(t.cell, ground);
             let root = root_transform(t);
             let mut obs = vec![];
-            let mut place = |piece: &str, sh: &Arc<PieceShape>, t: &Transform| {
-                for (poly, part) in sh.footprints() {
-                    obs.push(Obstacle {
-                        piece: piece.to_owned(),
-                        poly: place_hull(poly, t),
-                    });
-                    out.props.extend(match part {
-                        None => PickProp::new(piece, sh, t),
-                        Some(i) => PickProp::new_part(piece, sh, t, i),
-                    });
-                }
-                for (_, corners) in PIECE_POSTS.iter().filter(|(p, _)| *p == piece) {
-                    let poly = hull(&corners.map(Vec2::from));
-                    obs.push(Obstacle {
-                        piece: piece.to_owned(),
-                        poly: place_hull(&poly, t),
-                    });
-                }
-            };
+            // A footprint's ring scatter, by the ring cell it stands on, so a body beside that
+            // cell meets it ([`WalkGround::obstacle`] looks one cell around).
+            let mut ring_obs: HashMap<Axial, Vec<Obstacle>> = HashMap::new();
+            let mut place =
+                |obs: &mut Vec<Obstacle>, piece: &str, sh: &Arc<PieceShape>, t: &Transform| {
+                    for (poly, part) in sh.footprints() {
+                        obs.push(Obstacle {
+                            piece: piece.to_owned(),
+                            poly: place_hull(poly, t),
+                        });
+                        out.props.extend(match part {
+                            None => PickProp::new(piece, sh, t),
+                            Some(i) => PickProp::new_part(piece, sh, t, i),
+                        });
+                    }
+                    for (_, corners) in PIECE_POSTS.iter().filter(|(p, _)| *p == piece) {
+                        let poly = hull(&corners.map(Vec2::from));
+                        obs.push(Obstacle {
+                            piece: piece.to_owned(),
+                            poly: place_hull(&poly, t),
+                        });
+                    }
+                };
             let herd = crate::farm::herd_slots(def);
             for (slot, (h, piece)) in def.hero_pieces(t.cell).enumerate() {
                 if OBSTACLES.contains(&piece) {
@@ -1038,7 +1228,7 @@ impl WalkGround {
                         out.herd.push(b);
                         continue;
                     }
-                    place(piece, &shape(piece), &(root * local));
+                    place(&mut obs, piece, &shape(piece), &(root * local));
                 }
             }
             if let Some(s) = scatter.get(&t.cell).filter(|s| s.tile == t.tile) {
@@ -1046,22 +1236,29 @@ impl WalkGround {
                     let rule = inst.rule as usize;
                     let piece = s.piece_of(inst);
                     if s.drawn[rule] && OBSTACLES.contains(&piece) {
-                        place(piece, &shape(piece), &(root * inst.transform()));
+                        let placed = root * inst.transform();
+                        let into = if def.is_mega() {
+                            ring_obs
+                                .entry(cell_at(placed.translation.xz()))
+                                .or_default()
+                        } else {
+                            &mut obs
+                        };
+                        place(into, piece, &shape(piece), &placed);
                     }
                 }
             }
             // The buffer stops at the tile's open rail ends (`play::respawn_pairs` draws them).
-            for s in rail_end::open_stops(def, t.cell, t.rotation, |c| tile_at.get(&c).copied()) {
+            for s in rail_end::open_stops(def, t.cell, t.rotation, &at) {
                 let local = crate::play::buffer_stop_local(&s);
-                place(BUFFER_STOP, &shape(BUFFER_STOP), &(root * local));
+                place(&mut obs, BUFFER_STOP, &shape(BUFFER_STOP), &(root * local));
             }
             // The field boundaries this tile owns (`play::respawn_pairs` draws them), and the
             // hedgerow oaks they carry.
-            let at = |c: Axial| tile_at.get(&c).copied();
             for f in crate::play::boundaries::placements(world_seed, t.cell, &at) {
                 if OBSTACLES.contains(&f.piece) {
                     let local = crate::play::boundaries::transform(&f);
-                    place(f.piece, &shape(f.piece), &(root * local));
+                    place(&mut obs, f.piece, &shape(f.piece), &(root * local));
                 }
             }
             for (centre, part, corners) in CENTRE_OBSTACLES {
@@ -1073,8 +1270,22 @@ impl WalkGround {
                     });
                 }
             }
+            for (tile, part, parts) in FOOTPRINT_OBSTACLES {
+                if def.id == *tile {
+                    for corners in *parts {
+                        let poly: Vec<Vec2> = corners.iter().map(|c| Vec2::from(*c)).collect();
+                        obs.push(Obstacle {
+                            piece: (*part).to_owned(),
+                            poly: place_hull(&poly, &root),
+                        });
+                    }
+                }
+            }
             if !obs.is_empty() {
                 out.obstacles.insert(t.cell, obs);
+            }
+            for (cell, o) in ring_obs {
+                out.obstacles.entry(cell).or_default().extend(o);
             }
         }
         out
@@ -1404,7 +1615,7 @@ fn piece_shape(
 /// rebuilds, and what the ground was last built from.
 #[derive(Default)]
 pub struct WalkCache {
-    surfaces: HashMap<String, (Arc<Surface>, f32)>,
+    surfaces: HashMap<String, (Arc<TileSurface>, f32)>,
     shapes: HashMap<String, PieceShape>,
     built: Option<BuiltFrom>,
 }
@@ -1468,7 +1679,7 @@ pub fn sync(
     let WalkCache {
         surfaces, shapes, ..
     } = &mut *cache;
-    let mut surface_of = |def: &TileDef| -> Option<(Arc<Surface>, f32)> {
+    let mut surface_of = |def: &TileDef| -> Option<(Arc<TileSurface>, f32)> {
         if let Some(s) = surfaces.get(&def.id) {
             return Some(s.clone());
         }
@@ -1476,11 +1687,10 @@ pub fn sync(
         if !pieces.iter().all(|(id, _)| kit.contains_key(*id)) {
             return None;
         }
-        let all = crate::play::slope_ground::tile_ground_tris(def, &catalog.0, &mut |id| {
+        let s = Arc::new(TileSurface::new(def, &catalog.0, &mut |id| {
             scatter::kit_tris(id, &packs, assets)
-        })?;
-        let s = Arc::new(Surface::new(all));
-        let ride = ride_max(def, &s);
+        })?);
+        let ride = ride_max(def, &s.centre);
         surfaces.insert(def.id.clone(), (s.clone(), ride));
         Some((s, ride))
     };
@@ -1523,7 +1733,7 @@ pub(crate) mod tests {
     use super::*;
     use crate::{
         kit_scene::MANIFEST,
-        play::scatter::{layout, prepare},
+        play::scatter::{Instance, layout, prepare},
     };
 
     type Tris = Option<Vec<(Tri, String)>>;
@@ -2255,6 +2465,15 @@ pub(crate) mod tests {
 
     /// [`world_in`] with each tile's level: (q, r, id, rotation, level).
     pub(crate) fn world_at(c: &TileCatalog, tiles: &[(i32, i32, &str, u8, u8)]) -> WalkGround {
+        world_with(c, tiles, &[])
+    }
+
+    /// [`world_at`] with `extra` scatter instances (tile frame) added to the tiles at their cells.
+    fn world_with(
+        c: &TileCatalog,
+        tiles: &[(i32, i32, &str, u8, u8)],
+        extra: &[(Axial, Instance)],
+    ) -> WalkGround {
         let play: Vec<PlayTile> = tiles
             .iter()
             .map(|&(q, r, tile, rotation, level)| PlayTile {
@@ -2272,12 +2491,19 @@ pub(crate) mod tests {
             }
             let prepared = prepare(def, c, &mut |id| mesh_tris(id, "lod0")).unwrap();
             let seed = hex_core::cell_seed(1, t.cell);
+            let mut l = layout(def, seed, &prepared);
+            l.instances.extend(
+                extra
+                    .iter()
+                    .filter(|(cell, _)| *cell == t.cell)
+                    .map(|(_, i)| i.clone()),
+            );
             scatter.insert(
                 t.cell,
                 TileScatter {
                     tile: t.tile.clone(),
                     seed,
-                    layout: Arc::new(layout(def, seed, &prepared)),
+                    layout: Arc::new(l),
                     fences: Arc::new(vec![]),
                     cut: 0,
                     drawn: vec![true; def.props.scatter.len()],
@@ -2295,7 +2521,11 @@ pub(crate) mod tests {
             c,
             1,
             &[],
-            &mut |d| surface(d).map(|s| (s.clone(), ride_max(d, &s))),
+            &mut |d| {
+                let s = TileSurface::new(d, c, &mut |id| mesh_tris(id, "lod0"))?;
+                let ride = ride_max(d, &s.centre);
+                Some((Arc::new(s), ride))
+            },
             &mut |p| shape(p),
             &scatter,
         )
@@ -3271,5 +3501,325 @@ pub(crate) mod tests {
                 "r{rotation}: picked above the roof"
             );
         }
+    }
+
+    /// The topmost upward triangle's height over tile-frame (x, z) among `tris`, by brute force
+    /// over every triangle (no bucket grid, no extent), as [`Surface::top`] reads one.
+    fn brute_top(tris: &[(Tri, String)], x: f32, z: f32) -> Option<f32> {
+        let mut best: Option<f32> = None;
+        for ([a, b, c], name) in tris {
+            if scatter::NOT_GROUND.contains(&name.as_str()) {
+                continue;
+            }
+            let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);
+            if d.abs() < 1e-9 {
+                continue;
+            }
+            let u = ((x - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (z - a[2])) / d;
+            let v = ((b[0] - a[0]) * (z - a[2]) - (x - a[0]) * (b[2] - a[2])) / d;
+            if u < -1e-5 || v < -1e-5 || u + v > 1.0 + 1e-5 {
+                continue;
+            }
+            let y = a[1] + u * (b[1] - a[1]) + v * (c[1] - a[1]);
+            best = Some(best.map_or(y, |h: f32| h.max(y)));
+        }
+        best
+    }
+
+    /// The massif's ground under world `p` for an anchor at the origin turned `k` at level 1: the
+    /// piece's LOD0 ground in the tile frame, read by [`brute_top`].
+    fn massif_ground(tris: &[(Tri, String)], k: u8, p: Vec2) -> f32 {
+        let l = turn((6 - k % 6) % 6, [p.x, 0.0, p.y]);
+        LEVEL_STEP + brute_top(tris, l[0], l[2]).unwrap_or_else(|| panic!("no ground at {p}"))
+    }
+
+    fn massif_tris(c: &TileCatalog) -> Vec<(Tri, String)> {
+        let def = c.get("massif_granite").unwrap();
+        crate::play::slope_ground::tile_ground_tris(def, c, &mut |id| mesh_tris(id, "lod0"))
+            .unwrap()
+    }
+
+    /// Mega tiles (A52): every cell a massif covers is ground and its tile is the massif, and the
+    /// ground there is the piece's own, turned with the tile: on the ring cells the grass slopes
+    /// rise metres above the massif's level toward the rock, not a flat floor at it. The cell past
+    /// its ring is still the map edge.
+    #[test]
+    fn member_cells_are_ground_not_void() {
+        let c = catalog();
+        let tris = massif_tris(&c);
+        for k in [0u8, 1, 2, 5] {
+            let g = world_at(&c, &[(0, 0, "massif_granite", k, 1)]);
+            let mut raised = 0;
+            for m in hex_core::footprint::members(Axial::ORIGIN) {
+                let at = centre(m.q, m.r);
+                assert_eq!(g.tile_at(at), Some((m, "massif_granite")), "{m:?}");
+                for b in 0..12 {
+                    let dir = Vec2::from_angle(b as f32 * std::f32::consts::FRAC_PI_6);
+                    for r in [0.0, 3.0, 7.0, 11.0] {
+                        let p = at + dir * r;
+                        if cell_at(p) != m {
+                            continue;
+                        }
+                        let want = massif_ground(&tris, k, p);
+                        let got = g.ground(p).unwrap();
+                        assert!(
+                            (got - want).abs() < 0.02,
+                            "k{k} {m:?} at {p}: ground {got}, the piece's {want}"
+                        );
+                        if m != Axial::ORIGIN && want > LEVEL_STEP + 1.0 {
+                            raised += 1;
+                        }
+                    }
+                }
+            }
+            assert!(raised > 20, "k{k}: only {raised} ring points on the slopes");
+        }
+        let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
+        assert!(
+            g.ground(Vec2::ZERO).unwrap() > LEVEL_STEP + 20.0,
+            "the summit"
+        );
+        assert_eq!(g.ground(centre(2, 0)), Err(Blocked::Edge));
+    }
+
+    /// The massif without its ring scatter, whose boulders and pines would stop a walk short of the
+    /// rock.
+    fn bare_massif_catalog() -> TileCatalog {
+        let base = catalog();
+        let tiles = base.tiles().iter().cloned().map(|mut t| {
+            if t.is_mega() {
+                t.props.scatter.clear();
+            }
+            t
+        });
+        TileCatalog::new(base.sockets().clone(), tiles.collect()).unwrap()
+    }
+
+    /// Mega tiles (A52): the walker stands on a massif's ring on the piece's ground, climbs its
+    /// grass slopes toward the rock, and never enters the rock's foot: aimed past the centre it
+    /// slides along the foot, aimed at the dead centre it stops at it.
+    #[test]
+    fn walker_walks_around_a_massif() {
+        let c = bare_massif_catalog();
+        let tris = massif_tris(&c);
+        let rock: Vec<Obstacle> = {
+            let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
+            assert_eq!(g.obstacles[&Axial::ORIGIN].len(), MASSIF_ROCK_FOOT.len());
+            g.obstacles[&Axial::ORIGIN].clone()
+        };
+        for k in [0u8, 1, 2, 5] {
+            let g = world_at(&c, &[(0, 0, "massif_granite", k, 1)]);
+            for d in 0..6u8 {
+                let m = Axial::ORIGIN.neighbor(d);
+                let p = centre(m.q, m.r);
+                let y = g
+                    .stand(p)
+                    .unwrap_or_else(|b| panic!("k{k} ring cell {d}: {b:?}"));
+                let want = massif_ground(&tris, k, p);
+                assert!(
+                    (y - want).abs() < 0.02,
+                    "k{k} ring cell {d} at {y}, the piece's {want}"
+                );
+            }
+            assert_eq!(
+                g.stand(Vec2::ZERO),
+                Err(Blocked::Obstacle("massif_granite".into()))
+            );
+        }
+        let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
+        let ring = centre(-1, 0);
+        let start = ring + ring.normalize() * 4.0;
+        // West of the anchor the foot between two spines (`MASSIF_ROCK_FOOT`) faces a walk aimed
+        // a little north of the centre obliquely, so it slides north along that face until the
+        // next spine's notch stops it; one aimed at the centre stops where it meets the foot.
+        for (bias, slides) in [(Vec2::new(0.0, 0.2), true), (Vec2::ZERO, false)] {
+            let aim = (-start).normalize() + bias;
+            let mut pos = Vec3::new(start.x, g.ground(start).unwrap(), start.y);
+            let mut blocked = None;
+            let mut contact = None;
+            let mut top = pos.y;
+            for _ in 0..1200 {
+                let s = g.step(pos, aim.normalize() * 0.05);
+                pos = s.pos;
+                if contact.is_none() && s.blocked.is_some() {
+                    contact = Some(pos.xz());
+                }
+                blocked = s.blocked.or(blocked);
+                top = top.max(pos.y);
+                assert!(
+                    rock.iter().all(|o| !o.hits(pos.xz(), BODY_RADIUS - 1e-2)),
+                    "inside the rock's foot at {pos}"
+                );
+                let want = massif_ground(&tris, 0, pos.xz());
+                assert!(
+                    (pos.y - want).abs() < 0.02,
+                    "feet at {pos}, the ground {want}"
+                );
+            }
+            assert!(top > LEVEL_STEP + 2.0, "climbed the slopes: top {top}");
+            assert_eq!(blocked, Some(Blocked::Obstacle("massif_granite".into())));
+            let contact = contact.expect("met the foot");
+            if slides {
+                let slid = (pos.xz() - contact).length();
+                assert!(slid > 2.0, "slid along the foot: {contact} to {pos}");
+            } else {
+                assert!(pos.xz().length() < ring.length(), "reached the foot: {pos}");
+            }
+        }
+    }
+
+    /// Form pass 3 (A55 Q1 O1): the massif's grass flanks rise from the rim to a rock foot 7-11 m
+    /// up within a ring cell's depth, and the walker climbs them. The steepest grass or scree
+    /// triangle stays under the walker's limit, a [`MAX_STEP`] rise per [`SUBSTEP`] stride
+    /// (gradient 4, 76 degrees), and walks in from the rim on twelve bearings (each ring cell's
+    /// middle and each notch between two ring cells) climb without a step refused and stop at the
+    /// rock's foot more than 7 m up.
+    #[test]
+    fn walker_climbs_the_massif_flanks_to_the_rock_foot() {
+        let c = bare_massif_catalog();
+        let tris = massif_tris(&c);
+        let steepest = tris
+            .iter()
+            .filter(|(_, s)| s.ends_with("_cap") || s.ends_with("_scree"))
+            .map(|([a, b, c], _)| {
+                let u = Vec3::from(*b) - Vec3::from(*a);
+                let v = Vec3::from(*c) - Vec3::from(*a);
+                let n = u.cross(v);
+                n.xz().length() / n.y.abs().max(1e-9)
+            })
+            .fold(0.0f32, f32::max);
+        assert!(
+            steepest < 1.5,
+            "steepest ground {steepest} (the walker's limit is {})",
+            MAX_STEP / SUBSTEP
+        );
+        let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
+        let apothem = HEX_RADIUS * 3f32.sqrt() / 2.0;
+        let ring: Vec<Vec2> = (0..6u8)
+            .map(|d| {
+                let m = Axial::ORIGIN.neighbor(d);
+                centre(m.q, m.r).normalize()
+            })
+            .collect();
+        let mut walks: Vec<(Vec2, f32)> = ring.iter().map(|&d| (d, 3.0 * apothem)).collect();
+        walks.extend((0..6).map(|i| ((ring[i] + ring[(i + 1) % 6]).normalize(), 2.0 * HEX_RADIUS)));
+        for (dir, rim) in walks {
+            let start = dir * (rim - 0.6);
+            let mut pos = Vec3::new(start.x, g.ground(start).unwrap(), start.y);
+            assert!(pos.y - LEVEL_STEP < 0.3, "{dir}: the rim at {pos}");
+            let mut foot = None;
+            for _ in 0..1200 {
+                let s = g.step(pos, -dir * 0.05);
+                assert_ne!(
+                    s.blocked,
+                    Some(Blocked::Steep),
+                    "{dir}: refused a step at {pos}"
+                );
+                pos = s.pos;
+                if s.blocked == Some(Blocked::Obstacle("massif_granite".into())) {
+                    foot = Some(pos);
+                    break;
+                }
+            }
+            let foot = foot.unwrap_or_else(|| panic!("{dir}: never reached the rock, at {pos}"));
+            assert!(
+                foot.y - LEVEL_STEP > 7.0,
+                "{dir}: the rock's foot at {foot}, {} m up",
+                foot.y - LEVEL_STEP
+            );
+        }
+    }
+
+    /// The massif's ring scatter blocks the walker where it is drawn, in every ring cell, and a
+    /// body touching a ring prop from any side (an outer neighbour's cell included) meets it: a
+    /// boulder added half a metre inside ring cell (1, 0)'s outer edge reaches across it.
+    #[test]
+    fn ring_scatter_blocks_the_walker() {
+        let c = catalog();
+        let def = c.get("massif_granite").unwrap();
+        let rule = def
+            .props
+            .scatter
+            .iter()
+            .position(|r| r.piece.as_str() == "boulder_granite")
+            .unwrap() as u8;
+        let edge = Instance {
+            rule,
+            pos: Vec3::new(1.5 * 3f32.sqrt() * HEX_RADIUS - 0.5, 0.0, 0.0),
+            yaw: 0.0,
+            scale: 1.0,
+            order: 0,
+            variant: 0,
+        };
+        for k in [0u8, 3] {
+            let g = world_with(
+                &c,
+                &[(0, 0, "massif_granite", k, 1)],
+                &[(Axial::ORIGIN, edge.clone())],
+            );
+            let outside = g
+                .obstacles
+                .values()
+                .flatten()
+                .flat_map(|o| o.poly.iter())
+                .filter(|v| v.length() > 1.5 * 3f32.sqrt() * HEX_RADIUS)
+                .count();
+            assert!(outside > 0, "k{k}: no ring prop reaches past the ring");
+            let props: Vec<&Obstacle> = g
+                .obstacles
+                .values()
+                .flatten()
+                .filter(|o| o.piece != "massif_granite")
+                .collect();
+            let mut cells = std::collections::BTreeSet::new();
+            for o in &props {
+                let mid = o.poly.iter().copied().sum::<Vec2>() / o.poly.len() as f32;
+                let cell = cell_at(mid);
+                assert_ne!(cell, Axial::ORIGIN, "k{k}: {} on the rock cell", o.piece);
+                cells.insert(cell);
+                for v in &o.poly {
+                    let p = *v + (*v - mid).normalize_or_zero() * (BODY_RADIUS * 0.5);
+                    assert!(
+                        g.obstacle(p).is_some(),
+                        "k{k}: a body at {p} ({:?}) misses the {} there",
+                        cell_at(p),
+                        o.piece
+                    );
+                }
+            }
+            assert_eq!(cells.len(), 6, "k{k}: props on every ring cell: {cells:?}");
+        }
+    }
+
+    /// A rail end facing a massif's ring cell is open (the massif carries no rail) and keeps its
+    /// buffer stop, as an end facing an empty cell does.
+    #[test]
+    fn a_rail_end_at_a_massif_member_keeps_its_stop() {
+        let g = world_at(
+            &catalog(),
+            &[
+                (0, 0, "massif_granite", 0, 0),
+                (2, 0, "rail_straight", 0, 0),
+            ],
+        );
+        let stops = g
+            .obstacles
+            .get(&Axial::new(2, 0))
+            .map_or(0, |o| o.iter().filter(|o| o.piece == BUFFER_STOP).count());
+        assert_eq!(stops, 2, "both open ends keep their stops");
+    }
+
+    /// The walk ground's field boundaries read a footprint's ring cell as the footprint: a farm
+    /// whose only land neighbour is the footprint meadow's ring cell (2, 0) is walled there.
+    #[test]
+    fn walk_fences_read_a_ring_cell_as_its_footprint() {
+        let c = crate::play::tests::footprint_fixtures();
+        let g = world_in(&c, &[(3, 0, "meadow", 0), (1, 0, "farm", 0)]);
+        let fences = g.obstacles.get(&Axial::new(1, 0)).map_or(0, |o| {
+            o.iter()
+                .filter(|o| hex_core::boundary::PIECES.contains(&o.piece.as_str()))
+                .count()
+        });
+        assert!(fences > 0, "no boundary toward the ring cell");
     }
 }

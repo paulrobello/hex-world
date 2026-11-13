@@ -470,7 +470,10 @@ fn runtime_ground(
         extra.push((skirt, Transform::IDENTITY, base));
     }
     if level > 0 {
-        extra.push((slope.column(level, meshes), Transform::IDENTITY, base));
+        let column = slope.column(level, meshes);
+        for at in crate::play::cell_offsets(def) {
+            extra.push((column.clone(), Transform::from_translation(at), base));
+        }
     }
     let draped = slope_ground::draped_pieces(def, catalog);
     for (id, t, role) in pieces.iter().filter(|(id, ..)| draped.contains(id)) {

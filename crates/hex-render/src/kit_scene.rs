@@ -492,6 +492,10 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, q, r, at, yaw_deg)
         });
     }
+    // The granite massif (mega tiles, A52) at rotation 0, anchored on (-3, -2): its six ring cells
+    // stay empty for the piece's footprint, and nothing stands within a cell of them, so its 18
+    // outer edges and the open sun side to -x/-z read clear of the rest of the layout.
+    v.push(place("massif_granite", -3, -2, 0));
     v
 }
 

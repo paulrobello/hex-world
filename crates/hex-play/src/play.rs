@@ -96,6 +96,28 @@ fn prism_mesh(radius: f32, height: f32) -> Mesh {
     .with_inserted_indices(Indices::U32(p.indices))
 }
 
+/// The massif piece's peak stands 34.57 m over the cap (its LOD0 top: form pass 3, the form
+/// pass's rock in grass raised round it, owner A55 Q1 O1).
+pub const MASSIF_PEAK: f32 = 34.57;
+
+/// Where each cell `def` covers sits from its anchor, in the tile root's frame: the anchor alone
+/// for a single tile, the seven cells for a footprint tile. The ring is 60-degree symmetric, so the
+/// set is the same at every rotation.
+pub(crate) fn cell_offsets(def: &TileDef) -> Vec<Vec3> {
+    let cells = if def.is_mega() {
+        hex_core::footprint::members(Axial::ORIGIN).to_vec()
+    } else {
+        vec![Axial::ORIGIN]
+    };
+    cells
+        .iter()
+        .map(|c| {
+            let [x, z] = c.to_world(HEX_RADIUS);
+            Vec3::new(x, 0.0, z)
+        })
+        .collect()
+}
+
 fn lit(c: Color) -> StandardMaterial {
     StandardMaterial {
         base_color: c,
@@ -548,20 +570,7 @@ fn respawn_pairs(
             continue;
         };
         let rise = rising.contains(&cell).then_some((cell, RiseRole::Edge));
-        let tile_at = |c: Axial| {
-            spawned
-                .tiles
-                .get(&c)
-                .and_then(|(t, _)| Some((catalog.get(&t.tile)?, t.rotation)))
-        };
-        let stops = tile_at(cell)
-            .filter(|_| draw_stops)
-            .map_or(vec![], |(def, rot)| {
-                rail_end::open_stops(def, cell, rot, tile_at)
-            });
-        // The field boundaries this tile owns (B2), from the world seed (`bounds`, None when
-        // they are left out).
-        let fences = bounds.map_or(vec![], |seed| boundaries::placements(seed, cell, &tile_at));
+        let (stops, fences) = stops_and_fences(&spawned.tiles, catalog, cell, draw_stops, bounds);
         let mut ids = vec![];
         commands.entity(*root).with_children(|p| {
             for (e, piece) in pieces.iter().enumerate() {
@@ -595,6 +604,30 @@ fn respawn_pairs(
         });
         spawned.pair_entities.insert(cell, ids);
     }
+}
+
+/// The buffer stops at the open rail ends of the drawn tile at `cell` (with `draw_stops`) and the
+/// field boundaries it owns (B2, from the world seed `bounds`, None when they are left out),
+/// reading the drawn `tiles` with footprint ring cells resolved ([`covering`]).
+fn stops_and_fences(
+    tiles: &HashMap<Axial, (PlayTile, Entity)>,
+    catalog: &TileCatalog,
+    cell: Axial,
+    draw_stops: bool,
+    bounds: Option<u64>,
+) -> (Vec<BufferStop>, Vec<hex_core::boundary::Placement>) {
+    let tile_at = covering(|c: Axial| {
+        tiles
+            .get(&c)
+            .and_then(|(t, _)| Some((catalog.get(&t.tile)?, t.rotation)))
+    });
+    let stops = tile_at(cell)
+        .filter(|_| draw_stops)
+        .map_or(vec![], |(def, rot)| {
+            rail_end::open_stops(def, cell, rot, &tile_at)
+        });
+    let fences = bounds.map_or(vec![], |seed| boundaries::placements(seed, cell, &tile_at));
+    (stops, fences)
 }
 
 /// Child transform for something authored on edge 0, moved to local edge `e` at `along` metres
@@ -638,33 +671,31 @@ fn spawn_tile(
                     Transform::from_xyz(0.0, -LEVEL_STEP, 0.0),
                     SceneEntity,
                 ));
-                spawn_column(p, kit, t.level, ground, &plain.block_mat);
+                spawn_column(p, kit, t.level, ground, &plain.block_mat, Vec3::ZERO);
             }
         })
         .id()
 }
 
-/// A raised tile's cliff column (P4), down to the level-0 floor: in `meadow_base`'s skirt soil
-/// once the core pack is in, else in `fallback`. Nothing at level 0.
+/// A raised tile's cliff column (P4) under the cell at `at` in the tile root's frame, down to the
+/// level-0 floor: in `meadow_base`'s skirt soil once the core pack is in, else in `fallback`.
+/// Nothing at level 0.
 fn spawn_column(
     p: &mut ChildSpawnerCommands,
     kit: &HashMap<String, Vec<KitPart>>,
     level: u8,
     ground: &mut GroundBuild,
     fallback: &Handle<StandardMaterial>,
+    at: Vec3,
 ) {
     if level == 0 {
         return;
     }
     let mesh = Mesh3d(ground.cache.column(level, ground.meshes));
+    let t = Transform::from_translation(at);
     match slope_ground::slot_material(kit, slope_ground::SKIRT_SLOT) {
-        Some(mat) => p.spawn((mesh, MeshMaterial3d(mat), Transform::IDENTITY, SceneEntity)),
-        None => p.spawn((
-            mesh,
-            MeshMaterial3d(fallback.clone()),
-            Transform::IDENTITY,
-            SceneEntity,
-        )),
+        Some(mat) => p.spawn((mesh, MeshMaterial3d(mat), t, SceneEntity)),
+        None => p.spawn((mesh, MeshMaterial3d(fallback.clone()), t, SceneEntity)),
     };
 }
 
@@ -738,16 +769,22 @@ fn tile_children(
         (true, ..) => false,
         (false, ..) => water_bed || spawn_kit(p, kit, def.base.as_str(), Transform::IDENTITY, None),
     };
+    let offsets = cell_offsets(def);
     if !drawn_base {
-        plain_mesh(
-            p,
-            &plain.prism,
-            &plain.biome[biome_index(def.biome)],
-            Transform::from_xyz(0.0, -LEVEL_STEP, 0.0),
-            None,
-        );
+        for &at in &offsets {
+            plain_mesh(
+                p,
+                &plain.prism,
+                &plain.biome[biome_index(def.biome)],
+                Transform::from_translation(at - Vec3::Y * LEVEL_STEP),
+                None,
+            );
+        }
     }
-    spawn_column(p, kit, level, ground, &plain.biome[biome_index(def.biome)]);
+    for &at in &offsets {
+        let fallback = &plain.biome[biome_index(def.biome)];
+        spawn_column(p, kit, level, ground, fallback, at);
+    }
     let draped = slope_ground::draped_pieces(def, catalog);
     let lanes: Vec<(u8, SocketKind)> = (0..6u8)
         .filter_map(|e| {
@@ -1023,6 +1060,14 @@ pub fn sync(
     }
     let mut out = vec![];
     let want: HashMap<Axial, &PlayTile> = view.tiles.iter().map(|t| (t.cell, t)).collect();
+    // Footprint tiles leaving the view: their ring cells change with their anchor.
+    let gone_footprints: HashSet<Axial> = spawned
+        .tiles
+        .iter()
+        .filter(|(c, (t, _))| want.get(c) != Some(&t))
+        .filter(|(_, (t, _))| catalog.0.get(&t.tile).is_some_and(TileDef::is_mega))
+        .map(|(c, _)| *c)
+        .collect();
     let (mut changed, swapped_cells) = sync_spans::remove_tiles(
         &mut commands,
         &mut spawned,
@@ -1081,10 +1126,10 @@ pub fn sync(
         }
     }
     changed.extend(added_cells.iter().copied());
-    let at = |cell: Axial| {
-        want.get(&cell)
-            .and_then(|t| Some((catalog.0.get(&t.tile)?, t.rotation)))
-    };
+    let changed = with_rings(changed, |c| {
+        gone_footprints.contains(&c) || view.is_footprint(c)
+    });
+    let at = |cell: Axial| occupant_def(&view, &catalog.0, cell);
     // A rail tile's buffer stops depend on its neighbours: an edit next to it re-draws them.
     let near: BTreeSet<Axial> = changed
         .iter()
@@ -1093,7 +1138,7 @@ pub fn sync(
     // A field tile's boundaries read the tiles up to two cells away (a farm's gate reads all its
     // edges): an edit within that radius redraws them.
     let field_tile = |c: &Axial| {
-        at(*c).is_some_and(|(def, _)| hex_core::boundary::FIELD_TILES.contains(&def.id.as_str()))
+        at(*c).is_some_and(|(def, ..)| hex_core::boundary::FIELD_TILES.contains(&def.id.as_str()))
     };
     let near_fields: BTreeSet<Axial> = changed
         .iter()
@@ -1108,7 +1153,7 @@ pub fn sync(
         }
     }
     let rail_tile =
-        |c: &Axial| at(*c).is_some_and(|(def, _)| (0..6).any(|e| rail_end::rail_edge(def, e)));
+        |c: &Axial| at(*c).is_some_and(|(def, ..)| (0..6).any(|e| rail_end::rail_edge(def, e)));
     redraw.extend(near.into_iter().filter(rail_tile));
     if stops_arrived {
         redraw.extend(want.keys().copied().filter(rail_tile));
@@ -1140,6 +1185,44 @@ pub fn sync(
     {
         w.0 = now;
     }
+}
+
+/// The tile covering `cell` in `view` as [`hex_core::pair_edge_pieces`] reads it: its definition,
+/// rotation and the cell's ring direction from its anchor.
+fn occupant_def<'a>(
+    view: &'a PlayView,
+    catalog: &'a TileCatalog,
+    cell: Axial,
+) -> Option<(&'a TileDef, u8, Option<u8>)> {
+    let (t, ring) = view.occupant(cell)?;
+    Some((catalog.get(&t.tile)?, t.rotation, ring))
+}
+
+/// `at` with a footprint tile's ring cells answering as that tile: a cell with no tile of its own
+/// next to a footprint anchor is one of its members. Its sockets read as the anchor's base edges.
+pub(crate) fn covering<'a>(
+    at: impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+) -> impl Fn(Axial) -> Option<(&'a TileDef, u8)> {
+    move |cell| {
+        at(cell).or_else(|| {
+            (0..6)
+                .filter_map(|d| at(cell.neighbor(d)))
+                .find(|(def, _)| def.is_mega())
+        })
+    }
+}
+
+/// `changed` plus the ring cells of every footprint anchored in it (`footprint(cell)`), so the
+/// pair pieces of the cells around a ring are re-evaluated when the footprint comes or goes.
+fn with_rings(changed: BTreeSet<Axial>, footprint: impl Fn(Axial) -> bool) -> BTreeSet<Axial> {
+    let rings: Vec<Axial> = changed
+        .iter()
+        .filter(|&&c| footprint(c))
+        .flat_map(|&c| hex_core::footprint::members(c))
+        .collect();
+    let mut out = changed;
+    out.extend(rings);
+    out
 }
 
 mod sync_spans {
@@ -1288,7 +1371,7 @@ mod sync_spans {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     #[test]
@@ -1522,12 +1605,301 @@ mod tests {
         assert_eq!(parts(&world, root), 2, "the block prism and the column");
     }
 
+    /// The placed massif's root and its children, spawned with no kit (its pack not loaded yet).
+    fn spawn_massif(level: u8) -> (World, PlainAssets, Handle<Mesh>, Entity) {
+        let mut world = World::new();
+        let mut meshes = Assets::<Mesh>::default();
+        let mut mats = Assets::<StandardMaterial>::default();
+        let plain = PlainAssets::new(&mut meshes, &mut mats);
+        let catalog = TileCatalog::builtin().unwrap();
+        let t = PlayTile {
+            cell: Axial::new(2, 0),
+            tile: "massif_granite".into(),
+            rotation: 0,
+            level,
+        };
+        let mut cache = SlopeMeshes::default();
+        let mut ground = GroundBuild {
+            cache: &mut cache,
+            meshes: &mut meshes,
+        };
+        let root = spawn_tile(
+            &mut world.commands(),
+            &plain,
+            &HashMap::new(),
+            &catalog,
+            &t,
+            &mut ground,
+        );
+        let column = cache.column(level.max(1), &mut meshes);
+        world.flush();
+        (world, plain, column, root)
+    }
+
+    /// The XZ centres (rounded to cm) of `root`'s children drawing `mesh`.
+    fn centres_of(world: &World, root: Entity, mesh: &Handle<Mesh>) -> Vec<(i32, i32)> {
+        let mut out: Vec<(i32, i32)> = world
+            .get::<Children>(root)
+            .unwrap()
+            .iter()
+            .filter(|&c| world.get::<Mesh3d>(c).is_some_and(|m| m.0 == *mesh))
+            .map(|c| {
+                let t = world.get::<Transform>(c).unwrap().translation;
+                ((t.x * 100.0).round() as i32, (t.z * 100.0).round() as i32)
+            })
+            .collect();
+        out.sort();
+        out
+    }
+
+    /// The member offsets of a footprint from its anchor, in cm.
+    fn member_offsets() -> Vec<(i32, i32)> {
+        let mut out: Vec<(i32, i32)> = hex_core::footprint::members(Axial::ORIGIN)
+            .iter()
+            .map(|m| {
+                let [x, z] = m.to_world(HEX_RADIUS);
+                ((x * 100.0).round() as i32, (z * 100.0).round() as i32)
+            })
+            .collect();
+        out.sort();
+        out
+    }
+
+    /// Until its pack streams in, a massif's root draws a meadow prism on each of its seven cells
+    /// and nothing else.
+    #[test]
+    fn an_unloaded_massif_draws_seven_prisms() {
+        let (world, plain, _, root) = spawn_massif(0);
+        assert_eq!(centres_of(&world, root, &plain.prism), member_offsets());
+        assert_eq!(world.get::<Children>(root).unwrap().len(), 7);
+    }
+
+    /// A raised massif stands on a cliff column under each of its seven cells.
+    #[test]
+    fn raised_massif_columns_reach_the_floor() {
+        let (world, _, column, root) = spawn_massif(2);
+        assert_eq!(centres_of(&world, root, &column), member_offsets());
+        let (world, _, column, root) = spawn_massif(0);
+        assert!(centres_of(&world, root, &column).is_empty());
+    }
+
+    /// The placeholder meshes and materials (6 meshes, 12 materials) are all allocated up front:
+    /// spawning every flat single tile or an unloaded massif adds none, so no later asset id
+    /// shifts.
+    #[test]
+    fn spawning_tiles_allocates_no_placeholder_assets() {
+        let mut world = World::new();
+        let mut meshes = Assets::<Mesh>::default();
+        let mut mats = Assets::<StandardMaterial>::default();
+        let plain = PlainAssets::new(&mut meshes, &mut mats);
+        assert_eq!((meshes.len(), mats.len()), (6, 12));
+        let catalog = TileCatalog::builtin().unwrap();
+        let mut cache = SlopeMeshes::default();
+        let mut spawn = |tile: &str, q: i32, meshes: &mut Assets<Mesh>| {
+            let t = PlayTile {
+                cell: Axial::new(q, 0),
+                tile: tile.into(),
+                rotation: 0,
+                level: 0,
+            };
+            let mut ground = GroundBuild {
+                cache: &mut cache,
+                meshes,
+            };
+            spawn_tile(
+                &mut world.commands(),
+                &plain,
+                &HashMap::new(),
+                &catalog,
+                &t,
+                &mut ground,
+            );
+        };
+        for (i, d) in catalog.tiles().iter().filter(|d| !d.is_mega()).enumerate() {
+            if !d.is_sloped() {
+                spawn(&d.id, i as i32 * 3, &mut meshes);
+            }
+        }
+        assert_eq!((meshes.len(), mats.len()), (6, 12), "flat single tiles");
+        spawn("massif_granite", 200, &mut meshes);
+        assert_eq!((meshes.len(), mats.len()), (6, 12), "an unloaded massif");
+    }
+
+    /// The play view's pair pieces beside a massif's ring cell read the massif's outer socket,
+    /// exactly as `World::facing` says, and placing the massif re-evaluates the cells around its
+    /// ring, not just its anchor's neighbours (its own ring cells).
+    #[test]
+    fn a_pair_piece_beside_a_massif_member_pairs_as_world_facing_says() {
+        use hex_core::{Orientation, socket::PairCorners};
+        let base = TileCatalog::builtin().unwrap();
+        let mut file = base.sockets().file().clone();
+        file.pair_edge_pieces.push(hex_core::PairEdgePiece {
+            own: SocketKind::Forest,
+            neighbour: SocketKind::Grass,
+            piece: "forest_grass_edge".into(),
+            per_base_edge: false,
+            corners: PairCorners::Straight,
+        });
+        let c = TileCatalog::new(
+            hex_core::SocketTable::new(file).unwrap(),
+            base.tiles().to_vec(),
+        )
+        .unwrap();
+        let anchor = Axial::new(2, 0);
+        let forest = anchor.neighbor(0).neighbor(1);
+        let mut w = hex_core::World::new(1);
+        w.place(&c, anchor, "massif_granite", Orientation::new(2, 0))
+            .unwrap();
+        w.place(&c, forest, "forest", Orientation::new(1, 0))
+            .unwrap();
+        let view_of = |w: &hex_core::World, massif: bool| {
+            let mut v = PlayView {
+                tiles: w
+                    .tiles()
+                    .iter()
+                    .filter(|(cell, _)| massif || **cell != anchor)
+                    .map(|(cell, t)| PlayTile {
+                        cell: *cell,
+                        tile: t.def.clone(),
+                        rotation: t.rotation,
+                        level: t.level,
+                    })
+                    .collect(),
+                members: if massif {
+                    w.members().iter().map(|(m, a)| (*m, *a)).collect()
+                } else {
+                    HashMap::new()
+                },
+                ..default()
+            };
+            v.index_tiles();
+            v
+        };
+        let before = view_of(&w, false);
+        let after = view_of(&w, true);
+        let mut pairs = PairPieces::default();
+        let cells: Vec<Axial> = before.tiles.iter().map(|t| t.cell).collect();
+        pairs.update(&c, cells, |cell| occupant_def(&before, &c, cell));
+        assert!(pairs.get(forest).unwrap().iter().all(Option::is_none));
+        let changed = with_rings(BTreeSet::from([anchor]), |cell| after.is_footprint(cell));
+        let redraw = pairs.update(&c, changed, |cell| occupant_def(&after, &c, cell));
+        assert!(redraw.contains(&forest), "{redraw:?}");
+        let got = pairs.get(forest).unwrap();
+        let mut beside = 0;
+        for e in 0..6u8 {
+            let world = (e + 1) % 6;
+            let want = w
+                .facing(&c, forest.neighbor(world), hex_core::opposite_edge(world))
+                .and_then(|f| {
+                    c.sockets()
+                        .pair_edge_piece(SocketKind::Forest, f.socket.kind, e, false, false)
+                });
+            assert_eq!(got[e as usize], want, "local edge {e}");
+            beside += usize::from(want.is_some());
+        }
+        assert_eq!(beside, 2);
+    }
+
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 45);
+        assert_eq!(c.0.tiles().len(), 46);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);
+    }
+
+    /// `MASSIF_PEAK` is the massif piece's LOD0 top (its GLB), within 5 cm.
+    #[test]
+    fn massif_peak_is_the_lod0_top() {
+        let tris = crate::walk::tests::mesh_tris("massif_granite", "lod0").expect("massif LOD0");
+        let top = tris
+            .iter()
+            .flat_map(|(t, _)| t.iter().map(|p| p[1]))
+            .fold(f32::MIN, f32::max);
+        assert!(
+            (top - MASSIF_PEAK).abs() < 0.05,
+            "LOD0 top {top}, MASSIF_PEAK {MASSIF_PEAK}"
+        );
+    }
+
+    /// The builtin catalog with `meadow` turned into a footprint: a land tile, so a field beside
+    /// its ring is fenced and a lookup that misses ring cells is seen. (No rail fixture: the
+    /// catalog refuses a footprint whose centre edges carry a lane or whose tile carries networks,
+    /// so a ring cell reads as no rail either way.)
+    pub(crate) fn footprint_fixtures() -> TileCatalog {
+        let builtin = TileCatalog::builtin().unwrap();
+        let massif = builtin.get("massif_granite").unwrap();
+        let mut meadow = builtin.get("meadow").unwrap().clone();
+        meadow.footprint = massif.footprint.clone();
+        meadow.look_period = massif.look_period;
+        let mut tiles: Vec<TileDef> = builtin
+            .tiles()
+            .iter()
+            .filter(|d| d.id != "meadow")
+            .cloned()
+            .collect();
+        tiles.push(meadow);
+        TileCatalog::new(builtin.sockets().clone(), tiles).unwrap()
+    }
+
+    fn drawn(tiles: &[(i32, i32, &str, u8)]) -> HashMap<Axial, (PlayTile, Entity)> {
+        tiles
+            .iter()
+            .map(|&(q, r, id, rotation)| {
+                let cell = Axial::new(q, r);
+                let t = PlayTile {
+                    cell,
+                    tile: id.into(),
+                    rotation,
+                    level: 0,
+                };
+                (cell, (t, Entity::PLACEHOLDER))
+            })
+            .collect()
+    }
+
+    /// A drawn farm beside a land footprint's ring cell fences that edge (`covering`): its only
+    /// land neighbour is the footprint meadow's ring cell (2, 0).
+    #[test]
+    fn pair_fences_read_a_ring_cell_as_its_footprint() {
+        let c = footprint_fixtures();
+        let tiles = drawn(&[(3, 0, "meadow", 0), (1, 0, "farm", 0)]);
+        let (_, fences) = stops_and_fences(&tiles, &c, Axial::new(1, 0), false, Some(1));
+        assert!(!fences.is_empty(), "no boundary toward the ring cell");
+        assert!(
+            fences.iter().all(|f| f.cells.contains(&Axial::new(2, 0))),
+            "{fences:#?}"
+        );
+    }
+
+    /// `covering` answers a ring cell with the anchor's base edges. That is the socket the ring
+    /// shows outward only while every builtin footprint's outer sockets equal its base edges in
+    /// that direction; a footprint with mixed outer sockets needs a ring-aware lookup.
+    #[test]
+    fn footprint_outer_sockets_equal_the_base_edges_covering_reads() {
+        let c = TileCatalog::builtin().unwrap();
+        let megas: Vec<&TileDef> = c.tiles().iter().filter(|d| d.is_mega()).collect();
+        assert!(!megas.is_empty());
+        for def in megas {
+            for rotation in 0..6u8 {
+                let mut outer = 0;
+                for ring in 0..6u8 {
+                    for w in 0..6u8 {
+                        let Some(s) = def.socket_toward(rotation, Some(ring), w) else {
+                            continue;
+                        };
+                        outer += 1;
+                        assert_eq!(
+                            s,
+                            def.edge(w, rotation),
+                            "{} r{rotation} ring {ring} edge {w}",
+                            def.id
+                        );
+                    }
+                }
+                assert_eq!(outer, 18, "{} r{rotation}", def.id);
+            }
+        }
     }
 }

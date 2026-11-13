@@ -1012,6 +1012,14 @@ pub const CYCLE: f32 = 36.0;
 pub const SKY_LOW: f32 = 22.0;
 pub const SKY_HIGH: f32 = 44.0;
 pub const SKY_MARGIN: f32 = 24.0;
+/// A footprint tile's peak lifts the band within this reach (m) of its centre: out to the
+/// footprint's outer corners (a ring cell's centre, sqrt(3) hex radii out, plus a hex radius).
+pub const PEAK_REACH: f32 = HEX_RADIUS * 2.732_051;
+/// Past [`PEAK_REACH`] a peak's lift falls back to the world's over this far (m).
+pub const PEAK_FALLOFF: f32 = 24.0;
+/// The most peaks the compute pass lifts the band over (`Params::peaks`, a fixed uniform array):
+/// the nearest the sky's centre.
+pub const MAX_PEAKS: usize = 8;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SlotKind {
@@ -1103,6 +1111,10 @@ pub struct BoidPlan {
     /// How far (m) the altitude band [`SKY_LOW`]..[`SKY_HIGH`] lifts (P4): the highest placed
     /// level × `LEVEL_STEP`, so the flocks clear a raised world as they clear flat ground.
     pub sky_lift: f32,
+    /// The footprint peaks the band also lifts over ([`Self::lift_at`]), at most [`MAX_PEAKS`]:
+    /// each centre (x, z), its top (y, the level plus [`crate::play::MASSIF_PEAK`]) and its reach
+    /// (w, [`PEAK_REACH`]).
+    pub peaks: Vec<Vec4>,
     cursor: usize,
     tiles: Option<Vec<PlayTile>>,
     /// Which of [`PERCH_PIECES`] the kit draws, as of the last `set_world`.
@@ -1134,6 +1146,7 @@ impl BoidPlan {
             schools: vec![],
             sky: Vec4::new(0.0, 80.0, 0.0, 400.0),
             sky_lift: 0.0,
+            peaks: vec![],
             cursor: 0,
             tiles: None,
             drawn: vec![],
@@ -1200,6 +1213,16 @@ impl BoidPlan {
         plan
     }
 
+    /// The altitude band's lift (m) over world XZ `p`: [`Self::sky_lift`], and within a footprint
+    /// peak's reach its top, falling back over [`PEAK_FALLOFF`]. `lift_at` in boids_compute.wgsl
+    /// does the same arithmetic.
+    pub fn lift_at(&self, p: Vec2) -> f32 {
+        self.peaks.iter().fold(self.sky_lift, |l, k| {
+            let d = p.distance(Vec2::new(k.x, k.z));
+            l.max(k.y * (1.0 - smoothstep(k.w, k.w + PEAK_FALLOFF, d)))
+        })
+    }
+
     /// Where bird slot `slot` arrives from: its flock's seeded heading, [`ARRIVE_OUT`] past the
     /// sky's edge, at its sky height.
     fn arrive_point(&self, slot: u32) -> Vec3 {
@@ -1225,14 +1248,22 @@ impl BoidPlan {
         let mut rng = Rng(self.seed ^ u64::from(flock).wrapping_mul(0xD1B5_4A32_D192_ED03));
         let a = rng.unit() * std::f32::consts::TAU;
         let d = rng.unit().sqrt() * self.sky.w;
-        let y = self.sky_lift + SKY_LOW + 2.0 + rng.unit() * (SKY_HIGH - SKY_LOW - 4.0);
+        let band = rng.unit();
         let mut own = Rng(self.seed ^ u64::from(slot).wrapping_mul(0xA076_1D64_78BD_642F));
         let b = own.unit() * std::f32::consts::TAU;
         let e = own.unit().sqrt() * FLOCK_SPREAD;
-        Vec3::new(
+        let xz = Vec2::new(
             self.sky.x + a.cos() * d + b.cos() * e,
-            y + (own.unit() - 0.5) * 3.0,
             self.sky.z + a.sin() * d + b.sin() * e,
+        );
+        Vec3::new(
+            xz.x,
+            self.lift_at(xz)
+                + SKY_LOW
+                + 2.0
+                + band * (SKY_HIGH - SKY_LOW - 4.0)
+                + (own.unit() - 0.5) * 3.0,
+            xz.y,
         )
     }
 
@@ -1279,6 +1310,25 @@ impl BoidPlan {
                 0.5 * lo.distance(hi) + HEX_RADIUS + SKY_MARGIN,
             );
         }
+        // The band also lifts over each footprint's peak, the nearest the sky's centre first.
+        let sky = Vec2::new(self.sky.x, self.sky.z);
+        let mut peaks: Vec<Vec4> = tiles
+            .iter()
+            .filter(|t| catalog.get(&t.tile).is_some_and(TileDef::is_mega))
+            .map(|t| {
+                let [x, z] = t.cell.to_world(HEX_RADIUS);
+                let top = f32::from(t.level) * LEVEL_STEP + crate::play::MASSIF_PEAK;
+                Vec4::new(x, top, z, PEAK_REACH)
+            })
+            .collect();
+        peaks.sort_by(|a, b| {
+            let d = |p: &Vec4| Vec2::new(p.x, p.z).distance(sky);
+            d(a).total_cmp(&d(b))
+                .then(a.x.total_cmp(&b.x))
+                .then(a.z.total_cmp(&b.z))
+        });
+        peaks.truncate(MAX_PEAKS);
+        self.peaks = peaks;
         // Water, then the split: birds fill the low slots, fish the high ones.
         self.water = FishWorld::new(tiles, catalog);
         let (_, fish) = self.budget.split(self.water.cells.len());
@@ -1919,6 +1969,84 @@ mod tests {
                 assert!((SKY_LOW + lift..=SKY_HIGH + lift).contains(&b.spawn.y));
             }
         }
+    }
+
+    /// Mega tiles (A52): the sky band lifts over a massif alone. Far from it the band keeps the
+    /// world's level lift; over the anchor and out to the footprint's corners it clears the peak by
+    /// the band's usual height ([`SKY_LOW`]); past [`PEAK_REACH`] + [`PEAK_FALLOFF`] it is back
+    /// down. Airborne birds spawn inside the band over their spawn point, and no roost stands on
+    /// the massif's cells.
+    #[test]
+    fn flocks_clear_the_massif_peak() {
+        let massif = PlayTile {
+            level: 1,
+            ..tile(0, 0, "massif_granite", 0)
+        };
+        let land = with_land(&[massif, tile(3, 0, "oak", 0)], 400);
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 9);
+        plan.set_world_all(&land, &catalog(), 0.0);
+        assert_eq!(
+            plan.sky_lift, LEVEL_STEP,
+            "the world's lift is its level alone"
+        );
+        let peak = LEVEL_STEP + crate::play::MASSIF_PEAK;
+        let anchor = Vec2::ZERO;
+        for p in [
+            anchor,
+            Vec2::new(PEAK_REACH, 0.0),
+            Vec2::new(0.0, -PEAK_REACH),
+        ] {
+            let low = SKY_LOW + plan.lift_at(p);
+            assert!(
+                low >= peak + SKY_LOW,
+                "band floor {low} at {p} under the peak {peak}"
+            );
+        }
+        let far = Vec2::from(Axial::new(40, -40).to_world(HEX_RADIUS));
+        assert_eq!(
+            plan.lift_at(far),
+            LEVEL_STEP,
+            "far land keeps the flat band"
+        );
+        let past = Vec2::new(PEAK_REACH + PEAK_FALLOFF + 0.01, 0.0);
+        assert_eq!(plan.lift_at(past), LEVEL_STEP);
+        let birds: Vec<&Slot> = plan
+            .slots
+            .iter()
+            .filter(|s| s.kind == SlotKind::Bird && s.roost.is_none())
+            .collect();
+        assert!(!birds.is_empty(), "birds in the air");
+        for b in birds {
+            let low = SKY_LOW + plan.lift_at(b.spawn.xz());
+            assert!(b.spawn.y >= low, "{b:?} under the band floor {low}");
+        }
+        let cover = hex_core::footprint::members(Axial::ORIGIN);
+        assert!(!plan.roosts.is_empty(), "the oak roosts");
+        assert!(plan.roosts.iter().all(|r| !cover.contains(&r.cell)));
+    }
+
+    /// The compute pass lifts the band over at most [`MAX_PEAKS`] massifs, the nearest the sky's
+    /// centre first; a world without one sends none.
+    #[test]
+    fn the_nearest_massifs_reach_the_compute_pass() {
+        let mut tiles: Vec<PlayTile> = (0..10)
+            .map(|k| tile(4 * k, 0, "massif_granite", 0))
+            .collect();
+        tiles.push(tile(-60, 0, "meadow", 0));
+        let mut plan = BoidPlan::play(BoidBudget::HIGH, 3);
+        plan.set_world_all(&tiles, &catalog(), 0.0);
+        assert_eq!(plan.peaks.len(), MAX_PEAKS);
+        let sky = Vec2::new(plan.sky.x, plan.sky.z);
+        let d = |p: &Vec4| Vec2::new(p.x, p.z).distance(sky);
+        let kept = plan.peaks.iter().map(d).fold(0.0, f32::max);
+        let all: Vec<f32> = tiles[..10]
+            .iter()
+            .map(|t| Vec2::from(t.cell.to_world(HEX_RADIUS)).distance(sky))
+            .collect();
+        assert_eq!(all.iter().filter(|x| **x <= kept + 1e-3).count(), MAX_PEAKS);
+        let mut flat = BoidPlan::play(BoidBudget::HIGH, 3);
+        flat.set_world_all(&[tile(0, 0, "meadow", 0)], &catalog(), 0.0);
+        assert!(flat.peaks.is_empty());
     }
 
     /// The pine forest has no Bird rule since the split (U3), so it never roosts: a world without

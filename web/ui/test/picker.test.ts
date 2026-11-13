@@ -9,9 +9,12 @@ import {
   entrySummary,
   fitEntry,
   needsAt,
+  rotationReadout,
+  tileDef,
   tileMap,
 } from "../src/rules.ts";
-import { tileName } from "../src/words.ts";
+import { FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
+import parity from "./rules-parity.json" with { type: "json" };
 
 const world = (...t: [number, number, string, number][]) =>
   tileMap(t.map(([q, r, tile, rotation]) => ({ q, r, tile, rotation, level: 0 })));
@@ -85,4 +88,40 @@ test("a lone tile's entry reads as its tile did", () => {
   assert.equal(entryMeta(meadow, f), "Fits any way round");
   assert.equal(entrySummary(meadow), "Grass all round");
   assert.equal(entrySummary(curve()), "Ocean, beach and grass edges");
+});
+
+test("the Tiles sheet lists the massif at a slot a footprint covers and says why elsewhere", () => {
+  const massif = PICKER.find((e) => e.id === "massif_granite")!;
+  assert.deepEqual(
+    massif.tiles.map((t) => t.id),
+    ["massif_granite"],
+  );
+  const w = parity.worlds.find((p) => p.tiles.some((t) => t[2] === "massif_granite"))!;
+  const tiles = tileMap(
+    (w.tiles as [number, number, string, number, number][]).map(([q, r, tile, rotation, level]) => ({
+      q,
+      r,
+      tile,
+      rotation,
+      level,
+    })),
+  );
+  const centres = w.mega_centres as Record<string, Record<string, [number, number]>>;
+  const slots = Object.keys(w.slots);
+  const covered = slots.find((s) => centres[s]?.massif_granite)!;
+  const bare = slots.find((s) => !centres[s]?.massif_granite)!;
+  const at = (s: string) => {
+    const [q, r] = s.split(",").map(Number) as [number, number];
+    return fitEntry(massif, needsAt({ q, r }, tiles), { slot: { q, r }, megaSlots: w.mega_slots });
+  };
+  const f = at(covered);
+  assert.ok(f.ok, covered);
+  assert.equal(entryMeta(massif, f), "6 rotations fit");
+  const off = at(bare);
+  assert.equal(off.ok, false, bare);
+  assert.equal(off.why, FOOTPRINT_REFUSAL);
+  // Without engine slots nothing lists it: the HUD never derives a footprint fit itself.
+  assert.equal(fitEntry(massif, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0]))).ok, false);
+  // The ghost readout counts its six distinct turns, as any hero tile's.
+  assert.deepEqual(rotationReadout(tileDef("massif_granite")!, [0, 1, 2, 3, 4, 5], 3), { index: 3, count: 6 });
 });

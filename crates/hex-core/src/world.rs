@@ -3,13 +3,15 @@
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde::{Deserialize, Serialize};
 
 use crate::axial::Axial;
-use crate::catalog::{START_TILE, TileCatalog};
+use crate::catalog::{Facing, START_TILE, TileCatalog};
+use crate::footprint;
 use crate::socket::HeightMeet;
-use crate::tile::{EdgePieces, KitRef, TileDef, opposite_edge};
+use crate::tile::{EdgePieces, KitRef, TileDef, local_edge, opposite_edge};
 use crate::tunnel;
 
 /// Undo depth (PRD §4.2 requires at least 100). Older actions are dropped first.
@@ -57,6 +59,16 @@ pub enum EdgeStatus {
     Neutral,
 }
 
+/// One outward face of a ghosted tile: the ghost's own `cell`, its world edge `w`, the glow
+/// against the occupant across it, and whether that seam is an accepted cliff.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Face {
+    pub cell: Axial,
+    pub w: u8,
+    pub status: EdgeStatus,
+    pub cliff: bool,
+}
+
 /// Direction for cycling through distinct legal tile orientations.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum RotateDir {
@@ -67,7 +79,7 @@ pub enum RotateDir {
 /// A placement refusal. Failed placements leave the world and history unchanged.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PlaceError {
-    /// The target cell already holds a tile.
+    /// A cell the tile would cover already holds a tile.
     Occupied,
     /// The empty target cell touches no placed tile.
     NotAdjacent,
@@ -140,6 +152,8 @@ pub enum ReplaceError {
     Unchanged,
     /// This meadow covers a tunnel; remove a portal first.
     TunnelCover,
+    /// A footprint tile cannot take the place of a single tile, or the reverse.
+    FootprintMismatch,
 }
 
 impl fmt::Display for ReplaceError {
@@ -152,6 +166,9 @@ impl fmt::Display for ReplaceError {
             ReplaceError::Incompatible(edges) => write!(f, "edges {edges:?} do not fit"),
             ReplaceError::Unchanged => write!(f, "that tile is already here"),
             ReplaceError::TunnelCover => write!(f, "this tile covers a tunnel"),
+            ReplaceError::FootprintMismatch => {
+                write!(f, "a mega tile and a single tile cannot replace each other")
+            }
         }
     }
 }
@@ -196,12 +213,50 @@ pub struct History {
 }
 
 /// The tile map. Cells live in an ordered map so iteration and serialized saves are deterministic.
+/// A mega tile is held once, at its anchor (centre) in `tiles`; `members` maps each of its ring
+/// cells to that anchor and is derived from `tiles` and the catalog.
+///
+/// `members` is not serialized, and deserializing a `World` directly leaves it empty: a world
+/// holding a mega tile would then read its ring cells as free. Only [`crate::SaveData::decode`],
+/// which rebuilds `members` against the catalog, yields a valid world from bytes. It is the only
+/// deserialize path in the workspace; the RON round trip in this module's tests holds single
+/// tiles only.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct World {
     seed: u64,
     tiles: BTreeMap<Axial, PlacedTile>,
     history: History,
+    #[serde(skip)]
+    members: BTreeMap<Axial, Axial>,
+    #[serde(skip)]
+    stamp: Stamp,
 }
+
+static NEXT_STAMP: AtomicU64 = AtomicU64::new(1);
+
+/// A world's [`World::stamp`]. It takes no part in equality or the save.
+#[derive(Clone, Debug)]
+struct Stamp(u64);
+
+impl Stamp {
+    fn fresh() -> Self {
+        Self(NEXT_STAMP.fetch_add(1, Ordering::Relaxed))
+    }
+}
+
+impl Default for Stamp {
+    fn default() -> Self {
+        Self::fresh()
+    }
+}
+
+impl PartialEq for Stamp {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl Eq for Stamp {}
 
 impl World {
     /// A world holding only the start tile at the origin (A1). The start tile is not undoable.
@@ -220,6 +275,8 @@ impl World {
             seed,
             tiles,
             history: History::default(),
+            members: BTreeMap::new(),
+            stamp: Stamp::fresh(),
         }
     }
 
@@ -235,12 +292,22 @@ impl World {
             seed,
             tiles,
             history: History { undo, redo },
+            members: BTreeMap::new(),
+            stamp: Stamp::fresh(),
         }
     }
 
     /// The undo stack (oldest first) and the redo stack (the next redo last).
     pub(crate) fn history_stacks(&self) -> (&VecDeque<Action>, &[Action]) {
         (&self.history.undo, &self.history.redo)
+    }
+
+    /// Identifies this state of the placed tiles across every world in the process: each world
+    /// takes a new stamp when it is built and whenever its tiles change, and a clone keeps its
+    /// original's until either changes. So two equal stamps mean equal tiles, and a cache of
+    /// anything derived from the tiles may key on it.
+    pub fn stamp(&self) -> u64 {
+        self.stamp.0
     }
 
     /// The world seed from which placed tiles derive deterministic seeds.
@@ -253,30 +320,143 @@ impl World {
         &self.tiles
     }
 
-    /// The tile at `cell`, or `None` when the cell is empty.
-    pub fn tile(&self, cell: Axial) -> Option<&PlacedTile> {
-        self.tiles.get(&cell)
+    /// Ring cells of placed mega tiles, each mapped to its anchor.
+    pub fn members(&self) -> &BTreeMap<Axial, Axial> {
+        &self.members
     }
 
-    /// Free cells adjacent to at least one placed tile, sorted.
+    /// Recomputes `members` from the placed tiles' definitions.
+    pub(crate) fn rebuild_members(&mut self, catalog: &TileCatalog) {
+        self.members = self
+            .tiles
+            .iter()
+            .filter(|(_, t)| catalog.get(&t.def).is_some_and(TileDef::is_mega))
+            .flat_map(|(&a, _)| {
+                footprint::members(a)
+                    .into_iter()
+                    .skip(1)
+                    .map(move |m| (m, a))
+            })
+            .collect();
+        self.stamp = Stamp::fresh();
+    }
+
+    /// The anchor of the tile covering `cell`: the cell itself for an anchor, its anchor for a
+    /// member, otherwise `None`.
+    pub fn anchor_of(&self, cell: Axial) -> Option<Axial> {
+        anchor_in(&self.tiles, &self.members, cell)
+    }
+
+    /// Whether a tile covers `cell`.
+    pub fn occupied(&self, cell: Axial) -> bool {
+        self.anchor_of(cell).is_some()
+    }
+
+    /// The tile covering `cell` (a member answers with its anchor's tile), or `None` when the cell
+    /// is empty.
+    pub fn tile(&self, cell: Axial) -> Option<&PlacedTile> {
+        self.tiles.get(&self.anchor_of(cell)?)
+    }
+
+    /// Free cells adjacent to at least one occupied cell, sorted.
     pub fn frontier(&self) -> Vec<Axial> {
         let free: BTreeSet<Axial> = self
             .tiles
             .keys()
+            .chain(self.members.keys())
             .flat_map(|c| (0..6).map(move |e| c.neighbor(e)))
-            .filter(|n| !self.tiles.contains_key(n))
+            .filter(|&n| !self.occupied(n))
             .collect();
         free.into_iter().collect()
     }
 
     /// Empty and adjacent to the world.
     pub fn is_slot(&self, cell: Axial) -> bool {
-        !self.tiles.contains_key(&cell)
-            && (0..6).any(|e| self.tiles.contains_key(&cell.neighbor(e)))
+        !self.occupied(cell) && (0..6).any(|e| self.occupied(cell.neighbor(e)))
     }
 
-    /// Glow for each world edge of `def` ghosted at `cell` in orientation `o`. A neighbor whose
-    /// definition is missing from the catalog counts as incompatible.
+    /// Whether `def` could stand with its anchor at `cell`: a slot for a single tile; for a mega
+    /// tile, all seven cells empty and at least one cell around the footprint occupied.
+    pub fn is_slot_for(&self, cell: Axial, def: &TileDef) -> bool {
+        if !def.is_mega() {
+            return self.is_slot(cell);
+        }
+        footprint::members(cell).iter().all(|&m| !self.occupied(m))
+            && footprint::outer_neighbours(cell)
+                .iter()
+                .any(|&n| self.occupied(n))
+    }
+
+    /// The occupant of `cell` seen across its world edge `w`: the tile, the socket it shows there
+    /// and its level. `None` when the cell is empty, its definition is not in the catalog, or the
+    /// edge is interior to a footprint.
+    pub fn facing<'c>(&self, catalog: &'c TileCatalog, cell: Axial, w: u8) -> Option<Facing<'c>> {
+        facing_in(&self.tiles, &self.members, catalog, cell, w)
+    }
+
+    /// Every outward face of `def` ghosted with its anchor at `cell` in orientation `o` (6 for a
+    /// single tile, in world edge order; 18 for a mega tile, in local outer-index order), against
+    /// the occupant across it. An occupant whose definition is missing from the catalog counts as
+    /// incompatible.
+    pub fn faces(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> Vec<Face> {
+        let mut out = vec![];
+        each_face(cell, def, o, |m, w, mine| {
+            out.push(self.face(catalog, m, w, mine, true));
+            true
+        });
+        out
+    }
+
+    /// The face `mine` shows across world edge `w` of `m` against the occupant there; its `cliff`
+    /// is worked out only when `cliff` asks for it (else `false`).
+    fn face(&self, catalog: &TileCatalog, m: Axial, w: u8, mine: Facing, cliff: bool) -> Face {
+        let across = m.neighbor(w);
+        let (status, cliff) = if !self.occupied(across) {
+            (EdgeStatus::Neutral, false)
+        } else {
+            match self.facing(catalog, across, opposite_edge(w)) {
+                None => (EdgeStatus::Incompatible, false),
+                Some(theirs) => {
+                    let status = if catalog.facing_meets(mine, theirs) {
+                        EdgeStatus::Compatible
+                    } else {
+                        EdgeStatus::Incompatible
+                    };
+                    let cliff = cliff
+                        && match mine.meet(theirs) {
+                            HeightMeet::Seamless => false,
+                            HeightMeet::Cliff | HeightMeet::Refused => {
+                                catalog.facings_meet(mine, theirs)
+                            }
+                        };
+                    (status, cliff)
+                }
+            }
+        };
+        Face {
+            cell: m,
+            w,
+            status,
+            cliff,
+        }
+    }
+
+    /// Whether any face of `def` at `cell` in `o` meets its occupant as a cliff.
+    fn has_cliff(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> bool {
+        !each_face(cell, def, o, |m, w, mine| {
+            !self.face(catalog, m, w, mine, true).cliff
+        })
+    }
+
+    /// Glow for each world edge of `def` ghosted at `cell` in orientation `o` ([`World::faces`]
+    /// at `cell`). A neighbor whose definition is missing from the catalog counts as incompatible.
+    /// A mega def has no face at its anchor, so every entry is `Neutral`: read [`World::faces`].
     pub fn edge_status(
         &self,
         catalog: &TileCatalog,
@@ -284,34 +464,20 @@ impl World {
         def: &TileDef,
         o: Orientation,
     ) -> [EdgeStatus; 6] {
-        std::array::from_fn(|w| {
-            let w = w as u8;
-            let Some(placed) = self.tiles.get(&cell.neighbor(w)) else {
-                return EdgeStatus::Neutral;
-            };
-            let Some(neighbor) = catalog.get(&placed.def) else {
-                return EdgeStatus::Incompatible;
-            };
-            if catalog.placement_meets(
-                def,
-                o.rotation,
-                o.level,
-                w,
-                neighbor,
-                placed.rotation,
-                placed.level,
-            ) {
-                EdgeStatus::Compatible
-            } else {
-                EdgeStatus::Incompatible
+        let mut out = [EdgeStatus::Neutral; 6];
+        for f in self.faces(catalog, cell, def, o) {
+            if f.cell == cell {
+                out[usize::from(f.w)] = f.status;
             }
-        })
+        }
+        out
     }
 
     /// World edges of `def` at `cell` in orientation `o` that meet a placed neighbour as a cliff:
-    /// the pair is accepted ([`TileCatalog::edges_meet`]) but its corners differ in absolute
+    /// the pair is accepted ([`TileCatalog::facings_meet`]) but its corners differ in absolute
     /// height. A stopped rail end beside a raised tile counts: the stop meets it as lane-free
-    /// ground, so the step is a cliff face.
+    /// ground, so the step is a cliff face. A mega def has no face at its anchor, so every entry is
+    /// `false`: read [`World::faces`].
     pub fn cliff_edges(
         &self,
         catalog: &TileCatalog,
@@ -319,32 +485,23 @@ impl World {
         def: &TileDef,
         o: Orientation,
     ) -> [bool; 6] {
-        std::array::from_fn(|w| {
-            let w = w as u8;
-            let Some(placed) = self.tiles.get(&cell.neighbor(w)) else {
-                return false;
-            };
-            let Some(n) = catalog.get(&placed.def) else {
-                return false;
-            };
-            let (r, l, nr, nl) = (o.rotation, o.level, placed.rotation, placed.level);
-            match catalog.meet_kind(def, r, l, w, n, nr, nl) {
-                HeightMeet::Seamless => false,
-                HeightMeet::Cliff | HeightMeet::Refused => {
-                    catalog.edges_meet(def, r, l, w, n, nr, nl)
-                }
+        let mut out = [false; 6];
+        for f in self.faces(catalog, cell, def, o) {
+            if f.cell == cell {
+                out[usize::from(f.w)] = f.cliff;
             }
-        })
+        }
+        out
     }
 
     /// Whether `def` may be placed at `cell` in orientation `o`.
     pub fn fits(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> bool {
         o.rotation < 6
             && level_allowed(def, o.level)
-            && self.is_slot(cell)
-            && !self
-                .edge_status(catalog, cell, def, o)
-                .contains(&EdgeStatus::Incompatible)
+            && self.is_slot_for(cell, def)
+            && each_face(cell, def, o, |m, w, mine| {
+                self.face(catalog, m, w, mine, false).status != EdgeStatus::Incompatible
+            })
     }
 
     /// The orientations `test` accepts, cliff-free first, then by level, then by rotation, so
@@ -375,21 +532,21 @@ impl World {
             .filter(|&l| level_allowed(def, l))
             .flat_map(|l| (0..6).map(move |k| Orientation::new(k, l)))
             .filter(|&o| test(o))
-            .map(|o| (self.cliff_edges(catalog, cell, def, o).contains(&true), o))
+            .map(|o| (self.has_cliff(catalog, cell, def, o), o))
             .collect();
         out.sort_by_key(|&(cliff, o)| (cliff, o.level, o.rotation));
         out
     }
 
-    /// Orientations in which `def` fits at `cell`: cliff-free first, then by level, then by
-    /// rotation. Empty when `cell` is not a slot.
+    /// Orientations in which `def` fits with its anchor at `cell`: cliff-free first, then by
+    /// level, then by rotation. Empty when `cell` is not a slot for `def` ([`World::is_slot_for`]).
     pub fn legal_orientations(
         &self,
         catalog: &TileCatalog,
         cell: Axial,
         def: &TileDef,
     ) -> Vec<Orientation> {
-        if !self.is_slot(cell) {
+        if !self.is_slot_for(cell, def) {
             return vec![];
         }
         self.ordered_orientations(catalog, cell, def, |o| self.fits(catalog, cell, def, o))
@@ -405,6 +562,44 @@ impl World {
                     .any(|l| (0..6).any(|k| self.fits(catalog, cell, def, Orientation::new(k, l))))
             })
             .collect()
+    }
+
+    /// Every legal centre for the mega tile `def`, sorted, with its legal orientations
+    /// ([`World::legal_orientations`]); empty for a single tile. A centre lies two steps from the
+    /// world.
+    pub fn mega_slots(
+        &self,
+        catalog: &TileCatalog,
+        def: &TileDef,
+    ) -> Vec<(Axial, Vec<Orientation>)> {
+        let candidates: BTreeSet<Axial> = if def.is_mega() {
+            self.tiles
+                .keys()
+                .chain(self.members.keys())
+                .flat_map(|&c| footprint::outer_neighbours(c))
+                .filter(|&a| self.is_slot_for(a, def))
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
+        candidates
+            .into_iter()
+            .map(|a| (a, self.legal_orientations(catalog, a, def)))
+            .filter(|(_, legal)| !legal.is_empty())
+            .collect()
+    }
+
+    /// The centre a footprint `def` placed for slot `cell` takes: `cell` itself when it is a legal
+    /// centre, else the first legal centre among `cell.neighbor(0..6)` in edge order.
+    pub fn mega_centre_for(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+    ) -> Option<Axial> {
+        std::iter::once(cell)
+            .chain((0..6).map(|e| cell.neighbor(e)))
+            .find(|&a| !self.legal_orientations(catalog, a, def).is_empty())
     }
 
     /// The orientation the ghost snaps to when `cell` is hovered: the first legal one.
@@ -432,7 +627,7 @@ impl World {
         let mut keys: Vec<(bool, u8, usize, u8)> = vec![];
         for (i, &d) in members.iter().enumerate() {
             let mut reps: Vec<(bool, Orientation)> = vec![];
-            let legal = if self.is_slot(cell) {
+            let legal = if self.is_slot_for(cell, d) {
                 self.ordered_with_cliff(catalog, cell, d, |o| self.fits(catalog, cell, d, o))
             } else {
                 vec![]
@@ -485,10 +680,7 @@ impl World {
             });
         }
         let own = members.iter().find(|d| d.id == id).and_then(|&d| {
-            let key = |o: Orientation| {
-                let cliff = self.cliff_edges(catalog, cell, d, o).contains(&true);
-                (cliff, o.level, o.rotation)
-            };
+            let key = |o: Orientation| (self.has_cliff(catalog, cell, d, o), o.level, o.rotation);
             let at = key(o);
             let mine: Vec<_> = seq
                 .iter()
@@ -516,7 +708,8 @@ impl World {
         }))
     }
 
-    /// World edges of `def` at `cell` in orientation `o` whose neighbor does not fit.
+    /// World edges of `def` at `cell` in orientation `o` whose neighbor does not fit, ascending
+    /// and once each (a mega tile's 18 faces share six directions).
     fn clashes(
         &self,
         catalog: &TileCatalog,
@@ -524,16 +717,18 @@ impl World {
         def: &TileDef,
         o: Orientation,
     ) -> Vec<u8> {
-        self.edge_status(catalog, cell, def, o)
+        let bad: BTreeSet<u8> = self
+            .faces(catalog, cell, def, o)
             .iter()
-            .enumerate()
-            .filter(|(_, s)| **s == EdgeStatus::Incompatible)
-            .map(|(w, _)| w as u8)
-            .collect()
+            .filter(|f| f.status == EdgeStatus::Incompatible)
+            .map(|f| f.w)
+            .collect();
+        bad.into_iter().collect()
     }
 
-    /// Places `def_id` at `cell` in orientation `o` if every touching edge is compatible (PRD §4.1
-    /// step 4).
+    /// Places `def_id` with its anchor at `cell` in orientation `o` if every cell it covers is
+    /// empty and every touching edge is compatible (PRD §4.1 step 4). A mega tile records one
+    /// action at its anchor.
     pub fn place(
         &mut self,
         catalog: &TileCatalog,
@@ -544,10 +739,15 @@ impl World {
         let def = catalog
             .get(def_id)
             .ok_or_else(|| PlaceError::UnknownTile(def_id.to_owned()))?;
-        if self.tiles.contains_key(&cell) {
+        let covers: &[Axial] = if def.is_mega() {
+            &footprint::members(cell)
+        } else {
+            &[cell]
+        };
+        if covers.iter().any(|&m| self.occupied(m)) {
             return Err(PlaceError::Occupied);
         }
-        if !self.is_slot(cell) {
+        if !self.is_slot_for(cell, def) {
             return Err(PlaceError::NotAdjacent);
         }
         if o.rotation >= 6 {
@@ -567,20 +767,36 @@ impl World {
             seed: cell_seed(self.seed, cell),
         };
         self.tiles.insert(cell, tile.clone());
+        self.stamp = Stamp::fresh();
+        if def.is_mega() {
+            self.rebuild_members(catalog);
+        }
         self.record(Action::Place { cell, tile });
         Ok(())
     }
 
-    /// Orientations in which `def` may take the place of the tile at `cell`, ordered as
-    /// [`World::legal_orientations`]: every touching edge fits its neighbor. Empty when `cell`
-    /// holds no tile. Swapping a tile keeps the world connected, so only the edges are checked.
+    /// Whether the tile anchored at `anchor` is a mega tile by its catalog definition.
+    fn holds_mega(&self, catalog: &TileCatalog, anchor: Axial) -> bool {
+        self.tiles
+            .get(&anchor)
+            .and_then(|t| catalog.get(&t.def))
+            .is_some_and(TileDef::is_mega)
+    }
+
+    /// Orientations in which `def` may take the place of the tile covering `cell` (resolved to its
+    /// anchor), ordered as [`World::legal_orientations`]: every touching edge fits its neighbor.
+    /// Empty when `cell` holds no tile or only one of the two is a mega tile. Swapping a tile keeps
+    /// the world connected, so only the edges are checked.
     pub fn replace_orientations(
         &self,
         catalog: &TileCatalog,
         cell: Axial,
         def: &TileDef,
     ) -> Vec<Orientation> {
-        if !self.tiles.contains_key(&cell) {
+        let Some(cell) = self.anchor_of(cell) else {
+            return vec![];
+        };
+        if self.holds_mega(catalog, cell) != def.is_mega() {
             return vec![];
         }
         self.ordered_orientations(catalog, cell, def, |o| {
@@ -588,9 +804,11 @@ impl World {
         })
     }
 
-    /// Swaps the tile at `cell` for `def_id` in orientation `o` as one undoable action. The same
-    /// tile in the same orientation (equal sockets on every edge) at the same level is
-    /// [`ReplaceError::Unchanged`] and records nothing. Returns the tile that was there.
+    /// Swaps the tile covering `cell` (resolved to its anchor) for `def_id` in orientation `o` as
+    /// one undoable action at the anchor. The same tile in the same orientation (equal sockets on
+    /// every edge) at the same level is [`ReplaceError::Unchanged`] and records nothing; a mega
+    /// tile for a single one, or the reverse, is [`ReplaceError::FootprintMismatch`]. Returns the
+    /// tile that was there.
     pub fn replace(
         &mut self,
         catalog: &TileCatalog,
@@ -601,9 +819,13 @@ impl World {
         let def = catalog
             .get(def_id)
             .ok_or_else(|| ReplaceError::UnknownTile(def_id.to_owned()))?;
-        let Some(from) = self.tiles.get(&cell).cloned() else {
+        let Some(cell) = self.anchor_of(cell) else {
             return Err(ReplaceError::Empty);
         };
+        let from = self.tiles[&cell].clone();
+        if self.holds_mega(catalog, cell) != def.is_mega() {
+            return Err(ReplaceError::FootprintMismatch);
+        }
         if tunnel::is_cover(self, catalog, cell) {
             return Err(ReplaceError::TunnelCover);
         }
@@ -630,6 +852,7 @@ impl World {
             seed: cell_seed(self.seed, cell),
         };
         self.tiles.insert(cell, to.clone());
+        self.stamp = Stamp::fresh();
         self.record(Action::Replace {
             cell,
             from: from.clone(),
@@ -638,11 +861,12 @@ impl World {
         Ok(from)
     }
 
-    /// Whether the tile at `cell` may be removed: not the last tile, and the rest stays connected.
+    /// Whether the tile covering `cell` (resolved to its anchor) may be removed: not the last
+    /// tile, and the rest stays connected.
     pub fn can_bulldoze(&self, catalog: &TileCatalog, cell: Axial) -> Result<(), BulldozeError> {
-        if !self.tiles.contains_key(&cell) {
+        let Some(cell) = self.anchor_of(cell) else {
             return Err(BulldozeError::Empty);
-        }
+        };
         if tunnel::is_cover(self, catalog, cell) {
             return Err(BulldozeError::TunnelCover);
         }
@@ -655,17 +879,16 @@ impl World {
         Ok(())
     }
 
-    /// Removes and returns a tile as one undoable action, preserving a nonempty connected world.
+    /// Removes and returns the tile covering `cell`, its whole footprint at once, as one undoable
+    /// action at its anchor, preserving a nonempty connected world.
     pub fn bulldoze(
         &mut self,
         catalog: &TileCatalog,
         cell: Axial,
     ) -> Result<PlacedTile, BulldozeError> {
         self.can_bulldoze(catalog, cell)?;
-        let tile = self
-            .tiles
-            .remove(&cell)
-            .expect("can_bulldoze checked the cell");
+        let cell = self.anchor_of(cell).expect("can_bulldoze checked the cell");
+        let tile = self.lift(cell).expect("can_bulldoze checked the cell");
         self.record(Action::Bulldoze {
             cell,
             tile: tile.clone(),
@@ -684,44 +907,72 @@ impl World {
     }
 
     /// Reverts the latest action. LIFO order always lands on an earlier valid world, so no rule
-    /// checks run. Returns false when there is nothing to undo.
-    pub fn undo(&mut self) -> bool {
+    /// checks run. A footprint comes and goes whole; `catalog` supplies it when a bulldozed tile
+    /// returns (a definition missing from it returns the anchor alone). Returns false when there
+    /// is nothing to undo.
+    pub fn undo(&mut self, catalog: &TileCatalog) -> bool {
         let Some(action) = self.history.undo.pop_back() else {
             return false;
         };
         match &action {
             Action::Place { cell, .. } => {
-                self.tiles.remove(cell);
+                self.lift(*cell);
             }
             Action::Bulldoze { cell, tile } => {
-                self.tiles.insert(*cell, tile.clone());
+                self.put(catalog, *cell, tile.clone());
             }
             Action::Replace { cell, from, .. } => {
                 self.tiles.insert(*cell, from.clone());
+                self.stamp = Stamp::fresh();
             }
         }
         self.history.redo.push(action);
         true
     }
 
-    /// Re-applies the latest undone action. Returns false when there is nothing to redo.
-    pub fn redo(&mut self) -> bool {
+    /// Re-applies the latest undone action, a footprint whole as in [`World::undo`]. Returns false
+    /// when there is nothing to redo.
+    pub fn redo(&mut self, catalog: &TileCatalog) -> bool {
         let Some(action) = self.history.redo.pop() else {
             return false;
         };
         match &action {
             Action::Place { cell, tile } => {
-                self.tiles.insert(*cell, tile.clone());
+                self.put(catalog, *cell, tile.clone());
             }
             Action::Bulldoze { cell, .. } => {
-                self.tiles.remove(cell);
+                self.lift(*cell);
             }
             Action::Replace { cell, to, .. } => {
                 self.tiles.insert(*cell, to.clone());
+                self.stamp = Stamp::fresh();
             }
         }
         self.history.undo.push_back(action);
         true
+    }
+
+    /// Inserts `tile` at `anchor`, with its members when its definition is a mega tile.
+    fn put(&mut self, catalog: &TileCatalog, anchor: Axial, tile: PlacedTile) {
+        if catalog.get(&tile.def).is_some_and(TileDef::is_mega) {
+            for m in footprint::members(anchor).into_iter().skip(1) {
+                self.members.insert(m, anchor);
+            }
+        }
+        self.tiles.insert(anchor, tile);
+        self.stamp = Stamp::fresh();
+    }
+
+    /// Removes the tile anchored at `anchor` together with its members.
+    fn lift(&mut self, anchor: Axial) -> Option<PlacedTile> {
+        let tile = self.tiles.remove(&anchor)?;
+        self.stamp = Stamp::fresh();
+        for m in footprint::members(anchor).into_iter().skip(1) {
+            if self.members.get(&m) == Some(&anchor) {
+                self.members.remove(&m);
+            }
+        }
+        Some(tile)
     }
 
     /// Pushes a new action: clears redo and drops the oldest action beyond [`HISTORY_DEPTH`].
@@ -733,7 +984,8 @@ impl World {
         }
     }
 
-    /// Flood fill over the 6-neighborhood of every tile except `removed`.
+    /// Flood fill over the 6-neighborhood of every occupied cell outside the footprint of the tile
+    /// anchored at `removed`. True when every other anchor is reached.
     fn connected_without(&self, removed: Axial) -> bool {
         let Some(&start) = self.tiles.keys().find(|&&c| c != removed) else {
             return true;
@@ -743,26 +995,116 @@ impl World {
         while let Some(cell) = stack.pop() {
             for e in 0..6 {
                 let n = cell.neighbor(e);
-                if n != removed && self.tiles.contains_key(&n) && seen.insert(n) {
+                if self.anchor_of(n).is_some_and(|a| a != removed) && seen.insert(n) {
                     stack.push(n);
                 }
             }
         }
-        seen.len() == self.tiles.len() - 1
+        seen.iter().filter(|c| self.tiles.contains_key(c)).count() == self.tiles.len() - 1
     }
 }
 
+/// Calls `f` on each outward face of `def` with its anchor at `cell` in orientation `o` (the
+/// cell, its world edge and the face it shows there), in [`World::faces`] order, until `f` returns
+/// `false`. Returns whether every call returned `true`.
+fn each_face<'c>(
+    cell: Axial,
+    def: &'c TileDef,
+    o: Orientation,
+    mut f: impl FnMut(Axial, u8, Facing<'c>) -> bool,
+) -> bool {
+    match &def.footprint {
+        None => (0..6).all(|w| f(cell, w, Facing::single(def, o.rotation, o.level, w))),
+        Some(fp) => footprint::outer_faces(cell, o.rotation)
+            .into_iter()
+            .all(|(m, w, j)| match fp.outer.get(usize::from(j)) {
+                Some(socket) => f(
+                    m,
+                    w,
+                    Facing {
+                        def,
+                        socket,
+                        local: None,
+                        level: o.level,
+                    },
+                ),
+                None => true,
+            }),
+    }
+}
+
+/// The anchor of the tile covering `cell` in `tiles` with footprint members `members`.
+fn anchor_in(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    members: &BTreeMap<Axial, Axial>,
+    cell: Axial,
+) -> Option<Axial> {
+    if tiles.contains_key(&cell) {
+        Some(cell)
+    } else {
+        members.get(&cell).copied()
+    }
+}
+
+/// [`World::facing`] over a tile map and its footprint members ([`footprint_index`]), so play and
+/// save validation read a seam by one rule.
+pub(crate) fn facing_in<'c>(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    members: &BTreeMap<Axial, Axial>,
+    catalog: &'c TileCatalog,
+    cell: Axial,
+    w: u8,
+) -> Option<Facing<'c>> {
+    let anchor = anchor_in(tiles, members, cell)?;
+    let placed = tiles.get(&anchor)?;
+    let def = catalog.get(&placed.def)?;
+    let ring = if cell == anchor {
+        None
+    } else {
+        Some((0..6).find(|&d| anchor.neighbor(d) == cell)?)
+    };
+    Some(Facing {
+        def,
+        socket: def.socket_toward(placed.rotation, ring, w)?,
+        local: (!def.is_mega()).then(|| local_edge(w, placed.rotation)),
+        level: placed.level,
+    })
+}
+
+/// The ring cells of every mega tile in `tiles`, each mapped to its anchor, or the first cell (in
+/// anchor order, then ring order) that two footprints, or a footprint and a tile, both claim. A
+/// definition missing from `catalog` counts as a single tile.
+pub(crate) fn footprint_index(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    catalog: &TileCatalog,
+) -> Result<BTreeMap<Axial, Axial>, Axial> {
+    let mut members: BTreeMap<Axial, Axial> = BTreeMap::new();
+    for (&anchor, t) in tiles {
+        if !catalog.get(&t.def).is_some_and(TileDef::is_mega) {
+            continue;
+        }
+        for m in footprint::members(anchor).into_iter().skip(1) {
+            if tiles.contains_key(&m) || members.insert(m, anchor).is_some() {
+                return Err(m);
+            }
+        }
+    }
+    Ok(members)
+}
+
 /// Pair edge pieces of the tile at `cell`, by local edge (decision D3, `data/sockets.ron`
-/// `pair_edge_pieces`). `at(cell)` is the definition and rotation of the tile placed there. An edge
+/// `pair_edge_pieces`). `at(cell)` is the definition and rotation of the tile covering `cell`, and
+/// the cell's ring direction from that tile's anchor (`None` at an anchor), so a neighbour beside a
+/// footprint's ring cell reads the footprint's outer socket ([`TileDef::socket_toward`]). An edge
 /// gets a piece when the (own socket, neighbour socket) pair across it has an entry; its corner
 /// flags say whether the local edges either side carry the same pair. A tile that lists its edge
-/// pieces explicitly gets none.
+/// pieces explicitly gets none, and so does a ring cell.
 pub fn pair_edge_pieces<'a>(
     catalog: &'a TileCatalog,
     cell: Axial,
-    at: impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    at: impl Fn(Axial) -> Option<(&'a TileDef, u8, Option<u8>)>,
 ) -> [Option<KitRef>; 6] {
-    let Some((def, rot)) = at(cell) else {
+    let Some((def, rot, None)) = at(cell) else {
         return Default::default();
     };
     if def.edge_pieces != EdgePieces::Derived {
@@ -771,10 +1113,10 @@ pub fn pair_edge_pieces<'a>(
     let sockets = catalog.sockets();
     let pair = |e: u8| {
         let world = (e + rot) % 6;
-        let (n, nrot) = at(cell.neighbor(world))?;
+        let (n, nrot, ring) = at(cell.neighbor(world))?;
         Some((
             def.edges[e as usize].kind,
-            n.edge(opposite_edge(world), nrot).kind,
+            n.socket_toward(nrot, ring, opposite_edge(world))?.kind,
         ))
     };
     std::array::from_fn(|e| {
@@ -802,12 +1144,13 @@ impl PairPieces {
 
     /// Re-evaluates every cell in `changed` and its six neighbours against `at` (see
     /// [`pair_edge_pieces`]). Returns the cells whose pieces changed (a cell gaining or losing its
-    /// tile counts as changed).
+    /// tile counts as changed). Only anchors hold pieces. A footprint change reaches the cells
+    /// around its ring only when `changed` lists its ring cells too.
     pub fn update<'a>(
         &mut self,
         catalog: &'a TileCatalog,
         changed: impl IntoIterator<Item = Axial>,
-        at: impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+        at: impl Fn(Axial) -> Option<(&'a TileDef, u8, Option<u8>)>,
     ) -> BTreeSet<Axial> {
         let mut dirty = BTreeSet::new();
         for c in changed {
@@ -816,7 +1159,9 @@ impl PairPieces {
         }
         let mut out = BTreeSet::new();
         for c in dirty {
-            let new = at(c).map(|_| pair_edge_pieces(catalog, c, &at));
+            let new = at(c)
+                .filter(|(.., ring)| ring.is_none())
+                .map(|_| pair_edge_pieces(catalog, c, &at));
             if new.as_ref() != self.cells.get(&c) {
                 out.insert(c);
                 match new {
@@ -839,12 +1184,425 @@ pub fn cell_seed(world_seed: u64, cell: Axial) -> u64 {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
+    use crate::footprint;
     use crate::socket::{EdgeProfile, Side, SocketKind};
 
     fn catalog() -> TileCatalog {
         TileCatalog::builtin().unwrap_or_else(|e| panic!("{e}"))
+    }
+
+    /// A legal massif centre two steps east of the start meadow.
+    const CENTRE: Axial = Axial { q: 2, r: 0 };
+
+    /// A massif centred two steps east of the start meadow, turned by `k`.
+    fn massif_world(c: &TileCatalog, k: u8) -> World {
+        let mut w = World::new(1);
+        w.place(c, CENTRE, "massif_granite", o(k, 0)).unwrap();
+        w
+    }
+
+    /// The side cell between ring cells 0 and 1 of `CENTRE`: its world edges 4 and 3 face them.
+    fn side_cell() -> Axial {
+        CENTRE.neighbor(0).neighbor(1)
+    }
+
+    #[test]
+    fn a_massif_occupies_all_seven_cells() {
+        let c = catalog();
+        let w = massif_world(&c, 0);
+        assert_eq!(w.tiles().len(), 2);
+        let anchor = w.tile(CENTRE).unwrap().clone();
+        assert_eq!(anchor.def, "massif_granite");
+        for m in footprint::members(CENTRE) {
+            assert!(w.occupied(m), "{m:?}");
+            assert_eq!(w.tile(m), Some(&anchor), "{m:?}");
+            assert_eq!(w.anchor_of(m), Some(CENTRE), "{m:?}");
+            let mut v = w.clone();
+            assert_eq!(
+                v.place(&c, m, "meadow", o(0, 0)),
+                Err(PlaceError::Occupied),
+                "{m:?}"
+            );
+            assert_eq!(v, w);
+        }
+        assert_eq!(w.members().len(), 6);
+        assert_eq!(w.anchor_of(Axial::ORIGIN), Some(Axial::ORIGIN));
+        assert_eq!(w.anchor_of(Axial::new(9, 9)), None);
+        assert!(!w.occupied(Axial::new(9, 9)));
+        // A massif whose ring overlaps the placed one is refused as occupied.
+        let mut v = w.clone();
+        assert_eq!(
+            v.place(
+                &c,
+                CENTRE.neighbor(0).neighbor(0),
+                "massif_granite",
+                o(0, 0)
+            ),
+            Err(PlaceError::Occupied)
+        );
+        let mut rebuilt = w.clone();
+        rebuilt.members.clear();
+        rebuilt.rebuild_members(&c);
+        assert_eq!(rebuilt, w);
+    }
+
+    #[test]
+    fn a_massif_centre_is_two_steps_from_the_world() {
+        let c = catalog();
+        let massif = def(&c, "massif_granite");
+        let w = World::new(1);
+        for e in 0..6 {
+            let frontier = Axial::ORIGIN.neighbor(e);
+            assert!(w.legal_orientations(&c, frontier, massif).is_empty());
+            assert!(!w.is_slot_for(frontier, massif));
+            assert!(w.is_slot_for(frontier, def(&c, "meadow")));
+        }
+        assert!(
+            w.inventory(&c, Axial::ORIGIN.neighbor(0))
+                .iter()
+                .all(|d| !d.is_mega())
+        );
+        let slots = w.mega_slots(&c, massif);
+        let centres: Vec<Axial> = slots.iter().map(|(a, _)| *a).collect();
+        let want: Vec<Axial> = footprint::outer_neighbours(Axial::ORIGIN)
+            .into_iter()
+            .filter(|&a| footprint::members(a).iter().all(|&m| !w.occupied(m)))
+            .collect();
+        assert_eq!(want.len(), 12);
+        assert_eq!(centres, want);
+        for (a, orientations) in &slots {
+            assert_eq!(*orientations, w.legal_orientations(&c, *a, massif), "{a:?}");
+            let level0: Vec<u8> = orientations
+                .iter()
+                .take_while(|o| o.level == 0)
+                .map(|o| o.rotation)
+                .collect();
+            assert_eq!(level0, [0, 1, 2, 3, 4, 5], "{a:?}");
+        }
+        assert!(w.mega_slots(&c, def(&c, "meadow")).is_empty());
+    }
+
+    #[test]
+    fn facing_a_member_returns_the_outer_socket() {
+        let c = catalog();
+        let w = massif_world(&c, 2);
+        let members = footprint::members(CENTRE);
+        for (cell, edge, _) in footprint::outer_faces(CENTRE, 2) {
+            let f = w.facing(&c, cell, edge).expect("an outer face");
+            assert_eq!(f.socket.kind, SocketKind::Grass);
+            assert_eq!(
+                (f.def.id.as_str(), f.local, f.level),
+                ("massif_granite", None, 0)
+            );
+        }
+        let mut interior = 0;
+        for &m in &members {
+            for e in 0..6 {
+                if members.contains(&m.neighbor(e)) {
+                    assert!(w.facing(&c, m, e).is_none(), "{m:?} edge {e}");
+                    interior += 1;
+                }
+            }
+        }
+        assert_eq!(interior, 24);
+        let f = w.facing(&c, Axial::ORIGIN, 0).unwrap();
+        assert_eq!((f.def.id.as_str(), f.local), ("meadow", Some(0)));
+        assert!(w.facing(&c, Axial::new(9, 9), 0).is_none());
+    }
+
+    #[test]
+    fn a_neighbour_meeting_two_outer_edges_checks_both() {
+        let c = catalog();
+        let w = massif_world(&c, 0);
+        let road = def(&c, "road_straight")
+            .edges
+            .iter()
+            .find(|e| e.kind == SocketKind::Road)
+            .unwrap()
+            .clone();
+        let mut grass_road = def(&c, "meadow").clone();
+        grass_road.id = "grass_road".into();
+        grass_road.edges[1] = road;
+        let side = side_cell();
+        // The Road edge (local 1) lands on world edge 3 at rotation 2 and 4 at rotation 3.
+        assert_eq!(rots(&w, &c, side, &grass_road), vec![0, 1, 4, 5]);
+        for k in [2, 3] {
+            assert!(!w.fits(&c, side, &grass_road, o(k, 0)));
+            let status = w.edge_status(&c, side, &grass_road, o(k, 0));
+            let bad: Vec<u8> = (0..6)
+                .filter(|&e| status[usize::from(e)] == EdgeStatus::Incompatible)
+                .collect();
+            assert_eq!(bad, vec![1 + k], "rotation {k}");
+        }
+    }
+
+    #[test]
+    fn frontier_rings_the_footprint() {
+        let c = catalog();
+        let w = massif_world(&c, 0);
+        let f = w.frontier();
+        assert!(f.is_sorted());
+        for m in footprint::members(CENTRE) {
+            assert!(!f.contains(&m), "{m:?}");
+        }
+        for n in footprint::outer_neighbours(CENTRE) {
+            assert_eq!(f.contains(&n), !w.occupied(n), "{n:?}");
+            assert_eq!(w.is_slot(n), !w.occupied(n), "{n:?}");
+        }
+        assert!(w.occupied(Axial::ORIGIN));
+    }
+
+    #[test]
+    fn a_road_cannot_face_a_massif() {
+        let c = catalog();
+        let w = massif_world(&c, 0);
+        let road = def(&c, "road_straight");
+        let legal = rots(&w, &c, side_cell(), road);
+        assert_eq!(legal, vec![2, 5]);
+        for k in legal {
+            assert_eq!(road.edge(3, k).kind, SocketKind::Grass);
+            assert_eq!(road.edge(4, k).kind, SocketKind::Grass);
+        }
+    }
+
+    #[test]
+    fn a_raised_massif_meets_meadow_as_a_cliff() {
+        let c = catalog();
+        let massif = def(&c, "massif_granite");
+        let w = World::new(1);
+        let faces = w.faces(&c, CENTRE, massif, o(0, 1));
+        assert_eq!(faces.len(), footprint::OUTER_EDGES);
+        for f in &faces {
+            let toward_meadow = f.cell.neighbor(f.w) == Axial::ORIGIN;
+            assert_eq!(f.cliff, toward_meadow, "{f:?}");
+            let want = if toward_meadow {
+                EdgeStatus::Compatible
+            } else {
+                EdgeStatus::Neutral
+            };
+            assert_eq!(f.status, want, "{f:?}");
+        }
+        assert_eq!(faces.iter().filter(|f| f.cliff).count(), 1);
+        assert!(w.fits(&c, CENTRE, massif, o(0, 1)));
+        let legal = w.legal_orientations(&c, CENTRE, massif);
+        assert_eq!(legal[0], o(0, 0));
+        assert!(
+            !w.faces(&c, CENTRE, massif, legal[0])
+                .iter()
+                .any(|f| f.cliff)
+        );
+        assert!(legal.contains(&o(0, 1)));
+        // The single-tile view of a mega def has no face at its anchor.
+        assert_eq!(
+            w.edge_status(&c, CENTRE, massif, o(0, 1)),
+            [EdgeStatus::Neutral; 6]
+        );
+        assert_eq!(w.cliff_edges(&c, CENTRE, massif, o(0, 1)), [false; 6]);
+        // R walks the massif's six turns at level 0 before the cliffs.
+        let seq = w.group_orientations(&c, CENTRE, &[massif]);
+        let first: Vec<Orientation> = seq.iter().take(6).map(|(_, o)| *o).collect();
+        assert_eq!(first, (0..6).map(|k| o(k, 0)).collect::<Vec<_>>());
+        assert_eq!(
+            w.cycle_group(
+                &c,
+                CENTRE,
+                &[massif],
+                (&massif.id, o(5, 0)),
+                RotateDir::Forward
+            ),
+            Some((massif, o(0, 1)))
+        );
+    }
+
+    #[test]
+    fn massif_seed_comes_from_the_anchor() {
+        let c = catalog();
+        let w = massif_world(&c, 0);
+        for m in footprint::members(CENTRE) {
+            assert_eq!(
+                w.tile(m).unwrap().seed,
+                cell_seed(w.seed(), CENTRE),
+                "{m:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn mega_centre_for_maps_a_frontier_slot_to_a_covering_centre() {
+        let c = catalog();
+        let massif = def(&c, "massif_granite");
+        let w = World::new(1);
+        let slot = Axial::ORIGIN.neighbor(0);
+        assert!(w.is_slot(slot));
+        assert_eq!(w.mega_centre_for(&c, slot, massif), Some(slot.neighbor(0)));
+        assert_eq!(w.mega_centre_for(&c, CENTRE, massif), Some(CENTRE));
+        assert_eq!(w.mega_centre_for(&c, Axial::new(9, 9), massif), None);
+        // A pocket: an empty slot whose six neighbours are all placed.
+        let mut v = World::new(1);
+        for cell in [(1, 0), (1, 1), (2, 1), (3, 0), (3, -1), (2, -1)] {
+            v.place(&c, Axial::new(cell.0, cell.1), "meadow", o(0, 0))
+                .unwrap();
+        }
+        assert!(v.is_slot(CENTRE));
+        assert_eq!(v.mega_centre_for(&c, CENTRE, massif), None);
+    }
+
+    /// The cell east of the massif at `CENTRE`, touching only its ring.
+    const PAST_MASSIF: Axial = Axial { q: 4, r: 0 };
+
+    /// `members` is exactly what the placed tiles derive, every member points at a placed mega
+    /// anchor, and every mega anchor has all six members.
+    fn assert_whole_footprints(w: &World, c: &TileCatalog) {
+        let mut r = w.clone();
+        r.rebuild_members(c);
+        assert_eq!(r.members(), w.members());
+        for (m, a) in w.members() {
+            let t = w
+                .tiles()
+                .get(a)
+                .unwrap_or_else(|| panic!("{m:?} points at a missing anchor {a:?}"));
+            assert!(def(c, &t.def).is_mega(), "{m:?}");
+        }
+        for (&a, t) in w.tiles() {
+            if def(c, &t.def).is_mega() {
+                for m in footprint::members(a).into_iter().skip(1) {
+                    assert_eq!(w.members().get(&m), Some(&a), "{m:?}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bulldozing_a_member_removes_the_whole_massif() {
+        let c = catalog();
+        let mut w = massif_world(&c, 0);
+        let ring = CENTRE.neighbor(3);
+        assert_eq!(w.can_bulldoze(&c, ring), Ok(()));
+        let gone = w.bulldoze(&c, ring).unwrap();
+        assert_eq!(gone.def, "massif_granite");
+        for m in footprint::members(CENTRE) {
+            assert!(!w.occupied(m), "{m:?}");
+        }
+        assert_eq!(w.tiles().len(), 1);
+        assert!(w.members().is_empty());
+        assert_eq!(w.history_stacks().0.back().map(Action::cell), Some(CENTRE));
+    }
+
+    #[test]
+    fn undo_redo_never_leave_part_of_a_footprint() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, Axial::ORIGIN.neighbor(3), "meadow", o(0, 0))
+            .unwrap();
+        w.place(&c, CENTRE, "massif_granite", o(0, 0)).unwrap();
+        w.place(&c, PAST_MASSIF, "meadow", o(0, 0)).unwrap();
+        w.bulldoze(&c, PAST_MASSIF).unwrap();
+        w.bulldoze(&c, CENTRE.neighbor(1)).unwrap();
+        w.place(&c, CENTRE, "massif_granite", o(2, 0)).unwrap();
+        w.place(&c, PAST_MASSIF, "meadow", o(0, 0)).unwrap();
+        assert_whole_footprints(&w, &c);
+        let done = w.clone();
+        let mut steps = 0;
+        while w.undo(&c) {
+            assert_whole_footprints(&w, &c);
+            steps += 1;
+        }
+        assert_eq!(steps, 7);
+        assert_eq!(w.tiles().len(), 1);
+        while w.redo(&c) {
+            assert_whole_footprints(&w, &c);
+        }
+        assert_eq!(w, done);
+    }
+
+    #[test]
+    fn bulldoze_refuses_a_massif_that_holds_the_world_together() {
+        let c = catalog();
+        let mut w = massif_world(&c, 0);
+        w.place(&c, PAST_MASSIF, "meadow", o(0, 0)).unwrap();
+        for m in footprint::members(CENTRE) {
+            assert_eq!(
+                w.can_bulldoze(&c, m),
+                Err(BulldozeError::WouldDisconnect),
+                "{m:?}"
+            );
+        }
+        let before = w.clone();
+        assert_eq!(
+            w.bulldoze(&c, CENTRE.neighbor(3)),
+            Err(BulldozeError::WouldDisconnect)
+        );
+        assert_eq!(w, before);
+        assert_eq!(
+            w.bulldoze(&c, PAST_MASSIF).map(|t| t.def),
+            Ok("meadow".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_tile_beside_a_member_counts_as_connected() {
+        let c = catalog();
+        let west = Axial::ORIGIN.neighbor(3);
+        let mut w = World::new(1);
+        w.place(&c, west, "meadow", o(0, 0)).unwrap();
+        w.place(&c, CENTRE, "massif_granite", o(0, 0)).unwrap();
+        w.place(&c, PAST_MASSIF, "meadow", o(0, 0)).unwrap();
+        // Without the origin, `west` touches nothing.
+        assert_eq!(
+            w.can_bulldoze(&c, Axial::ORIGIN),
+            Err(BulldozeError::WouldDisconnect)
+        );
+        // The origin and `PAST_MASSIF` touch only the massif's ring.
+        assert_eq!(w.bulldoze(&c, west).map(|t| t.def), Ok("meadow".to_owned()));
+        assert_eq!(w.can_bulldoze(&c, Axial::ORIGIN), Ok(()));
+        assert_eq!(w.can_bulldoze(&c, PAST_MASSIF), Ok(()));
+    }
+
+    #[test]
+    fn massif_replace_rules() {
+        let c = catalog();
+        let massif = def(&c, "massif_granite");
+        let meadow = def(&c, "meadow");
+        let mut w = massif_world(&c, 0);
+        let before = w.clone();
+        for m in footprint::members(CENTRE) {
+            assert_eq!(
+                w.replace(&c, m, "meadow", o(0, 0)),
+                Err(ReplaceError::FootprintMismatch),
+                "{m:?}"
+            );
+            assert!(w.replace_orientations(&c, m, meadow).is_empty(), "{m:?}");
+        }
+        assert_eq!(
+            w.replace(&c, Axial::ORIGIN, "massif_granite", o(0, 0)),
+            Err(ReplaceError::FootprintMismatch)
+        );
+        assert!(w.replace_orientations(&c, Axial::ORIGIN, massif).is_empty());
+        assert_eq!(
+            w.replace(&c, CENTRE.neighbor(2), "massif_granite", o(0, 0)),
+            Err(ReplaceError::Unchanged)
+        );
+        assert_eq!(w, before);
+        // Re-orienting from a ring cell turns the whole massif as one step at the anchor.
+        let ring = CENTRE.neighbor(4);
+        assert!(w.replace_orientations(&c, ring, massif).contains(&o(1, 0)));
+        let depth = w.history_stacks().0.len();
+        assert_eq!(
+            w.replace(&c, ring, "massif_granite", o(1, 0))
+                .map(|t| t.rotation),
+            Ok(0)
+        );
+        assert_eq!(w.history_stacks().0.len(), depth + 1);
+        assert_eq!(w.history_stacks().0.back().map(Action::cell), Some(CENTRE));
+        assert_eq!(w.tiles().len(), 2);
+        let turned = w.tile(CENTRE).unwrap();
+        assert_eq!((turned.rotation, turned.seed), (1, cell_seed(1, CENTRE)));
+        assert_eq!(w.members(), before.members());
+        assert!(w.undo(&c));
+        assert_eq!(w.tiles(), before.tiles());
+        assert_eq!(w.members(), before.members());
     }
 
     fn def<'a>(c: &'a TileCatalog, id: &str) -> &'a TileDef {
@@ -957,9 +1715,9 @@ mod tests {
         assert_eq!(station_stops(&c, &w), vec![1, 4], "the stop stays");
         w.bulldoze(&c, BEYOND_END).unwrap();
         assert_eq!(station_stops(&c, &w), vec![1, 4]);
-        assert!(w.undo() && w.tile(BEYOND_END).is_some());
-        assert!(w.undo() && w.tile(BEYOND_END).is_none());
-        assert!(w.redo() && w.redo() && w.tile(BEYOND_END).is_none());
+        assert!(w.undo(&c) && w.tile(BEYOND_END).is_some());
+        assert!(w.undo(&c) && w.tile(BEYOND_END).is_none());
+        assert!(w.redo(&c) && w.redo(&c) && w.tile(BEYOND_END).is_none());
         assert_eq!(station_stops(&c, &w), vec![1, 4]);
         // A rail tile never turns an end toward a placed tile without rail.
         assert_eq!(
@@ -971,7 +1729,7 @@ mod tests {
         let mut v = station_world(&c);
         v.place(&c, Axial::new(1, -1), "meadow", o(0, 0)).unwrap();
         v.bulldoze(&c, EAST).unwrap();
-        assert!(v.undo());
+        assert!(v.undo(&c));
         assert_eq!(v.tile(EAST).map(|t| t.rotation), Some(1));
         let at = |cell: Axial| v.tile(cell).map(|t| (def(&c, &t.def), t.rotation));
         assert_eq!(
@@ -1126,6 +1884,7 @@ mod tests {
         let all_but_ocean: Vec<String> = c
             .tiles()
             .iter()
+            .filter(|d| !d.is_mega())
             .map(|d| d.id.clone())
             .filter(|id| id != "ocean")
             .filter(|id| {
@@ -1133,7 +1892,8 @@ mod tests {
                     .is_some_and(|d| d.edges.iter().any(|e| e.profile == EdgeProfile::Flat))
             })
             .collect();
-        // A tile with no Flat edge (hillside 010101) cannot face the level meadow, so it never fits beside it.
+        // A tile with no Flat edge (hillside 010101) cannot face the level meadow, so it never fits
+        // beside it. A massif centre is never a frontier cell.
         assert_eq!(ids(&w, EAST), all_but_ocean);
 
         // A road end now points at EAST's world edge 4, next to the meadow on its edge 3: only
@@ -1691,12 +2451,12 @@ mod tests {
         let mut w = World::new(1);
         w.place(&c, EAST, "forest", o(3, 0)).unwrap();
         let placed = w.clone();
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(w.tiles(), World::new(1).tiles());
-        assert!(!w.undo(), "the start tile is not undoable");
-        assert!(w.redo());
+        assert!(!w.undo(&c), "the start tile is not undoable");
+        assert!(w.redo(&c));
         assert_eq!(w, placed);
-        assert!(!w.redo());
+        assert!(!w.redo(&c));
     }
 
     #[test]
@@ -1707,9 +2467,9 @@ mod tests {
         let before = w.tiles().clone();
         w.bulldoze(&c, EAST).unwrap();
         assert!(w.tile(EAST).is_none());
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(w.tiles(), &before);
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert!(w.tile(EAST).is_none());
     }
 
@@ -1727,12 +2487,12 @@ mod tests {
         w.bulldoze(&c, Axial::ORIGIN).unwrap();
         states.push(w.tiles().clone());
         for want in states.iter().rev().skip(1) {
-            assert!(w.undo());
+            assert!(w.undo(&c));
             assert_eq!(w.tiles(), want);
         }
-        assert!(!w.undo());
+        assert!(!w.undo(&c));
         for want in states.iter().skip(1) {
-            assert!(w.redo());
+            assert!(w.redo(&c));
             assert_eq!(w.tiles(), want);
         }
     }
@@ -1742,11 +2502,11 @@ mod tests {
         let c = catalog();
         let mut w = World::new(1);
         w.place(&c, EAST, "meadow", o(0, 0)).unwrap();
-        w.undo();
+        w.undo(&c);
         assert!(w.can_redo());
         w.place(&c, Axial::new(-1, 0), "meadow", o(0, 0)).unwrap();
         assert!(!w.can_redo());
-        assert!(!w.redo());
+        assert!(!w.redo(&c));
     }
 
     #[test]
@@ -1754,7 +2514,7 @@ mod tests {
         let c = catalog();
         let mut w = World::new(1);
         w.place(&c, EAST, "meadow", o(0, 0)).unwrap();
-        w.undo();
+        w.undo(&c);
         assert!(w.place(&c, EAST, "ocean", o(0, 0)).is_err());
         assert!(w.bulldoze(&c, Axial::ORIGIN).is_err());
         assert!(w.can_redo());
@@ -1771,7 +2531,7 @@ mod tests {
             w.place(&c, Axial::new(i, 0), "meadow", o(0, 0)).unwrap();
         }
         let mut undone = 0;
-        while w.undo() {
+        while w.undo(&c) {
             undone += 1;
         }
         assert_eq!(undone, HISTORY_DEPTH);
@@ -1859,17 +2619,17 @@ mod tests {
         let placed = w.tiles().clone();
         w.replace(&c, EAST, "forest", o(3, 0)).unwrap();
         let replaced = w.clone();
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(w.tiles(), &placed, "one undo restores the meadow");
         assert!(w.can_undo() && w.can_redo());
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert_eq!(w, replaced, "redo puts the forest back at rotation 3");
         // Undo twice: the replace, then the placement.
-        assert!(w.undo() && w.undo());
+        assert!(w.undo(&c) && w.undo(&c));
         assert_eq!(w.tiles(), World::new(1).tiles());
         // A new action after an undone replace clears its redo.
-        assert!(w.redo() && w.redo());
-        assert!(w.undo());
+        assert!(w.redo(&c) && w.redo(&c));
+        assert!(w.undo(&c));
         w.place(&c, Axial::new(-1, 0), "meadow", o(0, 0)).unwrap();
         assert!(!w.can_redo());
         assert_eq!(w.tile(EAST).unwrap().def, "meadow");
@@ -1882,7 +2642,7 @@ mod tests {
         w.place(&c, EAST, "road_straight", o(1, 0)).unwrap();
         w.place(&c, Axial::new(-1, 0), "forest", o(0, 0)).unwrap();
         w.bulldoze(&c, Axial::new(-1, 0)).unwrap();
-        w.undo();
+        w.undo(&c);
         let text = ron::ser::to_string(&w).unwrap();
         let back: World = ron::from_str(&text).unwrap();
         assert_eq!(back, w);
@@ -1909,10 +2669,7 @@ mod tests {
         cache: &mut PairPieces,
         changed: Axial,
     ) -> BTreeSet<Axial> {
-        let at = |cell: Axial| {
-            w.tile(cell)
-                .and_then(|t| Some((c.get(&t.def)?, t.rotation)))
-        };
+        let at = |cell: Axial| occupant(w, c, cell);
         let out = cache.update(c, [changed], at);
         let mut full = PairPieces::default();
         full.update(c, w.tiles().keys().copied().collect::<Vec<_>>(), at);
@@ -1921,6 +2678,67 @@ mod tests {
             "incremental pair pieces differ from a full evaluation"
         );
         out
+    }
+
+    /// The tile covering `cell` as [`pair_edge_pieces`] reads it: definition, rotation and the
+    /// cell's ring direction from its anchor.
+    fn occupant<'c>(
+        w: &World,
+        c: &'c TileCatalog,
+        cell: Axial,
+    ) -> Option<(&'c TileDef, u8, Option<u8>)> {
+        let anchor = w.anchor_of(cell)?;
+        let t = &w.tiles()[&anchor];
+        let ring = (cell != anchor).then(|| (0..6).find(|&d| anchor.neighbor(d) == cell));
+        Some((c.get(&t.def)?, t.rotation, ring.flatten()))
+    }
+
+    /// A forest beside a massif's ring cells reads the massif's outer socket there, as
+    /// [`World::facing`] does, rather than the anchor's own edges. The builtin pair table has no
+    /// entry with Grass, so the test adds a (Forest, Grass) pair for the seam to show.
+    #[test]
+    fn a_pair_piece_beside_a_massif_member_reads_its_outer_socket() {
+        let base = catalog();
+        let mut file = base.sockets().file().clone();
+        file.pair_edge_pieces.push(crate::socket::PairEdgePiece {
+            own: SocketKind::Forest,
+            neighbour: SocketKind::Grass,
+            piece: "forest_grass_edge".into(),
+            per_base_edge: false,
+            corners: crate::socket::PairCorners::Straight,
+        });
+        let c = TileCatalog::new(
+            crate::socket::SocketTable::new(file).unwrap(),
+            base.tiles().to_vec(),
+        )
+        .unwrap();
+        let mut w = massif_world(&c, 2);
+        let forest = side_cell();
+        w.place(&c, forest, "forest", o(1, 0)).unwrap();
+        let pieces = pair_edge_pieces(&c, forest, |cell| occupant(&w, &c, cell));
+        let mut beside = 0;
+        for e in 0..6u8 {
+            let world = (e + 1) % 6;
+            let want = w
+                .facing(&c, forest.neighbor(world), opposite_edge(world))
+                .and_then(|f| {
+                    c.sockets()
+                        .pair_edge_piece(SocketKind::Forest, f.socket.kind, e, false, false)
+                });
+            assert_eq!(pieces[e as usize], want, "local edge {e}");
+            if w.members().contains_key(&forest.neighbor(world)) {
+                assert_eq!(want.as_ref().map(KitRef::as_str), Some("forest_grass_edge"));
+                beside += 1;
+            }
+        }
+        assert_eq!(beside, 2, "a side cell meets two outer edges");
+        // Ring cells hold no pair pieces of their own; the forest's come back from the cache.
+        let mut cache = PairPieces::default();
+        let mut cells: Vec<Axial> = w.tiles().keys().copied().collect();
+        cells.extend(w.members().keys().copied());
+        cache.update(&c, cells, |cell| occupant(&w, &c, cell));
+        assert!(w.members().keys().all(|&m| cache.get(m).is_none()));
+        assert_eq!(cache.get(forest), Some(&pieces));
     }
 
     fn piece(cache: &PairPieces, cell: Axial, local: usize) -> Option<&str> {
@@ -1975,13 +2793,13 @@ mod tests {
         w.place(&c, FAR, "forest", o(1, 0)).unwrap();
         pairs_after(&w, &c, &mut cache, FAR);
         // Undo the place: the edge piece goes; redo it: the piece comes back.
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(
             pairs_after(&w, &c, &mut cache, FAR),
             BTreeSet::from([EAST, FAR])
         );
         assert_eq!(piece(&cache, EAST, 0), None);
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert_eq!(
             pairs_after(&w, &c, &mut cache, FAR),
             BTreeSet::from([EAST, FAR])
@@ -1990,10 +2808,10 @@ mod tests {
         // Bulldoze, then undo the bulldoze (the tile returns) and redo it (it goes again).
         w.bulldoze(&c, FAR).unwrap();
         pairs_after(&w, &c, &mut cache, FAR);
-        assert!(w.undo());
+        assert!(w.undo(&c));
         pairs_after(&w, &c, &mut cache, FAR);
         assert_eq!(piece(&cache, FAR, 2), Some("forest_forest_edge_e2"));
-        assert!(w.redo());
+        assert!(w.redo(&c));
         pairs_after(&w, &c, &mut cache, FAR);
         assert_eq!(piece(&cache, EAST, 0), None);
     }
@@ -2189,7 +3007,7 @@ mod tests {
         let old = w.replace(&c, EAST, "meadow", o(0, 2)).unwrap();
         assert_eq!(old.level, 0);
         assert_eq!(w.tile(EAST).unwrap().level, 2);
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(w.tile(EAST).unwrap().level, 0);
         let rots = w.replace_orientations(&c, EAST, def(&c, "meadow"));
         assert_eq!(rots[0].level, 0);

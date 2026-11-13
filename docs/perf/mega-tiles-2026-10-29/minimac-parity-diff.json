@@ -1,0 +1,44 @@
+{
+ "close mainA vs mainB": {
+  "pixels": 1600000,
+  "differing": 1221462,
+  "differing_over_5": 514748,
+  "max": 144,
+  "bbox": null
+ },
+ "close mainA vs branch": {
+  "pixels": 1600000,
+  "differing": 1010505,
+  "differing_over_5": 258125,
+  "max": 121,
+  "bbox": null
+ },
+ "close mainB vs branch": {
+  "pixels": 1600000,
+  "differing": 1197658,
+  "differing_over_5": 471074,
+  "max": 134,
+  "bbox": null
+ },
+ "overview mainA vs mainB": {
+  "pixels": 1600000,
+  "differing": 833876,
+  "differing_over_5": 72115,
+  "max": 81,
+  "bbox": null
+ },
+ "overview mainA vs branch": {
+  "pixels": 1600000,
+  "differing": 555625,
+  "differing_over_5": 16808,
+  "max": 88,
+  "bbox": null
+ },
+ "overview mainB vs branch": {
+  "pixels": 1600000,
+  "differing": 805272,
+  "differing_over_5": 53632,
+  "max": 83,
+  "bbox": null
+ }
+}

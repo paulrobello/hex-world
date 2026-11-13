@@ -1,0 +1,655 @@
+{
+  "pieceId": "massif_granite",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/massif_granite.py",
+    "sha256": "a4fdc1bce5034cae0ef2a59c21811d9587c227d0f7a0c02f6d6c7464e375fac6"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 1.2,
+    "bakeStats": {
+      "groundAO": {
+        "mean": 0.9843,
+        "min": 0,
+        "p01": 0.4706,
+        "p05": 0.9686,
+        "texels": 138324
+      },
+      "normalMissFraction": 0.00032,
+      "rockAO": {
+        "mean": 0.8071,
+        "min": 0,
+        "p01": 0.0941,
+        "p05": 0.2824,
+        "texels": 1581433
+      },
+      "rockAlbedoLuma": {
+        "mean": 0.5443,
+        "min": 0,
+        "p01": 0.183,
+        "p05": 0.183,
+        "texels": 1581433
+      },
+      "rockFaceAO": {
+        "areaMean": 0.7956,
+        "areaUnder0.1": 0.0141
+      },
+      "rockRoughness": {
+        "mean": 0.8392,
+        "min": 0,
+        "p01": 0.8392,
+        "p05": 0.8392,
+        "texels": 1581433
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.15,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 2048
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 1024
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 2048
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "groundStats": {
+      "lod0": {
+        "capTris": 3744,
+        "capTrisUnderRock": 724,
+        "groundMaxErrorAt": [
+          -4.05,
+          7.01,
+          10.39
+        ],
+        "groundMaxHeightErrorM": 0.315,
+        "trisPerSlot": {
+          "cap": 3145,
+          "scree": 599
+        }
+      },
+      "lod1": {
+        "capTris": 1761,
+        "capTrisUnderRock": 271,
+        "groundMaxErrorAt": [
+          -1.63,
+          6.06,
+          10.85
+        ],
+        "groundMaxHeightErrorM": 0.604,
+        "trisPerSlot": {
+          "cap": 1478,
+          "scree": 283
+        }
+      },
+      "lod2": {
+        "capTris": 616,
+        "capTrisUnderRock": 10,
+        "groundMaxErrorAt": [
+          14,
+          26.67,
+          4.9
+        ],
+        "groundMaxHeightErrorM": 1.898,
+        "trisPerSlot": {
+          "cap": 577,
+          "scree": 39
+        }
+      }
+    },
+    "lod2Drops": {},
+    "marginPx": 8,
+    "masksDensityPxPerM": {
+      "lod0_cap": {
+        "areaM2": 4568.4,
+        "faces": 3145,
+        "max": 2.95,
+        "median": 2.77,
+        "min": 2.54
+      }
+    },
+    "maxRayDistanceM": 0.3,
+    "receiverSignature": "84ea1aa262bb4c1aad19b9e2ee16421b9123df3c4ea2603e6cb1efc4df8662ea",
+    "rockReachM": 21.913,
+    "rockStats": {
+      "lod0": {
+        "highToLodM": [
+          1.152,
+          0.141
+        ],
+        "rockTris": 7148,
+        "toHighM": [
+          0.17,
+          0.08
+        ]
+      },
+      "lod1": {
+        "highToLodM": [
+          1.662,
+          0.369
+        ],
+        "rockTris": 2682,
+        "toHighM": [
+          0.266,
+          0.161
+        ]
+      },
+      "lod2": {
+        "highToLodM": [
+          2.879,
+          1.359
+        ],
+        "rockTris": 402,
+        "toHighM": [
+          0.581,
+          0.444
+        ]
+      }
+    },
+    "samples": 32,
+    "screeRoute": "unique",
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "lod0_rock": {
+        "areaM2": 2610.7,
+        "faces": 7148,
+        "max": 44.15,
+        "median": 24.78,
+        "min": 3.33
+      },
+      "lod0_scree": {
+        "areaM2": 283.6,
+        "faces": 599,
+        "max": 25.27,
+        "median": 24.77,
+        "min": 24.45
+      },
+      "lod1_rock": {
+        "areaM2": 2558,
+        "faces": 2682,
+        "max": 81.29,
+        "median": 23.81,
+        "min": 2.58
+      },
+      "lod1_scree": {
+        "areaM2": 280.6,
+        "faces": 283,
+        "max": 22.23,
+        "median": 21.8,
+        "min": 21.46
+      },
+      "lod2_rock": {
+        "areaM2": 2378.7,
+        "faces": 402,
+        "max": 9.63,
+        "median": 7.84,
+        "min": 5.91
+      },
+      "lod2_scree": {
+        "areaM2": 193.8,
+        "faces": 39,
+        "max": 7.89,
+        "median": 7.84,
+        "min": 7.68
+      }
+    },
+    "topM": 34.569
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 11468,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 5019,
+      "ratio": 0.43765259853505406
+    },
+    {
+      "lod": 2,
+      "tris": 1594,
+      "ratio": 0.13899546564352983
+    }
+  ],
+  "collider": {
+    "node": "massif_granite_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        33.71281433105469,
+        4.441662788391113,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        16.856407165527344,
+        4.441662788391113,
+        29.196151733398438
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -16.856407165527344,
+        4.441662788391113,
+        29.196151733398438
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -33.71281433105469,
+        4.441662788391113,
+        4.1286287438141184e-15
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -16.856407165527344,
+        4.441662788391113,
+        -29.196151733398438
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        16.856407165527344,
+        4.441662788391113,
+        -29.196151733398438
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "lod0_rock": {
+      "areaM2": 2610.7,
+      "faces": 7148,
+      "max": 44.15,
+      "median": 24.78,
+      "min": 3.33
+    },
+    "lod0_scree": {
+      "areaM2": 283.6,
+      "faces": 599,
+      "max": 25.27,
+      "median": 24.77,
+      "min": 24.45
+    },
+    "lod1_rock": {
+      "areaM2": 2558,
+      "faces": 2682,
+      "max": 81.29,
+      "median": 23.81,
+      "min": 2.58
+    },
+    "lod1_scree": {
+      "areaM2": 280.6,
+      "faces": 283,
+      "max": 22.23,
+      "median": 21.8,
+      "min": 21.46
+    },
+    "lod2_rock": {
+      "areaM2": 2378.7,
+      "faces": 402,
+      "max": 9.63,
+      "median": 7.84,
+      "min": 5.91
+    },
+    "lod2_scree": {
+      "areaM2": 193.8,
+      "faces": 39,
+      "max": 7.89,
+      "median": 7.84,
+      "min": 7.68
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "hero",
+      "ktxMax": 11500000,
+      "ktxBytes": {
+        "bc7": 6089370,
+        "astc": 6166759
+      },
+      "glbBytes": 583532
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/massif_granite/massif_granite.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 12,
+        "bytes": 3086742,
+        "sha256": "ff3346df7c8f73106bfffc8fc8fb57e8fa706216b83b3cef5691f30e81af4fd9"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/massif_granite/massif_granite.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 12,
+        "bytes": 3088023,
+        "sha256": "8563d06d24c40c83c499823cc9884caba4b30d20acd951905f3f367a4bf754da"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/massif_granite/massif_granite.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 5484267,
+        "sha256": "3308492d38bb11b9f5ac9ef552e113ae1616d9cd7a07878ee66391cdefc917cd"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/massif_granite/massif_granite.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 11,
+        "bytes": 62135,
+        "sha256": "9fc13237e34c9c32d42232c5dac3a71874407b0714cb6980086ce4955b6fed34"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/massif_granite/massif_granite.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 11,
+        "bytes": 61150,
+        "sha256": "e5c2aff2749f6c8587c430c583ab4f946722eef9b2ec9b04654dc31bcf555a4f"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/massif_granite/massif_granite.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 87056,
+        "sha256": "97070c98d86ccb9d014a0149ce5020ef2014ffe6bd3e527e9b86369b63028c4e"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/massif_granite/massif_granite.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 12,
+        "bytes": 2778297,
+        "sha256": "123aa8305a6490999561e17ccfe5c58b9317b7b813d3281a243aaafd82556636"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/massif_granite/massif_granite.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 12,
+        "bytes": 2846308,
+        "sha256": "5315ca2c0432c3046f96dc607162f35e45f00361fefd3e658b85586e7467b68c"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/massif_granite/massif_granite.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 4430982,
+        "sha256": "7d44c8fd87f1e9329af45481cbbe2eba2d659d4666b151ce2f048761a20b3e5f"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/massif_granite/massif_granite.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 162196,
+        "sha256": "887035560d5417668ad47b26419164f5cceb89637235ca4b65a159595ab7cd4a"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/massif_granite/massif_granite.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 171278,
+        "sha256": "9a96034d7406fd5eff3d4528a3558fa8bc2f0f77cb5a1de668ce29a8bb00eec5"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/massif_granite/massif_granite.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 270692,
+        "sha256": "a5b5960928e6db32d29ff0dac2fc985cfaeb51e6a874fd84b02b27d59f55a4e0"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.glb",
+      "sha256": "4ef7140ff37deee4d8848b35cdac384bb9404a1bb21f9704b5648b3ff527d148",
+      "bytes": 583532
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.bc7.ktx2",
+      "sha256": "ff3346df7c8f73106bfffc8fc8fb57e8fa706216b83b3cef5691f30e81af4fd9",
+      "bytes": 3086742
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.astc.ktx2",
+      "sha256": "8563d06d24c40c83c499823cc9884caba4b30d20acd951905f3f367a4bf754da",
+      "bytes": 3088023
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.png",
+      "sha256": "3308492d38bb11b9f5ac9ef552e113ae1616d9cd7a07878ee66391cdefc917cd",
+      "bytes": 5484267
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.bc7.ktx2",
+      "sha256": "9fc13237e34c9c32d42232c5dac3a71874407b0714cb6980086ce4955b6fed34",
+      "bytes": 62135
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.astc.ktx2",
+      "sha256": "e5c2aff2749f6c8587c430c583ab4f946722eef9b2ec9b04654dc31bcf555a4f",
+      "bytes": 61150
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.png",
+      "sha256": "97070c98d86ccb9d014a0149ce5020ef2014ffe6bd3e527e9b86369b63028c4e",
+      "bytes": 87056
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.bc7.ktx2",
+      "sha256": "123aa8305a6490999561e17ccfe5c58b9317b7b813d3281a243aaafd82556636",
+      "bytes": 2778297
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.astc.ktx2",
+      "sha256": "5315ca2c0432c3046f96dc607162f35e45f00361fefd3e658b85586e7467b68c",
+      "bytes": 2846308
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.png",
+      "sha256": "7d44c8fd87f1e9329af45481cbbe2eba2d659d4666b151ce2f048761a20b3e5f",
+      "bytes": 4430982
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.bc7.ktx2",
+      "sha256": "887035560d5417668ad47b26419164f5cceb89637235ca4b65a159595ab7cd4a",
+      "bytes": 162196
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.astc.ktx2",
+      "sha256": "9a96034d7406fd5eff3d4528a3558fa8bc2f0f77cb5a1de668ce29a8bb00eec5",
+      "bytes": 171278
+    },
+    {
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.png",
+      "sha256": "a5b5960928e6db32d29ff0dac2fc985cfaeb51e6a874fd84b02b27d59f55a4e0",
+      "bytes": 270692
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/massif_granite/ref-1.jpg",
+      "sha256": "83941c36f9629475c5c3af4eca221ffe4f5ce83498831b151ed9b3e17cc1cc03",
+      "sourceSha256": "a3b86801c4a3d5a41b97db3d8305aae64c8c9460b18c01425b688a3c16362343",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "18592c3e-9693-4f7f-ba03-19513d3a01dd",
+      "prompt": "Mountain massif tile: one single solid diorama tile shaped like seven regular hexagons fused together into a honeycomb cluster, seven hexagons, a centre and six around it, the outer border an 18-sided zig-zag outline of eighteen straight flat sides each 16 m long, with twelve outward-pointing corners and six inward notches, not a plain hexagon and not a circle, about 84 m across, the whole tile centred in frame with plain grey margin all round. The top is one continuous landscape with no grid lines, grooves, gaps or seams between the seven hexagons, so the hexagons show only in the zig-zag outline, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the central hexagon rises one broad weathered granite dome about 20 m high, its smooth rounded grassy shoulders swelling gently up out of the meadow across the six surrounding hexagons, crowned by three granite tors of huge rounded blocks stacked like piled cushions, with aprons of pale grey scree and loose fallen boulders spilling down the slopes below the tors, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. All the way round inside the zig-zag rim runs a band of flat open meadow about 10 m wide, level with the rim on every side, lush dense clumpy meadow grass with a few small wildflowers, one even fresh green from the rim to the foot of the slopes with no lighter or darker band. The slopes, rock and scree all start inside that band, and none of them reaches the rim or the side walls. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so the whole zig-zag outline of the seven hexagons reads clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/massif_granite/ref-2.jpg",
+      "sha256": "c1006c967638abddebc76b3b348f514f4f399b03763960ce197edf5ced2d8607",
+      "sourceSha256": "7db3eb3d86f41f0ee4d36cc9a2c7c54b0b5ba063cd5c0e850e6b4411f3885f39",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "95f532b8-1994-42fc-a6e9-7c5646f1a8b5",
+      "prompt": "Mountain massif tile: one single solid diorama tile shaped like seven regular hexagons fused together into a honeycomb cluster, seven hexagons, a centre and six around it, the outer border an 18-sided zig-zag outline of eighteen straight flat sides each 16 m long, with twelve outward-pointing corners and six inward notches, not a plain hexagon and not a circle, about 84 m across, the whole tile centred in frame with plain grey margin all round. The top is one continuous landscape with no grid lines, grooves, gaps or seams between the seven hexagons, so the hexagons show only in the zig-zag outline, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the central hexagon rises a taller craggy granite peak about 36 m high with a jagged summit, steep exposed cliffs and buttresses of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, split by vertical joints on its upper half, long grey scree fans in the gullies between the buttresses, its lower slopes grassy and spreading out across the six surrounding hexagons, with a few small groups of hardy Scots pines and dark spruce low on the lower slopes. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, and the rock and scree stay well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the lower slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so the whole zig-zag outline of the seven hexagons reads clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/massif_granite/ref-3.jpg",
+      "sha256": "be9c52eac01c9b65970fc874af59741bc40978c8343080de2e828a572bba6dc9",
+      "sourceSha256": "293f234cea437f93cfb479c71199a130d5d2b4693552008f7d157f15fcce6bdb",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "29e35dc1-9127-4a4f-a3d2-20230ccf2253",
+      "prompt": "Mountain massif tile: one single solid diorama tile shaped like seven regular hexagons fused together into a honeycomb cluster, seven hexagons, a centre and six around it, the outer border an 18-sided zig-zag outline of eighteen straight flat sides each 16 m long, with twelve outward-pointing corners and six inward notches, not a plain hexagon and not a circle, about 84 m across, the whole tile centred in frame with plain grey margin all round. The top is one continuous landscape with no grid lines, grooves, gaps or seams between the seven hexagons, so the hexagons show only in the zig-zag outline, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the central hexagon rises a lower broad rounded granite massif about 14 m high that clearly rises as a hill above the flat meadow, its long gentle rolling slopes spreading across the six surrounding hexagons and covered in purple-flowering heather with patches of golden-brown bracken that thin out gradually into the meadow grass at the foot of the slopes, wide boulder fields of scattered rounded granite boulders across its flanks and a few low flat granite outcrops near the top, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, and the rock and scree stay well inside the rim, never reaching it or the side walls. Between the heather patches and around the boulders grows the same fresh green meadow grass, never pale, dry or yellow. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so the whole zig-zag outline of the seven hexagons reads clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/massif_granite/ref-4.jpg",
+      "sha256": "9f1b218a82eb851fbeda302b3efa0e6189c3cec0657b76fc38c6d9804117c72c",
+      "sourceSha256": "ce73454782a9bb7c5d5c500604b438c9451fc43adc0f18e58b16ce63165c0bbc",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "58a71f2f-3c9c-4028-ace5-d51c92a9812c",
+      "prompt": "Mountain massif tile: one single solid diorama tile shaped like seven regular hexagons fused together into a honeycomb cluster, seven hexagons, a centre and six around it, the outer border an 18-sided zig-zag outline of eighteen straight flat sides each 16 m long, with twelve outward-pointing corners and six inward notches, not a plain hexagon and not a circle, about 84 m across, the whole tile centred in frame with plain grey margin all round. The top is one continuous landscape with no grid lines, grooves, gaps or seams between the seven hexagons, so the hexagons show only in the zig-zag outline, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the central hexagon rises a taller craggy granite peak about 36 m high with a jagged summit, steep exposed cliffs and buttresses of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, split by vertical joints on its upper half, long grey scree fans in the gullies between the buttresses, its lower slopes grassy and spreading out across the six surrounding hexagons, with a few small groups of hardy Scots pines and dark spruce low on the lower slopes. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, and the rock and scree stay well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the lower slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a very low camera close to the ground just beyond the front rim, looking almost level across the tile at only about 15 degrees above the horizon, so the flat meadow at the front foreshortens into a narrow strip, the front rim and its dark earth side walls run across the bottom of the frame, and the peak's full silhouette rises against the plain grey backdrop"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-11-13T07:24:44.280Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-10-29",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/massif_granite/ref-2.jpg"
+      ],
+      "notes": "ref-2, the craggy granite peak (about 36 m) with cliffs, scree fans and a few pines, even Meadow grass from rim to rock. Answered in chat (\"ref-2 approved\") from docs/checkpoints/massif_granite/reference/refs-sheet.jpg (A53 Q1 O1). Height and scree were not answered separately and are taken as drawn: peak about 36 m (A53 Q2 O1); cliffs and scree fans sculpted into the piece as landform, loose boulders on the ring stay runtime scatter (A53 Q3 O1). ref-4 is a second roll of the same prompt from a low camera and may guide the silhouette."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-10-29",
+      "notes": "Pending owner review; not an approval. massif_granite form pass 3 (owner A55 Q1 O1, 2026-10-29: taller grassy flanks as in ref-2; the orchestrator's ruling of 2026-10-30: the rock's shape and colour stay, so only the grass rises; pine density and rock colour kept, Q2 O1 and Q3 O1) against assets-source/refs/massif_granite/ref-2.jpg (owner A53), with ref-4 as the silhouette guide: the 7-cell mega-tile ground piece, jointed slab granite (a summit block with lower tops and six ridge spines running into the ring cells, cleft between them, with slab facets and joints carved into a meshed volume, non-heightfield) exactly as the form pass built it, top 34.57 m, half buried in grass flanks that rise from the Meadow rim (at tile level only on its outer 1.6 m) to a rock foot about 9 m up (7.4-10.7 m), scree fans from the clefts and the 18-edge rim, kind hero, about 11,500 LOD0 tris. Texture route O1 with the kit gate's texel floor scoped to 20 px/m (owner A54 Q1 O1); the lower-slope pines are a runtime scatter rule (A54 Q2 O1). Review sheet: docs/checkpoints/massif_granite/form-pass-3-sheet.jpg (ref-2 beside headless EEVEE stills of this pass and the original form pass at ref-2's fitted camera, the play camera and a low view, the top-down view and the silhouette overlay, all at the same light); in-engine views come from the orchestrator. The controller records the owner's decision."
+    }
+  ]
+}

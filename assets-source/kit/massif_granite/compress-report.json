@@ -1,0 +1,183 @@
+{
+  "name": "massif_granite",
+  "date": "2026-11-13T07:08:11.988Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 12,
+      "bytes": 3086742,
+      "sha256": "ff3346df7c8f73106bfffc8fc8fb57e8fa706216b83b3cef5691f30e81af4fd9"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 12,
+      "bytes": 3088023,
+      "sha256": "8563d06d24c40c83c499823cc9884caba4b30d20acd951905f3f367a4bf754da"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/massif_granite/massif_granite.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 5484267,
+      "sha256": "3308492d38bb11b9f5ac9ef552e113ae1616d9cd7a07878ee66391cdefc917cd"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 11,
+      "bytes": 62135,
+      "sha256": "9fc13237e34c9c32d42232c5dac3a71874407b0714cb6980086ce4955b6fed34"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 11,
+      "bytes": 61150,
+      "sha256": "e5c2aff2749f6c8587c430c583ab4f946722eef9b2ec9b04654dc31bcf555a4f"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/massif_granite/massif_granite.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 87056,
+      "sha256": "97070c98d86ccb9d014a0149ce5020ef2014ffe6bd3e527e9b86369b63028c4e"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 12,
+      "bytes": 2778297,
+      "sha256": "123aa8305a6490999561e17ccfe5c58b9317b7b813d3281a243aaafd82556636"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 12,
+      "bytes": 2846308,
+      "sha256": "5315ca2c0432c3046f96dc607162f35e45f00361fefd3e658b85586e7467b68c"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/massif_granite/massif_granite.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 4430982,
+      "sha256": "7d44c8fd87f1e9329af45481cbbe2eba2d659d4666b151ce2f048761a20b3e5f"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 162196,
+      "sha256": "887035560d5417668ad47b26419164f5cceb89637235ca4b65a159595ab7cd4a"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 171278,
+      "sha256": "9a96034d7406fd5eff3d4528a3558fa8bc2f0f77cb5a1de668ce29a8bb00eec5"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/massif_granite/massif_granite.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 270692,
+      "sha256": "a5b5960928e6db32d29ff0dac2fc985cfaeb51e6a874fd84b02b27d59f55a4e0"
+    }
+  ],
+  "budgets": {
+    "class": "hero",
+    "ktxMax": 11500000,
+    "ktxBytes": {
+      "bc7": 6089370,
+      "astc": 6166759
+    },
+    "glbBytes": 583532
+  },
+  "glb": {
+    "bytes": 583532,
+    "sha256": "4ef7140ff37deee4d8848b35cdac384bb9404a1bb21f9704b5648b3ff527d148"
+  }
+}

@@ -44,9 +44,9 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 }
 
 /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
-/// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4): edges 0..5 for each
-/// inventory tile.
-const F1: [(&str, [SocketKind; 6]); 45] = [
+/// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4) and the massif (A52):
+/// edges 0..5 for each inventory tile (the centre's, for a footprint tile).
+const F1: [(&str, [SocketKind; 6]); 46] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -107,6 +107,7 @@ const F1: [(&str, [SocketKind; 6]); 45] = [
         "hillside_011111",
         [Grass, Grass, Grass, Grass, Grass, Grass],
     ),
+    ("massif_granite", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("road_ramp", [Road, Grass, Grass, Road, Grass, Grass]),
     (
         "road_tunnel_portal",
@@ -245,6 +246,33 @@ fn only_hillside_family_edges_leave_flat_zero() {
         if family {
             assert!(t.is_sloped(), "{} is a family tile but level", t.id);
         }
+    }
+}
+
+/// A52 Q1 O1, Q2 O1: a footprint tile meets the world through 18 plain outer edges, Grass, Flat and
+/// at its own level with no lane, carries no network, and turns through six distinct looks.
+#[test]
+fn footprint_tiles_have_eighteen_plain_outer_edges() {
+    let c = catalog();
+    let mega: Vec<&TileDef> = c.tiles().iter().filter(|t| t.is_mega()).collect();
+    assert_eq!(
+        mega.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(),
+        ["massif_granite"]
+    );
+    for t in mega {
+        let outer = &t.footprint.as_ref().unwrap().outer;
+        assert_eq!(outer.len(), hex_core::footprint::OUTER_EDGES, "{}", t.id);
+        for (j, s) in outer.iter().chain(&t.edges).enumerate() {
+            assert_eq!(
+                (s.kind, s.profile, s.height, s.lane),
+                (Grass, EdgeProfile::Flat, 0, None),
+                "{} socket {j}",
+                t.id
+            );
+        }
+        assert!(t.networks.is_empty() && t.nodes.is_empty(), "{}", t.id);
+        assert_eq!(t.look_period, Some(6), "{}", t.id);
+        assert!(t.raisable, "{}", t.id);
     }
 }
 

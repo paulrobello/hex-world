@@ -758,6 +758,8 @@ mod schema {
             "grade_preset": keys(&grade["presets"][0]),
             "play": keys(&place),
             "ghost": keys(&place["ghost"]),
+            "mega_slot": keys(&place["mega_slots"][0]),
+            "orientation": keys(&place["mega_slots"][0]["orientations"][0]),
             "bulldoze": keys(&bulldoze["bulldoze"]),
             "last_result": keys(&place["last_result"]),
             "tile": keys(&place["tiles"][0]),
@@ -796,6 +798,12 @@ mod schema {
                     "raisable": t.raisable,
                     "top": t.top(),
                     "tunnel": t.tunnel.as_ref().map(|m| m.edge),
+                    "footprint": t.is_mega(),
+                    "outer": t.footprint.as_ref().map(|f| f.outer.iter().map(|e| json!({
+                        "kind": kind_name(e.kind),
+                        "height": e.height,
+                        "profile": e.profile,
+                    })).collect::<Vec<_>>()),
                 })
             })
             .collect();
@@ -824,6 +832,11 @@ mod schema {
             "directional": directional,
             "hex_radius": HEX_RADIUS,
             "max_level": hex_core::MAX_LEVEL,
+            // The geometry pin: outer edge j is (ring cell, local edge), so TypeScript reads it.
+            "footprint_outer": (0..hex_core::footprint::OUTER_EDGES as u8)
+                .map(hex_core::footprint::outer_edge)
+                .map(|(ring, edge)| [ring, edge])
+                .collect::<Vec<_>>(),
         })
     }
 
@@ -885,6 +898,29 @@ mod schema {
         w
     }
 
+    /// A granite massif on level 1, centred two steps east of the start meadow, so single tiles
+    /// beside its members meet them across cliffs: a meadow and a forest that also touch the start,
+    /// and a river mouth east of it that only a member joins to the world.
+    fn massif_world(c: &TileCatalog) -> World {
+        let mut w = World::new(1);
+        let massif = c.get("massif_granite").unwrap();
+        let centre = Axial::new(2, 0);
+        let o = Orientation::new(2, 1);
+        assert!(w.legal_orientations(c, centre, massif).contains(&o));
+        w.place(c, centre, "massif_granite", o).unwrap();
+        for (q, r, id) in [(1, -1, "meadow"), (0, 1, "forest"), (4, 0, "river_mouth")] {
+            let cell = Axial::new(q, r);
+            let o = w.legal_orientations(c, cell, c.get(id).unwrap())[0];
+            w.place(c, cell, id, o).unwrap();
+        }
+        assert_eq!(
+            w.can_bulldoze(c, centre),
+            Err(hex_core::BulldozeError::WouldDisconnect)
+        );
+        assert_eq!(w.can_bulldoze(c, Axial::new(4, 0)), Ok(()));
+        w
+    }
+
     /// Legal orientations of every catalog tile at every frontier slot of the world a script
     /// leaves.
     fn parity(c: &TileCatalog, script: &str) -> Value {
@@ -898,7 +934,8 @@ mod schema {
     }
 
     /// Legal orientations (`[rotation, level]`, in hex-core order) of every catalog tile at every
-    /// frontier slot of `w`.
+    /// frontier slot of `w`, every footprint tile's legal centres as the state's `mega_slots`
+    /// publishes them, and the centre `World::mega_centre_for` picks for each frontier slot.
     fn parity_of(c: &TileCatalog, w: &World) -> Value {
         let tiles: Vec<Value> = w
             .tiles()
@@ -923,7 +960,33 @@ mod schema {
                 (format!("{},{}", s.q, s.r), per_tile)
             })
             .collect();
-        json!({ "tiles": tiles, "slots": slots })
+        let mega_slots: Vec<Value> = c
+            .tiles()
+            .iter()
+            .filter(|t| t.is_mega())
+            .flat_map(|t| {
+                w.mega_slots(c, t)
+                    .into_iter()
+                    .map(|(cell, legal)| crate::game::mega_slot_json(cell, &t.id, &legal))
+            })
+            .collect();
+        let mega_centres: BTreeMap<String, BTreeMap<String, [i32; 2]>> = w
+            .frontier()
+            .iter()
+            .map(|s| {
+                let per_tile = c
+                    .tiles()
+                    .iter()
+                    .filter(|t| t.is_mega())
+                    .filter_map(|t| {
+                        let a = w.mega_centre_for(c, *s, t)?;
+                        Some((t.id.clone(), [a.q, a.r]))
+                    })
+                    .collect();
+                (format!("{},{}", s.q, s.r), per_tile)
+            })
+            .collect();
+        json!({ "tiles": tiles, "slots": slots, "mega_slots": mega_slots, "mega_centres": mega_centres })
     }
 
     fn schema() -> Value {
@@ -958,7 +1021,7 @@ mod schema {
     fn parity_worlds() -> Value {
         let c = TileCatalog::builtin().unwrap();
         json!({
-            "about": "Legal orientations ([rotation, level], in hex-core order) of every tile at every frontier slot of seven worlds, from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
+            "about": "Legal orientations ([rotation, level], in hex-core order) of every tile at every frontier slot of eight worlds, each world's mega_slots and the centre a footprint tile takes for each frontier slot (mega_centres), from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
             "worlds": [
                 parity(&c, include_str!("../../../docs/checkpoints/play/play.json")),
                 parity(&c, include_str!("../../../docs/checkpoints/water-play/water-play.json")),
@@ -970,6 +1033,7 @@ mod schema {
                     &c,
                     include_str!("../../../docs/checkpoints/elevation/elevation.json"),
                 ),
+                parity_of(&c, &massif_world(&c)),
             ],
         })
     }

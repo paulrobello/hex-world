@@ -1,0 +1,55 @@
+// The granite massif (P4 mega tile, A52): one piece, the Meadow-matched ground ring and the peak,
+// covering the centre cell and its six-cell ring. Its 18 outer edges are plain Grass at its own
+// level (A52 Q1 O1, Q2 O1), listed in outer-index order (hex-core `footprint::outer_edge`). The
+// centre's six edges face members only. Without `look_period: Some(6)` the all-Grass sockets
+// would fold its six turns into one.
+(
+    id: "massif_granite",
+    biome: Grass,
+    base: "massif_granite",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    footprint: Some((
+        outer: [
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+            (kind: Grass),
+        ],
+    )),
+    // Each ring cell scatters as a meadow (these five rules are meadow's, in its order), then the
+    // lower-slope pines in small drifts within `scatter::PINE_BAND` (owner A54 Q2 O1).
+    props: (
+        scatter: [
+            (piece: "outcrop_granite", density: 0.03),
+            (piece: "boulder_granite", density: 0.06),
+            (piece: "wildflower_clump", density: 4.0, drift: true),
+            (piece: "rock_small", density: 0.3),
+            (piece: "wildflower_single", density: 6.0, vary: 0.8),
+            (piece: "tree_forest", density: 0.3, drift: true),
+            (piece: "sapling_spruce", density: 0.3, drift: true),
+        ],
+    ),
+    look_period: Some(6),
+    raisable: true,
+)

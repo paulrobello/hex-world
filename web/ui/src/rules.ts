@@ -1,8 +1,9 @@
 // The placement rules the sheet reads (PRD §4.1–4.2), from the Rust catalog and socket table in
 // bridge-schema.json. hex-core stays the authority: test/rules.test.ts checks
-// legalOrientations against hex-core's own answers for every slot of six worlds (rules-parity.json).
-import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
+// legalOrientations against hex-core's own answers for every slot of the parity worlds (rules-parity.json).
+import type { Cell, MegaSlot, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
+import { FOOTPRINT_EDGES, FOOTPRINT_INNER, FOOTPRINT_REFUSAL, MASSIF_SWAP, SINGLE_SWAP } from "./words.ts";
 
 /** A network crossing at an edge, in metres (hex-core `LaneSpec`): `[offset, width]`. */
 export type Lane = readonly [offset: number, width: number];
@@ -54,7 +55,21 @@ export interface TileDef {
   top: number;
   /** The local edge a tunnel portal's mouth opens on (hex-core `TileDef::tunnel`), null on every other tile. */
   tunnel: number | null;
+  /**
+   * Whether it covers its cell and the six around it (hex-core `TileDef::is_mega`). Such a tile never
+   * fits a frontier slot: where it fits comes from the engine's `play.mega_slots`.
+   */
+  footprint: boolean;
+  /**
+   * A footprint tile's 18 outer sockets in local outer-index order ({@link FOOTPRINT_OUTER}), each
+   * with its relative corner heights `[start, end]`; null for a single tile.
+   */
+  outer: { kind: SocketKind; heights: [number, number] }[] | null;
 }
+
+/** Relative corner heights `[start, end]` of an edge (hex-core `EdgeSocket::corners`). */
+const corners = (height: number, profile: string): [number, number] =>
+  profile === "Rise" ? [height, height + 1] : profile === "Fall" ? [height + 1, height] : [height, height];
 
 export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   id: t.id,
@@ -68,7 +83,14 @@ export const TILES: TileDef[] = schema.catalog.tiles.map((t) => ({
   raisable: t.raisable,
   top: t.top,
   tunnel: t.tunnel,
+  footprint: t.footprint,
+  outer: t.outer?.map((o) => ({ kind: o.kind as SocketKind, heights: corners(o.height, o.profile) })) ?? null,
 }));
+/**
+ * The geometry pin (hex-core `footprint::outer_edge`): outer edge j is `[ring cell, local edge]` of
+ * a footprint turned by 0.
+ */
+export const FOOTPRINT_OUTER = schema.catalog.footprint_outer as [number, number][];
 export const START_TILE: string = schema.catalog.start;
 /** Highest level a tile may stand on (hex-core `MAX_LEVEL`). */
 export const MAX_LEVEL: number = schema.catalog.max_level;
@@ -225,8 +247,81 @@ export const placementMeets = (theirs: Facing, mine: Facing): boolean =>
     absoluteMeet(mine.heights, mine.lane !== null, theirs.heights, theirs.lane !== null) !== "Refused") ||
   stopCloses(theirs, mine);
 
-export type TileMap = Map<string, PlayTile>;
-export const tileMap = (tiles: readonly PlayTile[]): TileMap => new Map(tiles.map((t) => [cellKey(t), t]));
+/**
+ * What covers a cell: a placed tile, or a ring cell of a footprint tile, which repeats its anchor's
+ * tile, rotation and level at its own `q`, `r` and names its `anchor` and the `ring` direction
+ * (world edge) from it.
+ */
+export interface Occupant extends PlayTile {
+  member: { anchor: Cell; ring: number } | null;
+}
+
+/** Every covered cell, keyed by {@link cellKey}: each tile at its cell and a footprint's six members. */
+export type TileMap = Map<string, Occupant>;
+export function tileMap(tiles: readonly PlayTile[]): TileMap {
+  const map: TileMap = new Map();
+  for (const t of tiles) {
+    map.set(cellKey(t), { ...t, member: null });
+    if (!tileDef(t.tile)?.footprint) continue;
+    const anchor = { q: t.q, r: t.r };
+    for (let ring = 0; ring < 6; ring++) {
+      const c = neighbor(t, ring);
+      map.set(cellKey(c), { ...t, q: c.q, r: c.r, member: { anchor, ring } });
+    }
+  }
+  return map;
+}
+
+/** The anchor of the tile covering `cell`: the cell itself, a member's anchor, or null when it is empty. */
+const anchorOf = (tiles: TileMap, cell: Cell): Cell | null => {
+  const o = tiles.get(cellKey(cell));
+  return o ? (o.member?.anchor ?? { q: o.q, r: o.r }) : null;
+};
+
+/** One side of a seam at the level its tile stands on. */
+export interface LevelFacing extends Facing {
+  level: number;
+  heights: [number, number];
+}
+
+/**
+ * What the occupant of `cell` shows across its world edge `w` (hex-core `World::facing`): a single
+ * tile's rotated edge; a footprint member's outer socket, read through {@link FOOTPRINT_OUTER}. Null
+ * when the cell is empty or the edge is interior to a footprint.
+ */
+export function facingAt(tiles: TileMap, cell: Cell, w: number): LevelFacing | null {
+  const n = tiles.get(cellKey(cell));
+  const def = n && tileDef(n.tile);
+  if (!def) return null;
+  const level = n.level;
+  if (!def.footprint)
+    return {
+      kind: rotated(def, n.rotation)[w]!,
+      land: rotatedLand(def, n.rotation)[w]!,
+      stopped: rotatedStopped(def, n.rotation)[w]!,
+      rail: def.rail,
+      level,
+      heights: rotatedHeights(def, n.rotation, level)[w]!,
+      lane: rotatedLanes(def, n.rotation)[w]!,
+    };
+  if (!n.member) return null;
+  const ring = (n.member.ring - n.rotation + 6) % 6;
+  const edge = (w - n.rotation + 6) % 6;
+  const j = FOOTPRINT_OUTER.findIndex(([r, e]) => r === ring && e === edge);
+  const s = def.outer?.[j];
+  if (!s) return null;
+  // hex-core `validate_footprint`: outer sockets carry no lane and no land side, and a footprint
+  // face has no rail stop (`Facing::local` is None).
+  return {
+    kind: s.kind,
+    land: null,
+    stopped: false,
+    rail: def.rail,
+    level,
+    heights: [s.heights[0] + level, s.heights[1] + level],
+    lane: null,
+  };
+}
 
 /** The socket kinds around a slot, by world edge, null where nothing touches it. */
 export type Kinds = (SocketKind | null)[];
@@ -248,23 +343,7 @@ export interface Needs {
 }
 
 export function needsAt(slot: Cell, tiles: TileMap): Needs {
-  const facing = [0, 1, 2, 3, 4, 5].map((w) => {
-    const n = tiles.get(cellKey(neighbor(slot, w)));
-    const def = n && tileDef(n.tile);
-    const back = (w + 3) % 6;
-    const level = n?.level ?? 0;
-    return def
-      ? {
-          kind: rotated(def, n.rotation)[back]!,
-          land: rotatedLand(def, n.rotation)[back]!,
-          stopped: rotatedStopped(def, n.rotation)[back]!,
-          rail: def.rail,
-          level,
-          heights: rotatedHeights(def, n.rotation, level)[back]!,
-          lane: rotatedLanes(def, n.rotation)[back]!,
-        }
-      : null;
-  });
+  const facing = [0, 1, 2, 3, 4, 5].map((w) => facingAt(tiles, neighbor(slot, w), (w + 3) % 6));
   return {
     kinds: facing.map((f) => f?.kind ?? null),
     land: facing.map((f) => f?.land ?? null),
@@ -278,6 +357,39 @@ export function needsAt(slot: Cell, tiles: TileMap): Needs {
 
 export const isSlot = (c: Cell, tiles: TileMap): boolean =>
   !tiles.has(cellKey(c)) && [0, 1, 2, 3, 4, 5].some((w) => tiles.has(cellKey(neighbor(c, w))));
+
+/**
+ * Whether the Tiles sheet may sit on `c`: a frontier slot, or a legal centre of the selected footprint
+ * tile (`play.mega_slots`), which can lie further out.
+ */
+export const isSheetSlot = (c: Cell, tiles: TileMap, megaSlots: readonly MegaSlot[], selected: string): boolean =>
+  isSlot(c, tiles) || megaSlots.some((m) => m.tile === selected && m.q === c.q && m.r === c.r);
+
+/** Why a replace of the tile at `target` by `selected` is refused as a footprint mismatch, else null. */
+export function swapRefusal(selected: string, target: Cell, tiles: TileMap): string | null {
+  const there = tileDef(tiles.get(cellKey(target))?.tile ?? "");
+  const mine = tileDef(selected);
+  if (!there || !mine || there.footprint === mine.footprint) return null;
+  return there.footprint ? MASSIF_SWAP : SINGLE_SWAP;
+}
+
+/**
+ * The tag text for a refused placement `e` over a placed tile: a tunnel's cover, a level it cannot
+ * stand at, a single-tile/massif mismatch, else the socket phrase.
+ */
+export function refusedWhy(
+  e: { q: number; r: number; tile: string; level: number; reason: string },
+  tiles: TileMap,
+  covered: boolean,
+): string {
+  const def = tileDef(e.tile);
+  const why = covered
+    ? "This tile covers a tunnel."
+    : e.reason.includes("cannot stand at level")
+      ? `${e.reason[0]!.toUpperCase()}${e.reason.slice(1)}.`
+      : (swapRefusal(e.tile, e, tiles) ?? (def ? fit(def, needsAt(e, tiles), e.level).why : ""));
+  return why || "An edge doesn't match its neighbour.";
+}
 
 /** What my edge on world edge `w` of `def` turned by k on `level` offers, and what it faces. */
 function seam(
@@ -339,6 +451,7 @@ export interface Orientation {
 /**
  * Orientations in which `def` fits a slot with these needs, in hex-core `legal_orientations` order:
  * cliff-free first, then by level, then by rotation. A tile that is not raisable stands on level 0.
+ * None for a footprint tile, whose centre is never a frontier slot.
  */
 export function legalOrientations(def: TileDef, needs: Needs): Orientation[] {
   return legalEntries(def, needs).map((e) => e.o);
@@ -346,6 +459,7 @@ export function legalOrientations(def: TileDef, needs: Needs): Orientation[] {
 
 /** {@link legalOrientations} with each orientation's cliff flag (hex-core `cliff_edges` has any). */
 function legalEntries(def: TileDef, needs: Needs): { o: Orientation; cliff: boolean }[] {
+  if (def.footprint) return [];
   const top = def.raisable ? MAX_LEVEL - def.top : 0;
   const out: { o: Orientation; cliff: boolean }[] = [];
   for (let level = 0; level <= top; level++)
@@ -438,6 +552,7 @@ export interface Fit {
 }
 
 export function fit(def: TileDef, needs: Needs, level?: number): Fit {
+  if (def.footprint) return { ok: false, legal: [], distinct: [], why: FOOTPRINT_REFUSAL, bestK: 0, level: level ?? 0 };
   const all = legalOrientations(def, needs);
   const on = level ?? all[0]?.level ?? 0;
   const legal = legalRotations(def, needs, on);
@@ -483,8 +598,69 @@ export interface EntryFit {
   best: Turn;
 }
 
-/** The fit of a picker entry: fitting when any member fits (the Legend's "Fits here" filter). */
-export function fitEntry(entry: PickerEntry, needs: Needs): EntryFit {
+/**
+ * Where footprint tile `tile` stands for `slot`, from the engine's legal centres (`play.mega_slots`):
+ * the first of the slot itself, then `neighbor(slot, 0..6)`, that is a legal centre (hex-core
+ * `World::mega_centre_for`), with its orientations in hex-core order; null where none covers it.
+ */
+export function megaFit(
+  slot: Cell,
+  megaSlots: readonly MegaSlot[],
+  tile: string,
+): { centre: Cell; orientations: Orientation[] } | null {
+  for (const c of [slot, ...[0, 1, 2, 3, 4, 5].map((e) => neighbor(slot, e))]) {
+    const m = megaSlots.find((s) => s.tile === tile && s.q === c.q && s.r === c.r);
+    if (m) return { centre: { q: m.q, r: m.r }, orientations: m.orientations };
+  }
+  return null;
+}
+
+/** The slot an entry is fitted for and the engine's legal footprint centres, which a footprint entry reads. */
+export interface MegaContext {
+  slot: Cell;
+  megaSlots: readonly MegaSlot[];
+  /** Cell occupancy, to tell a refusal for lack of room from one for clashing edges. */
+  tiles?: TileMap;
+}
+
+/**
+ * Whether some footprint centred on the slot or beside it has all seven cells free and touches a
+ * placed tile: occupancy only, so a refusal there is down to the edges (the engine's `mega_slots`
+ * stays the only source of legality).
+ */
+function roomBeside(slot: Cell, tiles: TileMap): boolean {
+  return [slot, ...[0, 1, 2, 3, 4, 5].map((e) => neighbor(slot, e))].some((centre) => {
+    const cells = [centre, ...[0, 1, 2, 3, 4, 5].map((e) => neighbor(centre, e))];
+    return (
+      cells.every((c) => !tiles.has(cellKey(c))) &&
+      cells.some((c) => [0, 1, 2, 3, 4, 5].some((e) => tiles.has(cellKey(neighbor(c, e)))))
+    );
+  });
+}
+
+/** A footprint entry's fit: R walks the engine's orientations at the centre covering the slot. */
+function footprintFit(def: TileDef, mega: MegaContext | undefined): EntryFit {
+  const at = mega && megaFit(mega.slot, mega.megaSlots, def.id);
+  const reps: Orientation[] = [];
+  for (const o of at?.orientations ?? [])
+    if (!reps.some((r) => r.level === o.level && orientation(def, r.rotation) === orientation(def, o.rotation)))
+      reps.push(o);
+  const seq = reps.map((o) => ({ def, k: o.rotation, level: o.level }));
+  if (seq.length) return { ok: true, seq, why: "", best: seq[0]! };
+  const why = mega?.tiles && roomBeside(mega.slot, mega.tiles) ? FOOTPRINT_EDGES : FOOTPRINT_REFUSAL;
+  return { ok: false, seq, why, best: { def, k: 0, level: 0 } };
+}
+
+/**
+ * The fit of a picker entry: fitting when any member fits (the Legend's "Fits here" filter). A
+ * footprint entry fits only where `mega` says a legal centre covers the slot.
+ */
+export function fitEntry(entry: PickerEntry, needs: Needs, mega?: MegaContext): EntryFit {
+  const first = entry.tiles[0]!;
+  if (first.footprint) return footprintFit(first, mega);
+  // A centre inside the world has no frontier needs, so a single tile would read as fitting anywhere.
+  if (mega?.tiles && !isSlot(mega.slot, mega.tiles))
+    return { ok: false, seq: [], why: FOOTPRINT_INNER, best: { def: first, k: 0, level: 0 } };
   const fits = entry.tiles.map((def) => ({ def, f: fit(def, needs) }));
   const keyed = entry.tiles.flatMap((def, i) => {
     const reps: { def: TileDef; o: Orientation; cliff: boolean }[] = [];
@@ -605,6 +781,7 @@ const COVER_DEF = "meadow";
 export function tunnelCover(tiles: TileMap): Set<string> {
   const cover = new Set<string>();
   for (const a of tiles.values()) {
+    if (a.member) continue;
     const mouth = tileDef(a.tile)?.tunnel;
     if (mouth == null) continue;
     const edge = (mouth + a.rotation) % 6;
@@ -627,14 +804,16 @@ export function tunnelCover(tiles: TileMap): Set<string> {
 export const isCover = (tiles: TileMap, cell: Cell): boolean => tunnelCover(tiles).has(cellKey(cell));
 
 /**
- * Tiles that removing `target` would cut off: everything outside the largest remaining part. A tunnel
- * cover cell is refused before any connectivity check (hex-core `BulldozeError::TunnelCover`), so
- * nothing is cut off by it.
+ * Tiles that removing the tile covering `target` (a footprint whole) would cut off: every tile
+ * outside the remaining part with the most tiles, connected over covered cells. A tunnel cover cell
+ * is refused before any connectivity check (hex-core `BulldozeError::TunnelCover`), so nothing is
+ * cut off by it.
  */
 export function cutOff(tiles: TileMap, target: Cell): PlayTile[] {
   if (isCover(tiles, target)) return [];
-  const rest = new Map(tiles);
-  rest.delete(cellKey(target));
+  const gone = anchorOf(tiles, target);
+  const goneKey = gone && cellKey(gone);
+  const rest = new Map([...tiles].filter(([, t]) => cellKey(t.member?.anchor ?? t) !== goneKey));
   const seen = new Set<string>();
   const parts: PlayTile[][] = [];
   for (const [key, t] of rest) {
@@ -644,7 +823,7 @@ export function cutOff(tiles: TileMap, target: Cell): PlayTile[] {
     seen.add(key);
     while (stack.length) {
       const c = stack.pop()!;
-      part.push(c);
+      if (!c.member) part.push(tileOf(c));
       for (let w = 0; w < 6; w++) {
         const nk = cellKey(neighbor(c, w));
         const n = rest.get(nk);
@@ -665,9 +844,17 @@ export interface TileDiff {
   removed: PlayTile[];
 }
 
+/** The placed tile an anchor's occupant stands for. */
+const tileOf = ({ member: _, ...t }: Occupant): PlayTile => t;
+
 export function diffTiles(before: TileMap, after: TileMap): TileDiff {
-  const added = [...after.values()].filter((t) => before.get(cellKey(t))?.tile !== t.tile);
-  const removed = [...before.values()].filter((t) => after.get(cellKey(t))?.tile !== t.tile);
+  const tiles = (m: TileMap) => [...m.values()].filter((t) => !t.member);
+  const added = tiles(after)
+    .filter((t) => before.get(cellKey(t))?.tile !== t.tile)
+    .map(tileOf);
+  const removed = tiles(before)
+    .filter((t) => after.get(cellKey(t))?.tile !== t.tile)
+    .map(tileOf);
   return { added, removed };
 }
 

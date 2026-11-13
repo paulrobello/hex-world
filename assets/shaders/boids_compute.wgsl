@@ -12,6 +12,9 @@ struct Params {
     sky: vec4<f32>,
     // How far the play altitude band lifts over the highest placed level (plan::BoidPlan::sky_lift).
     lift: f32,
+    // The footprint peaks it also lifts over (plan::BoidPlan::peaks): centre xz, top y, reach w.
+    peak_count: u32,
+    peaks: array<vec4<f32>, 8>,
 };
 @group(0) @binding(0) var<storage, read_write> boids: array<Boid>;
 @group(0) @binding(1) var<uniform> params: Params;
@@ -47,6 +50,8 @@ const APPROACH: f32 = 8.0;
 const SKY_LOW: f32 = 22.0;
 const SKY_HIGH: f32 = 44.0;
 const TAU: f32 = 6.2831853;
+// plan::PEAK_FALLOFF.
+const PEAK_FALLOFF: f32 = 24.0;
 
 fn hash(n: u32) -> f32 {
     var x = n * 747796405u + 2891336453u;
@@ -141,9 +146,20 @@ fn stress(i: u32, me: Boid) -> Boid {
     return Boid(vec4<f32>(me.pos.xyz + v * params.dt, me.pos.w), vec4<f32>(v, FLY), me.anim);
 }
 
+// The band's lift over p (plan::BoidPlan::lift_at): the world's, and within a footprint peak's
+// reach its top, falling back over PEAK_FALLOFF.
+fn lift_at(p: vec2<f32>) -> f32 {
+    var l = params.lift;
+    for (var k = 0u; k < min(params.peak_count, 8u); k++) {
+        let pk = params.peaks[k];
+        l = max(l, pk.y * (1.0 - smoothstep(pk.w, pk.w + PEAK_FALLOFF, distance(p, pk.xz))));
+    }
+    return l;
+}
+
 // A play bird: flocks over the world, flies to its roost when sent and sits there, launches when
 // released.
-fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
+fn fly(i: u32, me: Boid, c: Ctl, lift: f32) -> Boid {
     let p = me.pos.xyz;
     var v = me.vel.xyz;
     let dt = params.dt;
@@ -210,8 +226,8 @@ fn fly(i: u32, me: Boid, c: Ctl) -> Boid {
     if (od > params.sky.w) {
         v -= vec3<f32>(off.x, 0.0, off.y) / od * ((od - params.sky.w) * 0.01 * k);
     }
-    let low = SKY_LOW + params.lift;
-    let high = SKY_HIGH + params.lift;
+    let low = SKY_LOW + lift;
+    let high = SKY_HIGH + lift;
     if (p.y < low) { v.y += (low - p.y) * 0.05 * k; }
     if (p.y > high) { v.y -= (p.y - high) * 0.05 * k; }
     v.y -= v.y * 0.02 * k;
@@ -282,9 +298,21 @@ fn swim(i: u32, me: Boid, c: Ctl) -> Boid {
     return Boid(vec4<f32>(st.p, me.pos.w), vec4<f32>(st.v, SWIM), me.anim);
 }
 
+// Two entry points (boids.rs dispatches update_peaks only while the plan has footprint peaks):
+// compiling the peak loop into the flat world's pass changes the compiled flight arithmetic in
+// its last bits, and the flock amplifies that into visibly different poses (the mega-tiles
+// overview parity, docs/perf/mega-tiles-2026-11-13-overview/).
 @compute @workgroup_size(64)
 fn update(@builtin(global_invocation_id) id: vec3<u32>) {
-    let i = id.x;
+    advance(id.x, false);
+}
+
+@compute @workgroup_size(64)
+fn update_peaks(@builtin(global_invocation_id) id: vec3<u32>) {
+    advance(id.x, true);
+}
+
+fn advance(i: u32, peaks: bool) {
     if (i >= params.count) { return; }
     let me = prev[i];
     let c = ctl[i];
@@ -310,7 +338,9 @@ fn update(@builtin(global_invocation_id) id: vec3<u32>) {
     } else if (fish) {
         next = swim(i, me, c);
     } else {
-        next = fly(i, me, c);
+        var lift = params.lift;
+        if (peaks) { lift = lift_at(me.pos.xz); }
+        next = fly(i, me, c, lift);
     }
     next.anim = animate(i, next, c);
     boids[i] = next;

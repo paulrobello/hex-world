@@ -837,7 +837,7 @@ mod tests {
         }
         assert!(through, "no car took the tunnel");
 
-        assert!(g.world.undo());
+        assert!(g.world.undo(&g.catalog));
         assert!(sim.mirror(&g.world, &g.catalog));
         sim.tick();
         assert!(hidden(&sim).is_empty(), "undo took the hidden link out");
@@ -847,7 +847,7 @@ mod tests {
         }
         assert_matches_world(&sim, &g.world, &g.catalog);
 
-        assert!(g.world.redo());
+        assert!(g.world.redo(&g.catalog));
         assert!(sim.mirror(&g.world, &g.catalog));
         assert_eq!(hidden(&sim), link, "redo brought it back");
         assert_matches_world(&sim, &g.world, &g.catalog);

@@ -53,7 +53,7 @@ fn small_world_v1(c: &TileCatalog) -> SaveData {
     w.place(c, SOUTH, "meadow", Orientation::new(0, 0)).unwrap();
     w.place(c, NORTH, "beach", Orientation::new(4, 0)).unwrap();
     w.bulldoze(c, WEST).unwrap();
-    assert!(w.undo() && w.undo());
+    assert!(w.undo(c) && w.undo(c));
     SaveData {
         world: w,
         unlocks: BTreeSet::new(),
@@ -132,7 +132,7 @@ fn fixtures_load_at_level_zero() {
         );
         for step in [World::undo, World::redo] {
             let mut probe = w.clone();
-            while step(&mut probe) {
+            while step(&mut probe, &c) {
                 assert!(probe.tiles().values().all(|t| t.level == 0));
             }
         }
@@ -182,12 +182,12 @@ fn v1_small_world_restores_tiles_history_camera_and_settings() {
 
     // Redo replays the beach, then the bulldoze; undo walks back to the start meadow.
     assert!(w.can_undo() && w.can_redo());
-    assert!(w.redo());
+    assert!(w.redo(&c));
     assert_eq!(w.tile(NORTH).unwrap().def, "beach");
-    assert!(w.redo());
+    assert!(w.redo(&c));
     assert!(w.tile(WEST).is_none());
-    assert!(!w.redo());
-    while w.undo() {}
+    assert!(!w.redo(&c));
+    while w.undo(&c) {}
     assert_eq!(w.tiles(), World::new(2026).tiles());
 
     // While v1 is the current version, the fixture equals the world built by play.
@@ -226,7 +226,7 @@ fn replaced_v3(c: &TileCatalog) -> SaveData {
     w.replace(c, EAST, "forest", Orientation::new(0, 0))
         .unwrap();
     w.replace(c, SOUTH, "oak", Orientation::new(2, 0)).unwrap();
-    assert!(w.undo());
+    assert!(w.undo(c));
     save
 }
 
@@ -242,10 +242,10 @@ fn v3_replaced_keeps_replace_records_on_both_stacks() {
     let mut w = save.world.clone();
     assert_eq!(w.tile(EAST).unwrap().def, "forest");
     assert_eq!(w.tile(SOUTH).unwrap().def, "meadow");
-    assert!(w.redo(), "redo swaps the oak in");
+    assert!(w.redo(&c), "redo swaps the oak in");
     assert_eq!(w.tile(SOUTH).unwrap().def, "oak");
     assert!(
-        w.undo() && w.undo(),
+        w.undo(&c) && w.undo(&c),
         "undo swaps the oak and then the forest out"
     );
     let road = w.tile(EAST).unwrap();
@@ -253,6 +253,99 @@ fn v3_replaced_keeps_replace_records_on_both_stacks() {
     if SAVE_FORMAT_VERSION == 3 {
         assert_eq!(save, replaced_v3(&c));
     }
+}
+
+/// The massif centre in `v3-massif.hexworld`, two steps east of the start meadow.
+const MASSIF: Axial = Axial { q: 2, r: 0 };
+
+/// The save in `v3-massif.hexworld`: the v2 settings over a level-0 massif east of the start
+/// meadow, placed, bulldozed whole and placed again, then two meadows and a forest touching its
+/// footprint, and a meadow placed beside the massif then bulldozed. The history holds the massif's
+/// Place, its Bulldoze and its re-place.
+fn massif_v3(c: &TileCatalog) -> SaveData {
+    let mut w = World::new(2026);
+    let massif = Orientation::new(0, 0);
+    w.place(c, MASSIF, "massif_granite", massif).unwrap();
+    w.bulldoze(c, MASSIF.neighbor(3)).unwrap();
+    w.place(c, MASSIF, "massif_granite", massif).unwrap();
+    let place = |w: &mut World, cell: Axial, id: &str| {
+        let o = w.legal_orientations(c, cell, c.get(id).unwrap())[0];
+        w.place(c, cell, id, o).unwrap();
+    };
+    place(&mut w, MASSIF.neighbor(0).neighbor(0), "meadow");
+    place(&mut w, MASSIF.neighbor(1).neighbor(1), "meadow");
+    place(&mut w, MASSIF.neighbor(5).neighbor(5), "forest");
+    let extra = MASSIF.neighbor(2).neighbor(2);
+    place(&mut w, extra, "meadow");
+    w.bulldoze(c, extra).unwrap();
+    let mut save = tilt_chosen_v2(c);
+    save.world = w;
+    save
+}
+
+#[test]
+fn v3_massif_expands_on_load() {
+    let c = catalog();
+    let bytes = std::fs::read(fixture_dir().join("v3-massif.hexworld")).unwrap();
+    let save = SaveData::decode(&bytes, &c).unwrap();
+    assert_eq!(
+        save.encode(),
+        bytes,
+        "the footprint re-encodes byte for byte"
+    );
+    let footprint = hex_core::footprint::members(MASSIF);
+    let whole = |w: &World| {
+        w.members().len() == 6
+            && footprint.iter().all(|&m| {
+                w.anchor_of(m) == Some(MASSIF) && w.tile(m).unwrap().def == "massif_granite"
+            })
+    };
+    let gone = |w: &World| w.members().is_empty() && footprint.iter().all(|&m| !w.occupied(m));
+    let mut w = save.world.clone();
+    assert!(whole(&w));
+    assert_eq!(
+        w.tiles().len(),
+        5,
+        "start meadow, massif, two meadows, forest"
+    );
+    // Undo the bulldoze, the four placements beside the massif, then the re-place.
+    for _ in 0..5 {
+        assert!(w.undo(&c));
+        assert!(whole(&w));
+    }
+    assert!(w.undo(&c), "undo the re-place");
+    assert!(gone(&w));
+    assert!(w.undo(&c), "undo the massif's bulldoze");
+    assert!(whole(&w), "all seven cells come back");
+    assert!(w.undo(&c), "undo the first place");
+    assert!(gone(&w));
+    assert!(!w.undo(&c));
+    assert!(w.redo(&c));
+    assert!(whole(&w));
+    assert!(w.redo(&c), "redo the massif's bulldoze");
+    assert!(gone(&w), "all seven cells go");
+    assert!(w.redo(&c), "redo the re-place");
+    assert!(whole(&w));
+    while w.redo(&c) {
+        assert!(whole(&w));
+    }
+    assert_eq!(w.tiles(), save.world.tiles());
+    if SAVE_FORMAT_VERSION == 3 {
+        assert_eq!(save, massif_v3(&c));
+    }
+}
+
+#[test]
+#[ignore = "writes the v3 massif fixture once; fixtures are frozen"]
+fn write_v3_massif_fixture() {
+    let path = fixture_dir().join("v3-massif.hexworld");
+    assert!(
+        !path.exists(),
+        "{} exists and is frozen; add a new version instead",
+        path.display()
+    );
+    assert_eq!(SAVE_FORMAT_VERSION, 3, "this writer only produces v3");
+    std::fs::write(&path, massif_v3(&catalog()).encode()).unwrap();
 }
 
 #[test]

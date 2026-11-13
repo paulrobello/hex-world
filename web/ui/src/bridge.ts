@@ -241,7 +241,24 @@ export interface Ghost {
   level: number;
   valid: boolean;
   legal_rotations: number[];
+  /** Per world edge; all `Neutral` for a footprint tile, whose glow is `outer_edges`. */
   edges: EdgeStatus[];
+  /** A footprint tile's 18 outer edges in local outer-index order (`catalog.footprint_outer`); null for a single tile. */
+  outer_edges: EdgeStatus[] | null;
+  /** The seven cells a footprint ghost covers, its centre (`q`, `r`) first; null for a single tile. */
+  footprint: Cell[] | null;
+}
+
+/**
+ * A legal centre of a footprint tile (`play.mega_slots`, hex-core `World::mega_slots`) with its legal
+ * orientations in hex-core order. Engine output: the HUD reads where a massif fits from these and
+ * never re-derives the seven-cell rules (A52 Q6 O1).
+ */
+export interface MegaSlot {
+  q: number;
+  r: number;
+  tile: string;
+  orientations: { rotation: number; level: number }[];
 }
 
 export interface BulldozeTarget {
@@ -314,6 +331,8 @@ export interface PlayState {
   frontier: Cell[];
   /** The level each free slot's outline sits on, where it is not 0 (P4). */
   slot_levels: (Cell & { level: number })[];
+  /** Every legal centre of every footprint tile, recomputed when the world changes. */
+  mega_slots: MegaSlot[];
   hovered: Cell | null;
   /** The slot a click pinned: the ghost stays there while the pointer moves; null when nothing is pinned. */
   pinned: Cell | null;
@@ -760,6 +779,7 @@ export const STATE_FIELDS = {
     tiles: true,
     frontier: true,
     slot_levels: true,
+    mega_slots: true,
     hovered: true,
     pinned: true,
     hovered_kind: true,
@@ -796,7 +816,11 @@ export const STATE_FIELDS = {
     valid: true,
     legal_rotations: true,
     edges: true,
+    outer_edges: true,
+    footprint: true,
   }),
+  mega_slot: keys<MegaSlot>({ q: true, r: true, tile: true, orientations: true }),
+  orientation: keys<MegaSlot["orientations"][number]>({ rotation: true, level: true }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
   last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
   tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true, level: true }),

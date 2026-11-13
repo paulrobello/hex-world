@@ -1,0 +1,63 @@
+{
+ "rimRow": 240.7,
+ "refTopRow": 125,
+ "oursTopRow": 16,
+ "perBearing": [
+  {
+   "bearing": 0,
+   "azimDeg": 0,
+   "iou": 0.871,
+   "iouAboveRim": 0.312,
+   "oursAboveRimPx": 46357,
+   "refAboveRimPx": 14466
+  },
+  {
+   "bearing": 1,
+   "azimDeg": 60,
+   "iou": 0.869,
+   "iouAboveRim": 0.302,
+   "oursAboveRimPx": 46670,
+   "refAboveRimPx": 14466
+  },
+  {
+   "bearing": 2,
+   "azimDeg": 120,
+   "iou": 0.869,
+   "iouAboveRim": 0.306,
+   "oursAboveRimPx": 47284,
+   "refAboveRimPx": 14466
+  },
+  {
+   "bearing": 3,
+   "azimDeg": 180,
+   "iou": 0.864,
+   "iouAboveRim": 0.286,
+   "oursAboveRimPx": 50643,
+   "refAboveRimPx": 14466
+  },
+  {
+   "bearing": 4,
+   "azimDeg": 240,
+   "iou": 0.874,
+   "iouAboveRim": 0.324,
+   "oursAboveRimPx": 44591,
+   "refAboveRimPx": 14466
+  },
+  {
+   "bearing": 5,
+   "azimDeg": 300,
+   "iou": 0.877,
+   "iouAboveRim": 0.339,
+   "oursAboveRimPx": 42697,
+   "refAboveRimPx": 14466
+  }
+ ],
+ "best": {
+  "bearing": 5,
+  "azimDeg": 300,
+  "iou": 0.877,
+  "iouAboveRim": 0.339,
+  "oursAboveRimPx": 42697,
+  "refAboveRimPx": 14466
+ }
+}

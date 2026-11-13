@@ -1,0 +1,125 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "hero",
+  "generator": {
+    "path": "scripts/blender/kit/massif_granite.py",
+    "sha256": "a4fdc1bce5034cae0ef2a59c21811d9587c227d0f7a0c02f6d6c7464e375fac6"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "lodTris": {
+    "massif_granite_lod0": 11468,
+    "massif_granite_lod1": 5019,
+    "massif_granite_lod2": 1594
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "anchor-prop-3",
+    "anchor-prop-4",
+    "anchor-prop-5",
+    "massif_granite",
+    "massif_granite_collider",
+    "massif_granite_lod0",
+    "massif_granite_lod1",
+    "massif_granite_lod2"
+  ],
+  "pieceId": "massif_granite",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        33.71281433105469,
+        4.441662788391113,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        16.856407165527344,
+        4.441662788391113,
+        29.196151733398438
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -16.856407165527344,
+        4.441662788391113,
+        29.196151733398438
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -33.71281433105469,
+        4.441662788391113,
+        4.1286287438141184e-15
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -16.856407165527344,
+        4.441662788391113,
+        -29.196151733398438
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        16.856407165527344,
+        4.441662788391113,
+        -29.196151733398438
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

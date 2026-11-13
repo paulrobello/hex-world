@@ -30,6 +30,7 @@ export const TILE_NAMES: Record<string, string> = {
   hillside_010111: "Hillside",
   hillside_011011: "Hillside",
   hillside_011111: "Hillside",
+  massif_granite: "Granite massif",
   road_ramp: "Road ramp",
   road_tunnel_portal: "Tunnel portal",
   rail_straight: "Rail straight",
@@ -54,6 +55,21 @@ export const TILE_NAMES: Record<string, string> = {
   river_mouth_l: "River mouth",
   ocean: "Ocean",
 };
+
+/** Why a footprint tile (the massif) is refused at a slot no legal centre covers. */
+export const FOOTPRINT_REFUSAL = "Needs seven free cells beside the world.";
+
+/** Why a footprint tile is refused where seven free cells touch the world but an outer edge clashes. */
+export const FOOTPRINT_EDGES = "Its edges don't meet the tiles beside it.";
+
+/** Why a single tile is refused at a cell the engine offers only to a massif. */
+export const FOOTPRINT_INNER = "Only a massif can stand here.";
+
+/** Why a single tile is refused over a massif (hex-core `ReplaceError::FootprintMismatch`). */
+export const MASSIF_SWAP = "A massif can only be swapped for another massif.";
+
+/** Why a massif is refused over a single tile (the same mismatch, the other way round). */
+export const SINGLE_SWAP = "A massif can't replace a single tile.";
 
 export const tileName = (id: string): string => TILE_NAMES[id] ?? id.replace(/_/g, " ");
 

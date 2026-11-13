@@ -127,26 +127,42 @@ pub fn all_placements<'a>(
 }
 
 /// The boundary footprints on `cell`'s edges and corners in `cell`'s tile frame (x, z), from
-/// every field tile's placements (`all`, [`all_placements`]): its own and its neighbours'.
+/// every field tile's placements (`all`, [`all_placements`]): its own and its neighbours'. A
+/// footprint tile's `cell` is its anchor, and it gathers the footprints on every cell it covers.
 pub fn local_segments_from<'a>(
     all: &BTreeMap<Axial, Vec<boundary::Placement>>,
     cell: Axial,
     at: &impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
 ) -> Vec<Seg> {
-    let Some((_, rot)) = at(cell) else {
+    let Some((def, rot)) = at(cell) else {
         return vec![];
     };
     let centre = Vec2::from(cell.to_world(HEX_RADIUS));
     let back = cos_sin_deg(-60.0 * (rot % 6) as f32);
     let local = |p: [f32; 2]| -> [f32; 2] { rotate(Vec2::from(p) - centre, back).into() };
-    boundary::within(cell, 1)
-        .filter_map(|o| all.get(&o))
-        .flatten()
-        .flat_map(|p| p.segs.iter().copied())
-        .filter(|s| {
-            let near = |p: [f32; 2]| Vec2::from(p).distance(centre) <= HEX_RADIUS + 0.5;
-            near(s.a) && near(s.b) && s.distance(centre.into()) < APOTHEM + s.half + 0.5
-        })
+    let on = |c: Axial| {
+        let mid = Vec2::from(c.to_world(HEX_RADIUS));
+        boundary::within(c, 1)
+            .filter_map(|o| all.get(&o))
+            .flatten()
+            .flat_map(|p| p.segs.iter().copied())
+            .filter(move |s| {
+                let near = |p: [f32; 2]| Vec2::from(p).distance(mid) <= HEX_RADIUS + 0.5;
+                near(s.a) && near(s.b) && s.distance(mid.into()) < APOTHEM + s.half + 0.5
+            })
+    };
+    let segs: Vec<Seg> = if def.is_mega() {
+        let mut segs: Vec<Seg> = vec![];
+        for s in hex_core::footprint::members(cell).into_iter().flat_map(on) {
+            if !segs.contains(&s) {
+                segs.push(s);
+            }
+        }
+        segs
+    } else {
+        on(cell).collect()
+    };
+    segs.into_iter()
         .map(|s| Seg {
             a: local(s.a),
             b: local(s.b),
@@ -266,6 +282,36 @@ pub(crate) mod tests {
             wheat.iter().all(|s| !(on_edge_3(s.a) && on_edge_3(s.b))),
             "{wheat:?}"
         );
+    }
+
+    /// Mega tiles (A52): the tile lookup the fence and buffer-stop code reads
+    /// ([`crate::play::covering`]) answers a massif's ring cell as the massif, not as an empty
+    /// cell. A farm beside the ring draws what it draws beside an empty cell: the massif is no
+    /// land tile.
+    #[test]
+    fn a_massif_member_is_not_an_empty_neighbour() {
+        let c = TileCatalog::builtin().unwrap();
+        let (farm, meadow, anchor) = (Axial::new(1, 0), Axial::new(1, -1), Axial::new(3, 0));
+        let tiles = std::collections::HashMap::from([
+            (farm, (c.get("farm").unwrap(), 0u8)),
+            (meadow, (c.get("meadow").unwrap(), 0u8)),
+            (anchor, (c.get("massif_granite").unwrap(), 2u8)),
+        ]);
+        let bare = |x: Axial| tiles.get(&x).copied();
+        let at = crate::play::covering(bare);
+        for m in hex_core::footprint::members(anchor) {
+            let (def, rot) = at(m).unwrap_or_else(|| panic!("{m:?} reads as empty"));
+            assert_eq!((def.id.as_str(), rot), ("massif_granite", 2), "{m:?}");
+        }
+        assert_eq!(at(farm).map(|(d, _)| d.id.as_str()), Some("farm"));
+        assert!(at(Axial::new(5, 0)).is_none(), "past the ring is empty");
+        assert!(at(Axial::new(0, 0)).is_none(), "beside the farm is empty");
+        assert!(
+            !placements(1, farm, &bare).is_empty(),
+            "the meadow edge is fenced"
+        );
+        let no_massif = |x: Axial| (x != anchor).then(|| tiles.get(&x).copied()).flatten();
+        assert_eq!(placements(1, farm, &at), placements(1, farm, &no_massif));
     }
 
     /// Owner A31 Q3: boundaries keep off hero props. The farm's barn stands 0.5 m inside its edge

@@ -183,6 +183,12 @@ def main() -> None:
         "camera": plan["camera"],
         "tiles": manifest_tiles,
     }
+    # Only footprint tiles carry a camera of their own (thumbs.rs `camera_for`); a catalog with
+    # none writes the manifest exactly as before.
+    tile_cameras = {t["id"]: t["camera"] for t in plan["tiles"] if "camera" in t}
+    if tile_cameras:
+        manifest["about"] += " tile_cameras[id] replaces camera's look_at and distance for that tile's images."
+        manifest = {**manifest, "tile_cameras": tile_cameras}
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n")
 
     sheet_path = SHEET_DIR / "contact-sheet.png"

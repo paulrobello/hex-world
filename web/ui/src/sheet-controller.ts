@@ -1,9 +1,13 @@
-import type { Cell, Command, PlayState } from "./bridge.ts";
-import { PICKER, type TileMap, cellKey, fitEntry, isSlot, needsAt } from "./rules.ts";
+import type { Cell, Command, Ghost, PlayState } from "./bridge.ts";
+import { PICKER, type TileMap, cellKey, fitEntry, isSheetSlot, needsAt } from "./rules.ts";
 import { Sheet } from "./sheet.ts";
 
 const sameCell = (a: Cell | null | undefined, b: Cell | null | undefined): boolean =>
   !!a && !!b && a.q === b.q && a.r === b.r;
+
+/** Whether the ghost stands for `slot`: on it, or as a footprint tile whose centre covers it. */
+export const ghostCovers = (g: Ghost | null | undefined, slot: Cell | null | undefined): boolean =>
+  !!g && (sameCell(g, slot) || !!g.footprint?.some((c) => sameCell(c, slot)));
 
 export class SheetController {
   readonly sheet: Sheet;
@@ -74,7 +78,7 @@ export class SheetController {
       this.hoverResent = false;
       hovered = true;
     }
-    if (this.slot && !isSlot(this.slot, map)) this.slot = null;
+    if (this.slot && !isSheetSlot(this.slot, map, st.mega_slots, st.selected)) this.slot = null;
     if (
       !st.pinned &&
       !st.walk_mode &&
@@ -92,7 +96,7 @@ export class SheetController {
 
   render(st: PlayState, map: TileMap, tilesRevision: number): void {
     const slot = this.slot;
-    const onSlot = st.ghost && sameCell(st.ghost, slot) ? st.ghost : null;
+    const onSlot = ghostCovers(st.ghost, slot) ? st.ghost : null;
     const ghostRotation = onSlot ? onSlot.rotation : null;
     const ghostTile = onSlot ? onSlot.tile : null;
     const ghostLevel = onSlot ? onSlot.level : 0;
@@ -109,7 +113,10 @@ export class SheetController {
     if (signature === this.signature) return;
     this.signature = signature;
     const needs = slot ? needsAt(slot, map) : null;
-    const nearest = slot && needs && !PICKER.some((e) => fitEntry(e, needs).ok) ? this.nearest(st, slot, map) : null;
+    const nearest =
+      slot && needs && !PICKER.some((e) => fitEntry(e, needs, { slot, megaSlots: st.mega_slots, tiles: map }).ok)
+        ? this.nearest(st, slot, map)
+        : null;
     this.sheet.render({
       slot: slot && needs ? { cell: slot, needs } : null,
       selected: st.selected,
@@ -119,6 +126,8 @@ export class SheetController {
       turns: this.turns,
       bulldoze: st.tool === "bulldoze",
       nearest,
+      megaSlots: st.mega_slots,
+      tiles: map,
     });
   }
 
@@ -130,7 +139,9 @@ export class SheetController {
         (Math.abs(cell.q - from.q) + Math.abs(cell.r - from.r) + Math.abs(cell.q + cell.r - from.q - from.r)) / 2;
       if (best && d >= best.d) continue;
       const needs = needsAt(cell, map);
-      const fits = PICKER.filter((e) => fitEntry(e, needs).ok).length;
+      const fits = PICKER.filter(
+        (e) => fitEntry(e, needs, { slot: cell, megaSlots: st.mega_slots, tiles: map }).ok,
+      ).length;
       if (fits) best = { cell, fits, d };
     }
     return best && { cell: best.cell, fits: best.fits };

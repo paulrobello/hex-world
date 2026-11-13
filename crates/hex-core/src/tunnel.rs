@@ -308,6 +308,40 @@ pub(crate) mod tests {
     }
 
     #[test]
+    fn no_tunnel_runs_under_a_massif() {
+        let c = catalog();
+        // East from a portal at the origin: a level-1 meadow, a level-1 massif centred at (3, 0)
+        // covering (2, 0)..=(4, 0), then a portal facing back west.
+        let a = Axial::ORIGIN;
+        let meadow = Axial::new(1, 0);
+        let centre = Axial::new(3, 0);
+        let b = Axial::new(5, 0);
+        let mut tiles = BTreeMap::new();
+        tiles.insert(a, tile("road_tunnel_portal", 0, 0, a));
+        tiles.insert(meadow, tile("meadow", 0, 1, meadow));
+        tiles.insert(centre, tile("massif_granite", 0, 1, centre));
+        tiles.insert(b, tile("road_tunnel_portal", 3, 0, b));
+        let mut w = World::from_parts(1, tiles, VecDeque::new(), vec![]);
+        w.rebuild_members(&c);
+        for q in 2..=4 {
+            assert_eq!(w.anchor_of(Axial::new(q, 0)), Some(centre), "q {q}");
+        }
+        assert!(tunnels(&w, &c).is_empty());
+        assert_eq!(open_portals(&w, &c), vec![a, b]);
+        let mut w = without(&w, a);
+        w.rebuild_members(&c);
+        assert!(w.occupied(Axial::new(2, 0)));
+        let def = c.get("road_tunnel_portal").unwrap();
+        assert_eq!(
+            preview(&w, &c, a, def, Orientation::new(0, 0)),
+            TunnelPreview {
+                cells: vec![meadow],
+                completes: false,
+            }
+        );
+    }
+
+    #[test]
     fn preview_reports_cells_and_completion() {
         let c = catalog();
         // The ghost stands where the first portal is, over a world that lacks it.

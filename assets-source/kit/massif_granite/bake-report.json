@@ -1,0 +1,200 @@
+{
+  "aoDistanceM": 1.2,
+  "bakeStats": {
+    "groundAO": {
+      "mean": 0.9843,
+      "min": 0.0,
+      "p01": 0.4706,
+      "p05": 0.9686,
+      "texels": 138324
+    },
+    "normalMissFraction": 0.00032,
+    "rockAO": {
+      "mean": 0.8071,
+      "min": 0.0,
+      "p01": 0.0941,
+      "p05": 0.2824,
+      "texels": 1581433
+    },
+    "rockAlbedoLuma": {
+      "mean": 0.5443,
+      "min": 0.0,
+      "p01": 0.183,
+      "p05": 0.183,
+      "texels": 1581433
+    },
+    "rockFaceAO": {
+      "areaMean": 0.7956,
+      "areaUnder0.1": 0.0141
+    },
+    "rockRoughness": {
+      "mean": 0.8392,
+      "min": 0.0,
+      "p01": 0.8392,
+      "p05": 0.8392,
+      "texels": 1581433
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.15,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 2048
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 1024
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 2048
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "groundStats": {
+    "lod0": {
+      "capTris": 3744,
+      "capTrisUnderRock": 724,
+      "groundMaxErrorAt": [
+        -4.05,
+        7.01,
+        10.39
+      ],
+      "groundMaxHeightErrorM": 0.315,
+      "trisPerSlot": {
+        "cap": 3145,
+        "scree": 599
+      }
+    },
+    "lod1": {
+      "capTris": 1761,
+      "capTrisUnderRock": 271,
+      "groundMaxErrorAt": [
+        -1.63,
+        6.06,
+        10.85
+      ],
+      "groundMaxHeightErrorM": 0.604,
+      "trisPerSlot": {
+        "cap": 1478,
+        "scree": 283
+      }
+    },
+    "lod2": {
+      "capTris": 616,
+      "capTrisUnderRock": 10,
+      "groundMaxErrorAt": [
+        14.0,
+        26.67,
+        4.9
+      ],
+      "groundMaxHeightErrorM": 1.898,
+      "trisPerSlot": {
+        "cap": 577,
+        "scree": 39
+      }
+    }
+  },
+  "lod2Drops": {},
+  "marginPx": 8,
+  "masksDensityPxPerM": {
+    "lod0_cap": {
+      "areaM2": 4568.4,
+      "faces": 3145,
+      "max": 2.95,
+      "median": 2.77,
+      "min": 2.54
+    }
+  },
+  "maxRayDistanceM": 0.3,
+  "receiverSignature": "84ea1aa262bb4c1aad19b9e2ee16421b9123df3c4ea2603e6cb1efc4df8662ea",
+  "rockReachM": 21.913,
+  "rockStats": {
+    "lod0": {
+      "highToLodM": [
+        1.152,
+        0.141
+      ],
+      "rockTris": 7148,
+      "toHighM": [
+        0.17,
+        0.08
+      ]
+    },
+    "lod1": {
+      "highToLodM": [
+        1.662,
+        0.369
+      ],
+      "rockTris": 2682,
+      "toHighM": [
+        0.266,
+        0.161
+      ]
+    },
+    "lod2": {
+      "highToLodM": [
+        2.879,
+        1.359
+      ],
+      "rockTris": 402,
+      "toHighM": [
+        0.581,
+        0.444
+      ]
+    }
+  },
+  "samples": 32,
+  "screeRoute": "unique",
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "lod0_rock": {
+      "areaM2": 2610.7,
+      "faces": 7148,
+      "max": 44.15,
+      "median": 24.78,
+      "min": 3.33
+    },
+    "lod0_scree": {
+      "areaM2": 283.6,
+      "faces": 599,
+      "max": 25.27,
+      "median": 24.77,
+      "min": 24.45
+    },
+    "lod1_rock": {
+      "areaM2": 2558.0,
+      "faces": 2682,
+      "max": 81.29,
+      "median": 23.81,
+      "min": 2.58
+    },
+    "lod1_scree": {
+      "areaM2": 280.6,
+      "faces": 283,
+      "max": 22.23,
+      "median": 21.8,
+      "min": 21.46
+    },
+    "lod2_rock": {
+      "areaM2": 2378.7,
+      "faces": 402,
+      "max": 9.63,
+      "median": 7.84,
+      "min": 5.91
+    },
+    "lod2_scree": {
+      "areaM2": 193.8,
+      "faces": 39,
+      "max": 7.89,
+      "median": 7.84,
+      "min": 7.68
+    }
+  },
+  "topM": 34.569
+}

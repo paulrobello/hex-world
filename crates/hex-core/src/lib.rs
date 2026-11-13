@@ -3,6 +3,7 @@
 pub mod axial;
 pub mod boundary;
 pub mod catalog;
+pub mod footprint;
 pub mod path;
 pub mod prism;
 pub mod rail_end;

@@ -892,12 +892,46 @@ fn particles(cell: Axial, n: u32, strength: f32) -> Vec<Particle> {
         .collect()
 }
 
+/// The share of a single tile's dust each cell of a footprint tile raises (a first value, to be
+/// tuned against review shots).
+const FOOTPRINT_DUST: f32 = 0.5;
+
+/// The cells a tile's dust rises from: its anchor, or every cell of its footprint.
+pub fn dust_cells(anchor: Axial, footprint: bool) -> Vec<Axial> {
+    if footprint {
+        hex_core::footprint::members(anchor).to_vec()
+    } else {
+        vec![anchor]
+    }
+}
+
+/// The particles `kind` raises for the tile at `anchor`: on each of its [`dust_cells`], a footprint
+/// tile's cells each with [`FOOTPRINT_DUST`] of a single tile's.
+fn dust_particles(kind: Dust, anchor: Axial, footprint: bool) -> Vec<Particle> {
+    let share = if footprint { FOOTPRINT_DUST } else { 1.0 };
+    dust_cells(anchor, footprint)
+        .into_iter()
+        .flat_map(|c| match kind {
+            Dust::Puff { n, strength, .. } => {
+                particles(c, (n as f32 * share).round() as u32, strength)
+            }
+            Dust::Cloud => cloud_share(c, share),
+        })
+        .collect()
+}
+
 /// The bulldoze cloud at `cell` as drawn: [`cloud_base`] at [`CLOUD_SIZE`] the size about the
 /// cell's centre on the ground and [`CLOUD_TIME`] the duration. Deterministic per cell.
+#[cfg(test)]
 fn cloud(cell: Axial) -> Vec<Particle> {
+    cloud_share(cell, 1.0)
+}
+
+/// [`cloud`] with `share` of each of its particle groups.
+fn cloud_share(cell: Axial, share: f32) -> Vec<Particle> {
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let centre = Vec3::new(cx, 0.0, cz);
-    cloud_base(cell)
+    cloud_base_share(cell, share)
         .into_iter()
         .map(|p| p.scaled(centre, CLOUD_SIZE, CLOUD_TIME).peaked(CLOUD_PEAK))
         .collect()
@@ -905,8 +939,21 @@ fn cloud(cell: Axial) -> Vec<Particle> {
 
 /// The bulldoze cloud's first look at `cell`: a low swell across the whole hex, a billow thrown
 /// out past the rim and up from the centre, and debris bits tossed up that fall back.
+#[cfg(test)]
 fn cloud_base(cell: Axial) -> Vec<Particle> {
+    cloud_base_share(cell, 1.0)
+}
+
+/// [`cloud_base`] with `share` of each of its particle groups.
+fn cloud_base_share(cell: Axial, share: f32) -> Vec<Particle> {
     use std::f32::consts::TAU;
+    let part = |n: u32| (n as f32 * share).round() as u32;
+    let (swell, rim, column, debris) = (
+        part(CLOUD_SWELL),
+        part(CLOUD_RIM),
+        part(CLOUD_COLUMN),
+        part(CLOUD_DEBRIS),
+    );
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let centre = Vec3::new(cx, 0.0, cz);
     let h = |i: u32, salt: u32| hash01(cell, i, salt);
@@ -917,7 +964,7 @@ fn cloud_base(cell: Axial) -> Vec<Particle> {
         (Vec3::new(a.cos(), 0.0, a.sin()), d)
     };
     let mut out = Vec::with_capacity(CLOUD_PARTICLES as usize);
-    for i in 0..CLOUD_SWELL {
+    for i in 0..swell {
         let (dir, d) = disc(i, HEX_RADIUS * 0.8);
         out.push(Particle {
             origin: centre + dir * d + Vec3::Y * (0.6 + 1.0 * h(i, 24)),
@@ -933,9 +980,9 @@ fn cloud_base(cell: Axial) -> Vec<Particle> {
             spin: 0.0,
         });
     }
-    for j in 0..CLOUD_RIM {
+    for j in 0..rim {
         let i = CLOUD_SWELL + j;
-        let a = (j as f32 + h(i, 31)) / CLOUD_RIM as f32 * TAU;
+        let a = (j as f32 + h(i, 31)) / rim as f32 * TAU;
         let dir = Vec3::new(a.cos(), 0.0, a.sin());
         out.push(Particle {
             origin: centre + dir * HEX_RADIUS * (0.82 + 0.14 * h(i, 32)) + Vec3::Y * 0.3,
@@ -951,7 +998,7 @@ fn cloud_base(cell: Axial) -> Vec<Particle> {
             spin: 0.0,
         });
     }
-    for j in 0..CLOUD_COLUMN {
+    for j in 0..column {
         let i = CLOUD_SWELL + CLOUD_RIM + j;
         let (dir, d) = disc(i, HEX_RADIUS * 0.65);
         out.push(Particle {
@@ -968,7 +1015,7 @@ fn cloud_base(cell: Axial) -> Vec<Particle> {
             spin: 0.0,
         });
     }
-    for j in 0..CLOUD_DEBRIS {
+    for j in 0..debris {
         let i = CLOUD_SWELL + CLOUD_RIM + CLOUD_COLUMN + j;
         let (dir, d) = disc(i, HEX_RADIUS * 0.7);
         let s = 0.7 + 0.6 * h(i, 51);
@@ -1000,6 +1047,7 @@ pub fn dust(
     mut commands: Commands,
     reduced: Res<ReducedMotion>,
     mut cues: MessageReader<RiseMessage>,
+    catalog: Option<Res<super::PlayCatalog>>,
     mut dust: ResMut<PlayDust>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -1009,19 +1057,21 @@ pub fn dust(
         let Some(kind) = dust_for(m.cue, m.skipped, reduced.0) else {
             continue;
         };
-        let (layers, ps) = match kind {
-            Dust::Puff { n, strength, alpha } => (
-                vec![Layer {
-                    rgb: PUFF_RGB,
-                    alpha,
-                    hold: 0.0,
-                    end: 1.2,
-                    shape: Shape::Puff,
-                }],
-                particles(m.cell, n, strength),
-            ),
-            Dust::Cloud => (cloud_layers().to_vec(), cloud(m.cell)),
+        let footprint = catalog
+            .as_deref()
+            .and_then(|c| c.0.get(&m.tile))
+            .is_some_and(hex_core::TileDef::is_mega);
+        let layers = match kind {
+            Dust::Puff { alpha, .. } => vec![Layer {
+                rgb: PUFF_RGB,
+                alpha,
+                hold: 0.0,
+                end: 1.2,
+                shape: Shape::Puff,
+            }],
+            Dust::Cloud => cloud_layers().to_vec(),
         };
+        let ps = dust_particles(kind, m.cell, footprint);
         // A raised tile's dust rises from its level (P4).
         let lift = Vec3::Y * (f32::from(m.level) * LEVEL_STEP);
         let ps: Vec<Particle> = ps
@@ -1494,11 +1544,63 @@ mod tests {
         assert!((life(&drawn) - 0.8 * life(&base)).abs() < 1e-5);
     }
 
+    /// The rise dust and the bulldoze cloud of a footprint tile rise from all seven of its cells,
+    /// half a single tile's particles on each, centred on the anchor.
+    #[test]
+    fn massif_dust_covers_the_footprint() {
+        let anchor = Axial::new(3, -1);
+        assert_eq!(dust_cells(anchor, false), vec![anchor]);
+        assert_eq!(
+            dust_cells(anchor, true),
+            hex_core::footprint::members(anchor).to_vec()
+        );
+        let [cx, cz] = anchor.to_world(HEX_RADIUS);
+        let kinds = [
+            dust_for(RiseCue::Stage(RiseStage::Column), false, false).unwrap(),
+            dust_for(RiseCue::Sink(SinkKind::Undo), false, false).unwrap(),
+            Dust::Cloud,
+        ];
+        for kind in kinds {
+            let single = dust_particles(kind, anchor, false);
+            let massif = dust_particles(kind, anchor, true);
+            assert_eq!(massif.len(), single.len() * 7 / 2, "{kind:?}");
+            let n = massif.len() as f32;
+            let mean = massif.iter().map(|p| p.origin).sum::<Vec3>() / n;
+            let off = Vec2::new(mean.x - cx, mean.z - cz).length();
+            assert!(off < 2.0, "{kind:?}: centroid {off} m off the centre");
+            for m in hex_core::footprint::members(anchor) {
+                let [x, z] = m.to_world(HEX_RADIUS);
+                assert!(
+                    massif
+                        .iter()
+                        .any(|p| Vec2::new(p.origin.x - x, p.origin.z - z).length() < HEX_RADIUS),
+                    "{kind:?}: no dust on {m:?}"
+                );
+            }
+        }
+        // A single tile's dust is what it was.
+        assert_eq!(dust_particles(Dust::Cloud, anchor, false), cloud(anchor));
+        assert_eq!(
+            dust_particles(kinds[0], anchor, false),
+            particles(anchor, 48, 1.0)
+        );
+        assert_eq!(
+            spawned_for_tile(RiseCue::Sink(SinkKind::Bulldoze), false, "massif_granite"),
+            CLOUD_PARTICLES as usize * 7 / 2
+        );
+    }
+
     /// Entities the dust system spawns for one cue.
     fn spawned_for(cue: RiseCue, reduced: bool) -> usize {
+        spawned_for_tile(cue, reduced, "forest")
+    }
+
+    /// Entities the dust system spawns for one cue on a `tile`.
+    fn spawned_for_tile(cue: RiseCue, reduced: bool, tile: &str) -> usize {
         let mut app = App::new();
         app.init_resource::<Time>()
             .init_resource::<PlayDust>()
+            .init_resource::<crate::play::PlayCatalog>()
             .insert_resource(ReducedMotion(reduced))
             .init_resource::<Assets<Mesh>>()
             .init_resource::<Assets<StandardMaterial>>()
@@ -1506,7 +1608,7 @@ mod tests {
             .add_systems(Update, dust);
         app.world_mut().write_message(RiseMessage {
             cell: Axial::new(1, 0),
-            tile: "forest".into(),
+            tile: tile.into(),
             level: 0,
             cue,
             skipped: false,

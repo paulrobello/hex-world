@@ -138,6 +138,42 @@ pub fn transformed_kit_mesh(source: &Mesh, world: Transform, origin: Vec3) -> Me
     mesh
 }
 
+#[cfg(test)]
+mod footprint_chunks {
+    use hex_core::{Axial, footprint};
+
+    use super::*;
+
+    /// A massif draws under its anchor's root, so every one of its parts goes to the anchor's
+    /// chunk, even where a ring cell lies in another chunk.
+    #[test]
+    fn a_massif_belongs_to_its_anchor_chunk() {
+        let anchor = (-6..=6)
+            .flat_map(|q| (-6..=6).map(move |r| Axial::new(q, r)))
+            .find(|&a| {
+                footprint::members(a)
+                    .iter()
+                    .any(|&m| chunk_center(m, 19) != chunk_center(a, 19))
+            })
+            .expect("a footprint that straddles two chunks");
+        let cells = [Axial::ORIGIN, anchor];
+        let chunks = chunk_tiles(&cells, 19);
+        let home = chunks
+            .iter()
+            .find(|(_, tiles)| tiles.contains(&1))
+            .map(|(c, _)| *c);
+        assert_eq!(home, Some(chunk_center(anchor, 19)));
+        assert_eq!(
+            chunks
+                .iter()
+                .flat_map(|(_, t)| t)
+                .filter(|&&t| t == 1)
+                .count(),
+            1
+        );
+    }
+}
+
 #[cfg(all(test, feature = "gate-tools"))]
 mod tests {
     use std::collections::{BTreeMap, HashMap};

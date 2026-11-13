@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-10-29",
+    "notes": "Pending owner review; not an approval. massif_granite form pass 3 (owner A55 Q1 O1, 2026-10-29: taller grassy flanks as in ref-2; the orchestrator's ruling of 2026-10-30: the rock's shape and colour stay, so only the grass rises; pine density and rock colour kept, Q2 O1 and Q3 O1) against assets-source/refs/massif_granite/ref-2.jpg (owner A53), with ref-4 as the silhouette guide: the 7-cell mega-tile ground piece, jointed slab granite (a summit block with lower tops and six ridge spines running into the ring cells, cleft between them, with slab facets and joints carved into a meshed volume, non-heightfield) exactly as the form pass built it, top 34.57 m, half buried in grass flanks that rise from the Meadow rim (at tile level only on its outer 1.6 m) to a rock foot about 9 m up (7.4-10.7 m), scree fans from the clefts and the 18-edge rim, kind hero, about 11,500 LOD0 tris. Texture route O1 with the kit gate's texel floor scoped to 20 px/m (owner A54 Q1 O1); the lower-slope pines are a runtime scatter rule (A54 Q2 O1). Review sheet: docs/checkpoints/massif_granite/form-pass-3-sheet.jpg (ref-2 beside headless EEVEE stills of this pass and the original form pass at ref-2's fitted camera, the play camera and a low view, the top-down view and the silhouette overlay, all at the same light); in-engine views come from the orchestrator. The controller records the owner's decision."
+  }
+]

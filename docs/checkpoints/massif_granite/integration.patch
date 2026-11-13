@@ -1,0 +1,263 @@
+diff --git a/assets-source/kit/massif_granite/approvals.json b/assets-source/kit/massif_granite/approvals.json
+new file mode 100644
+index 0000000..a780bfd
+--- /dev/null
++++ b/assets-source/kit/massif_granite/approvals.json
+@@ -0,0 +1,8 @@
++[
++  {
++    "gate": "piece",
++    "status": "pending",
++    "requested": "2026-10-29",
++    "notes": "Pending owner review; not an approval. massif_granite against assets-source/refs/massif_granite/ref-2.jpg (owner A53), with ref-4 as the silhouette guide: the 7-cell mega-tile ground piece, a peak of about 35 m of jointed slab granite (a summit block with lower tops and six ridge spines running into the ring cells, cleft between them, with slab facets and joints carved into a meshed volume, non-heightfield) over grass slopes rising from the flat Meadow ring to the rock foot, scree fans from the clefts and the 18-edge rim, kind hero, 11,843 LOD0 tris. Texture route O1 with the kit gate's texel floor scoped to 20 px/m (owner A54 Q1 O1); the lower-slope pines are a runtime scatter rule (A54 Q2 O1). Review sheet: docs/checkpoints/massif_granite/review-sheet.jpg (ref-2 and ref-4 beside headless EEVEE stills at their fitted cameras, the play camera with meadow_base beside it, a cliff-foot close-up, a top-down view with the rock coverage outlined, the silhouette overlay against ref-4 and the previous column-rock pass, all at the same light); in-engine views come from the orchestrator. The controller records the owner's decision."
++  }
++]
+diff --git a/docs/checkpoints/massif_granite/friction.md b/assets-source/kit/massif_granite/friction.md
+similarity index 100%
+rename from docs/checkpoints/massif_granite/friction.md
+rename to assets-source/kit/massif_granite/friction.md
+diff --git a/assets/kit/manifest.json b/assets/kit/manifest.json
+index a362101..b26592d 100644
+--- a/assets/kit/manifest.json
++++ b/assets/kit/manifest.json
+@@ -970,4 +970,12 @@
+       "provenance": "assets-source/kit/log_fallen_c/provenance.json",
+       "slots": { "log_fallen_c_wood": { "unique": true, "masks": true } },
+       "maps": { "albedo": "p1/log_fallen_c/log_fallen_c.albedo", "normal": "p1/log_fallen_c/log_fallen_c.normal",
+-                "orm": "p1/log_fallen_c/log_fallen_c.orm", "masks": "p1/log_fallen_c/log_fallen_c.masks" } } ] }
++                "orm": "p1/log_fallen_c/log_fallen_c.orm", "masks": "p1/log_fallen_c/log_fallen_c.masks" } },
++    { "id": "massif_granite", "pack": "hero", "kind": "hero", "glb": "p1/massif_granite/massif_granite.glb",
++      "provenance": "assets-source/kit/massif_granite/provenance.json",
++      "slots": { "massif_granite_cap": { "tileable": "grass", "masks": true },
++                 "massif_granite_rock": { "unique": true, "masks": true },
++                 "massif_granite_scree": { "unique": true, "masks": true },
++                 "massif_granite_skirt": { "tileable": "soil", "color": [2.5, 2.5, 2.5] } },
++      "maps": { "albedo": "p1/massif_granite/massif_granite.albedo", "normal": "p1/massif_granite/massif_granite.normal",
++                "orm": "p1/massif_granite/massif_granite.orm", "masks": "p1/massif_granite/massif_granite.masks" } } ] }
+diff --git a/crates/hex-play/tests/hooks/mod.rs b/crates/hex-play/tests/hooks/mod.rs
+index f1c35f3..bb21169 100644
+--- a/crates/hex-play/tests/hooks/mod.rs
++++ b/crates/hex-play/tests/hooks/mod.rs
+@@ -83,6 +83,10 @@ const MASKS_EXEMPT: &[(&str, &str)] = &[
+         "beach_skirt",
+         "tile skirt: the O4 cutaway cross-section, not a world surface",
+     ),
++    (
++        "massif_granite_skirt",
++        "tile skirt: the O4 cutaway cross-section, not a world surface",
++    ),
+     (
+         "river_skirt",
+         "tile skirt: the O4 cutaway cross-section, not a world surface",
+diff --git a/crates/hex-play/tests/kit_gate.rs b/crates/hex-play/tests/kit_gate.rs
+index 4c4a05d..6af15d4 100644
+--- a/crates/hex-play/tests/kit_gate.rs
++++ b/crates/hex-play/tests/kit_gate.rs
+@@ -554,11 +554,18 @@ const BOULDER_PIECES: &[&str] = &[
+     "outcrop_granite",
+ ];
+ 
+-/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set, else
+-/// `TEXEL_MIN_PX_PER_M`.
++/// The massif's unique rock and scree (owner A54 Q1 O1, 2026-10-29: a unique bake with this scoped
++/// floor; docs/checkpoints/massif_granite/integration.md): about 3,800 m² of slab granite and 420 m²
++/// of scree on one 2048² atlas measure 20.4 px/m; 256 px/m would need about 25,000² px.
++const MASSIF_TEXEL_MIN_PX_PER_M: f32 = 20.0;
++
++/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set,
++/// `MASSIF_TEXEL_MIN_PX_PER_M` for massif_granite, else `TEXEL_MIN_PX_PER_M`.
+ fn texel_min(id: &str) -> f32 {
+     if BOULDER_PIECES.contains(&id) {
+         BOULDER_TEXEL_MIN_PX_PER_M
++    } else if id == "massif_granite" {
++        MASSIF_TEXEL_MIN_PX_PER_M
+     } else {
+         TEXEL_MIN_PX_PER_M
+     }
+@@ -3269,8 +3276,6 @@ fn footprint_outline_check_catches_wrong_rings() {
+ }
+ 
+ #[test]
+-#[ignore = "massif_granite is not in the manifest until the owner rules on its texel floor \
+-            (docs/checkpoints/massif_granite/integration.md); its landing removes this"]
+ fn footprint_base_border_is_the_flower_outline() {
+     let kit = kits().pop().unwrap();
+     let piece = |id: &str| kit.manifest.pieces.iter().find(|p| p.id == id);
+diff --git a/scripts/blender/kit/massif_granite.py b/scripts/blender/kit/massif_granite.py
+new file mode 100644
+index 0000000..9813ef7
+--- /dev/null
++++ b/scripts/blender/kit/massif_granite.py
+@@ -0,0 +1,12 @@
++"""massif_granite: the 7-cell mega-tile ground piece with a craggy granite peak of about 36 m
++(owner A53 2026-10-29, "ref-2 approved"; assets-source/refs/massif_granite). Kind hero, pack hero,
++KTX2 class hero. The pipeline and its contracts are `_massif.build`:
++make kit-build PIECE=massif_granite."""
++import pathlib
++import sys
++
++sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
++sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
++import _massif  # noqa: E402
++
++_massif.build(pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__)
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -173,15 +173,47 @@
+     ],
+ )];
+ 
+-/// Footprint tiles' standing parts that block the walker, as (tile, part, base radius in m): a
+-/// hexagon over the anchor, its corners at 30 + 60 k degrees in the tile frame. The massif's
+-/// placeholder peak (`play::massif_placeholder_mesh`) until its piece's collider replaces the row.
+-pub const FOOTPRINT_OBSTACLES: &[(&str, &str, f32)] = &[(
+-    "massif_granite",
+-    "massif_granite",
+-    crate::play::MASSIF_PEAK_RADIUS,
+-)];
++/// Footprint tiles' standing parts that block the walker, as (tile, part, convex parts of its
++/// footprint in the tile frame, x and z). The massif's is its rock foot as measured top-down on its
++/// LOD0: the outermost rock along each 5-degree bearing from the anchor (the spines reach 27.4 m,
++/// into every ring cell), split into convex fans from the anchor
++/// (`docs/checkpoints/massif_granite/walk_parts.py` over `form/form-measure.json`). The grass
++/// slopes and scree fans below it are walkable ground.
++pub const FOOTPRINT_OBSTACLES: &[(&str, &str, &[&[[f32; 2]]])] =
++    &[("massif_granite", "massif_granite", MASSIF_ROCK_FOOT)];
+ 
++/// The massif's rock foot: 28 convex parts, 982 m² (the rock's top-down cover measures 934 m²).
++const MASSIF_ROCK_FOOT: &[&[[f32; 2]]] = &[
++    &[[0.00, 0.00], [4.59, -6.55], [4.80, -8.31], [4.61, -9.88]],
++    &[[0.00, 0.00], [4.61, -9.88], [5.95, -16.35], [4.79, -17.87], [3.23, -18.32], [1.30, -14.84]],
++    &[[0.00, 0.00], [1.30, -14.84], [0.00, -12.60]],
++    &[[0.00, 0.00], [0.00, -12.60], [-1.08, -12.35], [-1.94, -11.03]],
++    &[[0.00, 0.00], [-1.94, -11.03], [-2.90, -10.82]],
++    &[[0.00, 0.00], [-2.90, -10.82], [-4.14, -11.37]],
++    &[[0.00, 0.00], [-4.14, -11.37], [-10.86, -23.29], [-12.90, -22.34], [-14.91, -21.30]],
++    &[[0.00, 0.00], [-14.91, -21.30], [-17.10, -20.38], [-19.37, -19.37], [-18.84, -15.81], [-13.11, -9.18]],
++    &[[0.00, 0.00], [-13.11, -9.18], [-14.29, -8.25], [-15.23, -7.10], [-15.79, -5.75], [-15.84, -4.24]],
++    &[[0.00, 0.00], [-15.84, -4.24], [-16.35, -2.88]],
++    &[[0.00, 0.00], [-16.35, -2.88], [-17.53, -1.53], [-18.80, -0.00], [-19.53, 1.71], [-19.30, 3.40], [-17.58, 4.71]],
++    &[[0.00, 0.00], [-17.58, 4.71], [-16.82, 6.12]],
++    &[[0.00, 0.00], [-16.82, 6.12], [-19.58, 9.13], [-19.83, 11.45], [-19.33, 13.54], [-17.70, 14.85], [-11.81, 11.81]],
++    &[[0.00, 0.00], [-11.81, 11.81], [-10.86, 12.95], [-9.35, 13.35]],
++    &[[0.00, 0.00], [-9.35, 13.35], [-8.00, 13.86], [-5.41, 11.60]],
++    &[[0.00, 0.00], [-5.41, 11.60], [-4.58, 12.59]],
++    &[[0.00, 0.00], [-4.58, 12.59], [-5.59, 20.86], [-3.77, 21.37]],
++    &[[0.00, 0.00], [-3.77, 21.37], [-1.95, 22.31], [-0.00, 22.30], [1.65, 18.83], [2.22, 12.61]],
++    &[[0.00, 0.00], [2.22, 12.61], [3.31, 12.36]],
++    &[[0.00, 0.00], [3.31, 12.36], [4.93, 13.53], [6.09, 13.05], [7.00, 12.12]],
++    &[[0.00, 0.00], [7.00, 12.12], [8.09, 11.55], [8.03, 9.58]],
++    &[[0.00, 0.00], [8.03, 9.58], [10.11, 10.11], [12.03, 10.09], [13.11, 9.18], [14.12, 8.15], [14.86, 6.93], [15.60, 5.68], [16.32, 4.37]],
++    &[[0.00, 0.00], [16.32, 4.37], [18.12, 3.20], [18.53, 1.62], [16.60, -0.00], [14.35, -1.26]],
++    &[[0.00, 0.00], [14.35, -1.26], [12.80, -2.26]],
++    &[[0.00, 0.00], [12.80, -2.26], [11.59, -3.11]],
++    &[[0.00, 0.00], [11.59, -3.11], [16.35, -5.95], [22.30, -10.40], [21.56, -12.45], [19.74, -13.82], [10.80, -9.06]],
++    &[[0.00, 0.00], [10.80, -9.06], [7.85, -7.85]],
++    &[[0.00, 0.00], [7.85, -7.85], [6.56, -7.81], [4.59, -6.55]],
++];
++
+ /// Parts of obstacle pieces that stand outside the piece's collider, as (piece, footprint corners
+ /// in the piece frame); they block the walker as the piece. house_cottage_b's box collider is its
+ /// walls' (LOD2), so its porch posts get their own squares (`_house_slate.py` `porch`: 0.12 m oak
+@@ -1095,18 +1127,15 @@
+                     });
+                 }
+             }
+-            for (tile, part, r) in FOOTPRINT_OBSTACLES {
++            for (tile, part, parts) in FOOTPRINT_OBSTACLES {
+                 if def.id == *tile {
+-                    let poly: Vec<Vec2> = (0..6)
+-                        .map(|i| {
+-                            let a = (60.0 * i as f32 + 30.0).to_radians();
+-                            Vec2::new(a.cos(), a.sin()) * *r
+-                        })
+-                        .collect();
+-                    obs.push(Obstacle {
+-                        piece: (*part).to_owned(),
+-                        poly: place_hull(&poly, &root),
+-                    });
++                    for corners in *parts {
++                        let poly: Vec<Vec2> = corners.iter().map(|c| Vec2::from(*c)).collect();
++                        obs.push(Obstacle {
++                            piece: (*part).to_owned(),
++                            poly: place_hull(&poly, &root),
++                        });
++                    }
+                 }
+             }
+             if !obs.is_empty() {
+@@ -3323,7 +3352,7 @@
+     }
+ 
+     /// Mega tiles (A52): the walker stands on a massif's ring at its level, and a straight walk
+-    /// aimed through the centre slides along the placeholder peak's base, never entering it.
++    /// aimed through the centre slides along the rock's foot, never entering it.
+     #[test]
+     fn walker_walks_around_a_massif() {
+         let g = world_at(&catalog(), &[(0, 0, "massif_granite", 0, 1)]);
+@@ -3344,15 +3373,17 @@
+         let aim = (anchor - start).normalize();
+         let mut pos = Vec3::new(start.x, g.ground(start).unwrap(), start.y);
+         let mut blocked = None;
+-        // The base's flat faces stand this far (m) from the centre.
+-        let inradius = crate::play::MASSIF_PEAK_RADIUS * 0.866_025_4;
++        let rock = &g.obstacles[&Axial::ORIGIN];
++        assert_eq!(rock.len(), MASSIF_ROCK_FOOT.len());
+         for _ in 0..1200 {
+-            let s = g.step(pos, (aim + Vec2::new(0.0, 0.2)).normalize() * 0.05);
++            // West of the anchor the foot recedes toward -z (`MASSIF_ROCK_FOOT`), so the walk
++            // slides that way along it.
++            let s = g.step(pos, (aim + Vec2::new(0.0, -0.2)).normalize() * 0.05);
+             pos = s.pos;
+             blocked = s.blocked.or(blocked);
+             assert!(
+-                pos.xz().distance(anchor) >= inradius + BODY_RADIUS - 1e-3,
+-                "inside the peak's base at {pos}"
++                rock.iter().all(|o| !o.hits(pos.xz(), BODY_RADIUS - 1e-2)),
++                "inside the rock's foot at {pos}"
+             );
+         }
+         assert_eq!(blocked, Some(Blocked::Obstacle("massif_granite".into())));
+diff --git a/crates/hex-play/src/play.rs b/crates/hex-play/src/play.rs
+--- a/crates/hex-play/src/play.rs
++++ b/crates/hex-play/src/play.rs
+@@ -96,8 +96,8 @@
+     .with_inserted_indices(Indices::U32(p.indices))
+ }
+ 
+-/// The approved massif piece's peak stands 35.85 m over the cap.
+-pub const MASSIF_PEAK: f32 = 36.0;
++/// The massif piece's peak stands 34.63 m over the cap (its LOD0 top, form pass 2026-10-29).
++pub const MASSIF_PEAK: f32 = 34.63;
+ /// The placeholder peak's base radius (m) to its corners, which point 30 + 60 k degrees.
+ pub(crate) const MASSIF_PEAK_RADIUS: f32 = HEX_RADIUS * 1.6;
+ 
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -318,9 +318,11 @@
+ }
+ 
+ /// Slots no scatter may stand on whatever [`floor_slots`] says: roads, river beds and banks,
+-/// house pads and driveways, beaches and the coast, bridges, and every base's rim, mossy edge band
+-/// and skirt.
++/// house pads and driveways, beaches and the coast, bridges, every base's rim, mossy edge band
++/// and skirt, and the massif's rock and scree (exact names: a `_rock` suffix would catch other
++/// pieces' slots). They stay ground for the walker, so they are not [`NOT_GROUND`].
+ pub fn excluded_slot(slot: &str) -> bool {
++    const EXACT: [&str; 2] = ["massif_granite_rock", "massif_granite_scree"];
+     const PREFIXES: [&str; 6] = [
+         "road_",
+         "river_",
+@@ -330,7 +332,9 @@
+         "bridge_",
+     ];
+     const SUFFIXES: [&str; 3] = ["_rim", "_edge", "_skirt"];
+-    PREFIXES.iter().any(|p| slot.starts_with(p)) || SUFFIXES.iter().any(|s| slot.ends_with(s))
++    EXACT.contains(&slot)
++        || PREFIXES.iter().any(|p| slot.starts_with(p))
++        || SUFFIXES.iter().any(|s| slot.ends_with(s))
+ }
+ 
+ // ---------------------------------------------------------------------------------------------

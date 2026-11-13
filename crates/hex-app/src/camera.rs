@@ -6,6 +6,7 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP};
+use hex_play::play::MASSIF_PEAK;
 use hex_render::{ActiveScenario, Scenario};
 
 use crate::actions::{Action, ActionQueue};
@@ -143,22 +144,29 @@ pub fn axial_at(x: f32, z: f32) -> Axial {
     Axial::new(rq as i32, rr as i32)
 }
 
-/// The planes a pick tries, highest first: every top a tile can have (`MAX_LEVEL` 3 × 4 m).
-const PICK_PLANES: [f32; 4] = [3.0 * LEVEL_STEP, 2.0 * LEVEL_STEP, LEVEL_STEP, 0.0];
+/// How many planes a pick tries, `LEVEL_STEP` apart from y = 0: every top a tile can have
+/// (`MAX_LEVEL` 3 × 4 m), and up a massif's peak to the last whole step under it. Over a level-3
+/// footprint the top plane is 44 m, under the 46.63 m peak: a ray onto the peak's top 2.63 m
+/// picks the centre where it crosses 44 m over the centre cell.
+const PICK_PLANES: usize = ((3.0 * LEVEL_STEP + MASSIF_PEAK) / LEVEL_STEP) as usize + 1;
 
 /// Where a view ray first meets the world's tops (P4), and the cell there. `top_of` gives a
-/// placed tile's top (`level * 4 + def.top() * 4`), `None` for an empty cell (top 0). The ray
-/// crosses y = 12, 8, 4 and 0 in turn and stops at the first crossing over a cell whose top
-/// reaches that plane: equal is the cell's top, higher means the ray went into its cliff face
-/// between two planes. So a raised tile is picked before the level-0 cell behind it, and a ray
-/// into a cliff picks the cliff's tile.
+/// placed tile's top (`level * 4 + def.top() * 4`, a massif's anchor its peak over that), `None`
+/// for an empty cell (top 0). The ray crosses the [`PICK_PLANES`] from the highest down and stops
+/// at the first crossing over a cell whose top reaches that plane: equal is the cell's top,
+/// higher means the ray went into its cliff face (or a peak's column) between two planes. So a
+/// raised tile is picked before the level-0 cell behind it, and a ray into a cliff picks the
+/// cliff's tile.
 fn pick(ray: Ray3d, top_of: impl Fn(Axial) -> Option<f32>) -> Option<(Axial, Vec3)> {
-    PICK_PLANES.into_iter().find_map(|y| {
-        let d = ray.intersect_plane(Vec3::Y * y, InfinitePlane3d::new(Vec3::Y))?;
-        let p = ray.get_point(d);
-        let cell = axial_at(p.x, p.z);
-        (top_of(cell).unwrap_or(0.0) >= y - 1e-3).then_some((cell, p))
-    })
+    (0..PICK_PLANES)
+        .rev()
+        .map(|k| k as f32 * LEVEL_STEP)
+        .find_map(|y| {
+            let d = ray.intersect_plane(Vec3::Y * y, InfinitePlane3d::new(Vec3::Y))?;
+            let p = ray.get_point(d);
+            let cell = axial_at(p.x, p.z);
+            (top_of(cell).unwrap_or(0.0) >= y - 1e-3).then_some((cell, p))
+        })
 }
 
 /// The cell under a view ray: the first raised top it meets ([`pick`]), else its y = 0 cell.
@@ -295,6 +303,31 @@ mod tests {
         let ray = ray_at(Vec3::new(wall, 2.0, z));
         let top_of = |c: Axial| (c == raised).then_some(LEVEL_STEP);
         assert_eq!(pick_cell(ray, top_of), Some(raised));
+    }
+
+    /// Mega tiles (A52): a ray onto a level-1 massif's ring cell top picks that ring cell (hover
+    /// and bulldoze resolve it through `World::anchor_of`), and a ray into the peak over the
+    /// centre picks the centre, not the ring cell its lower crossings lie over.
+    #[test]
+    fn pick_on_a_member_returns_the_member_cell() {
+        let mut g = crate::game::GameState::new(1);
+        let def = g.catalog.get("massif_granite").unwrap().clone();
+        let (centre, o) = g
+            .world
+            .mega_slots(&g.catalog, &def)
+            .into_iter()
+            .find_map(|(c, legal)| Some((c, *legal.iter().find(|o| o.level == 1)?)))
+            .expect("a level-1 massif slot");
+        g.world
+            .place(&g.catalog, centre, "massif_granite", o)
+            .unwrap();
+        let ring = centre.neighbor(3);
+        let [x, z] = ring.to_world(HEX_RADIUS);
+        let ray = ray_at(Vec3::new(x, LEVEL_STEP, z));
+        assert_eq!(pick_cell(ray, |c| g.top_of(c)), Some(ring));
+        let [x, z] = centre.to_world(HEX_RADIUS);
+        let ray = ray_at(Vec3::new(x, 20.0, z));
+        assert_eq!(pick_cell(ray, |c| g.top_of(c)), Some(centre));
     }
 
     /// The orbit pivot over a raised tile is its top, so zooming in stops above it, not inside.

@@ -22,8 +22,11 @@ pub struct PlayGhost {
     pub tile: String,
     pub rotation: u8,
     pub level: u8,
-    /// Status per world edge 0..6.
+    /// Status per world edge 0..6 (all `Neutral` for a footprint tile: read `outer`).
     pub edges: [EdgeStatus; 6],
+    /// A footprint tile's status per outer edge, in local outer-index order
+    /// (`hex_core::footprint::outer_edge`); `None` for a single tile.
+    pub outer: Option<[EdgeStatus; 18]>,
     /// False when the tile does not fit here at this rotation.
     pub valid: bool,
     /// The ghost sits on a pinned slot (U4) rather than under the pointer.
@@ -40,7 +43,15 @@ pub struct PlayView {
     /// Position in `tiles` by cell, built once per view by [`PlayView::index_tiles`] so the
     /// affordances look a tile up in O(1); [`PlayView::tile_at`] scans when it is stale or unset.
     pub tile_index: HashMap<Axial, usize>,
+    /// Ring cells of placed footprint tiles, each mapped to its anchor (`hex_core::World::members`).
+    pub members: HashMap<Axial, Axial>,
     pub frontier: Vec<Axial>,
+    /// A footprint tile is selected for placing: the slot ring outlines only the footprints of
+    /// [`PlayView::mega_slots`], and nothing when there are none.
+    pub footprint_selected: bool,
+    /// The legal centres of the selected footprint tile (`hex_core::World::mega_slots`); empty
+    /// while a single tile is selected.
+    pub mega_slots: Vec<Axial>,
     /// The level a free slot's outline sits on where it is not 0 (P4): the level the selected
     /// tile's default orientation takes there (the first cliff-free legal one), else the highest
     /// neighbour's level when it fits nowhere.
@@ -81,8 +92,30 @@ impl PlayView {
             .collect();
     }
 
-    /// The placed tile at `cell`.
+    /// The placed tile covering `cell`: a footprint's ring cell answers with its anchor's tile.
     pub fn tile_at(&self, cell: Axial) -> Option<&PlayTile> {
+        self.placed_at(cell)
+            .or_else(|| self.placed_at(*self.members.get(&cell)?))
+    }
+
+    /// The tile covering `cell`, with the ring direction of `cell` from that tile's anchor
+    /// (`None` at the anchor).
+    pub fn occupant(&self, cell: Axial) -> Option<(&PlayTile, Option<u8>)> {
+        if let Some(t) = self.placed_at(cell) {
+            return Some((t, None));
+        }
+        let anchor = *self.members.get(&cell)?;
+        let ring = (0..6u8).find(|&d| anchor.neighbor(d) == cell)?;
+        Some((self.placed_at(anchor)?, Some(ring)))
+    }
+
+    /// Whether a footprint tile stands with its anchor at `cell`.
+    pub fn is_footprint(&self, cell: Axial) -> bool {
+        self.members.get(&cell.neighbor(0)) == Some(&cell)
+    }
+
+    /// The tile placed with its anchor at `cell`.
+    fn placed_at(&self, cell: Axial) -> Option<&PlayTile> {
         // A verified index hit is O(1). A miss or a stale hit (a same-length index built for other
         // tiles) falls back to the scan, so a hand-built view never answers None for a placed cell.
         if self.tile_index.len() == self.tiles.len()
@@ -346,6 +379,41 @@ mod tests {
             tile: "meadow".into(),
             rotation: 0,
             level: 0,
+        }
+    }
+
+    /// A massif's ring cells answer with the anchor's tile, before and after indexing, and say
+    /// which ring direction they sit at.
+    #[test]
+    fn tile_at_answers_members() {
+        let anchor = Axial::new(2, 0);
+        let massif = PlayTile {
+            cell: anchor,
+            tile: "massif_granite".into(),
+            rotation: 3,
+            level: 1,
+        };
+        let mut v = PlayView {
+            tiles: vec![tile(0, 0), massif.clone()],
+            members: (0..6u8).map(|d| (anchor.neighbor(d), anchor)).collect(),
+            ..Default::default()
+        };
+        for indexed in [false, true] {
+            if indexed {
+                v.index_tiles();
+            }
+            assert_eq!(v.tile_at(anchor), Some(&massif));
+            assert_eq!(v.occupant(anchor), Some((&massif, None)));
+            for d in 0..6u8 {
+                assert_eq!(v.tile_at(anchor.neighbor(d)), Some(&massif), "ring {d}");
+                assert_eq!(v.occupant(anchor.neighbor(d)), Some((&massif, Some(d))));
+            }
+            assert_eq!(
+                v.tile_at(Axial::ORIGIN).map(|t| t.cell),
+                Some(Axial::ORIGIN)
+            );
+            assert!(v.tile_at(Axial::new(5, 5)).is_none());
+            assert!(v.is_footprint(anchor) && !v.is_footprint(Axial::ORIGIN));
         }
     }
 

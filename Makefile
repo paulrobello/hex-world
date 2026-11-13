@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-massif shots-test
 
 fmt:
 	cargo fmt --all
@@ -346,6 +346,15 @@ shots-piece:
 # a booked load-sensitive window.
 shots-elevation:
 	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/elevation/elevation-shots.json OUT=docs/checkpoints/elevation ARGS='--scenario play --clock fixed --water_clock fixed'
+
+# Massif review shots (P4 mega tiles): docs/checkpoints/massif_granite/massif-shots.json builds a
+# massif ringed by Meadow, with a forest edge on its north side, a road through its east side cell
+# and a level-1 massif beside level-0 Meadow to the west, then shoots the overview, a low camera
+# along the ring-to-Meadow seam, the raised massif's cliff edge, the ghost at two rotations and two
+# frames of the bulldoze sink, with state dumps. Fixed clocks, so a rerun replays. GPU capture: run
+# only inside a booked load-sensitive window.
+shots-massif:
+	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/massif_granite/massif-shots.json OUT=docs/checkpoints/massif_granite ARGS='--scenario play --clock fixed --water_clock fixed'
 
 shots-kit:
 	mkdir -p target/shots

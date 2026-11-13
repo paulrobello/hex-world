@@ -12,8 +12,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::axial::Axial;
 use crate::catalog::TileCatalog;
-use crate::tile::TileDef;
-use crate::world::{Action, HISTORY_DEPTH, MAX_LEVEL, PlacedTile, World, level_allowed};
+use crate::footprint;
+use crate::tile::{TileDef, opposite_edge};
+use crate::world::{
+    Action, HISTORY_DEPTH, MAX_LEVEL, PlacedTile, World, facing_in, footprint_index, level_allowed,
+};
 
 /// First bytes of every `.hexworld` file.
 pub const SAVE_MAGIC: [u8; 8] = *b"HEXWORLD";
@@ -141,6 +144,10 @@ pub enum WorldIssue {
         cell: Axial,
         edge: u8,
     },
+    /// Two footprints, or a footprint and a tile, both cover `cell`.
+    FootprintOverlap {
+        cell: Axial,
+    },
     Disconnected,
 }
 
@@ -167,6 +174,9 @@ impl fmt::Display for WorldIssue {
             }
             WorldIssue::Incompatible { cell, edge } => {
                 write!(f, "edge {edge} of ({}, {}) does not fit", cell.q, cell.r)
+            }
+            WorldIssue::FootprintOverlap { cell } => {
+                write!(f, "cell ({}, {}) is covered twice", cell.q, cell.r)
             }
             WorldIssue::Disconnected => write!(f, "the world is not connected"),
         }
@@ -281,8 +291,9 @@ impl SaveData {
     /// validates it against `catalog`.
     pub fn decode(bytes: &[u8], catalog: &TileCatalog) -> Result<Self, SaveError> {
         let (version, payload) = open_envelope(bytes)?;
-        let save = migrate(version, payload)?;
+        let mut save = migrate(version, payload)?;
         save.validate(catalog)?;
+        save.world.rebuild_members(catalog);
         Ok(save)
     }
 
@@ -400,9 +411,10 @@ fn validate_values(camera: &CameraState, settings: &GameSettings) -> Result<(), 
     }
 }
 
-/// The world rules every reachable world obeys: non-empty, coordinates in range, known tiles,
-/// rotations `0..6`, every touching edge pair compatible, and one connected piece. The range check
-/// runs before any neighbor arithmetic.
+/// The world rules every reachable world obeys: non-empty, coordinates in range (a mega tile's ring
+/// cells too), known tiles, rotations `0..6`, no cell covered twice, every touching edge pair
+/// compatible, and one connected piece. A mega tile is saved once, at its anchor; its footprint
+/// comes from its definition. The range check runs before any neighbor arithmetic.
 fn validate_tiles(
     tiles: &BTreeMap<Axial, PlacedTile>,
     catalog: &TileCatalog,
@@ -410,12 +422,14 @@ fn validate_tiles(
     let Some(&start) = tiles.keys().next() else {
         return Err(WorldIssue::Empty);
     };
-    let mut defs: BTreeMap<Axial, (&TileDef, u8, u8)> = BTreeMap::new();
-    for (&cell, t) in tiles {
-        if [cell.q, cell.r]
+    let out_of_range = |cell: Axial| {
+        [cell.q, cell.r]
             .iter()
             .any(|v| !(-CELL_LIMIT..=CELL_LIMIT).contains(v))
-        {
+    };
+    let mut megas: Vec<Axial> = vec![];
+    for (&cell, t) in tiles {
+        if out_of_range(cell) {
             return Err(WorldIssue::OutOfRange(cell));
         }
         let Some(def) = catalog.get(&t.def) else {
@@ -436,16 +450,38 @@ fn validate_tiles(
                 level: t.level,
             });
         }
-        defs.insert(cell, (def, t.rotation, t.level));
+        if def.is_mega() {
+            megas.push(cell);
+        }
     }
-    // The edge rule (`TileCatalog::edges_meet`) is symmetric, so checking world edges 0..3 of every tile covers each
-    // touching pair once.
-    for (&cell, &(def, rotation, level)) in &defs {
+    // Every anchor is in range, so its ring cells are at most one past the limit.
+    for &anchor in &megas {
+        if let Some(&m) = footprint::members(anchor)
+            .iter()
+            .find(|&&m| out_of_range(m))
+        {
+            return Err(WorldIssue::OutOfRange(m));
+        }
+    }
+    let members =
+        footprint_index(tiles, catalog).map_err(|cell| WorldIssue::FootprintOverlap { cell })?;
+    let occupied: BTreeSet<Axial> = tiles.keys().chain(members.keys()).copied().collect();
+    let anchor = |cell: Axial| members.get(&cell).copied().unwrap_or(cell);
+    // The seam rule (`TileCatalog::facings_meet`) is symmetric, so checking world edges 0..3 of
+    // every occupied cell covers each touching pair once.
+    for &cell in &occupied {
         for w in 0..3 {
-            let Some(&(other, other_rotation, other_level)) = defs.get(&cell.neighbor(w)) else {
+            let n = cell.neighbor(w);
+            if !occupied.contains(&n) || anchor(n) == anchor(cell) {
                 continue;
+            }
+            let mine = facing_in(tiles, &members, catalog, cell, w);
+            let theirs = facing_in(tiles, &members, catalog, n, opposite_edge(w));
+            let fits = match (mine, theirs) {
+                (Some(a), Some(b)) => catalog.facings_meet(a, b),
+                _ => false,
             };
-            if !catalog.edges_meet(def, rotation, level, w, other, other_rotation, other_level) {
+            if !fits {
                 return Err(WorldIssue::Incompatible { cell, edge: w });
             }
         }
@@ -455,16 +491,24 @@ fn validate_tiles(
     while let Some(cell) = stack.pop() {
         for e in 0..6 {
             let n = cell.neighbor(e);
-            if tiles.contains_key(&n) && seen.insert(n) {
+            if occupied.contains(&n) && seen.insert(n) {
                 stack.push(n);
             }
         }
     }
-    if seen.len() == tiles.len() {
+    if seen.len() == occupied.len() {
         Ok(())
     } else {
         Err(WorldIssue::Disconnected)
     }
+}
+
+/// Whether a `Replace` keeps its footprint kind. Undo and redo swap only the anchor's tile, so a
+/// replace between a single and a mega tile would leave the members stale. A definition missing
+/// from `catalog` counts as a single tile; the world check then reports it.
+fn same_footprint(catalog: &TileCatalog, from: &PlacedTile, to: &PlacedTile) -> bool {
+    let mega = |t: &PlacedTile| catalog.get(&t.def).is_some_and(TileDef::is_mega);
+    mega(from) == mega(to)
 }
 
 /// Replays the whole undo stack backward and the whole redo stack forward from the current world,
@@ -484,7 +528,8 @@ fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryI
             Action::Place { cell, tile } => tiles.remove(cell).as_ref() == Some(tile),
             Action::Bulldoze { cell, tile } => tiles.insert(*cell, tile.clone()).is_none(),
             Action::Replace { cell, from, to } => {
-                tiles.insert(*cell, from.clone()).as_ref() == Some(to)
+                same_footprint(catalog, from, to)
+                    && tiles.insert(*cell, from.clone()).as_ref() == Some(to)
             }
         };
         check_step(&tiles, catalog, stack, index, action, ok)?;
@@ -496,7 +541,8 @@ fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryI
             Action::Place { cell, tile } => tiles.insert(*cell, tile.clone()).is_none(),
             Action::Bulldoze { cell, tile } => tiles.remove(cell).as_ref() == Some(tile),
             Action::Replace { cell, from, to } => {
-                tiles.insert(*cell, to.clone()).as_ref() == Some(from)
+                same_footprint(catalog, from, to)
+                    && tiles.insert(*cell, to.clone()).as_ref() == Some(from)
             }
         };
         check_step(&tiles, catalog, stack, index, action, ok)?;
@@ -960,7 +1006,7 @@ mod tests {
         w.place(c, Axial::new(0, 1), "meadow", Orientation::new(0, 0))
             .unwrap();
         w.bulldoze(c, WEST).unwrap();
-        w.undo();
+        w.undo(c);
         SaveData {
             world: w,
             unlocks: BTreeSet::from(["windmill".to_owned()]),
@@ -981,7 +1027,7 @@ mod tests {
             .unwrap();
         w.place(&c, Axial::new(1, -1), "forest", Orientation::new(0, 0))
             .unwrap();
-        w.undo();
+        w.undo(&c);
         let save = SaveData {
             world: w,
             unlocks: BTreeSet::new(),
@@ -1017,16 +1063,16 @@ mod tests {
         // The restored history behaves exactly like the original.
         let (mut a, mut b) = (save.world.clone(), back.world.clone());
         assert!(b.can_undo() && b.can_redo());
-        while a.undo() {
-            assert!(b.undo());
+        while a.undo(&c) {
+            assert!(b.undo(&c));
             assert_eq!(a, b);
         }
-        assert!(!b.undo());
-        while a.redo() {
-            assert!(b.redo());
+        assert!(!b.undo(&c));
+        while a.redo(&c) {
+            assert!(b.redo(&c));
             assert_eq!(a, b);
         }
-        assert!(!b.redo());
+        assert!(!b.redo(&c));
         assert_eq!(b.tile(WEST), None, "the bulldoze was redone last");
     }
 
@@ -1050,9 +1096,12 @@ mod tests {
         let mill = back.world.tile(EAST).unwrap();
         assert_eq!((mill.def.as_str(), mill.rotation), ("windmill", 3));
         let mut w = back.world.clone();
-        assert!(w.undo() && w.undo(), "both placements undo after the load");
+        assert!(
+            w.undo(&c) && w.undo(&c),
+            "both placements undo after the load"
+        );
         assert_eq!(w.tile(EAST), None);
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert_eq!(w.tile(EAST).unwrap().def, "windmill");
     }
 
@@ -1076,9 +1125,12 @@ mod tests {
         let farm = back.world.tile(EAST).unwrap();
         assert_eq!((farm.def.as_str(), farm.rotation), ("farm", 2));
         let mut w = back.world.clone();
-        assert!(w.undo() && w.undo(), "both placements undo after the load");
+        assert!(
+            w.undo(&c) && w.undo(&c),
+            "both placements undo after the load"
+        );
         assert_eq!(w.tile(EAST), None);
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert_eq!(w.tile(EAST).unwrap().def, "farm");
     }
 
@@ -1134,13 +1186,15 @@ mod tests {
     #[test]
     fn every_world_reached_by_play_round_trips() {
         let c = catalog();
+        let massif = c.get(MASSIF).unwrap();
         let mut checked_with_redo = 0;
+        let mut checked_with_massif = 0;
         for seed in 0..20u64 {
             let mut rng = Rng(seed);
             let mut w = World::new(seed);
             for step in 1..=400 {
                 match rng.below(10) {
-                    0..=5 => {
+                    0..=4 => {
                         let frontier = w.frontier();
                         let cell = frontier[rng.below(frontier.len())];
                         let options = w.inventory(&c, cell);
@@ -1151,19 +1205,28 @@ mod tests {
                             w.place(&c, cell, &def.id, o).unwrap();
                         }
                     }
+                    5 => {
+                        let slots = w.mega_slots(&c, massif);
+                        if !slots.is_empty() {
+                            let (a, legal) = &slots[rng.below(slots.len())];
+                            let o = legal[rng.below(legal.len())];
+                            w.place(&c, *a, MASSIF, o).unwrap();
+                        }
+                    }
                     6 => {
                         let cells: Vec<Axial> = w.tiles().keys().copied().collect();
                         let _ = w.bulldoze(&c, cells[rng.below(cells.len())]);
                     }
                     7 | 8 => {
-                        w.undo();
+                        w.undo(&c);
                     }
                     _ => {
-                        w.redo();
+                        w.redo(&c);
                     }
                 }
                 if step % 50 == 0 {
                     checked_with_redo += usize::from(w.can_redo());
+                    checked_with_massif += usize::from(!w.members().is_empty());
                     let save = SaveData {
                         world: w.clone(),
                         unlocks: BTreeSet::new(),
@@ -1175,6 +1238,7 @@ mod tests {
             }
         }
         assert!(checked_with_redo > 0);
+        assert!(checked_with_massif > 0);
     }
 
     #[test]
@@ -1435,7 +1499,7 @@ mod tests {
             .unwrap();
         w.replace(&c, Axial::new(3, 0), "meadow", Orientation::new(0, 0))
             .unwrap();
-        assert!(w.undo());
+        assert!(w.undo(&c));
         let levels: Vec<u8> = w.tiles().values().map(|t| t.level).collect();
         assert_eq!(levels.iter().copied().max(), Some(3));
         assert!(levels.contains(&2) && levels.contains(&1) && levels.contains(&0));
@@ -1616,12 +1680,12 @@ mod tests {
     fn replaced_sample(c: &TileCatalog) -> SaveData {
         let mut save = sample(c);
         let w = &mut save.world;
-        w.redo();
+        w.redo(c);
         w.replace(c, EAST, "forest", Orientation::new(0, 0))
             .unwrap();
         w.replace(c, Axial::new(0, 1), "forest", Orientation::new(4, 0))
             .unwrap();
-        w.undo();
+        w.undo(c);
         save
     }
 
@@ -1635,14 +1699,14 @@ mod tests {
         let back = decode(&save.encode()).unwrap();
         assert_eq!(back, save);
         let mut w = back.world;
-        assert!(w.undo());
+        assert!(w.undo(&c));
         let road = w.tile(EAST).unwrap();
         assert_eq!(
             (road.def.as_str(), road.rotation),
             ("road_straight", 1),
             "undo brings the road back at its rotation"
         );
-        assert!(w.redo() && w.redo());
+        assert!(w.redo(&c) && w.redo(&c));
         assert_eq!(w.tile(Axial::new(0, 1)).unwrap().def, "forest");
     }
 
@@ -1739,6 +1803,261 @@ mod tests {
         };
         let bytes = envelope(2, &postcard::to_allocvec(&w2).unwrap());
         assert_eq!(decode(&bytes), Ok(save));
+    }
+
+    const MASSIF: &str = "massif_granite";
+    /// A legal massif centre two steps east of the start meadow; ring cell 3 is `EAST`.
+    const CENTRE: Axial = Axial { q: 2, r: 0 };
+    /// East of the massif, touching only its ring cell 0.
+    const PAST_MASSIF: Axial = Axial { q: 4, r: 0 };
+    /// South-east of the massif, touching only its ring cell 1.
+    const BELOW_MASSIF: Axial = Axial { q: 2, r: 2 };
+
+    fn save_of(world: World) -> SaveData {
+        SaveData {
+            world,
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        }
+    }
+
+    fn placed(c: &TileCatalog, id: &str, rotation: u8, cell: Axial) -> PlacedTile {
+        assert!(c.get(id).is_some(), "{id}");
+        PlacedTile {
+            def: id.into(),
+            rotation,
+            level: 0,
+            seed: crate::world::cell_seed(1, cell),
+        }
+    }
+
+    fn wire_tile(c: &TileCatalog, id: &str, rotation: u8, cell: Axial) -> v1::Tile {
+        v1::Tile::new(cell, &placed(c, id, rotation, cell))
+    }
+
+    fn record(
+        kind: v3::ActionKind,
+        tile: v1::Tile,
+        replaced: Option<v1::Tile>,
+    ) -> v3::HistoryAction {
+        v3::HistoryAction {
+            kind,
+            tile,
+            replaced,
+        }
+    }
+
+    /// A massif with single tiles around it, a massif-to-massif replace that turns it, and a
+    /// bulldoze undone, so both stacks are non-empty.
+    fn massif_save(c: &TileCatalog) -> SaveData {
+        let mut w = World::new(5);
+        w.place(c, WEST, "meadow", Orientation::new(0, 0)).unwrap();
+        w.place(c, CENTRE, MASSIF, Orientation::new(2, 0)).unwrap();
+        w.place(c, PAST_MASSIF, "meadow", Orientation::new(0, 0))
+            .unwrap();
+        let forest = c.get("forest").unwrap();
+        let o = w.legal_orientations(c, BELOW_MASSIF, forest)[0];
+        w.place(c, BELOW_MASSIF, "forest", o).unwrap();
+        w.replace(c, CENTRE.neighbor(4), MASSIF, Orientation::new(3, 0))
+            .unwrap();
+        w.bulldoze(c, PAST_MASSIF).unwrap();
+        assert!(w.undo(c));
+        save_of(w)
+    }
+
+    /// `members` is exactly what the tiles derive.
+    fn assert_members_derived(w: &World, c: &TileCatalog) {
+        let mut r = w.clone();
+        r.rebuild_members(c);
+        assert_eq!(r.members(), w.members());
+    }
+
+    #[test]
+    fn massif_world_round_trips() {
+        let c = catalog();
+        let save = massif_save(&c);
+        assert_eq!(save.world.members().len(), 6);
+        let (undo, redo) = save.world.history_stacks();
+        assert!(!undo.is_empty() && !redo.is_empty());
+        let w3 = wire(&save);
+        assert_eq!(
+            w3.tiles.len(),
+            save.world.tiles().len(),
+            "one entry per anchor"
+        );
+        assert!(
+            w3.tiles
+                .iter()
+                .all(|t| !save.world.members().contains_key(&Axial::new(t.q, t.r)))
+        );
+        let bytes = save.encode();
+        let back = decode(&bytes).unwrap();
+        assert_eq!(back.world.members(), save.world.members());
+        assert_eq!(back, save);
+        assert_eq!(back.encode(), bytes);
+
+        let (mut a, mut b) = (save.world.clone(), back.world);
+        while a.undo(&c) {
+            assert!(b.undo(&c));
+            assert_members_derived(&b, &c);
+            assert_eq!(a, b);
+        }
+        assert_eq!(b.tiles().len(), 1);
+        while a.redo(&c) {
+            assert!(b.redo(&c));
+            assert_members_derived(&b, &c);
+            assert_eq!(a, b);
+        }
+        assert_eq!(b.tile(PAST_MASSIF), None, "the bulldoze was redone last");
+    }
+
+    #[test]
+    fn overlapping_footprints_are_rejected() {
+        let c = catalog();
+        let invalid = |w: &v3::Save| match decode(&file(w)) {
+            Err(SaveError::InvalidWorld(issue)) => issue,
+            other => panic!("expected InvalidWorld, got {other:?}"),
+        };
+        // A second massif one cell east: its anchor is the first one's ring cell 0.
+        let second = CENTRE.neighbor(0);
+        let mut w = wire(&massif_save(&c));
+        w.tiles.push(wire_tile(&c, MASSIF, 0, second));
+        assert_eq!(invalid(&w), WorldIssue::FootprintOverlap { cell: second });
+        // A single tile on a ring cell.
+        let mut w = wire(&massif_save(&c));
+        w.tiles.push(wire_tile(&c, "meadow", 0, EAST));
+        assert_eq!(invalid(&w), WorldIssue::FootprintOverlap { cell: EAST });
+        // Two massifs whose rings share a cell, their anchors two steps apart.
+        let mut w = wire(&massif_save(&c));
+        w.tiles
+            .retain(|t| (t.q, t.r) != (PAST_MASSIF.q, PAST_MASSIF.r));
+        w.tiles.push(wire_tile(&c, MASSIF, 0, PAST_MASSIF));
+        assert_eq!(
+            invalid(&w),
+            WorldIssue::FootprintOverlap {
+                cell: CENTRE.neighbor(0)
+            }
+        );
+    }
+
+    #[test]
+    fn member_out_of_range_is_rejected() {
+        let c = catalog();
+        let anchor = Axial::new(CELL_LIMIT, 0);
+        let mut w = wire(&save_of(World::new(1)));
+        w.tiles.push(wire_tile(&c, MASSIF, 0, anchor));
+        assert_eq!(
+            decode(&file(&w)),
+            Err(SaveError::InvalidWorld(WorldIssue::OutOfRange(
+                anchor.neighbor(0)
+            )))
+        );
+    }
+
+    #[test]
+    fn a_bad_neighbour_of_a_member_is_rejected() {
+        let c = catalog();
+        // Rotation 0 puts a road end on world edge 3 of `PAST_MASSIF`, against ring cell 0.
+        let mut w = wire(&massif_save(&c));
+        let t = tile_at(&mut w, PAST_MASSIF.q, PAST_MASSIF.r);
+        t.def = "road_straight".into();
+        t.rotation = 0;
+        assert_eq!(
+            decode(&file(&w)),
+            Err(SaveError::InvalidWorld(WorldIssue::Incompatible {
+                cell: CENTRE.neighbor(0),
+                edge: 0
+            }))
+        );
+    }
+
+    #[test]
+    fn massif_history_replays() {
+        let c = catalog();
+        let invalid = |w: &v3::Save| match decode(&file(w)) {
+            Err(SaveError::InvalidHistory(issue)) => issue,
+            other => panic!("expected InvalidHistory, got {other:?}"),
+        };
+        // A meadow stands on what would be the massif's ring cell 3.
+        let mut beside = World::new(1);
+        beside
+            .place(&c, EAST, "meadow", Orientation::new(0, 0))
+            .unwrap();
+        let base = || {
+            let mut w = wire(&save_of(beside.clone()));
+            w.undo.clear();
+            w.redo.clear();
+            w
+        };
+        let overlap = |stack| HistoryIssue::InvalidState {
+            stack,
+            index: 0,
+            issue: WorldIssue::FootprintOverlap { cell: EAST },
+        };
+        // Redoing a massif placement over it.
+        let mut w = base();
+        let massif = wire_tile(&c, MASSIF, 0, CENTRE);
+        w.redo.push(record(v3::ActionKind::Place, massif, None));
+        assert_eq!(invalid(&w), overlap(HistoryStack::Redo));
+        // Undoing a massif bulldoze over it.
+        let mut w = base();
+        let massif = wire_tile(&c, MASSIF, 0, CENTRE);
+        w.undo.push(record(v3::ActionKind::Bulldoze, massif, None));
+        assert_eq!(invalid(&w), overlap(HistoryStack::Undo));
+
+        // With the massif placed, a ring cell holds no tile of its own to undo...
+        let mut w = wire(&massif_save(&c));
+        let meadow = wire_tile(&c, "meadow", 0, EAST);
+        w.undo.push(record(v3::ActionKind::Place, meadow, None));
+        assert_eq!(
+            invalid(&w),
+            HistoryIssue::Mismatch {
+                stack: HistoryStack::Undo,
+                index: 0,
+                cell: EAST
+            }
+        );
+        // ...and a tile redone onto one overlaps the footprint.
+        let mut w = wire(&massif_save(&c));
+        w.redo.clear();
+        let meadow = wire_tile(&c, "meadow", 0, EAST);
+        w.redo.push(record(v3::ActionKind::Place, meadow, None));
+        assert_eq!(invalid(&w), overlap(HistoryStack::Redo));
+    }
+
+    /// Undo and redo of a `Replace` swap only the anchor's tile, so a replace between a single and
+    /// a mega tile would leave the footprint members stale.
+    #[test]
+    fn cross_kind_replace_in_history_is_rejected() {
+        let c = catalog();
+        let mismatch = |stack| {
+            Err(SaveError::InvalidHistory(HistoryIssue::Mismatch {
+                stack,
+                index: 0,
+                cell: Axial::ORIGIN,
+            }))
+        };
+        let meadow = || wire_tile(&c, "meadow", 0, Axial::ORIGIN);
+        let massif = || wire_tile(&c, MASSIF, 0, Axial::ORIGIN);
+        // Redo turns the start meadow into a massif.
+        let mut w = wire(&save_of(World::new(1)));
+        w.tiles = vec![meadow()];
+        w.redo
+            .push(record(v3::ActionKind::Replace, massif(), Some(meadow())));
+        assert_eq!(decode(&file(&w)), mismatch(HistoryStack::Redo));
+        // Undo turns a lone massif back into a meadow.
+        let mut w = wire(&save_of(World::new(1)));
+        w.tiles = vec![massif()];
+        w.undo
+            .push(record(v3::ActionKind::Replace, massif(), Some(meadow())));
+        assert_eq!(decode(&file(&w)), mismatch(HistoryStack::Undo));
+        // Redo turns a lone massif into a meadow.
+        let mut w = wire(&save_of(World::new(1)));
+        w.tiles = vec![massif()];
+        w.redo
+            .push(record(v3::ActionKind::Replace, meadow(), Some(massif())));
+        assert_eq!(decode(&file(&w)), mismatch(HistoryStack::Redo));
     }
 
     /// SplitMix64, so the fuzz corpus is reproducible without a `rand` dependency.

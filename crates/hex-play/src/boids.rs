@@ -539,6 +539,10 @@ struct Params {
     sky: Vec4,
     /// How far (m) the play altitude band lifts ([`BoidPlan::sky_lift`]).
     lift: f32,
+    /// How many of `peaks` are set.
+    peak_count: u32,
+    /// The footprint peaks the band also lifts over ([`BoidPlan::peaks`]).
+    peaks: [Vec4; plan::MAX_PEAKS],
 }
 
 /// The compute pass's per-frame input from the plan at time `t`, `dt` after the last frame.
@@ -559,6 +563,8 @@ fn sim_params(plan: &BoidPlan, dt: f32, t: f32) -> Params {
         flock: plan::FLOCK_SIZE,
         sky: plan.sky,
         lift: plan.sky_lift,
+        peak_count: plan.peaks.len().min(plan::MAX_PEAKS) as u32,
+        peaks: std::array::from_fn(|k| plan.peaks.get(k).copied().unwrap_or(Vec4::ZERO)),
     }
 }
 
@@ -1451,12 +1457,17 @@ pub fn step_dt(delta: f32, paused: bool) -> f32 {
 struct BoidsPipeline {
     layout: BindGroupLayoutDescriptor,
     update: CachedComputePipelineId,
+    /// The same pass with the band lifted over footprint peaks (`update_peaks`), dispatched only
+    /// while the plan has peaks, so a world without one runs exactly the flat-world pass.
+    update_peaks: CachedComputePipelineId,
 }
 
 #[derive(Resource)]
 struct BoidsBindGroup {
     group: BindGroup,
     count: u32,
+    /// The plan has footprint peaks ([`BoidsPipeline::update_peaks`]).
+    peaks: bool,
     /// The flock buffer and the copy of it the pass reads (`boids_prev`), refreshed before it runs.
     boids: Buffer,
     prev: Buffer,
@@ -1490,14 +1501,23 @@ fn init_pipeline(
             ),
         ),
     );
-    let update = pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
-        label: Some("boids_update".into()),
-        layout: vec![layout.clone()],
-        shader: asset_server.load(COMPUTE_SHADER),
-        entry_point: Some(Cow::from("update")),
-        ..default()
+    let shader = asset_server.load(COMPUTE_SHADER);
+    let queue = |label: &'static str, entry: &'static str| {
+        pipeline_cache.queue_compute_pipeline(ComputePipelineDescriptor {
+            label: Some(label.into()),
+            layout: vec![layout.clone()],
+            shader: shader.clone(),
+            entry_point: Some(Cow::from(entry)),
+            ..default()
+        })
+    };
+    let update = queue("boids_update", "update");
+    let update_peaks = queue("boids_update_peaks", "update_peaks");
+    commands.insert_resource(BoidsPipeline {
+        layout,
+        update,
+        update_peaks,
     });
-    commands.insert_resource(BoidsPipeline { layout, update });
     commands.init_resource::<BoidParams>();
 }
 
@@ -1563,6 +1583,7 @@ fn prepare_bind_group(
     commands.insert_resource(BoidsBindGroup {
         group,
         count: sim.0.count,
+        peaks: sim.0.peak_count > 0,
         boids: gpu.buffer.clone(),
         prev,
     });
@@ -1574,10 +1595,16 @@ fn dispatch_boids(
     pipeline_cache: Res<PipelineCache>,
     pipeline: Res<BoidsPipeline>,
 ) {
-    let (Some(bind_group), Some(update)) = (
-        bind_group,
-        pipeline_cache.get_compute_pipeline(pipeline.update),
-    ) else {
+    let Some(bind_group) = bind_group else {
+        DISPATCHED.store(0, Ordering::Relaxed);
+        return;
+    };
+    let id = if bind_group.peaks {
+        pipeline.update_peaks
+    } else {
+        pipeline.update
+    };
+    let Some(update) = pipeline_cache.get_compute_pipeline(id) else {
         DISPATCHED.store(0, Ordering::Relaxed);
         return;
     };
@@ -1904,8 +1931,8 @@ mod tests {
     fn gpu_structs_match_the_shader_layout() {
         assert_eq!(std::mem::size_of::<Boid>(), 48);
         assert_eq!(std::mem::size_of::<Ctl>(), 48);
-        // 68 bytes of fields (`lift` after `sky`), padded to 16.
-        assert_eq!(Params::min_size().get(), 80);
+        // 72 bytes of fields to `peak_count`, then the 16-aligned `peaks` array: 80 + 8 * 16.
+        assert_eq!(Params::min_size().get(), 208);
         // 60 bytes of fields (the slot mapping's three u32s after fold_back), padded to 16.
         assert_eq!(BoidForm::min_size().get(), 64);
     }
@@ -2200,12 +2227,54 @@ mod tests {
         for line in ["sky: vec4<f32>,", "lift: f32,"] {
             assert!(src.contains(line), "Params lacks `{line}`");
         }
-        for band in ["SKY_LOW + params.lift", "SKY_HIGH + params.lift"] {
+        for band in [
+            "SKY_LOW + lift",
+            "SKY_HIGH + lift",
+            "var lift = params.lift;",
+            "if (peaks) { lift = lift_at(me.pos.xz); }",
+            "next = fly(i, me, c, lift);",
+        ] {
             assert!(src.contains(band), "the band ignores the lift: `{band}`");
+        }
+        // The flat world's pass never compiles the peak loop in (the mega-tiles overview parity):
+        // `update` passes `false`, and only `update_peaks` (dispatched with peaks) passes `true`.
+        for entry in [
+            "fn update(@builtin(global_invocation_id) id: vec3<u32>) {\n    advance(id.x, false);",
+            "fn update_peaks(@builtin(global_invocation_id) id: vec3<u32>) {\n    advance(id.x, true);",
+        ] {
+            assert!(src.contains(entry), "the entry points changed: `{entry}`");
         }
         let mut plan = plan::BoidPlan::play(BoidBudget::HIGH, 1);
         plan.sky_lift = 8.0;
         assert_eq!(sim_params(&plan, 0.1, 2.0).lift, 8.0);
+    }
+
+    /// Mega tiles (A52): the compute pass lifts the band over each footprint peak the plan sends
+    /// (`Params::peaks`, [`plan::MAX_PEAKS`] at most), as [`plan::BoidPlan::lift_at`] does: the
+    /// shader's `lift_at` reads them with the plan's falloff, and the params carry them in order.
+    #[test]
+    fn the_compute_pass_lifts_the_band_over_footprint_peaks() {
+        let src = include_str!("../../../assets/shaders/boids_compute.wgsl");
+        let cap = format!("peaks: array<vec4<f32>, {}>,", plan::MAX_PEAKS);
+        let falloff = format!("const PEAK_FALLOFF: f32 = {:.1};", plan::PEAK_FALLOFF);
+        for line in ["peak_count: u32,", cap.as_str(), falloff.as_str()] {
+            assert!(src.contains(line), "the shader lacks `{line}`");
+        }
+        assert!(
+            src.contains(
+                "pk.y * (1.0 - smoothstep(pk.w, pk.w + PEAK_FALLOFF, distance(p, pk.xz)))"
+            ),
+            "the shader's peak lift differs from plan::BoidPlan::lift_at"
+        );
+        let mut plan = plan::BoidPlan::play(BoidBudget::HIGH, 1);
+        plan.peaks = vec![
+            Vec4::new(1.0, 40.0, 2.0, 43.7),
+            Vec4::new(-5.0, 44.0, 6.0, 43.7),
+        ];
+        let p = sim_params(&plan, 0.1, 2.0);
+        assert_eq!(p.peak_count, 2);
+        assert_eq!(&p.peaks[..2], &plan.peaks[..]);
+        assert_eq!(p.peaks[2], Vec4::ZERO);
     }
 
     /// The compute pass reads boids only from `prev` (last frame's copy) and writes only `boids`:

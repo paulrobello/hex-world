@@ -1,0 +1,575 @@
+{
+ "rockM2": 934.4,
+ "screeM2": 354.8,
+ "grassM2": 3362.8,
+ "rockShare": 0.2007,
+ "rockPlusScreeShare": 0.2769,
+ "equalAreaDiscRadiusM": 17.25,
+ "footRadiusM": {
+  "median": 16.6,
+  "mean": 17.24,
+  "min": 8.0,
+  "max": 27.4
+ },
+ "footRadiusPer5Deg": [
+  16.6,
+  14.4,
+  13.0,
+  12.0,
+  17.4,
+  24.6,
+  24.9,
+  24.1,
+  14.1,
+  11.1,
+  10.2,
+  8.0,
+  9.6,
+  10.9,
+  17.4,
+  18.5,
+  18.6,
+  14.9,
+  12.6,
+  12.4,
+  11.2,
+  11.2,
+  12.1,
+  25.7,
+  25.8,
+  26.0,
+  26.6,
+  27.4,
+  24.6,
+  16.0,
+  16.5,
+  16.8,
+  16.8,
+  16.4,
+  16.6,
+  17.6,
+  18.8,
+  19.6,
+  19.6,
+  18.2,
+  17.9,
+  21.6,
+  22.9,
+  23.6,
+  23.1,
+  16.7,
+  16.9,
+  16.3,
+  16.0,
+  12.8,
+  13.4,
+  21.6,
+  21.7,
+  22.4,
+  22.3,
+  18.9,
+  12.8,
+  12.8,
+  14.4,
+  14.4,
+  14.0,
+  14.1,
+  12.5,
+  14.3,
+  15.7,
+  16.0,
+  16.3,
+  16.4,
+  16.6,
+  16.9,
+  18.4,
+  18.6
+ ],
+ "spines": {
+  "count": 6,
+  "list": [
+   {
+    "bearingDeg": 30,
+    "reachM": 24.9
+   },
+   {
+    "bearingDeg": 80,
+    "reachM": 18.6
+   },
+   {
+    "bearingDeg": 135,
+    "reachM": 27.4
+   },
+   {
+    "bearingDeg": 215,
+    "reachM": 23.6
+   },
+   {
+    "bearingDeg": 265,
+    "reachM": 22.4
+   },
+   {
+    "bearingDeg": 355,
+    "reachM": 18.6
+   }
+  ],
+  "intoRingCells": 6
+ },
+ "groundProfile": {
+  "bearings": 36,
+  "bearingsWithInwardDropOver5cm": 0,
+  "worstInwardDropM": 0.0,
+  "bearingsSteepestAtFoot": 35,
+  "perBearing": {
+   "0": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 16.75,
+    "footZ": 4.27,
+    "z_at_r": {
+     "20": 2.78,
+     "25": 1.04,
+     "30": 0.13,
+     "35": -0.05
+    }
+   },
+   "10": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 28.0,
+    "footR": 13.25,
+    "footZ": 5.59,
+    "z_at_r": {
+     "15": 4.81,
+     "20": 2.07,
+     "25": 0.46,
+     "30": -0.0,
+     "35": -0.0
+    }
+   },
+   "20": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.25,
+    "footR": 17.5,
+    "footZ": 3.58,
+    "z_at_r": {
+     "15": 4.84,
+     "20": 2.41,
+     "25": 0.74,
+     "30": 0.04,
+     "35": -0.03
+    }
+   },
+   "30": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.75,
+    "footR": 25.0,
+    "footZ": 1.0,
+    "z_at_r": {
+     "25": 1.0,
+     "30": 0.0
+    }
+   },
+   "40": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 29.25,
+    "footR": 14.5,
+    "footZ": 4.9,
+    "z_at_r": {
+     "15": 4.67,
+     "20": 2.34,
+     "25": 0.7,
+     "30": 0.0,
+     "35": 0.0
+    }
+   },
+   "50": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 26.75,
+    "footR": 10.25,
+    "footZ": 7.21,
+    "z_at_r": {
+     "15": 4.64,
+     "20": 1.83,
+     "25": 0.4,
+     "30": -0.06,
+     "35": -0.04
+    }
+   },
+   "60": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 10.0,
+    "footR": 9.75,
+    "footZ": 7.62,
+    "z_at_r": {
+     "15": 5.11,
+     "20": 2.19,
+     "25": 0.62,
+     "30": -0.0,
+     "35": -0.0
+    }
+   },
+   "70": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 17.5,
+    "footZ": 4.05,
+    "z_at_r": {
+     "20": 2.95,
+     "25": 1.15,
+     "30": 0.1,
+     "35": -0.02
+    }
+   },
+   "80": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 29.0,
+    "footR": 18.75,
+    "footZ": 3.72,
+    "z_at_r": {
+     "20": 3.14,
+     "25": 1.22,
+     "30": 0.13,
+     "35": -0.04
+    }
+   },
+   "90": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.25,
+    "footR": 12.75,
+    "footZ": 6.29,
+    "z_at_r": {
+     "15": 4.93,
+     "20": 2.46,
+     "25": 0.75,
+     "30": -0.04
+    }
+   },
+   "100": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 28.25,
+    "footR": 11.5,
+    "footZ": 6.76,
+    "z_at_r": {
+     "15": 5.05,
+     "20": 2.49,
+     "25": 0.55,
+     "30": -0.01,
+     "35": -0.02
+    }
+   },
+   "110": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 29.25,
+    "footR": 12.25,
+    "footZ": 6.35,
+    "z_at_r": {
+     "15": 5.06,
+     "20": 2.6,
+     "25": 0.59,
+     "30": -0.0,
+     "35": -0.01
+    }
+   },
+   "120": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 26.0,
+    "footZ": 0.76,
+    "z_at_r": {
+     "15": 5.1,
+     "20": 2.69,
+     "30": 0.12,
+     "35": -0.01
+    }
+   },
+   "130": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 26.75,
+    "footZ": 1.11,
+    "z_at_r": {
+     "15": 5.98,
+     "30": 0.34,
+     "35": -0.07
+    }
+   },
+   "140": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 24.75,
+    "footZ": 1.58,
+    "z_at_r": {
+     "25": 1.5,
+     "30": 0.13,
+     "35": -0.0
+    }
+   },
+   "150": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 29.75,
+    "footR": 16.75,
+    "footZ": 4.23,
+    "z_at_r": {
+     "20": 2.73,
+     "25": 0.97,
+     "30": 0.02
+    }
+   },
+   "160": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 29.5,
+    "footR": 17.0,
+    "footZ": 4.24,
+    "z_at_r": {
+     "20": 3.04,
+     "25": 1.28,
+     "30": 0.01,
+     "35": 0.0
+    }
+   },
+   "170": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.5,
+    "footR": 17.0,
+    "footZ": 4.88,
+    "z_at_r": {
+     "20": 3.57,
+     "25": 1.56,
+     "30": 0.11,
+     "35": -0.0
+    }
+   },
+   "180": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.75,
+    "footR": 19.0,
+    "footZ": 3.68,
+    "z_at_r": {
+     "20": 3.27,
+     "25": 1.36,
+     "30": 0.13,
+     "35": -0.01
+    }
+   },
+   "190": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.75,
+    "footR": 19.75,
+    "footZ": 2.78,
+    "z_at_r": {
+     "20": 2.68,
+     "25": 1.02,
+     "30": 0.09,
+     "35": -0.0
+    }
+   },
+   "200": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.25,
+    "footR": 18.0,
+    "footZ": 4.34,
+    "z_at_r": {
+     "20": 3.43,
+     "25": 1.52,
+     "30": 0.07,
+     "35": -0.03
+    }
+   },
+   "210": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.0,
+    "footR": 23.0,
+    "footZ": 3.22,
+    "z_at_r": {
+     "25": 2.38,
+     "30": 0.03
+    }
+   },
+   "220": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.5,
+    "footR": 23.25,
+    "footZ": 2.93,
+    "z_at_r": {
+     "25": 2.24,
+     "30": 0.36,
+     "35": 0.0
+    }
+   },
+   "230": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.25,
+    "footR": 17.0,
+    "footZ": 5.16,
+    "z_at_r": {
+     "20": 3.76,
+     "25": 1.63,
+     "30": 0.12,
+     "35": -0.03
+    }
+   },
+   "240": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.5,
+    "footR": 16.0,
+    "footZ": 5.52,
+    "z_at_r": {
+     "20": 3.72,
+     "25": 1.52,
+     "30": 0.07,
+     "35": -0.01
+    }
+   },
+   "250": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.25,
+    "footR": 13.5,
+    "footZ": 6.5,
+    "z_at_r": {
+     "15": 5.78,
+     "20": 3.48,
+     "25": 1.41,
+     "30": 0.04,
+     "35": -0.04
+    }
+   },
+   "260": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.75,
+    "footR": 22.0,
+    "footZ": 3.05,
+    "z_at_r": {
+     "25": 1.81,
+     "30": 0.18,
+     "35": -0.01
+    }
+   },
+   "270": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 31.5,
+    "footR": 22.5,
+    "footZ": 3.16,
+    "z_at_r": {
+     "25": 2.15,
+     "30": 0.13
+    }
+   },
+   "280": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.75,
+    "footR": 13.0,
+    "footZ": 6.12,
+    "z_at_r": {
+     "15": 5.22,
+     "20": 3.09,
+     "25": 1.35,
+     "30": 0.1,
+     "35": -0.05
+    }
+   },
+   "290": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 28.75,
+    "footR": 14.5,
+    "footZ": 4.63,
+    "z_at_r": {
+     "15": 4.4,
+     "20": 2.3,
+     "25": 0.76,
+     "30": 0.01,
+     "35": -0.1
+    }
+   },
+   "300": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.75,
+    "footR": 14.0,
+    "footZ": 5.34,
+    "z_at_r": {
+     "15": 4.88,
+     "20": 2.71,
+     "25": 0.65,
+     "30": -0.02,
+     "35": -0.0
+    }
+   },
+   "310": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 26.75,
+    "footR": 12.75,
+    "footZ": 5.56,
+    "z_at_r": {
+     "15": 4.53,
+     "20": 2.47,
+     "25": 0.51,
+     "30": -0.13,
+     "35": -0.01
+    }
+   },
+   "320": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.25,
+    "footR": 16.0,
+    "footZ": 3.54,
+    "z_at_r": {
+     "20": 2.09,
+     "25": 0.46,
+     "30": -0.08,
+     "35": 0.0
+    }
+   },
+   "330": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.25,
+    "footR": 16.5,
+    "footZ": 3.23,
+    "z_at_r": {
+     "20": 1.82,
+     "25": 0.41,
+     "30": -0.02
+    }
+   },
+   "340": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 27.25,
+    "footR": 16.75,
+    "footZ": 3.66,
+    "z_at_r": {
+     "20": 2.24,
+     "25": 0.64,
+     "30": -0.14,
+     "35": -0.01
+    }
+   },
+   "350": {
+    "worstInwardDropM": 0.0,
+    "worstDropAtR": 30.75,
+    "footR": 18.75,
+    "footZ": 3.45,
+    "z_at_r": {
+     "20": 2.88,
+     "25": 1.07,
+     "30": 0.08,
+     "35": -0.03
+    }
+   }
+  }
+ },
+ "rimBand": {
+  "maxInM": 13.71,
+  "p99InM": 11.57,
+  "tileLevelM2": 1987.2,
+  "ringGroundTileLevelShare": 0.543
+ },
+ "topM": 34.631,
+ "rockSurfaceM2": {
+  "all": 3780.8,
+  "upFacing": 3109.8
+ },
+ "tris": {
+  "cap": 3220,
+  "scree": 1021,
+  "rock": 7026,
+  "skirt": 576
+ }
+}

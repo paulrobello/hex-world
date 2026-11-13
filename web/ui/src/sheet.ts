@@ -1,6 +1,6 @@
 // The Tiles sheet (S3): the slot key, "Fits here" and "Doesn't fit here" with reasons, socket codes,
 // number keys. Rows keep their identity across slots so a re-rank animates (FLIP) instead of blinking.
-import type { Cell } from "./bridge.ts";
+import type { Cell, MegaSlot } from "./bridge.ts";
 import { h, isMac, motionMs, reduceMotion, s } from "./dom.ts";
 import { KIND_CLASS, TilePicture, hexPoints, socketHex } from "./glyph.ts";
 import { icon } from "./icons.ts";
@@ -10,6 +10,7 @@ import {
   type Needs,
   PICKER,
   type PickerEntry,
+  type TileMap,
   type Turn,
   entryMeta,
   entrySummary,
@@ -56,6 +57,10 @@ export interface SheetView {
   bulldoze: boolean;
   /** The nearest slot where something fits, offered when nothing fits here. */
   nearest: { cell: Cell; fits: number } | null;
+  /** The engine's legal footprint centres (`play.mega_slots`): where a massif row fits. */
+  megaSlots: readonly MegaSlot[];
+  /** Cell occupancy, for the wording of a massif's refusal. */
+  tiles: TileMap;
 }
 
 export class Sheet {
@@ -198,7 +203,12 @@ export class Sheet {
   render(v: SheetView): void {
     this.el.classList.toggle("is-inert", v.bulldoze);
     const fits = new Map<string, EntryFit>();
-    for (const r of this.rows) if (v.slot) fits.set(r.entry.id, fitEntry(r.entry, v.slot.needs));
+    for (const r of this.rows)
+      if (v.slot)
+        fits.set(
+          r.entry.id,
+          fitEntry(r.entry, v.slot.needs, { slot: v.slot.cell, megaSlots: v.megaSlots, tiles: v.tiles }),
+        );
     const ok = (r: Row) => !v.slot || fits.get(r.entry.id)!.ok;
     const fitting = this.rows.filter(ok);
     const off = this.rows.filter((r) => !ok(r));

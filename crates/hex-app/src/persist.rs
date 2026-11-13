@@ -718,10 +718,10 @@ mod tests {
 
         // The loaded history replays: undo and redo act exactly as they would have before.
         let (mut a, mut b) = (g.world.clone(), g2.world.clone());
-        assert!(a.redo() && b.redo());
+        assert!(a.redo(&g.catalog) && b.redo(&g.catalog));
         assert_eq!(a, b);
         for _ in 0..5 {
-            assert_eq!(a.undo(), b.undo());
+            assert_eq!(a.undo(&g.catalog), b.undo(&g.catalog));
             assert_eq!(a, b);
         }
     }

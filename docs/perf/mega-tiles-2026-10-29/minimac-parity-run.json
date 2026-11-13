@@ -1,0 +1,73 @@
+{
+  "keys": {
+    "scenario": "play",
+    "tier": "high",
+    "tilt": "off",
+    "fps": "off",
+    "seed": "1",
+    "clock": "fixed",
+    "water_clock": "fixed"
+  },
+  "viewport": "1600x1000",
+  "t_close": 4000,
+  "t_over": 4700,
+  "cameras": {
+    "close": [
+      10,
+      12,
+      40,
+      0,
+      0,
+      0
+    ],
+    "overview": [
+      20,
+      160,
+      150,
+      20,
+      0,
+      -5
+    ]
+  },
+  "rows": [
+    {
+      "arm": "mainA",
+      "dist": "dist-main",
+      "load_before": 2.05712890625,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "frames_ready": 150,
+      "close_enqueued_at_frame": 150,
+      "close_target_frame": 4000,
+      "overview_enqueued_at_frame": 4020,
+      "overview_target_frame": 4700,
+      "load_after": 3.04638671875,
+      "console_errors": []
+    },
+    {
+      "arm": "branch",
+      "dist": "dist-branch",
+      "load_before": 3.04638671875,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "frames_ready": 150,
+      "close_enqueued_at_frame": 150,
+      "close_target_frame": 4000,
+      "overview_enqueued_at_frame": 4020,
+      "overview_target_frame": 4700,
+      "load_after": 1.97900390625,
+      "console_errors": []
+    },
+    {
+      "arm": "mainB",
+      "dist": "dist-main",
+      "load_before": 1.97900390625,
+      "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+      "frames_ready": 150,
+      "close_enqueued_at_frame": 150,
+      "close_target_frame": 4000,
+      "overview_enqueued_at_frame": 4020,
+      "overview_target_frame": 4700,
+      "load_after": 2.3095703125,
+      "console_errors": []
+    }
+  ]
+}

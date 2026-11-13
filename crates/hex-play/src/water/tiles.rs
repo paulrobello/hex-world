@@ -2740,8 +2740,8 @@ mod tests {
                 "bulldoze" => {
                     world.bulldoze(cat, at()).unwrap();
                 }
-                "undo" => assert!(world.undo()),
-                "redo" => assert!(world.redo()),
+                "undo" => assert!(world.undo(cat)),
+                "redo" => assert!(world.redo(cat)),
                 _ => {}
             }
         }

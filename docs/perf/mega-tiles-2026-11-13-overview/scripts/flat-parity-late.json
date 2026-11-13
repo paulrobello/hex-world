@@ -1,0 +1,644 @@
+[
+ {
+  "cmd": "camera",
+  "pos": [
+   0,
+   300,
+   270
+  ],
+  "look_at": [
+   0,
+   0,
+   -10
+  ]
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth"
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 4,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": 5,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_mouth_l"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 0
+ },
+ {
+  "cmd": "select_tile",
+  "id": "ocean"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_straight"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "place",
+  "q": -3,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_spring"
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "road_straight"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "oak"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 2,
+  "r": 2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": 6,
+  "r": -1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "river_bend"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "forest"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "beach"
+ },
+ {
+  "cmd": "place",
+  "q": -4,
+  "r": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "house_cluster"
+ },
+ {
+  "cmd": "place",
+  "q": 3,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "house_cluster"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -2
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "wheat_field"
+ },
+ {
+  "cmd": "place",
+  "q": 1,
+  "r": -4
+ },
+ {
+  "cmd": "select_tile",
+  "id": "farm"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -4
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": -4
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": -3
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": -5
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": 0,
+  "r": 1,
+  "level": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -1,
+  "r": 2,
+  "level": 1
+ },
+ {
+  "cmd": "select_tile",
+  "id": "meadow"
+ },
+ {
+  "cmd": "place",
+  "q": -2,
+  "r": 2,
+  "level": 1
+ },
+ {
+  "cmd": "hover",
+  "q": 12,
+  "r": -12
+ },
+ {
+  "cmd": "wait",
+  "frames": 900
+ },
+ {
+  "cmd": "toggle",
+  "what": "photo"
+ },
+ {
+  "cmd": "photo",
+  "dof": "off",
+  "pause_agents": true
+ },
+ {
+  "cmd": "wait",
+  "frames": 60
+ },
+ {
+  "cmd": "dump_state",
+  "name": "flat-state"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   0,
+   300,
+   270
+  ],
+  "look_at": [
+   0,
+   0,
+   -10
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-overview"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   30,
+   60,
+   90
+  ],
+  "look_at": [
+   0,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-play"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -20,
+   70,
+   40
+  ],
+  "look_at": [
+   -25,
+   0,
+   -55
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-play-road-farm"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   10,
+   12,
+   40
+  ],
+  "look_at": [
+   0,
+   0,
+   0
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-close"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -40,
+   4,
+   -44
+  ],
+  "look_at": [
+   20,
+   1,
+   -48
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-low-road-cars"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -14,
+   9,
+   85
+  ],
+  "look_at": [
+   -6,
+   4,
+   36
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-low-level1"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   40,
+   6,
+   60
+  ],
+  "look_at": [
+   80,
+   0,
+   8
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-low-coast"
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   -20,
+   6,
+   -50
+  ],
+  "look_at": [
+   -50,
+   2,
+   -82
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-low-farm"
+ },
+ {
+  "cmd": "wait",
+  "frames": 30
+ },
+ {
+  "cmd": "camera",
+  "pos": [
+   0,
+   300,
+   270
+  ],
+  "look_at": [
+   0,
+   0,
+   -10
+  ]
+ },
+ {
+  "cmd": "wait",
+  "frames": 240
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-overview-late"
+ },
+ {
+  "cmd": "wait",
+  "frames": 600
+ },
+ {
+  "cmd": "screenshot",
+  "name": "flat-overview-later"
+ },
+ {
+  "cmd": "exit"
+ }
+]

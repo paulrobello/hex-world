@@ -1,0 +1,35 @@
+11:45:01Z window open, load { 7.19 6.37 6.95 }
+c151-1 EXIT=0 load_before { 7.19 6.37 6.95 } 11:45:01Z load_after { 8.34 6.85 7.10 } 11:45:48Z 
+mf-1 EXIT=0 load_before { 8.34 6.85 7.10 } 11:45:48Z load_after { 9.73 7.33 7.26 } 11:46:19Z 
+head-1 EXIT=0 load_before { 9.73 7.33 7.26 } 11:46:19Z load_after { 10.12 7.59 7.35 } 11:46:49Z 
+a00c825 EXIT=0 load_before { 10.12 7.59 7.35 } 11:46:50Z load_after { 12.36 8.29 7.61 } 11:47:20Z 
+3c0855c EXIT=0 load_before { 12.36 8.29 7.61 } 11:47:21Z load_after { 13.15 8.94 7.87 } 11:47:51Z 
+6942098 EXIT=0 load_before { 13.15 8.94 7.87 } 11:47:51Z load_after { 10.85 8.77 7.85 } 11:48:22Z 
+11437e3 EXIT=0 load_before { 10.85 8.77 7.85 } 11:48:22Z load_after { 9.30 8.59 7.81 } 11:48:53Z 
+165f491 EXIT=0 load_before { 9.30 8.59 7.81 } 11:48:53Z load_after { 8.92 8.54 7.82 } 11:49:24Z 
+897c216 EXIT=0 load_before { 8.92 8.54 7.82 } 11:49:24Z load_after { 8.00 8.35 7.78 } 11:49:54Z 
+63b2064 EXIT=0 load_before { 8.00 8.35 7.78 } 11:49:55Z load_after { 7.31 8.17 7.73 } 11:50:25Z 
+e351e56 EXIT=0 load_before { 7.31 8.17 7.73 } 11:50:25Z load_after { 7.34 8.10 7.72 } 11:50:56Z 
+cf2c2c9 EXIT=0 load_before { 7.34 8.10 7.72 } 11:50:56Z load_after { 6.46 7.80 7.63 } 11:51:27Z 
+b06ac09 EXIT=0 load_before { 6.46 7.80 7.63 } 11:51:27Z load_after { 7.97 8.05 7.72 } 11:51:59Z 
+c151-2 EXIT=0 load_before { 7.97 8.05 7.72 } 11:51:59Z load_after { 8.01 8.06 7.74 } 11:52:30Z 
+mf-2 EXIT=0 load_before { 8.01 8.06 7.74 } 11:52:31Z load_after { 7.75 8.00 7.73 } 11:53:02Z 
+head-2 EXIT=0 load_before { 7.75 8.00 7.73 } 11:53:03Z load_after { 12.28 9.11 8.14 } 11:53:34Z 
+11:53:34Z chain done, load { 12.28 9.11 8.14 }
+head-oldboids-1 EXIT=0 load_before { 12.28 9.11 8.14 } 11:53:35Z load_after { 10.73 9.05 8.15 } 11:54:07Z 
+head-v1-1 EXIT=0 load_before { 10.73 9.05 8.15 } 11:54:07Z load_after { 9.68 8.99 8.17 } 11:54:39Z 
+head-v2-1 EXIT=0 load_before { 9.68 8.99 8.17 } 11:54:39Z load_after { 10.06 9.15 8.25 } 11:55:10Z 
+head-oldboids-2 EXIT=0 load_before { 10.06 9.15 8.25 } 11:55:10Z load_after { 11.69 9.70 8.49 } 11:55:40Z 
+chain2 done 11:55:40Z
+p-mf-1 EXIT=0 load_before { 26.26 14.92 10.92 } 12:01:47Z load_after { 41.52 19.62 12.77 } 12:02:22Z 
+p-bfix-1 EXIT=0 load_before { 41.52 19.62 12.77 } 12:02:22Z load_after { 37.65 21.13 13.60 } 12:02:54Z 
+p-head-1 EXIT=0 load_before { 37.65 21.13 13.60 } 12:02:54Z load_after { 34.17 21.81 14.10 } 12:03:25Z 
+p-mf-2 EXIT=0 load_before { 34.17 21.81 14.10 } 12:03:25Z load_after { 32.62 22.65 14.68 } 12:03:57Z 
+p-bfix-2 EXIT=0 load_before { 32.62 22.65 14.68 } 12:03:57Z load_after { 28.25 22.58 14.93 } 12:04:28Z 
+p-head-2 EXIT=0 load_before { 28.25 22.58 14.93 } 12:04:28Z load_after { 30.64 24.14 15.83 } 12:04:59Z 
+p-mf-3 EXIT=0 load_before { 30.64 24.14 15.83 } 12:04:59Z load_after { 25.50 23.47 15.87 } 12:05:30Z 
+p-bfix-3 EXIT=0 load_before { 25.50 23.47 15.87 } 12:05:30Z load_after { 30.42 24.86 16.63 } 12:06:02Z 
+p-head-3 EXIT=0 load_before { 30.42 24.86 16.63 } 12:06:02Z load_after { 31.48 25.79 17.31 } 12:06:34Z 
+p-bfix-massif EXIT=0 load_before { 31.48 25.79 17.31 } 12:06:34Z load_after { 30.80 25.75 17.34 } 12:06:42Z 
+p-head-massif EXIT=0 load_before { 30.80 25.75 17.34 } 12:06:42Z load_after { 28.53 25.42 17.32 } 12:06:50Z 
+proof done 12:06:50Z

@@ -186,6 +186,140 @@ fn ring_errors(id: &str, rings: &[Vec<[f32; 2]>], base: bool) -> Vec<String> {
     e
 }
 
+/// Footprint bases (mega tiles, owner A52 2026-10-29): one ground mesh over a centre cell and its six
+/// ring cells, kind `hero`, whose cap border is the footprint's 18-edge flower outline at the grass
+/// level, so each outer edge meets a level-equal `meadow_base` the way two meadows meet. Kind `hero`
+/// runs none of the single-hex ring checks, so `footprint_base_errors` carries all of them.
+const FOOTPRINT_BASES: &[&str] = &["massif_granite"];
+
+/// Runtime corner `i` of the cell centred at `c`, at 30° + 60°·i in XZ (hexgeo `corner`).
+fn cell_corner(c: [f32; 2], i: usize) -> [f32; 2] {
+    let a = (30.0 + 60.0 * (i % 6) as f32).to_radians();
+    [
+        c[0] + hex_core::HEX_RADIUS * a.cos(),
+        c[1] + hex_core::HEX_RADIUS * a.sin(),
+    ]
+}
+
+/// Centres of the footprint's members around the origin: the anchor, then `neighbor(0..6)`.
+fn footprint_centres() -> [[f32; 2]; 7] {
+    std::array::from_fn(|m| match m {
+        0 => [0.0, 0.0],
+        _ => hex_core::Axial::ORIGIN
+            .neighbor(m as u8 - 1)
+            .to_world(hex_core::HEX_RADIUS),
+    })
+}
+
+/// The 18 outer edges as (start, end) in runtime XZ, in outer-index order (the mega-tile geometry
+/// pin: outer edge `j` is ring cell `j / 3`'s local edge `(j / 3 + 5 + j % 3) % 6`). A cell's edge `k`
+/// runs from its corner `k - 1` to its corner `k`.
+fn flower_outline() -> [([f32; 2], [f32; 2]); 18] {
+    let centres = footprint_centres();
+    std::array::from_fn(|j| {
+        let ring = j / 3;
+        let edge = (ring + 5 + j % 3) % 6;
+        let c = centres[1 + ring];
+        (cell_corner(c, edge + 5), cell_corner(c, edge))
+    })
+}
+
+/// The ring a footprint base must carry: `BORDER_SUBDIV` (16) points per outer edge, 1 m apart, the
+/// points a `meadow_base` beside that edge has on it, so the seam has no T-junctions.
+fn flower_lattice() -> Vec<[f32; 2]> {
+    flower_outline()
+        .iter()
+        .flat_map(|&(a, b)| {
+            (0..16).map(move |s| {
+                let t = s as f32 / 16.0;
+                [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+            })
+        })
+        .collect()
+}
+
+/// Distance from `p` to the nearest outline segment.
+fn outline_distance(p: [f32; 2]) -> f32 {
+    flower_outline()
+        .iter()
+        .map(|&(a, b)| {
+            let (dx, dz) = (b[0] - a[0], b[1] - a[1]);
+            let t =
+                (((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz)).clamp(0.0, 1.0);
+            ((p[0] - a[0] - t * dx).powi(2) + (p[1] - a[1] - t * dz).powi(2)).sqrt()
+        })
+        .fold(f32::MAX, f32::min)
+}
+
+/// Signed distance inside the footprint (positive inside): the most inside of its seven cells.
+fn footprint_inside(p: [f32; 2]) -> f32 {
+    footprint_centres()
+        .iter()
+        .map(|c| dist_to_border(p[0] - c[0], p[1] - c[1]))
+        .fold(f32::MIN, f32::max)
+}
+
+/// A footprint base's seam errors from each LOD's vertices: every vertex inside the footprint; the
+/// up-facing vertices on the outline (the cap ring) exactly `flower_lattice` within 1 mm, at `level`
+/// (meadow_base's measured ring height), with +Y normals, the same in every LOD and invariant under
+/// a 60° turn about the centre; and the skirt bottom at -LEVEL_STEP.
+fn footprint_base_errors(id: &str, lods: &[Vec<([f32; 3], [f32; 3])>], level: f32) -> Vec<String> {
+    let mut e = vec![];
+    let lattice = flower_lattice();
+    let mut rings = vec![];
+    for (i, v) in lods.iter().enumerate() {
+        if let Some((p, _)) = v
+            .iter()
+            .find(|(p, _)| footprint_inside([p[0], p[2]]) < -1e-3)
+        {
+            e.push(format!(
+                "{id}: LOD{i} vertex {p:?} lies outside the footprint"
+            ));
+        }
+        let mut ring: Vec<[f32; 2]> = vec![];
+        for (p, n) in v {
+            let q = [p[0], p[2]];
+            if outline_distance(q) >= 1e-3 || n[1] <= 0.5 {
+                continue;
+            }
+            if (p[1] - level).abs() > 1e-3 {
+                e.push(format!(
+                    "{id}: LOD{i} cap border vertex {p:?} is not at meadow_base's ring level {level}"
+                ));
+            }
+            if n[1] < 0.999 {
+                e.push(format!(
+                    "{id}: LOD{i} cap border normal {n:?} at {p:?} is not +Y (seam shading)"
+                ));
+            }
+            if !ring.iter().any(|r| near(*r, q, RING_TOL)) {
+                ring.push(q);
+            }
+        }
+        if !same_points(&ring, &lattice, 1e-3) {
+            let missing = lattice
+                .iter()
+                .filter(|l| !ring.iter().any(|r| near(*r, **l, 1e-3)))
+                .count();
+            e.push(format!(
+                "{id}: LOD{i} cap border has {} vertices, not the outline's {} lattice points ({missing} missing)",
+                ring.len(),
+                lattice.len()
+            ));
+        }
+        let bottom = v.iter().map(|(p, _)| p[1]).fold(f32::MAX, f32::min);
+        if (bottom + hex_core::LEVEL_STEP).abs() > 0.005 {
+            e.push(format!(
+                "{id}: LOD{i} skirt bottom {bottom} != -{}",
+                hex_core::LEVEL_STEP
+            ));
+        }
+        rings.push(ring);
+    }
+    e.extend(ring_errors(id, &rings, true));
+    e
+}
+
 /// Lane-socket errors: a socket's world position must sit on the lane contract for its extras.
 fn socket_errors(id: &str, name: &str, extras: &serde_json::Value, got: [f32; 3]) -> Vec<String> {
     let (Some(edge), Some(offset)) = (extras["edge"].as_u64(), extras["offset"].as_f64()) else {
@@ -420,11 +554,18 @@ const BOULDER_PIECES: &[&str] = &[
     "outcrop_granite",
 ];
 
-/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set, else
-/// `TEXEL_MIN_PX_PER_M`.
+/// The massif's unique rock and scree (owner A54 Q1 O1, 2026-10-29: a unique bake with this scoped
+/// floor; docs/checkpoints/massif_granite/integration.md): about 3,800 m² of slab granite and 420 m²
+/// of scree on one 2048² atlas measure 20.4 px/m; 256 px/m would need about 25,000² px.
+const MASSIF_TEXEL_MIN_PX_PER_M: f32 = 20.0;
+
+/// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set,
+/// `MASSIF_TEXEL_MIN_PX_PER_M` for massif_granite, else `TEXEL_MIN_PX_PER_M`.
 fn texel_min(id: &str) -> f32 {
     if BOULDER_PIECES.contains(&id) {
         BOULDER_TEXEL_MIN_PX_PER_M
+    } else if id == "massif_granite" {
+        MASSIF_TEXEL_MIN_PX_PER_M
     } else {
         TEXEL_MIN_PX_PER_M
     }
@@ -3062,6 +3203,115 @@ fn base_ring_level_must_be_flat_and_a_contract_level() {
     tilted[3].0[1] += 0.01;
     let e = base_ring_level("b", &tilted).unwrap_err();
     assert!(e.contains("not flat"), "{e}");
+}
+
+/// A synthetic footprint base: the given cap ring at `y` with +Y normals over a one-row skirt.
+fn footprint_lod(ring: &[[f32; 2]], y: f32) -> Vec<([f32; 3], [f32; 3])> {
+    let cap = ring.iter().map(|&[x, z]| ([x, y, z], [0.0, 1.0, 0.0]));
+    let foot = ring
+        .iter()
+        .map(|&[x, z]| ([x, -hex_core::LEVEL_STEP, z], [1.0, 0.0, 0.0]));
+    cap.chain(foot)
+        .chain([([0.0, 30.0, 0.0], [0.0, 1.0, 0.0])])
+        .collect()
+}
+
+#[test]
+fn footprint_outline_check_catches_wrong_rings() {
+    let lattice = flower_lattice();
+    assert_eq!(lattice.len(), 18 * 16);
+    // The outline closes: each outer edge starts where the one before it ends.
+    let outline = flower_outline();
+    for j in 0..18 {
+        assert!(
+            near(outline[j].1, outline[(j + 1) % 18].0, 1e-3),
+            "outer edge {j} does not meet edge {}",
+            (j + 1) % 18
+        );
+    }
+    let good = footprint_lod(&lattice, 0.0);
+    let e = footprint_base_errors("f", &[good.clone(), good.clone(), good.clone()], 0.0);
+    assert!(e.is_empty(), "{e:?}");
+    // A single-hex ring around the centre cell is not the outline.
+    let e = footprint_base_errors("f", &[footprint_lod(&hex_ring(), 0.0)], 0.0);
+    assert!(e.iter().any(|m| m.contains("lattice points")), "{e:?}");
+    // Corners only would leave T-junctions against meadow_base's 16 points per edge.
+    let corners: Vec<[f32; 2]> = outline.iter().map(|s| s.0).collect();
+    let e = footprint_base_errors("f", &[footprint_lod(&corners, 0.0)], 0.0);
+    assert!(e.iter().any(|m| m.contains("(270 missing)")), "{e:?}");
+    // Off meadow_base's ring level.
+    let e = footprint_base_errors("f", &[footprint_lod(&lattice, 0.02)], 0.0);
+    assert!(
+        e.iter()
+            .any(|m| m.contains("not at meadow_base's ring level")),
+        "{e:?}"
+    );
+    // A ring that differs between LODs.
+    let mut moved = lattice.clone();
+    moved[40][0] += 3e-4;
+    let e = footprint_base_errors("f", &[good.clone(), footprint_lod(&moved, 0.0)], 0.0);
+    assert!(
+        e.iter()
+            .any(|m| m.contains("border ring differs across LODs")),
+        "{e:?}"
+    );
+    // A tilted border normal, a vertex past the outline and a short skirt.
+    let mut tilted = good.clone();
+    tilted[7].1 = [0.2, 0.98, 0.0];
+    let e = footprint_base_errors("f", &[tilted], 0.0);
+    assert!(e.iter().any(|m| m.contains("is not +Y")), "{e:?}");
+    let mut outside = good.clone();
+    outside.push(([60.0, 0.0, 0.0], [0.0, 1.0, 0.0]));
+    let e = footprint_base_errors("f", &[outside], 0.0);
+    assert!(
+        e.iter().any(|m| m.contains("outside the footprint")),
+        "{e:?}"
+    );
+    let short: Vec<_> = good
+        .iter()
+        .map(|&(p, n)| ([p[0], p[1].max(-3.0), p[2]], n))
+        .collect();
+    let e = footprint_base_errors("f", &[short], 0.0);
+    assert!(e.iter().any(|m| m.contains("skirt bottom")), "{e:?}");
+}
+
+#[test]
+fn footprint_base_border_is_the_flower_outline() {
+    let kit = kits().pop().unwrap();
+    let piece = |id: &str| kit.manifest.pieces.iter().find(|p| p.id == id);
+    let lods_of = |p: &PieceEntry| -> Result<Vec<Vec<([f32; 3], [f32; 3])>>, String> {
+        let (doc, buffers, _) = plain(&kit, p)?;
+        (0..3)
+            .map(|i| {
+                let name = lod_mesh_name(&p.id, i);
+                mesh_named(&doc, &name)
+                    .map(|m| positions(&m, &buffers))
+                    .ok_or_else(|| format!("{}: mesh {name} missing", p.id))
+            })
+            .collect()
+    };
+    let meadow = lods_of(piece("meadow_base").expect("meadow_base in the manifest")).unwrap();
+    let level = base_ring_level("meadow_base", &meadow[0]).unwrap();
+    let mut e = vec![];
+    for id in FOOTPRINT_BASES {
+        let Some(p) = piece(id) else {
+            e.push(format!(
+                "{id}: footprint base missing from assets/kit/manifest.json"
+            ));
+            continue;
+        };
+        if p.kind != PieceKind::Hero {
+            e.push(format!(
+                "{id}: a footprint base is kind hero, not {:?}",
+                p.kind
+            ));
+        }
+        match lods_of(p) {
+            Ok(lods) => e.extend(footprint_base_errors(id, &lods, level)),
+            Err(err) => e.push(err),
+        }
+    }
+    fail(e);
 }
 
 #[test]

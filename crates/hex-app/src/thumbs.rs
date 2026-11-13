@@ -9,6 +9,7 @@ use bevy::app::RunFixedMainLoopSystems;
 use bevy::prelude::*;
 use bevy::render::view::DebandDither;
 use hex_core::{Axial, TileCatalog, TileDef};
+use hex_play::debug::DebugOverlays;
 use hex_play::play::{
     PlayKit, PlayTile, PlayView,
     packs::{PackRequests, PlayPacks},
@@ -34,12 +35,17 @@ const KEY: Color = Color::srgb(1.0, 0.0, 1.0);
 
 /// Camera: on the play start camera's side (+Z, edge 0 on the right), pitched near top-down, with
 /// a narrow field of view so the far and near edges keep nearly the same scale. One pose for every
-/// tile, so all thumbnails share one scale. The hex fills about 75% of the width, leaving room for
-/// scattered spruces near the border, whose crowns rise and overhang the edge by up to 1 m.
+/// single tile, so their thumbnails share one scale (a footprint tile takes [`camera_for`]'s own
+/// framing). The hex fills about 75% of the width, leaving room for scattered spruces near the
+/// border, whose crowns rise and overhang the edge by up to 1 m.
 const PITCH_DEG: f32 = 58.0;
 const FOV_DEG: f32 = 20.0;
 const DISTANCE: f32 = 108.0;
 const LOOK_AT: Vec3 = Vec3::new(0.0, 5.5, 1.5);
+/// A footprint tile's pose: the same pitch and field of view, backed off until the seven cells
+/// (87 m across) fill the width as one hex does, and centred on the cells and the peak.
+const FOOTPRINT_DISTANCE: f32 = 320.0;
+const FOOTPRINT_LOOK_AT: Vec3 = Vec3::new(0.0, 12.0, 10.0);
 
 /// Frames before the first stage.
 const START_FRAME: u32 = 240;
@@ -95,12 +101,23 @@ pub fn stem(tile: &str, k: u8) -> String {
     format!("{tile}-r{k}")
 }
 
-/// `plan.json`: the catalog's tiles in order, each with its six canonical rotations.
+/// `plan.json`: the catalog's tiles in order, each with its six canonical rotations, and a
+/// footprint tile with the `camera` look-at and distance that override the shared pose.
 pub fn plan_json(catalog: &TileCatalog) -> serde_json::Value {
     let tiles: Vec<serde_json::Value> = catalog
         .tiles()
         .iter()
-        .map(|t| serde_json::json!({ "id": t.id, "rotations": canonical_rotations(t) }))
+        .map(|t| {
+            let mut entry = serde_json::json!({ "id": t.id, "rotations": canonical_rotations(t) });
+            if t.is_mega() {
+                let (look_at, distance) = camera_for(t);
+                entry["camera"] = serde_json::json!({
+                    "distance_m": distance,
+                    "look_at": [look_at.x, look_at.y, look_at.z],
+                });
+            }
+            entry
+        })
         .collect();
     serde_json::json!({
         "render_size": [RENDER_SIZE.0, RENDER_SIZE.1],
@@ -114,15 +131,36 @@ pub fn plan_json(catalog: &TileCatalog) -> serde_json::Value {
     })
 }
 
-pub fn camera_transform() -> Transform {
+/// The thumbnail camera's (look-at point, distance) for `def`: the shared single-tile pose, or
+/// the footprint pose for a mega tile.
+pub fn camera_for(def: &TileDef) -> (Vec3, f32) {
+    if def.is_mega() {
+        (FOOTPRINT_LOOK_AT, FOOTPRINT_DISTANCE)
+    } else {
+        (LOOK_AT, DISTANCE)
+    }
+}
+
+/// The LOD a stage of `def` pins every LOD-tagged part to (`DebugOverlays::force_lod`): LOD0 for a
+/// footprint tile, whose backed-off pose falls in the LOD1 distance band while single tiles draw
+/// LOD0 at theirs; `None` (the distance bands) for every single tile.
+pub fn force_lod_for(def: &TileDef) -> Option<u8> {
+    def.is_mega().then_some(0)
+}
+
+pub fn camera_transform(look_at: Vec3, distance: f32) -> Transform {
     let pitch = PITCH_DEG.to_radians();
-    let eye = LOOK_AT + Vec3::new(0.0, pitch.sin(), pitch.cos()) * DISTANCE;
-    Transform::from_translation(eye).looking_at(LOOK_AT, Vec3::Y)
+    let eye = look_at + Vec3::new(0.0, pitch.sin(), pitch.cos()) * distance;
+    Transform::from_translation(eye).looking_at(look_at, Vec3::Y)
 }
 
 struct Stage {
     tile: String,
     rotation: u8,
+    /// [`camera_for`] the tile.
+    camera: (Vec3, f32),
+    /// [`force_lod_for`] the tile.
+    force_lod: Option<u8>,
     /// Capture name, or `None` for a warm-up stage.
     shot: Option<String>,
 }
@@ -151,15 +189,19 @@ impl ThumbRun {
         let warm = catalog.tiles().iter().map(|t| Stage {
             tile: t.id.clone(),
             rotation: 0,
+            camera: camera_for(t),
+            force_lod: force_lod_for(t),
             shot: None,
         });
         let shots = catalog.tiles().iter().flat_map(|t| {
             let canon = canonical_rotations(t);
             (0..6u8)
                 .filter(move |&k| canon[k as usize] == k)
-                .map(|k| Stage {
+                .map(move |k| Stage {
                     tile: t.id.clone(),
                     rotation: k,
+                    camera: camera_for(t),
+                    force_lod: force_lod_for(t),
                     shot: Some(format!("{SHOT_PREFIX}/{}", stem(&t.id, k))),
                 })
         });
@@ -173,6 +215,14 @@ impl ThumbRun {
             blanks: 0,
             keep_black: false,
         }
+    }
+
+    /// The current stage's camera pose and forced LOD; past the last stage, the single-tile pose
+    /// and the distance bands.
+    fn current(&self) -> ((Vec3, f32), Option<u8>) {
+        self.stages
+            .get(self.stage)
+            .map_or(((LOOK_AT, DISTANCE), None), |s| (s.camera, s.force_lod))
     }
 }
 
@@ -243,9 +293,12 @@ fn pin_clocks(mut time: ResMut<Time>, clock: Option<ResMut<WaterClock>>) {
     }
 }
 
-/// Holds the thumbnail camera and the key clear colour and hides the GPU flock every frame.
+/// Holds the current stage's thumbnail camera and forced LOD and the key clear colour, and hides
+/// the GPU flock, every frame.
 fn stage_scene(
     mut commands: Commands,
+    run: Res<ThumbRun>,
+    mut debug: ResMut<DebugOverlays>,
     mut clear: ResMut<ClearColor>,
     mut cameras: Query<
         (
@@ -258,8 +311,13 @@ fn stage_scene(
     >,
     mut named: Query<(&Name, &mut Visibility)>,
 ) {
+    let ((look_at, distance), force_lod) = run.current();
+    // Written only on a change: `debug`'s systems re-range every LOD part when it changes.
+    if debug.force_lod != force_lod {
+        debug.force_lod = force_lod;
+    }
     for (e, mut t, mut p, dither) in &mut cameras {
-        *t = camera_transform();
+        *t = camera_transform(look_at, distance);
         if let Projection::Perspective(persp) = p.as_mut() {
             persp.fov = FOV_DEG.to_radians();
         }
@@ -462,6 +520,7 @@ mod tests {
             ("hillside_010111", 6),
             ("hillside_011011", 3),
             ("hillside_011111", 6),
+            ("massif_granite", 6),
             ("road_ramp", 6),
             ("road_tunnel_portal", 6),
             ("rail_straight", 3),
@@ -487,7 +546,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 45 + 216);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 46 + 222);
     }
 
     #[test]
@@ -516,9 +575,119 @@ mod tests {
         );
     }
 
+    /// Normalised device coordinates of `p` seen by the thumbnail camera at (`look_at`, `distance`)
+    /// in the square render: inside the frame where both lie in -1..1.
+    fn ndc(look_at: Vec3, distance: f32, p: Vec3) -> Vec2 {
+        use bevy::camera::CameraProjection;
+        let view = camera_transform(look_at, distance).to_matrix().inverse();
+        let clip = PerspectiveProjection {
+            fov: FOV_DEG.to_radians(),
+            aspect_ratio: RENDER_SIZE.0 as f32 / RENDER_SIZE.1 as f32,
+            ..default()
+        }
+        .get_clip_from_view()
+            * view
+            * p.extend(1.0);
+        clip.truncate().truncate() / clip.w
+    }
+
+    /// The top corners of every member of a footprint at the origin, and the peak over its centre.
+    fn massif_frame_points() -> Vec<Vec3> {
+        let mut pts: Vec<Vec3> = hex_core::footprint::members(Axial::ORIGIN)
+            .iter()
+            .flat_map(|c| {
+                let [x, z] = c.to_world(hex_core::HEX_RADIUS);
+                (0..6).map(move |i| {
+                    let a = (30.0 + 60.0 * i as f32).to_radians();
+                    Vec3::new(x, 0.0, z) + Vec3::new(a.cos(), 0.0, a.sin()) * hex_core::HEX_RADIUS
+                })
+            })
+            .collect();
+        pts.push(Vec3::Y * hex_play::play::MASSIF_PEAK);
+        pts
+    }
+
+    /// Every single tile keeps the one shared pose, so its thumbnail and plan entry stay
+    /// byte-identical; the massif's pose holds all seven members and the peak inside the render,
+    /// filling about as much of it as one hex fills its own.
+    #[test]
+    fn single_tile_camera_is_unchanged() {
+        let c = catalog();
+        assert_eq!(camera_for(c.get("meadow").unwrap()), (LOOK_AT, DISTANCE));
+        for t in c.tiles().iter().filter(|t| !t.is_mega()) {
+            assert_eq!(camera_for(t), (LOOK_AT, DISTANCE), "{}", t.id);
+        }
+        let massif = c.get("massif_granite").unwrap();
+        assert!(massif.is_mega());
+        let (look_at, distance) = camera_for(massif);
+        let pts = massif_frame_points();
+        assert_eq!(pts.len(), 7 * 6 + 1);
+        let mut widest = 0.0f32;
+        for p in pts {
+            let n = ndc(look_at, distance, p);
+            assert!(n.x.abs() <= 0.9 && n.y.abs() <= 0.9, "{p} lands at {n}");
+            widest = widest.max(n.x.abs());
+        }
+        assert!(
+            widest >= 0.6,
+            "the footprint fills {widest} of the half-width"
+        );
+    }
+
+    /// Every stage of a footprint tile, warm-up included, pins LOD0; every single tile's stage
+    /// keeps the distance bands, and so does the run once its stages are done.
+    #[test]
+    fn only_footprint_stages_force_lod0() {
+        let c = catalog();
+        let mut run = ThumbRun::new(&c);
+        let mut forced = 0;
+        for i in 0..run.stages.len() {
+            run.stage = i;
+            let def = c.get(&run.stages[i].tile).unwrap();
+            let (camera, force_lod) = run.current();
+            assert_eq!(
+                force_lod,
+                def.is_mega().then_some(0),
+                "{} stage {i}",
+                def.id
+            );
+            assert_eq!(camera, camera_for(def));
+            forced += usize::from(force_lod.is_some());
+        }
+        assert_eq!(forced, 1 + 6, "the massif's warm-up and its six rotations");
+        run.stage = run.stages.len();
+        assert_eq!(run.current(), ((LOOK_AT, DISTANCE), None));
+    }
+
+    /// Only a footprint tile's plan entry names its own camera; every other entry is the id and
+    /// the rotations alone.
+    #[test]
+    fn plan_names_a_camera_only_for_footprint_tiles() {
+        let c = catalog();
+        let plan = plan_json(&c);
+        for (t, entry) in c.tiles().iter().zip(plan["tiles"].as_array().unwrap()) {
+            if t.is_mega() {
+                let (look_at, distance) = camera_for(t);
+                assert_eq!(
+                    entry["camera"],
+                    serde_json::json!({
+                        "distance_m": distance,
+                        "look_at": [look_at.x, look_at.y, look_at.z],
+                    }),
+                    "{}",
+                    t.id
+                );
+            } else {
+                let want = serde_json::json!({ "id": t.id, "rotations": canonical_rotations(t) });
+                assert_eq!(entry, &want, "{}", t.id);
+            }
+        }
+        assert!(c.tiles().iter().any(|t| t.is_mega()));
+    }
+
     #[test]
     fn camera_looks_down_from_the_play_side() {
-        let t = camera_transform();
+        let t = camera_transform(LOOK_AT, DISTANCE);
         let fwd = t.forward();
         assert!(fwd.z < 0.0 && fwd.y < 0.0, "{fwd}");
         assert!(((t.translation - LOOK_AT).length() - DISTANCE).abs() < 1e-3);

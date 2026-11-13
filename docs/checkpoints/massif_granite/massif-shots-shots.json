@@ -1,0 +1,86 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/massif_granite/massif-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        48.07,
+        49.94,
+        65.02
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 31.3,
+      "load_after": [
+        54.21,
+        51.04,
+        64.8
+      ],
+      "frames": {
+        "massif-overview": {
+          "mean": 0.0834,
+          "problem": null
+        },
+        "massif-seam-low": {
+          "mean": 0.2664,
+          "problem": null
+        },
+        "massif-cliff-raised": {
+          "mean": 0.3202,
+          "problem": null
+        },
+        "massif-play": {
+          "mean": 0.2203,
+          "problem": null
+        },
+        "massif-foot-south": {
+          "mean": 0.2506,
+          "problem": null
+        },
+        "massif-foot-north": {
+          "mean": 0.1685,
+          "problem": null
+        },
+        "massif-eye": {
+          "mean": 0.2212,
+          "problem": null
+        },
+        "massif-ghost-0": {
+          "mean": 0.1505,
+          "problem": null
+        },
+        "massif-ghost-1": {
+          "mean": 0.1503,
+          "problem": null
+        },
+        "massif-sink-0": {
+          "mean": 0.1217,
+          "problem": null
+        },
+        "massif-sink-1": {
+          "mean": 0.1224,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

@@ -970,4 +970,12 @@
       "provenance": "assets-source/kit/log_fallen_c/provenance.json",
       "slots": { "log_fallen_c_wood": { "unique": true, "masks": true } },
       "maps": { "albedo": "p1/log_fallen_c/log_fallen_c.albedo", "normal": "p1/log_fallen_c/log_fallen_c.normal",
-                "orm": "p1/log_fallen_c/log_fallen_c.orm", "masks": "p1/log_fallen_c/log_fallen_c.masks" } } ] }
+                "orm": "p1/log_fallen_c/log_fallen_c.orm", "masks": "p1/log_fallen_c/log_fallen_c.masks" } },
+    { "id": "massif_granite", "pack": "hero", "kind": "hero", "glb": "p1/massif_granite/massif_granite.glb",
+      "provenance": "assets-source/kit/massif_granite/provenance.json",
+      "slots": { "massif_granite_cap": { "tileable": "grass", "masks": true },
+                 "massif_granite_rock": { "unique": true, "masks": true },
+                 "massif_granite_scree": { "unique": true, "masks": true },
+                 "massif_granite_skirt": { "tileable": "soil", "color": [2.5, 2.5, 2.5] } },
+      "maps": { "albedo": "p1/massif_granite/massif_granite.albedo", "normal": "p1/massif_granite/massif_granite.normal",
+                "orm": "p1/massif_granite/massif_granite.orm", "masks": "p1/massif_granite/massif_granite.masks" } } ] }

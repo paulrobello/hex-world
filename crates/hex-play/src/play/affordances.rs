@@ -32,8 +32,8 @@ use bevy::{
     window::PrimaryWindow,
 };
 use hex_core::{
-    Axial, EdgeStatus, Ground, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, opposite_edge,
-    slope::field_at, world_edge,
+    Axial, EdgeStatus, Ground, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, footprint,
+    opposite_edge, slope::field_at, world_edge,
 };
 
 use super::{
@@ -610,9 +610,37 @@ fn hex_poly(c: Vec3, r: f32) -> Vec<Vec3> {
     (0..6).map(|e| edge_seg(c, e, r).0).collect()
 }
 
-/// The tiles removing `cell` would cut off: every component but the largest.
-pub fn cut_off(tiles: &[Axial], cell: Axial) -> Vec<Axial> {
-    let rest: BTreeSet<Axial> = tiles.iter().copied().filter(|&c| c != cell).collect();
+/// A footprint's outer edges at height `y`, from corner to corner as [`edge_seg`] draws them, in
+/// local outer-index order for a footprint turned by `rotation`.
+fn footprint_segs(anchor: Axial, rotation: u8, y: f32) -> [(Vec3, Vec3); footprint::OUTER_EDGES] {
+    footprint::outer_faces(anchor, rotation).map(|(m, w, _)| edge_seg(centre(m, y), w, HEX_RADIUS))
+}
+
+/// The outline of the footprint anchored at `anchor` at height `y`: its 18 outer edge segments.
+pub fn footprint_outline(anchor: Axial, y: f32) -> Vec<(Vec3, Vec3)> {
+    footprint_segs(anchor, 0, y).to_vec()
+}
+
+/// The seven hexes of the footprint anchored at `anchor` at height `y`, edge to edge.
+fn footprint_polys(anchor: Axial, y: f32) -> Vec<Vec<Vec3>> {
+    footprint::members(anchor)
+        .iter()
+        .map(|&m| hex_poly(centre(m, y), HEX_RADIUS))
+        .collect()
+}
+
+/// The cells removing the tile covering `cell` would cut off: every cell of every component but
+/// the largest. A footprint (`members`, ring cell to anchor) is one tile, so it is removed whole and
+/// counts once in a component's size.
+pub fn cut_off(tiles: &[Axial], cell: Axial, members: &HashMap<Axial, Axial>) -> Vec<Axial> {
+    let node = |c: Axial| members.get(&c).copied().unwrap_or(c);
+    let gone = node(cell);
+    let rest: BTreeSet<Axial> = tiles
+        .iter()
+        .chain(members.keys())
+        .copied()
+        .filter(|&c| node(c) != gone)
+        .collect();
     let mut seen: BTreeSet<Axial> = BTreeSet::new();
     let mut parts: Vec<Vec<Axial>> = vec![];
     for &start in &rest {
@@ -634,10 +662,11 @@ pub fn cut_off(tiles: &[Axial], cell: Axial) -> Vec<Axial> {
         parts.push(part);
     }
     // Stable on ties: the first part found (lowest cell) stays.
+    let size = |p: &[Axial]| p.iter().filter(|c| !members.contains_key(c)).count();
     let keep = parts
         .iter()
         .enumerate()
-        .max_by_key(|(i, p)| (p.len(), std::cmp::Reverse(*i)))
+        .max_by_key(|(i, p)| (size(p), std::cmp::Reverse(*i)))
         .map(|(i, _)| i);
     let mut out: Vec<Axial> = parts
         .into_iter()
@@ -859,28 +888,35 @@ fn neighbour_sockets(
     catalog: &TileCatalog,
     cell: Axial,
 ) -> [Option<SocketKind>; 6] {
-    let placed: HashMap<Axial, (&str, u8)> = view
-        .tiles
-        .iter()
-        .map(|t| (t.cell, (t.tile.as_str(), t.rotation)))
-        .collect();
     std::array::from_fn(|w| {
-        let (id, rot) = placed.get(&cell.neighbor(w as u8))?;
-        let def = catalog.get(id)?;
-        Some(def.edge(opposite_edge(w as u8), *rot).kind)
+        let (t, ring) = view.occupant(cell.neighbor(w as u8))?;
+        let def = catalog.get(&t.tile)?;
+        Some(
+            def.socket_toward(t.rotation, ring, opposite_edge(w as u8))?
+                .kind,
+        )
     })
 }
 
 /// The free slots' dashed outlines, each on its slot level ([`PlayView::slot_levels`]).
+/// While a footprint tile is selected ([`PlayView::footprint_selected`]) the outlines are its legal
+/// centres' footprints ([`PlayView::mega_slots`]) only.
 fn ring_parts(view: &PlayView) -> Vec<PartSpec> {
-    let segs: Vec<_> = view
-        .frontier
-        .iter()
-        .flat_map(|&c| {
-            let level = view.slot_levels.get(&c).copied().unwrap_or(0);
-            hex_segs(centre(c, f32::from(level) * LEVEL_STEP + GROUND_Y), SLOT_R)
-        })
-        .collect();
+    let y = |c: Axial| {
+        let level = view.slot_levels.get(&c).copied().unwrap_or(0);
+        f32::from(level) * LEVEL_STEP + GROUND_Y
+    };
+    let segs: Vec<_> = if !view.footprint_selected {
+        view.frontier
+            .iter()
+            .flat_map(|&c| hex_segs(centre(c, y(c)), SLOT_R))
+            .collect()
+    } else {
+        view.mega_slots
+            .iter()
+            .flat_map(|&a| footprint_outline(a, y(a)))
+            .collect()
+    };
     vec![PartSpec {
         mesh: line_mesh(&segs),
         params: AffordanceParams::line(NEUTRAL, NEUTRAL_A, 2.0).dashed(6.0, 7.0),
@@ -908,6 +944,71 @@ fn hover_parts(cell: Axial, y0: f32) -> Vec<PartSpec> {
             on_top: false,
         },
     ]
+}
+
+/// [`hover_parts`] over a footprint centre: the seven hexes and their outline.
+fn footprint_hover_parts(cell: Axial, y0: f32) -> Vec<PartSpec> {
+    let y = y0 + GROUND_Y;
+    vec![
+        PartSpec {
+            mesh: fill_mesh(&footprint_polys(cell, y)),
+            params: AffordanceParams::fill(INK, 0.04),
+            layer: 0.5,
+            anim: Anim::Plain,
+            on_top: false,
+        },
+        PartSpec {
+            mesh: line_mesh(&footprint_outline(cell, y)),
+            params: AffordanceParams::line(INK, 0.9, 2.0).dashed(6.0, 7.0),
+            layer: 1.0,
+            anim: Anim::Plain,
+            on_top: false,
+        },
+    ]
+}
+
+/// Whether the hovered slot at `cell` is a footprint: a legal centre of the selected footprint
+/// tile, or the cell of a footprint ghost.
+fn hover_footprint(view: &PlayView, cell: Axial) -> bool {
+    view.mega_slots.contains(&cell)
+        || view
+            .ghost
+            .as_ref()
+            .is_some_and(|g| g.cell == cell && g.outer.is_some() && footprint_free(view, cell))
+}
+
+/// Whether all seven cells of a footprint at `anchor` are free. A footprint ghost refused on a
+/// frontier cell no legal centre covers would lie over placed tiles: it draws as one hex instead.
+fn footprint_free(view: &PlayView, anchor: Axial) -> bool {
+    footprint::members(anchor)
+        .iter()
+        .all(|&m| view.tile_at(m).is_none())
+}
+
+/// The outline of a placed footprint at `cell` at height `y`, or `None` for a single tile.
+fn placed_outline(view: &PlayView, cell: Axial, y: f32) -> Option<Vec<(Vec3, Vec3)>> {
+    view.is_footprint(cell).then(|| footprint_outline(cell, y))
+}
+
+/// A placed tile's rim parts (`parts`, a hex rim each) redrawn on its footprint outline when a
+/// footprint stands at `cell`, at the same height and look.
+fn footprint_rims(view: &PlayView, cell: Axial, parts: Vec<PartSpec>) -> Vec<PartSpec> {
+    if !view.is_footprint(cell) {
+        return parts;
+    }
+    parts
+        .into_iter()
+        .map(|p| {
+            let y = segments(&p.mesh).and_then(|s| s.first().map(|(a, _)| a.y));
+            match y {
+                Some(y) => PartSpec {
+                    mesh: line_mesh(&footprint_outline(cell, y)),
+                    ..p
+                },
+                None => p,
+            }
+        })
+        .collect()
 }
 
 /// The faint rim on a placed tile under the pointer: ink, solid, thinner and far fainter than the
@@ -942,6 +1043,9 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<Part
     } else {
         outline.dashed(10.0, 8.0)
     };
+    if let Some(outer) = g.outer.as_ref().filter(|_| footprint_free(view, g.cell)) {
+        return footprint_ghost_parts(g.cell, g.rotation, CAP_Y + y0, outer, outline);
+    }
     let mut out = vec![
         PartSpec {
             mesh: fill_mesh(&[hex_poly(c, RIM_R)]),
@@ -1042,12 +1146,55 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<Part
         }
     }
     // Edge glow by state, then the cross ticks on incompatible edges.
-    let edges_in = |s: EdgeStatus| -> Vec<(Vec3, Vec3)> {
+    out.extend(status_parts(|s| {
         (0..6u8)
             .filter(|&w| g.edges[w as usize] == s)
             .map(|w| edge_seg(c, w, RIM_R))
             .collect()
-    };
+    }));
+    out
+}
+
+/// A footprint ghost at `anchor` turned by `rotation`, its cap at `y`: the seven hexes, the
+/// footprint outline and each outer edge's glow by `outer` (local outer-index order).
+fn footprint_ghost_parts(
+    anchor: Axial,
+    rotation: u8,
+    y: f32,
+    outer: &[EdgeStatus; footprint::OUTER_EDGES],
+    outline: AffordanceParams,
+) -> Vec<PartSpec> {
+    let segs = footprint_segs(anchor, rotation, y);
+    let mut out = vec![
+        PartSpec {
+            mesh: fill_mesh(&footprint_polys(anchor, y)),
+            params: AffordanceParams::fill(GHOST_FILL, 0.12),
+            layer: 2.0,
+            anim: Anim::Breath,
+            on_top: false,
+        },
+        PartSpec {
+            mesh: line_mesh(&footprint_outline(anchor, y)),
+            params: outline,
+            layer: 4.0,
+            anim: Anim::Plain,
+            on_top: false,
+        },
+    ];
+    out.extend(status_parts(|s| {
+        segs.iter()
+            .zip(outer)
+            .filter(|(_, o)| **o == s)
+            .map(|(seg, _)| *seg)
+            .collect()
+    }));
+    out
+}
+
+/// The edge glow by state over the segments `edges_in` gives each state, then the cross ticks on
+/// the incompatible ones.
+fn status_parts(edges_in: impl Fn(EdgeStatus) -> Vec<(Vec3, Vec3)>) -> Vec<PartSpec> {
+    let mut out = vec![];
     let glows = [
         (
             EdgeStatus::Neutral,
@@ -1102,17 +1249,24 @@ fn bulldoze_parts(view: &PlayView) -> Vec<PartSpec> {
         return vec![];
     };
     let c = centre(cell, lift(view, cell) + CAP_Y);
+    // A footprint target outlines and fills its seven cells.
+    let rim = placed_outline(view, cell, c.y).unwrap_or_else(|| hex_segs(c, RIM_R));
     if allowed {
+        let polys = if view.is_footprint(cell) {
+            footprint_polys(cell, c.y)
+        } else {
+            vec![hex_poly(c, RIM_R)]
+        };
         return vec![
             PartSpec {
-                mesh: fill_mesh(&[hex_poly(c, RIM_R)]),
+                mesh: fill_mesh(&polys),
                 params: AffordanceParams::fill(INCOMPATIBLE, 0.12),
                 layer: 2.0,
                 anim: Anim::Plain,
                 on_top: false,
             },
             PartSpec {
-                mesh: line_mesh(&hex_segs(c, RIM_R)),
+                mesh: line_mesh(&rim),
                 params: AffordanceParams::line(INCOMPATIBLE, 1.0, 4.0)
                     .glow(GLOW, [4.0, 0.6, 0.0, 0.0]),
                 layer: 6.0,
@@ -1125,10 +1279,10 @@ fn bulldoze_parts(view: &PlayView) -> Vec<PartSpec> {
         vec![]
     } else {
         let cells: Vec<Axial> = view.tiles.iter().map(|t| t.cell).collect();
-        cut_off(&cells, cell)
+        cut_off(&cells, cell, &view.members)
     };
     let mut out = vec![PartSpec {
-        mesh: line_mesh(&hex_segs(c, RIM_R)),
+        mesh: line_mesh(&rim),
         params: AffordanceParams::line(INCOMPATIBLE, 1.0, 4.0)
             .dashed(10.0, 8.0)
             .glow(GLOW, [0.0, 0.0, 0.0, 0.0]),
@@ -1185,9 +1339,15 @@ fn waiting_parts(cell: Axial, y0: f32) -> Vec<PartSpec> {
     }]
 }
 
-/// What a placed tile's affordances at `cell` depend on: its level and, if sloped, its ground.
+/// What a placed tile's affordances at `cell` depend on: its level, if sloped its ground, and
+/// whether a footprint stands there.
 fn tile_sig(view: &PlayView, catalog: &TileCatalog, cell: Axial) -> u64 {
-    sig_of(&(lift(view, cell).to_bits(), tile_slope(view, catalog, cell)))
+    let ground = (lift(view, cell).to_bits(), tile_slope(view, catalog, cell));
+    if view.is_footprint(cell) {
+        sig_of(&(ground, true))
+    } else {
+        sig_of(&ground)
+    }
 }
 
 /// What the view asks for: (key, signature, whether it shows).
@@ -1201,14 +1361,26 @@ fn wanted(
     for &cell in waiting {
         out.push((Key::Waiting(cell), tile_sig(view, catalog, cell), true));
     }
-    let ring_on = !view.frontier.is_empty() && !view.bulldoze_mode;
+    let slots_on = if view.footprint_selected {
+        !view.mega_slots.is_empty()
+    } else {
+        !view.frontier.is_empty()
+    };
+    let ring_on = slots_on && !view.bulldoze_mode;
     out.push((
         Key::Ring,
-        sig_of(&(&view.frontier, &view.slot_levels)),
+        sig_of(&(
+            &view.frontier,
+            &view.slot_levels,
+            &view.mega_slots,
+            view.footprint_selected,
+        )),
         ring_on,
     ));
+    let hover_sig =
+        |cell: Axial| sig_of(&(lift(view, cell).to_bits(), hover_footprint(view, cell)));
     if let Some(cell) = view.pointer_slot {
-        out.push((Key::Hover(cell), sig_of(&lift(view, cell).to_bits()), true));
+        out.push((Key::Hover(cell), hover_sig(cell), true));
     }
     // Bulldoze mode outlines the hovered tile as its target instead; a tile still waiting for its
     // pack shows the waiting outline.
@@ -1219,12 +1391,13 @@ fn wanted(
         out.push((Key::TileHover(cell), tile_sig(view, catalog, cell), true));
     }
     if let Some(g) = &view.ghost {
-        out.push((
-            Key::Hover(g.cell),
-            sig_of(&lift(view, g.cell).to_bits()),
-            true,
-        ));
-        let edges: Vec<u8> = g.edges.iter().map(|s| status_hash(*s)).collect();
+        out.push((Key::Hover(g.cell), hover_sig(g.cell), true));
+        let edges: Vec<u8> = g
+            .edges
+            .iter()
+            .chain(g.outer.iter().flatten())
+            .map(|s| status_hash(*s))
+            .collect();
         let sockets: Vec<Option<usize>> = neighbour_sockets(view, catalog, g.cell)
             .iter()
             .map(|k| k.and_then(|k| SocketKind::ALL.iter().position(|&s| s == k)))
@@ -1242,7 +1415,7 @@ fn wanted(
         let cut = if allowed || view.bulldoze_cover {
             vec![]
         } else {
-            cut_off(&cells, cell)
+            cut_off(&cells, cell, &view.members)
         };
         let lifts: Vec<u64> = std::iter::once(cell)
             .chain(cut.iter().copied())
@@ -1258,12 +1431,19 @@ fn wanted(
 fn parts_for(key: Key, view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<PartSpec> {
     let parts = match key {
         Key::Ring => return ring_parts(view),
+        Key::Hover(c) if hover_footprint(view, c) => {
+            return footprint_hover_parts(c, lift(view, c));
+        }
         Key::Hover(c) => return hover_parts(c, lift(view, c)),
         Key::TileHover(c) => tile_hover_parts(c, lift(view, c)),
         Key::Ghost(_) => ghost_parts(view, catalog, meshes),
         Key::Bulldoze(_) => bulldoze_parts(view),
         Key::Flash(c, _) => flash_parts(c, lift(view, c)),
         Key::Waiting(c) => waiting_parts(c, lift(view, c)),
+    };
+    let parts = match key {
+        Key::TileHover(c) | Key::Flash(c, _) | Key::Waiting(c) => footprint_rims(view, c, parts),
+        _ => parts,
     };
     let slopes = slopes(view, catalog, matches!(key, Key::Ghost(_)));
     parts.into_iter().map(|p| drape(p, &slopes)).collect()
@@ -1852,13 +2032,62 @@ mod tests {
     #[test]
     fn cut_off_is_every_part_but_the_largest() {
         let a = |q, r| Axial::new(q, r);
+        let none = HashMap::new();
         // A line of three: removing the middle splits off one end.
         let line = [a(0, 0), a(1, 0), a(2, 0)];
-        assert_eq!(cut_off(&line, a(1, 0)), vec![a(2, 0)]);
-        assert!(cut_off(&line, a(2, 0)).is_empty());
+        assert_eq!(cut_off(&line, a(1, 0), &none), vec![a(2, 0)]);
+        assert!(cut_off(&line, a(2, 0), &none).is_empty());
         // Larger part stays.
         let tee = [a(0, 0), a(1, 0), a(2, 0), a(3, 0), a(-1, 0)];
-        assert_eq!(cut_off(&tee, a(0, 0)), vec![a(-1, 0)]);
+        assert_eq!(cut_off(&tee, a(0, 0), &none), vec![a(-1, 0)]);
+    }
+
+    /// A massif counts as one tile (hex-core Task 3): removing it, from any of its cells, cuts off
+    /// what `World::can_bulldoze` refuses as a split, and a tile beside its ring stays connected
+    /// through it. The hatch covers every cell of a cut-off part, ring cells included.
+    #[test]
+    fn cut_off_treats_a_footprint_as_one_tile() {
+        use hex_core::{BulldozeError, Orientation, World, footprint};
+        let c = TileCatalog::builtin().unwrap();
+        let centre = Axial::new(2, 0);
+        let past = Axial::new(4, 0);
+        let mut w = World::new(1);
+        w.place(&c, centre, "massif_granite", Orientation::new(0, 0))
+            .unwrap();
+        w.place(&c, past, "meadow", Orientation::new(0, 0)).unwrap();
+        let check = |w: &World| {
+            let tiles: Vec<Axial> = w.tiles().keys().copied().collect();
+            let members: HashMap<Axial, Axial> =
+                w.members().iter().map(|(m, a)| (*m, *a)).collect();
+            for cell in tiles.iter().chain(members.keys()) {
+                let cut = cut_off(&tiles, *cell, &members);
+                let split = w.can_bulldoze(&c, *cell) == Err(BulldozeError::WouldDisconnect);
+                assert_eq!(!cut.is_empty(), split, "{cell:?}: {cut:?}");
+            }
+            (tiles, members)
+        };
+        let (tiles, members) = check(&w);
+        for m in footprint::members(centre) {
+            assert_eq!(cut_off(&tiles, m, &members), vec![past], "{m:?}");
+        }
+        // The meadow west of the origin hangs off the origin alone; the origin and `past` touch
+        // only the massif's ring, which holds them together.
+        let west = Axial::ORIGIN.neighbor(3);
+        w.place(&c, west, "meadow", Orientation::new(0, 0)).unwrap();
+        let (tiles, members) = check(&w);
+        assert_eq!(cut_off(&tiles, Axial::ORIGIN, &members), vec![west]);
+        assert!(cut_off(&tiles, past, &members).is_empty());
+        // Cut off with the origin gone, the massif and `past` are two tiles against one: the
+        // smaller part, `west`, is hatched; with `west` and `past` as the far side, the massif's
+        // seven cells are.
+        let mut whole: Vec<Axial> = footprint::members(centre).to_vec();
+        whole.sort();
+        let lone = vec![Axial::ORIGIN, Axial::new(-1, 0), Axial::new(-2, 0), centre];
+        let lone_members: HashMap<Axial, Axial> = footprint::members(centre)[1..]
+            .iter()
+            .map(|m| (*m, centre))
+            .collect();
+        assert_eq!(cut_off(&lone, Axial::ORIGIN, &lone_members), whole);
     }
 
     #[test]
@@ -1886,6 +2115,293 @@ mod tests {
         f.t = 0.27;
         assert!((f.value() - 1.0).abs() < 1e-6);
         assert!(f.done());
+    }
+
+    /// The footprint outline is its 18 perimeter edges: each segment's midpoint is the midpoint
+    /// of a member's edge that faces outside the seven hexes, each such edge once.
+    #[test]
+    fn footprint_outline_has_eighteen_segments() {
+        let anchor = Axial::new(3, -2);
+        let segs = footprint_outline(anchor, 1.5);
+        assert_eq!(segs.len(), 18);
+        let members = hex_core::footprint::members(anchor);
+        let perimeter: Vec<Vec3> = members
+            .iter()
+            .flat_map(|&m| (0..6u8).map(move |w| (m, w)))
+            .filter(|(m, w)| !members.contains(&m.neighbor(*w)))
+            .map(|(m, w)| centre(m, 1.5) + dir(60.0 * f32::from(w)) * APOTHEM)
+            .collect();
+        assert_eq!(perimeter.len(), 18);
+        let mut hit = [false; 18];
+        for (a, b) in &segs {
+            assert!(
+                ((*b - *a).length() - HEX_RADIUS).abs() < 1e-3,
+                "a full hex edge"
+            );
+            let mid = (*a + *b) / 2.0;
+            let i = perimeter
+                .iter()
+                .position(|p| (*p - mid).length() < 1e-3)
+                .unwrap_or_else(|| panic!("{mid} is not on the perimeter"));
+            assert!(!hit[i], "{mid} drawn twice");
+            hit[i] = true;
+        }
+    }
+
+    /// The incompatible-glow segments of the ghost's parts.
+    fn incompatible_glow(parts: &[PartSpec]) -> Vec<(Vec3, Vec3)> {
+        let glow = AffordanceParams::line(INCOMPATIBLE, 1.0, 7.0).color;
+        parts
+            .iter()
+            .filter(|p| p.layer == 6.0 && p.params.color == glow)
+            .flat_map(|p| segments(&p.mesh).unwrap())
+            .collect()
+    }
+
+    /// A footprint ghost glows each of its 18 outer edges by `PlayGhost::outer`: one Incompatible
+    /// entry is one incompatible segment and no single-hex glow, rim or socket mark draws. At
+    /// rotation 2, against one road whose lane meets one outer face, the incompatible segment is
+    /// the edge between that ring cell and the road.
+    #[test]
+    fn ghost_outline_glows_by_outer_status() {
+        use hex_core::{Orientation, World};
+        let catalog = TileCatalog::builtin().unwrap();
+        let massif = catalog.get("massif_granite").unwrap();
+        let mut w = World::new(1);
+        let road = Axial::new(1, 0);
+        w.place(&catalog, road, "road_straight", Orientation::new(1, 0))
+            .unwrap();
+        let o = Orientation::new(2, 0);
+        // The first free centre (in cell order) whose 18 faces meet exactly one incompatible
+        // neighbour.
+        let mut found = None;
+        for q in -4..=5 {
+            for r in -4..=4 {
+                let a = Axial::new(q, r);
+                if !w.is_slot_for(a, massif) {
+                    continue;
+                }
+                let faces = w.faces(&catalog, a, massif, o);
+                let bad: Vec<_> = faces
+                    .iter()
+                    .filter(|f| f.status == EdgeStatus::Incompatible)
+                    .collect();
+                if found.is_none() && bad.len() == 1 && bad[0].cell.neighbor(bad[0].w) == road {
+                    found = Some((a, faces.clone()));
+                }
+            }
+        }
+        let (anchor, faces) = found.expect("a centre facing the road's lane once");
+        let outer: [EdgeStatus; 18] = std::array::from_fn(|j| faces[j].status);
+        let j = outer
+            .iter()
+            .position(|s| *s == EdgeStatus::Incompatible)
+            .unwrap();
+        let view = PlayView {
+            tiles: vec![
+                PlayTile {
+                    cell: Axial::ORIGIN,
+                    tile: "meadow".into(),
+                    rotation: 0,
+                    level: 0,
+                },
+                PlayTile {
+                    cell: road,
+                    tile: "road_straight".into(),
+                    rotation: 1,
+                    level: 0,
+                },
+            ],
+            ghost: Some(PlayGhost {
+                cell: anchor,
+                tile: "massif_granite".into(),
+                rotation: o.rotation,
+                level: 0,
+                edges: [EdgeStatus::Neutral; 6],
+                outer: Some(outer),
+                valid: false,
+                pinned: false,
+                tunnel: vec![],
+            }),
+            ..default()
+        };
+        let parts = ghost_parts(&view, &catalog, true);
+        let bad = incompatible_glow(&parts);
+        assert_eq!(bad.len(), 1, "one incompatible segment");
+        let (m, e) = (faces[j].cell, faces[j].w);
+        let want = centre(m, CAP_Y) + dir(60.0 * f32::from(e)) * APOTHEM;
+        let mid = (bad[0].0 + bad[0].1) / 2.0;
+        assert!(
+            (mid - want).length() < 1e-3,
+            "{mid} is not edge {e} of {m:?}"
+        );
+        assert_eq!(m.neighbor(e), road);
+        // The single-hex rim at the centre is not drawn: every line point lies on the perimeter.
+        let rim = segments(&line_mesh(&hex_segs(centre(anchor, CAP_Y), RIM_R))).unwrap();
+        for p in parts.iter().filter(|p| p.params.misc.y == MODE_LINE) {
+            for s in segments(&p.mesh).unwrap() {
+                assert!(!rim.contains(&s), "a single-hex segment at the centre");
+            }
+        }
+        // Statuses glow by index: moving the bad entry moves the segment.
+        let mut moved = outer;
+        moved.swap(j, (j + 1) % 18);
+        let view2 = PlayView {
+            ghost: view.ghost.clone().map(|g| PlayGhost {
+                outer: Some(moved),
+                ..g
+            }),
+            ..view.clone()
+        };
+        let bad2 = incompatible_glow(&ghost_parts(&view2, &catalog, true));
+        assert_eq!(bad2.len(), 1);
+        assert_ne!(bad2[0], bad[0]);
+        assert_ne!(
+            wanted(&view, &catalog, &[], true),
+            wanted(&view2, &catalog, &[], true),
+            "the ghost's signature hashes its outer glow"
+        );
+    }
+
+    /// A footprint ghost refused on a frontier cell (no legal centre covers it, so it stands on the
+    /// slot itself, over placed tiles) draws one hex there, as before footprints.
+    #[test]
+    fn a_footprint_ghost_over_placed_tiles_draws_one_hex() {
+        let catalog = TileCatalog::builtin().unwrap();
+        let slot = Axial::new(1, 0);
+        let view = PlayView {
+            tiles: vec![PlayTile {
+                cell: Axial::ORIGIN,
+                tile: "meadow".into(),
+                rotation: 0,
+                level: 0,
+            }],
+            ghost: Some(PlayGhost {
+                cell: slot,
+                tile: "massif_granite".into(),
+                rotation: 0,
+                level: 0,
+                edges: [EdgeStatus::Neutral; 6],
+                outer: Some([EdgeStatus::Incompatible; 18]),
+                valid: false,
+                pinned: false,
+                tunnel: vec![],
+            }),
+            ..default()
+        };
+        let parts = ghost_parts(&view, &catalog, true);
+        let line = parts.iter().find(|p| p.layer == 4.0).unwrap();
+        let rim = hex_segs(centre(slot, CAP_Y), RIM_R);
+        assert_eq!(segments(&line.mesh).unwrap(), rim);
+        assert!(incompatible_glow(&parts).is_empty());
+        let hover = parts_for(Key::Hover(slot), &view, &catalog, true);
+        let line = hover.iter().find(|p| p.params.misc.y == MODE_LINE).unwrap();
+        assert_eq!(segments(&line.mesh).unwrap().len(), 6);
+    }
+
+    /// With a footprint tile selected the slot ring outlines each legal centre's footprint, and
+    /// a hovered centre (off the frontier) outlines its footprint rather than one stray hex.
+    #[test]
+    fn the_ring_and_hover_outline_footprints_for_a_footprint_tile() {
+        let catalog = TileCatalog::builtin().unwrap();
+        let centre_cell = Axial::new(2, 0);
+        let view = PlayView {
+            tiles: vec![PlayTile {
+                cell: Axial::ORIGIN,
+                tile: "meadow".into(),
+                rotation: 0,
+                level: 0,
+            }],
+            frontier: (0..6).map(|e| Axial::ORIGIN.neighbor(e)).collect(),
+            footprint_selected: true,
+            mega_slots: vec![centre_cell, Axial::new(-2, 0)],
+            pointer_slot: Some(centre_cell),
+            ..default()
+        };
+        let ring = parts_for(Key::Ring, &view, &catalog, true);
+        let segs = segments(&ring[0].mesh).unwrap();
+        assert_eq!(segs.len(), 36, "two footprints of 18 edges");
+        let want: Vec<(Vec3, Vec3)> = [centre_cell, Axial::new(-2, 0)]
+            .iter()
+            .flat_map(|&a| footprint_outline(a, GROUND_Y))
+            .collect();
+        assert_eq!(segs, want);
+        let hover = parts_for(Key::Hover(centre_cell), &view, &catalog, true);
+        let line = hover.iter().find(|p| p.params.misc.y == MODE_LINE).unwrap();
+        assert_eq!(
+            segments(&line.mesh).unwrap(),
+            footprint_outline(centre_cell, GROUND_Y)
+        );
+        let single = PlayView {
+            footprint_selected: false,
+            mega_slots: vec![],
+            ..view.clone()
+        };
+        assert_ne!(
+            wanted(&view, &catalog, &[], true),
+            wanted(&single, &catalog, &[], true)
+        );
+        let ring = parts_for(Key::Ring, &single, &catalog, true);
+        assert_eq!(
+            segments(&ring[0].mesh).unwrap().len(),
+            36,
+            "six frontier hexes"
+        );
+        // A footprint tile selected with no legal centre: no ring at all, not the frontier hexes.
+        let nowhere = PlayView {
+            mega_slots: vec![],
+            pointer_slot: None,
+            ..view.clone()
+        };
+        let ring_shown = |v: &PlayView| {
+            wanted(v, &catalog, &[], true)
+                .into_iter()
+                .find(|w| w.0 == Key::Ring)
+                .map(|w| w.2)
+        };
+        assert_eq!(ring_shown(&nowhere), Some(false));
+        assert_eq!(ring_shown(&view), Some(true));
+        assert_eq!(ring_shown(&single), Some(true));
+        let ring = parts_for(Key::Ring, &nowhere, &catalog, true);
+        assert!(
+            segments(&ring[0].mesh).unwrap().is_empty(),
+            "no frontier hexes"
+        );
+    }
+
+    /// The bulldoze target on a massif outlines and fills its whole footprint.
+    #[test]
+    fn bulldozing_a_massif_outlines_its_footprint() {
+        let catalog = TileCatalog::builtin().unwrap();
+        let anchor = Axial::new(2, 0);
+        let view = PlayView {
+            tiles: vec![
+                PlayTile {
+                    cell: Axial::ORIGIN,
+                    tile: "meadow".into(),
+                    rotation: 0,
+                    level: 0,
+                },
+                PlayTile {
+                    cell: anchor,
+                    tile: "massif_granite".into(),
+                    rotation: 0,
+                    level: 1,
+                },
+            ],
+            members: (0..6).map(|d| (anchor.neighbor(d), anchor)).collect(),
+            bulldoze: Some((anchor, true)),
+            bulldoze_mode: true,
+            ..default()
+        };
+        let parts = parts_for(Key::Bulldoze(anchor), &view, &catalog, true);
+        let line = parts.iter().find(|p| p.params.misc.y == MODE_LINE).unwrap();
+        assert_eq!(
+            segments(&line.mesh).unwrap(),
+            footprint_outline(anchor, LEVEL_STEP + CAP_Y)
+        );
+        let fill = parts.iter().find(|p| p.params.misc.y == MODE_FILL).unwrap();
+        assert_eq!(triangles(&fill.mesh).unwrap().len(), 7 * 6, "seven hexes");
     }
 
     fn shown(view: &PlayView, waiting: &[Axial]) -> Vec<Key> {
@@ -1971,6 +2487,7 @@ mod tests {
                 rotation: 0,
                 level: 1,
                 edges: [EdgeStatus::Neutral; 6],
+                outer: None,
                 valid: true,
                 pinned: false,
                 tunnel,
@@ -2118,6 +2635,7 @@ mod tests {
                 rotation,
                 level: 1,
                 edges: [EdgeStatus::Neutral; 6],
+                outer: None,
                 valid: true,
                 pinned: false,
                 tunnel: vec![],
@@ -2155,6 +2673,7 @@ mod tests {
                 rotation: 0,
                 level: 1,
                 edges: [EdgeStatus::Incompatible; 6],
+                outer: None,
                 valid: true,
                 pinned: false,
                 tunnel: vec![Axial::new(1, 0)],
@@ -2223,6 +2742,7 @@ mod tests {
                 rotation: 0,
                 level: 0,
                 edges: [EdgeStatus::Compatible; 6],
+                outer: None,
                 valid: true,
                 pinned: false,
                 tunnel: vec![],
@@ -2371,6 +2891,7 @@ mod tests {
                 rotation: 0,
                 level: 0,
                 edges: [EdgeStatus::Neutral; 6],
+                outer: None,
                 valid: true,
                 pinned: true,
                 tunnel: vec![],
@@ -2418,6 +2939,7 @@ mod tests {
                 rotation: 0,
                 level: 0,
                 edges: [EdgeStatus::Neutral; 6],
+                outer: None,
                 valid: true,
                 pinned: false,
                 tunnel: vec![],

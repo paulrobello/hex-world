@@ -126,18 +126,20 @@ const BUCKETS: usize = 33;
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match family(piece) {
-        "tree_forest" | "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest"
-        | "sapling_spruce" => &["forest_base_floor"],
-        "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap"],
+        // The massif's lower-slope pines (owner A54 Q2 O1) stand on its cap in [`ring_band`].
+        "tree_forest" | "sapling_spruce" => &["forest_base_floor", MASSIF_CAP],
+        "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest" => &["forest_base_floor"],
+        "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap", MASSIF_CAP],
         // The granite boulders and outcrop (owner A25): the meadow, the forest and oak litter, and
         // on a coast the grass-to-sand band ([`coast_band`]).
         "boulder_granite" | "outcrop_granite" => &[
             "forest_base_floor",
             "meadow_base_cap",
+            MASSIF_CAP,
             "beach_grass",
             BEACH_FLOOR,
         ],
-        "wildflower_single" | "bush_verge" => &["meadow_base_cap"],
+        "wildflower_single" | "bush_verge" => &["meadow_base_cap", MASSIF_CAP],
         "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
         "river_stones" | "river_reeds" => &BANK_FLOORS,
         "lily_cluster" => &[WATER_FLOOR],
@@ -145,6 +147,21 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
         "seabed_rock" | "seabed_pebbles" => &[SEABED_FLOOR],
         _ => &[],
     }
+}
+
+/// The massif's Meadow-matched grass cap: the meadow pieces stand on it as on `meadow_base_cap`.
+pub const MASSIF_CAP: &str = "massif_granite_cap";
+
+/// The massif's lower slopes (m from its centre): the grass between the rock foot and the ring's
+/// outer half, where its pines stand in small drifts (owner A54 Q2 O1, a runtime rule, never baked;
+/// `docs/checkpoints/massif_granite/integration.md`).
+pub const PINE_BAND: (f32, f32) = (17.0, 28.0);
+
+/// The band of distances from a footprint tile's centre that a rule's instance centres keep to:
+/// [`PINE_BAND`] for a footprint tile's pines, `None` for every other rule and every single tile.
+pub fn ring_band(def: &TileDef, piece: &str) -> Option<(f32, f32)> {
+    (def.is_mega() && matches!(family(piece), "tree_forest" | "sapling_spruce"))
+        .then_some(PINE_BAND)
 }
 
 /// Farthest a verge piece's centre stands from the nearest road or river centreline (m): it keeps
@@ -318,9 +335,11 @@ pub fn pick_variant(def: &TileDef, piece: &str, seed: u64, rule: usize, n: u32) 
 }
 
 /// Slots no scatter may stand on whatever [`floor_slots`] says: roads, river beds and banks,
-/// house pads and driveways, beaches and the coast, bridges, and every base's rim, mossy edge band
-/// and skirt.
+/// house pads and driveways, beaches and the coast, bridges, every base's rim, mossy edge band
+/// and skirt, and the massif's rock and scree (exact names: a `_rock` suffix would catch other
+/// pieces' slots). They stay ground for the walker, so they are not [`NOT_GROUND`].
 pub fn excluded_slot(slot: &str) -> bool {
+    const EXACT: [&str; 2] = ["massif_granite_rock", "massif_granite_scree"];
     const PREFIXES: [&str; 6] = [
         "road_",
         "river_",
@@ -330,7 +349,9 @@ pub fn excluded_slot(slot: &str) -> bool {
         "bridge_",
     ];
     const SUFFIXES: [&str; 3] = ["_rim", "_edge", "_skirt"];
-    PREFIXES.iter().any(|p| slot.starts_with(p)) || SUFFIXES.iter().any(|s| slot.ends_with(s))
+    EXACT.contains(&slot)
+        || PREFIXES.iter().any(|p| slot.starts_with(p))
+        || SUFFIXES.iter().any(|s| slot.ends_with(s))
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1506,11 +1527,21 @@ pub struct Mask {
     pub area: f32,
 }
 
-/// A tile definition's ground, ready to scatter on: its surface and one mask per scatter rule.
+/// A tile definition's ground, ready to scatter on: its surface and one mask per scatter rule. A
+/// footprint tile's are its centre cell's, and `ring` holds each ring member (in the tile frame),
+/// its offset from the centre and its ground in its own frame, since a [`Surface`] spans one hex.
+/// A ring cell's `share` scales each rule's planned count by its mask area over the same rule's on
+/// a [`RING_GROUND`] cell, so it places as many per m² of free ground; a single tile's is empty.
 pub struct Prepared {
     pub surface: Surface,
     pub masks: Vec<Mask>,
+    pub ring: Vec<(Axial, Vec2, Prepared)>,
+    pub share: Vec<f32>,
 }
+
+/// The tile a footprint tile's ring cells scatter like: their density per m² of free ground is
+/// its (owner, visual standard: indistinguishable from the Meadow beside it).
+pub const RING_GROUND: &str = "meadow";
 
 fn cell_centre(i: usize) -> f32 {
     -EXTENT + (i as f32 + 0.5) * RASTER
@@ -1657,8 +1688,10 @@ fn mask(
     surface: &Surface,
     raster: &[Option<(f32, u16)>],
     rule: &ScatterRule,
+    at: Vec2,
 ) -> Mask {
     let piece = rule.piece.as_str();
+    let ring = ring_band(def, piece);
     let fp = group_footprint(piece);
     let floors = floor_slots(piece);
     let ok_slot: Vec<bool> = surface.slots.iter().map(|s| floor_ok(floors, s)).collect();
@@ -1730,6 +1763,8 @@ fn mask(
             - fp.ground * (1.0 + scale_jitter(fp))
             - RASTER * std::f32::consts::FRAC_1_SQRT_2,
     );
+    // A dart lands up to half a cell diagonal off its cell's centre.
+    let slop = RASTER * std::f32::consts::FRAC_1_SQRT_2;
     let mut cells = vec![];
     for j in 0..CELLS {
         for i in 0..CELLS {
@@ -1746,6 +1781,8 @@ fn mask(
                 || off_bank(k, p)
                 || off_water_cell(k, p)
                 || seabed_border.is_some_and(|r| hex_reach(p) > r)
+                || ring
+                    .is_some_and(|(lo, hi)| !(lo + slop..=hi - slop).contains(&(p + at).length()))
             {
                 continue;
             }
@@ -1774,7 +1811,57 @@ pub fn prepare(
     tris_of: &mut dyn FnMut(&str) -> Option<Vec<(Tri, String)>>,
 ) -> Option<Prepared> {
     let all = super::slope_ground::tile_ground_tris(def, catalog, tris_of)?;
-    let surface = Surface::new(all);
+    if !def.is_mega() {
+        return Some(prepare_cell(def, all, Vec2::ZERO));
+    }
+    let cells = hex_core::footprint::members(Axial::ORIGIN).map(|m| {
+        let at = Vec2::from(m.to_world(HEX_RADIUS));
+        (m, at, prepare_cell(def, member_tris(&all, at), at))
+    });
+    let centre = cells.iter().position(|(m, ..)| *m == Axial::ORIGIN)?;
+    let mut ring: Vec<(Axial, Vec2, Prepared)> = cells.into_iter().collect();
+    let (_, _, mut out) = ring.remove(centre);
+    let meadow = catalog.get(RING_GROUND)?;
+    let meadow_tris = super::slope_ground::tile_ground_tris(meadow, catalog, tris_of)?;
+    let reference = prepare_cell(def, meadow_tris, Vec2::ZERO);
+    for (_, _, cell) in &mut ring {
+        cell.share = def
+            .props
+            .scatter
+            .iter()
+            .zip(cell.masks.iter().zip(&reference.masks))
+            .map(|(r, (m, base))| {
+                // A banded rule (the pines) has no meadow counterpart: its density is its own.
+                if ring_band(def, r.piece.as_str()).is_some() || base.area <= 0.0 {
+                    1.0
+                } else {
+                    m.area / base.area
+                }
+            })
+            .collect();
+    }
+    out.ring = ring;
+    Some(out)
+}
+
+/// The triangles of a footprint tile's ground (`all`, tile frame) that reach the cell whose centre
+/// lies `at` from the tile's centre, in that cell's own frame: the ground a [`Surface`] of that
+/// cell holds, since one spans a single hex.
+pub fn member_tris(all: &[(Tri, String)], at: Vec2) -> Vec<(Tri, String)> {
+    let (x, z) = (at.x, at.y);
+    all.iter()
+        .filter(|(t, _)| {
+            let lo = |k: usize, o: f32| t.iter().map(|p| p[k] - o).fold(f32::MAX, f32::min);
+            let hi = |k: usize, o: f32| t.iter().map(|p| p[k] - o).fold(f32::MIN, f32::max);
+            lo(0, x) < EXTENT && hi(0, x) > -EXTENT && lo(2, z) < EXTENT && hi(2, z) > -EXTENT
+        })
+        .map(|(t, s)| (t.map(|p| [p[0] - x, p[1], p[2] - z]), s.clone()))
+        .collect()
+}
+
+/// One cell's ground from its triangles in its own frame, `at` from its tile's centre.
+fn prepare_cell(def: &TileDef, tris: Vec<(Tri, String)>, at: Vec2) -> Prepared {
+    let surface = Surface::new(tris);
     let raster: Vec<Option<(f32, u16)>> = (0..CELLS * CELLS)
         .map(|k| surface.top(cell_centre(k % CELLS), cell_centre(k / CELLS)))
         .collect();
@@ -1782,9 +1869,14 @@ pub fn prepare(
         .props
         .scatter
         .iter()
-        .map(|r| mask(def, &surface, &raster, r))
+        .map(|r| mask(def, &surface, &raster, r, at))
         .collect();
-    Some(Prepared { surface, masks })
+    Prepared {
+        surface,
+        masks,
+        ring: vec![],
+        share: vec![],
+    }
 }
 
 /// One placed prop, tile-local.
@@ -2198,7 +2290,12 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
         let piece = rule.piece.as_str();
         let fp = group_footprint(piece);
         let mask = &ground.masks[ri];
-        let want = (rule.density.max(0.0) * CAP_AREA / 100.0 + rng.unit()).floor() as u32;
+        let mean = rule.density.max(0.0) * CAP_AREA / 100.0;
+        let mean = match ground.share.get(ri) {
+            Some(share) => mean * share,
+            None => mean,
+        };
+        let want = (mean + rng.unit()).floor() as u32;
         out.planned.push(want);
         out.area.push(mask.area);
         let drift;
@@ -2309,8 +2406,56 @@ fn every_dart(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     out
 }
 
-/// The scatter of a tile with definition `def` and seed `seed` on its prepared ground.
+/// The scatter of a tile with definition `def` and seed `seed` on its prepared ground. A footprint
+/// tile scatters on its ring cells only, each as a single tile of its rules on its own ground and
+/// seed ([`ring_seed`]); its centre is the rock.
 pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
+    let mut out = if def.is_mega() {
+        let mut out = Layout::default();
+        for (m, at, g) in &ground.ring {
+            let l = cell_layout(def, ring_seed(seed, *m), g);
+            if out.planned.is_empty() {
+                out.planned = vec![0; l.planned.len()];
+                out.area = vec![0.0; l.area.len()];
+                out.spacing = vec![0.0; l.spacing.len()];
+            }
+            for ri in 0..l.planned.len() {
+                out.planned[ri] += l.planned[ri];
+                out.area[ri] += l.area[ri];
+                out.spacing[ri] = out.spacing[ri].max(l.spacing[ri]);
+            }
+            out.instances.extend(l.instances.into_iter().map(|mut i| {
+                i.pos += Vec3::new(at.x, 0.0, at.y);
+                i
+            }));
+        }
+        out
+    } else {
+        cell_layout(def, seed, ground)
+    };
+    let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
+    by_distance.sort_by(|&a, &b| {
+        let d = |i: usize| out.instances[i].pos.xz().length();
+        d(a).total_cmp(&d(b)).then(a.cmp(&b))
+    });
+    for (rank, i) in by_distance.into_iter().enumerate() {
+        out.instances[i].order = rank.min(u8::MAX as usize) as u8;
+    }
+    out
+}
+
+/// The seed a footprint tile with seed `seed` scatters and grows grass on its member `m` (tile
+/// frame) with; the centre keeps the tile's.
+pub fn ring_seed(seed: u64, m: Axial) -> u64 {
+    if m == Axial::ORIGIN {
+        seed
+    } else {
+        cell_seed(seed, m)
+    }
+}
+
+/// One cell's scatter: its darts, then a capped tile's [`dressing_cap`] and its water props' keep.
+fn cell_layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     let mut out = every_dart(def, seed, ground);
     let water: Vec<bool> = def
         .props
@@ -2323,14 +2468,6 @@ pub fn layout(def: &TileDef, seed: u64, ground: &Prepared) -> Layout {
     }
     if water.contains(&true) {
         keep_water(&mut out, seed, &water);
-    }
-    let mut by_distance: Vec<usize> = (0..out.instances.len()).collect();
-    by_distance.sort_by(|&a, &b| {
-        let d = |i: usize| out.instances[i].pos.xz().length();
-        d(a).total_cmp(&d(b)).then(a.cmp(&b))
-    });
-    for (rank, i) in by_distance.into_iter().enumerate() {
-        out.instances[i].order = rank.min(u8::MAX as usize) as u8;
     }
     out
 }
@@ -2636,12 +2773,6 @@ pub fn sync(
     let mut waiting = vec![];
     let mut cells: Vec<_> = spawned.tiles.iter().collect();
     cells.sort_by_key(|(c, _)| (c.q, c.r));
-    let tile_at = |c: Axial| {
-        spawned
-            .tiles
-            .get(&c)
-            .and_then(|(t, _)| Some((catalog.0.get(&t.tile)?, t.rotation)))
-    };
     let tiles_sig = {
         let mut h: u64 = 0xCBF2_9CE4_8422_2325 ^ view.world_seed;
         for (c, (t, _)) in &cells {
@@ -2658,20 +2789,7 @@ pub fn sync(
         h
     };
     if state.fences.0 != tiles_sig || state.fence_builds == 0 {
-        let all = super::boundaries::all_placements(
-            view.world_seed,
-            cells.iter().map(|(c, _)| **c),
-            &tile_at,
-        );
-        let near: std::collections::BTreeSet<Axial> = all
-            .keys()
-            .flat_map(|c| hex_core::boundary::within(*c, 1))
-            .collect();
-        let map: HashMap<Axial, Vec<hex_core::boundary::Seg>> = near
-            .into_iter()
-            .map(|c| (c, super::boundaries::local_segments_from(&all, c, &tile_at)))
-            .filter(|(_, s)| !s.is_empty())
-            .collect();
+        let map = fence_map(view.world_seed, &spawned.tiles, &catalog.0);
         state.fences = (tiles_sig, Arc::new(map));
         state.fence_builds += 1;
     }
@@ -2772,6 +2890,43 @@ pub fn sync(
     }
 }
 
+/// The boundary footprints of every drawn field tile, by the drawn tile they lie on, in its
+/// frame: what scatter keeps clear of. A footprint tile's, at its anchor, hold those on all its
+/// cells. The drawn `tiles` are read with footprint ring cells resolved ([`super::covering`]).
+fn fence_map(
+    world_seed: u64,
+    tiles: &HashMap<Axial, (super::PlayTile, Entity)>,
+    catalog: &TileCatalog,
+) -> HashMap<Axial, Vec<hex_core::boundary::Seg>> {
+    let tile_at = super::covering(|c: Axial| {
+        tiles
+            .get(&c)
+            .and_then(|(t, _)| Some((catalog.get(&t.tile)?, t.rotation)))
+    });
+    let all = super::boundaries::all_placements(world_seed, tiles.keys().copied(), &tile_at);
+    // The drawn tiles beside a field tile, a footprint's ring cell standing for its anchor, whose
+    // entry gathers every cell it covers.
+    let near: std::collections::BTreeSet<Axial> = all
+        .keys()
+        .flat_map(|c| hex_core::boundary::within(*c, 1))
+        .filter_map(|c| {
+            if tiles.contains_key(&c) {
+                return Some(c);
+            }
+            (0..6).map(|e| c.neighbor(e)).find(|a| {
+                tiles
+                    .get(a)
+                    .and_then(|(t, _)| catalog.get(&t.tile))
+                    .is_some_and(TileDef::is_mega)
+            })
+        })
+        .collect();
+    near.into_iter()
+        .map(|c| (c, super::boundaries::local_segments_from(&all, c, &tile_at)))
+        .filter(|(_, s)| !s.is_empty())
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -2858,6 +3013,140 @@ mod tests {
 
     fn prepared(def: &TileDef) -> Option<Prepared> {
         prepare(def, &catalog(), &mut |id| lod0(id))
+    }
+
+    /// The massif scatters each ring cell as a meadow (its first rules are meadow's): over 64 seeds,
+    /// each rule places as many instances per m² of its mask (`Layout::area`) on a ring cell as on a
+    /// meadow with the same seeds, within three standard errors of the per-tile rounding on both
+    /// sides plus 3%, and at least 99% of its planned count. Every instance's ground footprint is
+    /// on the grass cap, off the rock and scree, and the centre cell (the rock) has none.
+    #[test]
+    fn ring_scatter_matches_meadow_density() {
+        let c = catalog();
+        let meadow = c.get(RING_GROUND).unwrap();
+        let def = c.get("massif_granite").unwrap();
+        let rules = &meadow.props.scatter;
+        assert_eq!(&def.props.scatter[..rules.len()], &rules[..]);
+        let g = prepared(def).unwrap();
+        let mg = prepared(meadow).unwrap();
+        assert_eq!(g.ring.len(), 6);
+        let seeds = 64u64;
+        for (m, at, cell) in &g.ring {
+            let n = rules.len();
+            let (mut ring, mut base) = (vec![0.0f64; n], vec![0.0f64; n]);
+            let (mut placed, mut planned) = (vec![0usize; n], vec![0usize; n]);
+            for seed in 0..seeds {
+                let seed = ring_seed(cell_seed(1, Axial::new(seed as i32, -(seed as i32))), *m);
+                let l = cell_layout(def, seed, cell);
+                let ml = cell_layout(meadow, seed, &mg);
+                for ri in 0..n {
+                    planned[ri] += l.planned[ri] as usize;
+                    placed[ri] += l.placed(ri);
+                    ring[ri] += l.placed(ri) as f64 / f64::from(l.area[ri]);
+                    base[ri] += ml.placed(ri) as f64 / f64::from(ml.area[ri]);
+                }
+                for i in &l.instances {
+                    let piece = i.piece(def.props.scatter[i.rule as usize].piece.as_str());
+                    let reach = footprint(piece).ground;
+                    let p = i.pos.xz();
+                    for q in std::iter::once(p).chain(ring16().map(|d| p + reach * d)) {
+                        let (_, slot) = cell.surface.at(q.x, q.y).unwrap();
+                        assert_eq!(slot, MASSIF_CAP, "{m:?} {piece} at {} on {slot}", p + *at);
+                    }
+                }
+            }
+            println!("ring cell {m:?}: placed {placed:?} of {planned:?}");
+            for (ri, r) in rules.iter().enumerate() {
+                // A tile plans floor(want + u): Bernoulli on want's fraction, per m² of its mask.
+                let se = |want: f64, area: f32| {
+                    let f = want.fract();
+                    (f * (1.0 - f) / seeds as f64).sqrt() / f64::from(area)
+                };
+                let want = f64::from(r.density * CAP_AREA / 100.0);
+                let (ra, ma) = (cell.masks[ri].area, mg.masks[ri].area);
+                let tol = 3.0
+                    * (se(want * f64::from(cell.share[ri]), ra).powi(2) + se(want, ma).powi(2))
+                        .sqrt()
+                    + 0.03 * base[ri] / seeds as f64;
+                let (ring, base) = (ring[ri] / seeds as f64, base[ri] / seeds as f64);
+                assert!(
+                    (ring - base).abs() <= tol,
+                    "{m:?} {}: {ring} per m² of mask vs meadow's {base} (tolerance {tol})",
+                    r.piece.as_str()
+                );
+                // A drift's quarter of a ring cell's smaller ground may not fit every clump.
+                assert!(
+                    placed[ri] * 100 >= planned[ri] * 99,
+                    "{m:?} {}: placed {} of {}",
+                    r.piece.as_str(),
+                    placed[ri],
+                    planned[ri]
+                );
+            }
+        }
+        let l = layout(def, 7, &g);
+        assert!(!l.instances.is_empty());
+        assert!(l.instances.iter().all(|i| hex_reach(i.pos.xz()) >= APOTHEM));
+        let per_cell: usize = g
+            .ring
+            .iter()
+            .map(|(m, _, cell)| cell_layout(def, ring_seed(7, *m), cell).instances.len())
+            .sum();
+        assert_eq!(l.instances.len(), per_cell);
+    }
+
+    /// The massif's lower-slope pines (owner A54 Q2 O1): spruces and saplings on the grass cap in
+    /// [`PINE_BAND`] from its centre, in every ring cell over a few seeds, never on a single tile's
+    /// meadow-like cap.
+    #[test]
+    fn massif_pines_stand_on_the_lower_slopes() {
+        let c = catalog();
+        let def = c.get("massif_granite").unwrap();
+        let g = prepared(def).unwrap();
+        let pine = |r: u8| {
+            matches!(
+                family(def.props.scatter[r as usize].piece.as_str()),
+                "tree_forest" | "sapling_spruce"
+            )
+        };
+        let mut cells = HashSet::new();
+        let (mut n, mut raised) = (0, 0);
+        for seed in 0..16u64 {
+            for i in layout(def, cell_seed(3, Axial::new(seed as i32, 0)), &g)
+                .instances
+                .iter()
+                .filter(|i| pine(i.rule))
+            {
+                let d = i.pos.xz().length();
+                assert!((PINE_BAND.0..=PINE_BAND.1).contains(&d), "a pine {d} m out");
+                let (k, (_, at, cell)) = g
+                    .ring
+                    .iter()
+                    .enumerate()
+                    .find(|(_, (_, at, _))| hex_reach(i.pos.xz() - *at) < APOTHEM)
+                    .unwrap();
+                let q = i.pos.xz() - *at;
+                let (y, slot) = cell.surface.at(q.x, q.y).unwrap();
+                assert_eq!(slot, MASSIF_CAP);
+                // On the piece's ground (`stand`: the lowest of its centre and six points 0.3 m
+                // round it, so up to a steep flank's drop below the centre), not the tile's level:
+                // the flanks (owner A55 Q1 O1) carry most pines metres up.
+                assert!(
+                    i.pos.y <= y + 1e-4 && i.pos.y > y - 0.6,
+                    "a pine at {} over ground {y}",
+                    i.pos
+                );
+                raised += usize::from(i.pos.y > 2.0);
+                cells.insert(k);
+                n += 1;
+            }
+        }
+        assert_eq!(cells.len(), 6, "{n} pines over {cells:?}");
+        assert!(
+            2 * raised > n,
+            "{raised} of {n} pines stand over 2 m up the flanks"
+        );
+        assert!(ring_band(c.get("forest").unwrap(), "tree_forest").is_none());
     }
 
     /// `Surface::top`, with each triangle's divisor found once in `Surface::new`, answers as a scan
@@ -3110,7 +3399,8 @@ mod tests {
     /// Every MVP tile, every rotation: rules that declare no scatter get one rule per scatter piece,
     /// so roads, rivers, beaches, the ocean and the house pad are exercised too. Each instance's
     /// centre and footprint ring, turned with the tile, stand on its piece's floor in the tile's
-    /// turned ground, never on an excluded slot, clear of heroes, lanes and the border.
+    /// turned ground, never on an excluded slot, clear of heroes, lanes and the border. A
+    /// footprint tile's instances are read on the cell they stand in, in that cell's frame.
     #[test]
     fn no_instance_on_an_excluded_slot_for_every_mvp_tile_and_rotation() {
         let c = catalog();
@@ -3128,17 +3418,43 @@ mod tests {
             let local: Vec<(Tri, String)> =
                 crate::play::slope_ground::tile_ground_tris(&def, &c, &mut |id| lod0(id)).unwrap();
             let lanes = lanes(&def);
+            // Each cell's ground in its own frame, with its centre's offset from the tile's.
+            let cells: Vec<(Vec2, Vec<(Tri, String)>)> = if def.is_mega() {
+                hex_core::footprint::members(Axial::ORIGIN)
+                    .map(|m| {
+                        let at = Vec2::from(m.to_world(HEX_RADIUS));
+                        (at, member_tris(&local, at))
+                    })
+                    .to_vec()
+            } else {
+                vec![(Vec2::ZERO, local.clone())]
+            };
             for k in 0..6u8 {
                 let rot = piece_rotation(k);
-                let world = Surface::new(
-                    local
-                        .iter()
-                        .map(|(t, s)| (t.map(|p| (rot * Vec3::from(p)).to_array()), s.clone())),
-                );
+                let worlds: Vec<(Vec2, Surface)> = cells
+                    .iter()
+                    .map(|(at, tris)| {
+                        let turned = tris
+                            .iter()
+                            .map(|(t, s)| (t.map(|p| (rot * Vec3::from(p)).to_array()), s.clone()));
+                        (*at, Surface::new(turned))
+                    })
+                    .collect();
                 for seed in 0..4u64 {
                     let l = layout(&def, seed * 7919 + u64::from(k), &g);
                     *counts.entry(def.id.clone()).or_default() += l.instances.len();
-                    for inst in &l.instances {
+                    for tile_inst in &l.instances {
+                        let (at, world) = worlds
+                            .iter()
+                            .min_by(|a, b| {
+                                let reach = |o: Vec2| hex_reach(tile_inst.pos.xz() - o);
+                                reach(a.0).total_cmp(&reach(b.0))
+                            })
+                            .unwrap();
+                        let inst = &Instance {
+                            pos: tile_inst.pos - Vec3::new(at.x, 0.0, at.y),
+                            ..tile_inst.clone()
+                        };
                         let r = &def.props.scatter[inst.rule as usize];
                         let piece = r.piece.as_str();
                         let fp = footprint(inst.piece(piece));
@@ -3216,7 +3532,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 45, "every inventory tile ran");
+        assert_eq!(counts.len(), 46, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -3377,12 +3693,12 @@ mod tests {
             layout(c.get(&t.def).unwrap(), cell_seed(w.seed(), cell), &g)
         };
         let first = scatter(&w);
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert!(!w.tiles().contains_key(&cell));
-        assert!(w.redo());
+        assert!(w.redo(&c));
         assert_eq!(scatter(&w), first, "redo");
         w.bulldoze(&c, cell).unwrap();
-        assert!(w.undo());
+        assert!(w.undo(&c));
         assert_eq!(scatter(&w), first, "undo of a bulldoze");
     }
 
@@ -4921,6 +5237,77 @@ mod tests {
         for k in 0..200 {
             let q = Vec2::new(k as f32 * 0.37 - 30.0, 17.0 - k as f32 * 0.21);
             assert!((0.0..1.0).contains(&drift_noise(a, q)), "{q}");
+        }
+    }
+
+    /// Scatter keeps clear of a farm's boundary toward a land footprint's ring cell: the fence
+    /// map reads the ring cell (2, 0) as the footprint meadow (`covering`), its only land
+    /// neighbour.
+    #[test]
+    fn the_fence_map_reads_a_ring_cell_as_its_footprint() {
+        let c = crate::play::tests::footprint_fixtures();
+        let tiles: HashMap<Axial, (crate::play::PlayTile, Entity)> =
+            [((3, 0), "meadow"), ((1, 0), "farm")]
+                .into_iter()
+                .map(|((q, r), id)| {
+                    let cell = Axial::new(q, r);
+                    let t = crate::play::PlayTile {
+                        cell,
+                        tile: id.into(),
+                        rotation: 0,
+                        level: 0,
+                    };
+                    (cell, (t, Entity::PLACEHOLDER))
+                })
+                .collect();
+        let map = fence_map(1, &tiles, &c);
+        assert!(
+            map.get(&Axial::new(1, 0)).is_some_and(|s| !s.is_empty()),
+            "the farm has no boundary toward the ring cell: {map:?}"
+        );
+    }
+
+    /// The footprint's own fence map entry, which its ring scatter and ring grass keep clear of,
+    /// carries the farm's wall on the ring cell (2, 0)'s outer edge, in the anchor's frame: about
+    /// three apothems from the anchor, toward the farm.
+    #[test]
+    fn the_fence_map_gives_a_footprint_its_ring_cells_walls() {
+        let c = crate::play::tests::footprint_fixtures();
+        for rotation in [0u8, 2] {
+            let tiles: HashMap<Axial, (crate::play::PlayTile, Entity)> =
+                [((3, 0), "meadow", rotation), ((1, 0), "farm", 0)]
+                    .into_iter()
+                    .map(|((q, r), id, rotation)| {
+                        let cell = Axial::new(q, r);
+                        let t = crate::play::PlayTile {
+                            cell,
+                            tile: id.into(),
+                            rotation,
+                            level: 0,
+                        };
+                        (cell, (t, Entity::PLACEHOLDER))
+                    })
+                    .collect();
+            let map = fence_map(1, &tiles, &c);
+            let segs = map
+                .get(&Axial::new(3, 0))
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| {
+                    panic!("r{rotation}: no wall in the footprint's entry: {map:?}")
+                });
+            // The farm lies west of the anchor in the world; the anchor's frame turns it back.
+            let toward = turn((6 - rotation) % 6, [-1.0, 0.0, 0.0]);
+            for s in segs {
+                let mid = (Vec2::from(s.a) + Vec2::from(s.b)) / 2.0;
+                assert!(
+                    (mid.length() - 3.0 * APOTHEM).abs() < HEX_RADIUS,
+                    "r{rotation}: {s:?} is not on the ring cell's outer edge"
+                );
+                assert!(
+                    mid.normalize().dot(Vec2::new(toward[0], toward[2])) > 0.8,
+                    "r{rotation}: {s:?} does not face the farm"
+                );
+            }
         }
     }
 }

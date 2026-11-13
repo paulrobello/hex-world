@@ -26,6 +26,13 @@ static HELD: AtomicU32 = AtomicU32::new(0);
 /// several seconds, across several shots in a row. A window capture of an occluded window
 /// (`--offscreen off`) stays black until the window is uncovered.
 pub const BLANK_WAIT: std::time::Duration = std::time::Duration::from_secs(60);
+/// A held capture pauses `Time<Virtual>` for a whole number of these rendered frames: the hold
+/// ends on the first multiple after the frame is stored. The readback lands a wall-clock-dependent
+/// number of frames after the request, and `FrameCount` (TAA jitter, SSAO, shadow and blue-noise
+/// phases) keeps counting while simulated time stands still, so a hold of that raw length would
+/// shift every later frame's noise against its simulated time. 64 is a multiple of every
+/// frame-count period Bevy's passes use (the TAA Halton 8, SSAO's `% 64`).
+pub const HOLD_FRAMES: u32 = 64;
 /// Test hook: the first N frames of every held capture count as all black, so the retake runs
 /// on a GPU that draws.
 const FORCE_BLACK_ENV: &str = "HEXW_SHOT_FORCE_BLACK";
@@ -210,26 +217,36 @@ fn forced_black() -> u32 {
     })
 }
 
-/// Pauses `Time<Virtual>` while a held capture is out and resumes it once none is. Run after the
-/// requests: the pause takes effect at the next frame's time update, so the requested frame itself
-/// advances as usual, and from then until the frame is stored no `Time` delta, fixed tick or
-/// fixed water step passes. A readback still out a further [`BLANK_WAIT`] past the retake bound
-/// stops the run with exit 1, so a capture that never returns cannot hold a script forever.
+/// Whether a hold paused `frames` frames ago ends this frame: no held capture is out and the
+/// pause has lasted a whole number of [`HOLD_FRAMES`].
+fn hold_ends(frames: u32, held: bool) -> bool {
+    !held && frames > 0 && frames.is_multiple_of(HOLD_FRAMES)
+}
+
+/// Pauses `Time<Virtual>` while a held capture is out and resumes it once none is, on the first
+/// multiple of [`HOLD_FRAMES`] frames since the pause. Run after the requests: the pause takes
+/// effect at the next frame's time update, so the requested frame itself advances as usual, and
+/// from then until the hold ends no `Time` delta, fixed tick or fixed water step passes. A
+/// readback still out a further [`BLANK_WAIT`] past the retake bound stops the run with exit 1, so
+/// a capture that never returns cannot hold a script forever.
 pub fn hold_time(
     mut time: ResMut<Time<bevy::time::Virtual>>,
-    mut paused_at: Local<Option<std::time::Instant>>,
+    mut paused_at: Local<Option<(std::time::Instant, u32)>>,
 ) {
     let held = HELD.load(Ordering::SeqCst) > 0;
+    if let Some((_, frames)) = paused_at.as_mut() {
+        *frames += 1;
+    }
     match *paused_at {
         None if held => {
             time.pause();
-            *paused_at = Some(std::time::Instant::now());
+            *paused_at = Some((std::time::Instant::now(), 0));
         }
-        Some(_) if !held => {
+        Some((_, frames)) if hold_ends(frames, held) => {
             time.unpause();
             *paused_at = None;
         }
-        Some(t) if t.elapsed() >= 2 * BLANK_WAIT => {
+        Some((t, _)) if t.elapsed() >= 2 * BLANK_WAIT => {
             error!(
                 "a held screenshot has had no frame back for {:.1} s; exiting 1",
                 t.elapsed().as_secs_f32()
@@ -367,10 +384,10 @@ mod tests {
         assert_eq!(verdict(true, BLANK_WAIT), Verdict::Fail);
     }
 
-    /// The hold pauses virtual time from the frame after the request until the frame after the
-    /// capture lands, and `holding` stays true through the first unpaused-again frame's start.
-    #[test]
-    fn a_held_capture_pauses_virtual_time() {
+    /// A hold whose capture lands `lands_after` frames after the request: the frames that passed no
+    /// simulated time and were `holding`, and the frame count from the request to the first frame
+    /// that advanced time again.
+    fn hold_for(lands_after: u32) -> (u32, u32) {
         use bevy::time::{TimePlugin, TimeUpdateStrategy, Virtual};
         let step = std::time::Duration::from_nanos(16_666_667);
         let mut app = App::new();
@@ -381,26 +398,46 @@ mod tests {
         HELD.fetch_add(1, Ordering::SeqCst);
         app.update();
         let elapsed = app.world().resource::<Time<Virtual>>().elapsed();
-        for _ in 0..3 {
+        let (mut still, mut frames) = (0, 0);
+        loop {
+            frames += 1;
+            if frames == lands_after {
+                HELD.fetch_sub(1, Ordering::SeqCst);
+            }
             app.update();
             let time = app.world().resource::<Time<Virtual>>();
-            assert_eq!(
-                time.elapsed(),
-                elapsed,
-                "no simulated time passes while held"
+            if time.elapsed() != elapsed {
+                assert_eq!(time.elapsed(), elapsed + step);
+                assert!(!holding(time));
+                return (still, frames);
+            }
+            assert!(
+                holding(time),
+                "a frame that passes no time holds the script"
             );
-            assert!(holding(time));
+            still += 1;
         }
-        HELD.fetch_sub(1, Ordering::SeqCst);
-        app.update();
-        assert!(
-            holding(app.world().resource::<Time<Virtual>>()),
-            "the frame the capture lands on was still paused"
+    }
+
+    /// The hold pauses virtual time from the frame after the request for a whole number of
+    /// `HOLD_FRAMES`, however many frames the readback takes: `FrameCount` then keeps the same
+    /// phase against simulated time after every capture, so a capture run's later frames do not
+    /// depend on readback latency.
+    #[test]
+    fn a_held_capture_pauses_virtual_time_for_whole_hold_frames() {
+        assert_eq!(hold_for(1), (HOLD_FRAMES, HOLD_FRAMES + 1));
+        assert_eq!(hold_for(2), hold_for(1), "one frame later readback");
+        assert_eq!(hold_for(5), hold_for(1));
+        assert_eq!(hold_for(HOLD_FRAMES), hold_for(1));
+        assert_eq!(
+            hold_for(HOLD_FRAMES + 3),
+            (2 * HOLD_FRAMES, 2 * HOLD_FRAMES + 1),
+            "a readback past one quantum holds the next whole one"
         );
-        app.update();
-        let time = app.world().resource::<Time<Virtual>>();
-        assert_eq!(time.elapsed(), elapsed + step);
-        assert!(!holding(time));
+        assert!(
+            !hold_ends(HOLD_FRAMES, true),
+            "never while a capture is out"
+        );
     }
 
     #[test]

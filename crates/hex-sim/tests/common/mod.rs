@@ -67,10 +67,12 @@ impl Scene {
                 self.sim.sync_tunnels(&self.world, &self.catalog);
             }
             Edit::Bulldoze(cell) => {
+                // The sim keys a footprint tile by its anchor, which a member names until it goes.
+                let anchor = self.world.anchor_of(cell).unwrap_or(cell);
                 self.world
                     .bulldoze(&self.catalog, cell)
                     .unwrap_or_else(|e| panic!("bulldoze {cell:?}: {e}"));
-                self.sim.apply_bulldoze(cell);
+                self.sim.apply_bulldoze(anchor);
                 self.sim.sync_tunnels(&self.world, &self.catalog);
             }
         }
@@ -79,14 +81,14 @@ impl Scene {
     /// Undoes the world's latest edit and mirrors the change into the sim.
     pub fn undo(&mut self) {
         let before = self.world.tiles().clone();
-        assert!(self.world.undo(), "nothing to undo");
+        assert!(self.world.undo(&self.catalog), "nothing to undo");
         self.mirror(&before);
     }
 
     /// Redoes the world's latest undone edit and mirrors the change into the sim.
     pub fn redo(&mut self) {
         let before = self.world.tiles().clone();
-        assert!(self.world.redo(), "nothing to redo");
+        assert!(self.world.redo(&self.catalog), "nothing to redo");
         self.mirror(&before);
     }
 
