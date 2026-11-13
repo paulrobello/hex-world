@@ -35,7 +35,12 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
   - Branch `worktree-agent-a83978ad28323d671`.
   - Pass 1 gives two vertical joint sets plus sheet joints, flat tilted block faces and an even pale-grey tint (dark moss 8.3% → 0.02%).
   - Tris 3521 / 1660 / 505. Top 17.99 m. The hill stays byte-identical.
-  - A second pass, ruled overnight, varies the joint direction per pinnacle, removes the black pockets and edge shards, carries the joints lower on the foot, and pulls the rock back so the scree chutes read as in ref-1.
+  - Four passes ran overnight. The sheet `docs/checkpoints/peak_granite/jointing-sheet.jpg` on that branch shows each one beside the current peak and ref-1.
+    - Pass 2 varies the joint direction per pinnacle and removes the black pockets.
+    - Pass 3 adds dark joint lines (`#3b3329`), breaks the melted foot into stepped blocks and brings scree to 35 m².
+    - Pass 4 is colour only: a mid grey with a faint green-grey cast, ±14% shading per block, about 6.7% moss, 2.4% yellow lichen and faint weathering streaks.
+  - Pass 4 tris: 3597 / 1696 / 508. Top 18.03 m. The hill is still byte-identical.
+  - In Blender's stills the rock still reads lighter than ref-1. I'm judging that from the in-engine shots rather than starting a fifth pass blind. Recommendation: the pass-4 jointed peak over the current one.
 
 ## MT. Mega tiles (massif) merge notes
 
