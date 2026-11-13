@@ -4,6 +4,8 @@ Requests waiting on you, collected overnight while you slept. Nothing here is ap
 
 ## OC. Large granite boulder redo (`outcrop_granite`)
 
+**Answered 2026-11-13: "OC yes to all".** Q1–Q5 approved as recommended.
+
 Branch `worktree-agent-a3ab85e959e4f444d`. The surface lines you said read as stamped are now a refined fracture network. Every gate is green on the branch (checkall 0). Its ROCK_BASES outline refit is committed with it.
 - Review sheet, same views before and after: `docs/checkpoints/outcrop_granite/redo-sheet.jpg`.
 - In-engine shots, taken 2:25 AM PST on the variant branch `worktree-agent-ac1c48909c2a99abc`: `docs/checkpoints/outcrop_granite_b/play/` and `kit/`. These show single outcrops. A frame with several outcrops (OC-Q2) is still to be taken.
@@ -31,9 +33,9 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
 
 - **HL-A1. Approve the hills spec?** Recommendation: approve.
 - **HL-Q1. Reference picks.** Recommendation: ref-1 for both pieces.
-- **HL-Q2. Pines on the hill?** Recommendation: none, matching the references. The peak keeps a pine band.
+- **HL-Q2. Pines on the hill?** Answered 2026-11-13: no pines on the hill. The peak keeps its pine band.
 - **HL-Q3. Pack.** Recommendation: `hero`. The alternative is a new `hills` pack.
-- **HL-Q4. The peak's rock.** The builder noted that the pinnacles read as rounded blocks with blotchy tint, not ref-1's jointed crag. Ruling made overnight: a jointing pass is being built ahead as an alternative (`docs/checkpoints/peak_granite/jointing-sheet.jpg` when done), so you can compare the two. Recommendation: pick whichever reads closer to ref-1 in engine.
+- **HL-Q4. The peak's rock.** Owner 2026-11-13: "the current peak looks better to me, but i want to see both versions in engine before i make final call". Two playable builds are being served side by side. The builder noted that the pinnacles read as rounded blocks with blotchy tint, not ref-1's jointed crag. Ruling made overnight: a jointing pass is being built ahead as an alternative (`docs/checkpoints/peak_granite/jointing-sheet.jpg` when done), so you can compare the two. Recommendation: pick whichever reads closer to ref-1 in engine.
   - Branch `worktree-agent-a83978ad28323d671`.
   - Pass 1 gives two vertical joint sets plus sheet joints, flat tilted block faces and an even pale-grey tint (dark moss 8.3% → 0.02%).
   - Tris 3521 / 1660 / 505. Top 17.99 m. The hill stays byte-identical.
