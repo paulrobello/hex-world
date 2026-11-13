@@ -4,12 +4,16 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/outcrop_granite.py",
-    "sha256": "cd6e7f91ee157c04a5fa15215ffdfa346194d963690f459e7620da40780b2047"
+    "sha256": "267fdacc74111d446e4d7a502c2940bcda7ea0628adb8880add53d2498ee254a"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_boulder.py",
       "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_outcrop.py",
+      "sha256": "15f257351df90fadd5eaa6c1a1c910288c0ce37801c64c30f75f151feb04e753"
     },
     {
       "path": "scripts/blender/kit/_rock.py",
@@ -438,7 +442,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-11-13T07:18:45.239Z",
+    "date": "2026-11-13T14:42:48.516Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -484,6 +488,14 @@
       "revision": "stamped-lines redo (owner 2026-10-30, C3 review: \"the lines on it make it too recognizable as stamped\")",
       "requested": "2026-11-12",
       "notes": "Pending owner review; not an approval. The three straight joint grooves (a T on every instance) are now four wandering fractures (a main joint, two oblique branches, a hairline) whose width, depth and slab step vary along their length and fade out unevenly; a low swell breaks the flat top facets; lichen varies (pale sage rosette colonies, ochre crusts on the flanks, the small rosettes and the moss thinning and thickening across the stone) and fracture floors darken. Plan size and LOD budgets unchanged (7.94 x 4.96 m above ground, LOD tris 1370/587/175); the top sits 5.8 cm lower (1.21 m, was 1.268 m) because the fractures cut the crest; the scatter footprint still fits (collider reach 4.242, FOOTPRINTS 4.25); the grass ROCK_BASES outline needs the refit in docs/checkpoints/outcrop_granite/integration.patch. Review the before/after sheet docs/checkpoints/outcrop_granite/redo-sheet.jpg and the six-view renders in assets-source/kit/outcrop_granite/renders/; in-engine shots are taken by the orchestrator. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "piece",
+      "status": "approved",
+      "revision": "stamped-lines redo",
+      "notes": "Approved in chat (\"OC yes to all\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: OC-Q1 the stamped-lines redo reads natural; OC-Q2 keep outcrop_granite_b; OC-Q3 a/b 50/50; OC-Q4 the extra showcase meadow at (-3, 0); OC-Q5 move the shared fracture code into a _outcrop.py helper (a and b rebuild and re-check)."
     }
   ]
 }

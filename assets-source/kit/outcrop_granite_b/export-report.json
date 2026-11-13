@@ -2,12 +2,16 @@
   "blender": "5.2.2 LTS",
   "generator": {
     "path": "scripts/blender/kit/outcrop_granite_b.py",
-    "sha256": "be932c75629236b659817aa0d300b4ea116d56bda7809bac0161cd28f8325257"
+    "sha256": "0313c7563c970d561e9e96423cc98ae5359618a63bc16c862e6178a00e78ae84"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_boulder.py",
       "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_outcrop.py",
+      "sha256": "15f257351df90fadd5eaa6c1a1c910288c0ce37801c64c30f75f151feb04e753"
     },
     {
       "path": "scripts/blender/kit/_rock.py",

@@ -4,12 +4,16 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/outcrop_granite_b.py",
-    "sha256": "be932c75629236b659817aa0d300b4ea116d56bda7809bac0161cd28f8325257"
+    "sha256": "0313c7563c970d561e9e96423cc98ae5359618a63bc16c862e6178a00e78ae84"
   },
   "generatorDeps": [
     {
       "path": "scripts/blender/kit/_boulder.py",
       "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_outcrop.py",
+      "sha256": "15f257351df90fadd5eaa6c1a1c910288c0ce37801c64c30f75f151feb04e753"
     },
     {
       "path": "scripts/blender/kit/_rock.py",
@@ -438,7 +442,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-11-13T09:05:50.379Z",
+    "date": "2026-11-13T14:42:58.549Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -468,6 +472,14 @@
       "revision": "second outcrop variant, built ahead (outcrop redo Q2: \"every outcrop is the same mesh, rotated and scaled\")",
       "requested": "2026-11-13",
       "notes": "Pending owner review; not an approval. Not requested by the owner: built ahead so two outcrops in one view no longer share a fracture pattern. A runtime scatter variant of outcrop_granite (refs assets-source/refs/boulders, approved A25), same granite family, pipeline and budgets: a blunter, broader plan (7.41 x 5.34 m above ground against 7.94 x 4.96), its high point at one end with a saddle behind it, and its own fractures (a curved transverse joint where the level slab at the high end drops into the joint over a bevelled edge, no lip; pass 2 after the first build's step read as a raised ridge in the close sun-side view, a long joint down the low tail with one branch, a hairline near a rim). Scatter draws outcrop_granite and outcrop_granite_b half the picks each. Review the side-by-side sheet docs/checkpoints/outcrop_granite_b/review-sheet.jpg (headless EEVEE stills of both from the same views) and the six-view renders in assets-source/kit/outcrop_granite_b/renders/; in-engine shots are taken by the orchestrator. The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "piece",
+      "status": "approved",
+      "revision": "second outcrop variant (pass 2, ridge fixed)",
+      "notes": "Approved in chat (\"OC yes to all\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: OC-Q1 the stamped-lines redo reads natural; OC-Q2 keep outcrop_granite_b; OC-Q3 a/b 50/50; OC-Q4 the extra showcase meadow at (-3, 0); OC-Q5 move the shared fracture code into a _outcrop.py helper (a and b rebuild and re-check)."
     }
   ]
 }
