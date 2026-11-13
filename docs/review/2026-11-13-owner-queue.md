@@ -31,10 +31,10 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
 - In-engine shots: current peak on `worktree-agent-a5c9b226ddc2c72f5` in `docs/checkpoints/hill_meadow/play/`; jointed pass-4 peak on `worktree-agent-a83978ad28323d671` in `docs/checkpoints/peak_granite/jointed-play/`. Same script and cameras, so the files compare one to one. Compare `peak-low.jpg` first.
 - Thumbnails: rendered and committed on the jointed branch (ced99a7). The validator checks every tile again.
 
-- **HL-A1. Approve the hills spec?** Recommendation: approve.
-- **HL-Q1. Reference picks.** Recommendation: ref-1 for both pieces.
+- **HL-A1. Approve the hills spec?** **Answered 2026-11-13: yes ("yes to all (hero pack)"); merged to main in 96512f3.** Recommendation: approve.
+- **HL-Q1. Reference picks.** **Answered 2026-11-13: yes ("yes to all (hero pack)"); merged to main in 96512f3.** Recommendation: ref-1 for both pieces.
 - **HL-Q2. Pines on the hill?** Answered 2026-11-13: no pines on the hill. The peak keeps its pine band.
-- **HL-Q3. Pack.** Recommendation: `hero`. The alternative is a new `hills` pack.
+- **HL-Q3. Pack.** **Answered 2026-11-13: yes ("yes to all (hero pack)"); merged to main in 96512f3.** Recommendation: `hero`. The alternative is a new `hills` pack.
 - **HL-Q4. The peak's rock.** **Answered 2026-11-13: keep the current (original) peak.** After placing both Peak tiles in engine (8093 current, 8098 jointed pass 4; `docs/review/peak-ab/peak-ab-web.jpg`): "i still like original better". The jointing passes 1-4 are rejected and do not land. Before that: "the current peak looks better to me, but i want to see both versions in engine before i make final call". The builder noted that the pinnacles read as rounded blocks with blotchy tint, not ref-1's jointed crag. Ruling made overnight: a jointing pass is being built ahead as an alternative (`docs/checkpoints/peak_granite/jointing-sheet.jpg` when done), so you can compare the two. Recommendation: pick whichever reads closer to ref-1 in engine.
   - Branch `worktree-agent-a83978ad28323d671`.
   - Pass 1 gives two vertical joint sets plus sheet joints, flat tilted block faces and an even pale-grey tint (dark moss 8.3% → 0.02%).
