@@ -3,10 +3,14 @@
 // Writes <out.jpg> (JPEG q90) and prints the sha256 of the lossless PNG encode of the
 // Higgsfield output on stdout, recorded as refs.json `sourceSha256`.
 import { createHash } from "node:crypto";
+import { setDefaultResultOrder } from "node:dns";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 // ESM ignores NODE_PATH; the pinned sharp lives only in scripts/assets/node_modules.
 const sharp = createRequire(new URL("../assets/package.json", import.meta.url))("sharp");
+
+// The CDN publishes AAAA records that time out on IPv6-less networks; resolve IPv4 first.
+setDefaultResultOrder("ipv4first");
 
 const args = process.argv.slice(2);
 const idOnly = args[0] === "--job-id";
