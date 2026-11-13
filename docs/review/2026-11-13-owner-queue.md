@@ -40,3 +40,20 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
 ## MT. Mega tiles (massif) merge notes
 
 - **MT-N1. Tangent bytes changed since your C3 approval.** The massif's exported tangents were not deterministic, because Blender's threaded MikkTSpace gave a different result on each run of a large mesh. The export now runs single-threaded. The GLB bytes changed but the look did not. A parity proof against main is running, and its results go here before the merge.
+
+## RL. Rail tunnel portal and rail viaduct references (deferred P4 work, prepared ahead)
+
+Branch `worktree-agent-afe993181be01799e`. Rail on raised ground, viaducts and rail tunnels are still deferred, and nothing gets modelled until you lift that. These are only the R2 reference candidates, so the pick is ready when you do. Notes: `docs/checkpoints/rail-levels/refs-notes.md`.
+- Sheets: `docs/checkpoints/rail_tunnel_portal/refs-sheet.jpg` and `docs/checkpoints/rail_viaduct/refs-sheet.jpg`.
+- Candidates: `assets-source/refs/rail_tunnel_portal/ref-1..4.jpg` and `assets-source/refs/rail_viaduct/ref-1..4.jpg`.
+
+- **RL-Q1 (blocking): tunnel clearance.** The steam engine stands 4.66 m above the tile, so the arch needs about 5 m and the head wall about 5.9 m. One level of cover is 4 m.
+  - O1: rail tunnels need hills two levels (8 m) high.
+  - O2 (recommended): the head wall stands about 2 m above a one-level hill, under a turf mound, with its face about 6 m inside the tile edge.
+  - O3: shrink the arch or the train. Not recommended, since the engine is approved.
+- **RL-Q2. Picks.** Recommendation:
+  - Portal: ref-2's look with ref-3's turf-mound layout under O2, or ref-4's under O1.
+  - Viaduct: ref-2's form (three tall arches on tapering piers) with ref-4's stone and deck detail, scaled by pier height for the three levels.
+- **RL-Q3. Walking on the viaduct deck.** Can a walker go onto it from a raised neighbour? Recommendation: no, for now.
+- **RL-Q4. One viaduct design for all heights, or a two-tier form for 12 m?** Recommendation: one design. No candidate shows a true 12 m deck yet, and one more generation can cover that once you pick.
+- Note: the viaduct needs a new edge kind first (two rail edges at the upper level, four at its own level). That is gate and hex-core socket work before any modelling.
