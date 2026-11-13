@@ -1,0 +1,183 @@
+{
+  "name": "hill_meadow",
+  "date": "2026-11-13T15:49:23.903Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 595037,
+      "sha256": "b1d8e39699be8d60c10954f54bdc4db05acd1fb73a59c7a992918f2ca3458ad0"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 604516,
+      "sha256": "f90971095a2fd3e4d1900eb9922f4a628585485ee64cf3a701cba7b2422542cd"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 928424,
+      "sha256": "e0db4062addf2f825b920352c1bd7eaea3fc56fffbd1a9621db6f478ede530fc"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 21355,
+      "sha256": "0e7935c1d6609c27a2e268d7a9f17d1d5fce992ab3dea8698d89e5561bac2b04"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 20938,
+      "sha256": "74f3fd3bc6a0e410bcfc23c6b16b6d04412d589b2ae7d56dd52098b31bb6ddea"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 25820,
+      "sha256": "bc26d74086cd58167bce36203a4f9f02c3c7d36a83c527f991db8c41c78cb0a8"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 154063,
+      "sha256": "c33de2044afd748a643cfbe157b36e2201489c587a03ca3944ab4e84e16f01da"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 158348,
+      "sha256": "88b4db447cbc5bd717128b5deb8f8eba475c67f42a8c2a92e6bf8b46d85e9c45"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 235760,
+      "sha256": "9a060b1ea906f6f1c4fe32e44326803886996aa9000d2ee6c6dc1c91374e26b4"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 112541,
+      "sha256": "2773f43074abc2021b41888b2dc775d0b66a3e5c46138e5176a7d861fa4df0b4"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 117733,
+      "sha256": "cce4c8f87e94fc3bcb69efed35cac7f4af31279e7d1a464fcf8137c9e0932747"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 153453,
+      "sha256": "87e50a2fa52ad75fbb479a34fb10cf8feca54a0853c2cf88f7143fa3607bf6f5"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 882996,
+      "astc": 901535
+    },
+    "glbBytes": 163084
+  },
+  "glb": {
+    "bytes": 163084,
+    "sha256": "966473b2945a95a88d8074cc451d716704c7de70e4f10c6b9ec4d38674e28bde"
+  }
+}

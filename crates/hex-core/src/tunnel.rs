@@ -307,6 +307,21 @@ pub(crate) mod tests {
         assert!(tunnels(&w, &c).is_empty());
     }
 
+    /// Spec 2026-11-13 (single-tile hills) non-goal: a hill or a peak is never tunnel cover, at the
+    /// cover level or any other, so portals across one stay open.
+    #[test]
+    fn no_tunnel_runs_under_a_single_tile_hill() {
+        let c = catalog();
+        assert_eq!(tunnels(&row(&meadows(3), 0), &c).len(), 1);
+        for hill in ["hill_meadow", "peak_granite"] {
+            for level in 0..=2 {
+                let w = row(&[("meadow", 1), (hill, level), ("meadow", 1)], 0);
+                assert!(tunnels(&w, &c).is_empty(), "{hill} at level {level}");
+                assert_eq!(open_portals(&w, &c).len(), 2, "{hill} at level {level}");
+            }
+        }
+    }
+
     #[test]
     fn no_tunnel_runs_under_a_massif() {
         let c = catalog();

@@ -1,0 +1,15 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-11-13",
+    "notes": "Pending owner review; not an approval. peak_granite, built ahead of the reference pick (spec docs/superpowers/specs/2026-11-13-single-tile-hills-design.md, Q1 recommends ref-1) against assets-source/refs/peak_granite/ref-1.jpg: a single-tile granite peak (A40 O1) on the massif's pipeline carried to one hex, whose six edges are plain Grass, flat at the tile's level where a Meadow's are. A summit 17.68 m up (LOD0) with five lower pinnacles and six spines, cleft between them, rises from grass flanks; scree fans run down the gullies (195 m\u00b2 of visible rock, 21 m\u00b2 of scree). Kind base, pack hero, LOD0/1/2 3525/1705/507 tris, a unique 1024 atlas at 24.52 px/m on the rock (the scoped floor is 20 px/m, as the massif's A54 Q1 O1, D8), runtime grass on the cap (D10), Meadow's scatter at Meadow density per m\u00b2 of free ground plus lower-slope pines 8.5-12.5 m from the centre (D9, a runtime rule, never baked). Review sheet: docs/checkpoints/peak_granite/review-sheet.jpg (ref-1 beside headless EEVEE stills of the baked LOD0 among six meadow_base tiles); in-engine views come from the orchestrator (docs/checkpoints/hill_meadow/hills-shots.json). The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-11-13",
+    "gate": "piece",
+    "status": "approved",
+    "notes": "Approved in chat (\"yes to all (hero pack)\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: HL-A1 hills spec approved; HL-Q1 ref-1 for both pieces; HL-Q2 no pines on the hill (the peak keeps its pine band); HL-Q3 pack hero; HL-Q4 the original peak is kept, the jointing passes are rejected (after an in-engine A/B: \"i still like original better\")."
+  }
+]

@@ -100,6 +100,19 @@ fn prism_mesh(radius: f32, height: f32) -> Mesh {
 /// pass's rock in grass raised round it, owner A55 Q1 O1).
 pub const MASSIF_PEAK: f32 = 34.57;
 
+/// The single-tile landforms' tops over their cap (m): each piece's LOD0 top (spec 2026-11-13
+/// D12), which pointer picking stands on (`hex-app` `GameState::top_of`). Each stays more than
+/// 3 m under the boids' sky band at any level (D11), so no flock or peak lift needs it.
+pub const LANDFORM_TOPS: &[(&str, f32)] = &[("hill_meadow", 9.44), ("peak_granite", 17.68)];
+
+/// A single tile's landform top over its level ([`LANDFORM_TOPS`]), 0 for every other tile.
+pub fn landform_top(tile: &str) -> f32 {
+    LANDFORM_TOPS
+        .iter()
+        .find(|(t, _)| *t == tile)
+        .map_or(0.0, |(_, h)| *h)
+}
+
 /// Where each cell `def` covers sits from its anchor, in the tile root's frame: the anchor alone
 /// for a single tile, the seven cells for a footprint tile. The ring is 60-degree symmetric, so the
 /// set is the same at every rotation.
@@ -1803,7 +1816,7 @@ pub(crate) mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 46);
+        assert_eq!(c.0.tiles().len(), 48);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);
@@ -1821,6 +1834,30 @@ pub(crate) mod tests {
             (top - MASSIF_PEAK).abs() < 0.05,
             "LOD0 top {top}, MASSIF_PEAK {MASSIF_PEAK}"
         );
+    }
+
+    /// `LANDFORM_TOPS` lists the scatter landforms, each its piece's LOD0 top (its GLB) within
+    /// 5 cm, and each stays more than 3 m under the boids' sky band (spec 2026-11-13 D11, D12).
+    #[test]
+    fn landform_tops_are_the_lod0_tops_under_the_sky_band() {
+        assert_eq!(
+            LANDFORM_TOPS.iter().map(|(t, _)| *t).collect::<Vec<_>>(),
+            scatter::LANDFORMS
+        );
+        for (id, h) in LANDFORM_TOPS {
+            let tris = crate::walk::tests::mesh_tris(id, "lod0").expect("landform LOD0");
+            let top = tris
+                .iter()
+                .flat_map(|(t, _)| t.iter().map(|p| p[1]))
+                .fold(f32::MIN, f32::max);
+            assert!(
+                (top - h).abs() < 0.05,
+                "{id}: LOD0 top {top}, LANDFORM_TOPS {h}"
+            );
+            assert!(*h < crate::boids::plan::SKY_LOW - 3.0, "{id}: top {h}");
+        }
+        assert_eq!(landform_top("meadow"), 0.0);
+        assert_eq!(landform_top("massif_granite"), 0.0);
     }
 
     /// The builtin catalog with `meadow` turned into a footprint: a land tile, so a field beside

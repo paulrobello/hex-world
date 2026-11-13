@@ -560,11 +560,20 @@ const BOULDER_PIECES: &[&str] = &[
 /// of scree on one 2048² atlas measure 20.4 px/m; 256 px/m would need about 25,000² px.
 const MASSIF_TEXEL_MIN_PX_PER_M: f32 = 20.0;
 
+/// The single-tile landforms' unique rock and scree (spec 2026-11-13 D8, scoped as A54): each piece's
+/// measured LOD0 density on its 1024² atlas rounded down to a multiple of 5 px/m, never under the
+/// massif's 20. hill_meadow's slabs measure 54.7 px/m, peak_granite's 18 m of granite 24.5 px/m.
+const LANDFORM_TEXEL_MIN_PX_PER_M: &[(&str, f32)] =
+    &[("hill_meadow", 50.0), ("peak_granite", 20.0)];
+
 /// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set,
-/// `MASSIF_TEXEL_MIN_PX_PER_M` for massif_granite, else `TEXEL_MIN_PX_PER_M`.
+/// `MASSIF_TEXEL_MIN_PX_PER_M` for massif_granite, `LANDFORM_TEXEL_MIN_PX_PER_M` for the
+/// single-tile landforms, else `TEXEL_MIN_PX_PER_M`.
 fn texel_min(id: &str) -> f32 {
     if BOULDER_PIECES.contains(&id) {
         BOULDER_TEXEL_MIN_PX_PER_M
+    } else if let Some((_, floor)) = LANDFORM_TEXEL_MIN_PX_PER_M.iter().find(|(p, _)| *p == id) {
+        *floor
     } else if id == "massif_granite" {
         MASSIF_TEXEL_MIN_PX_PER_M
     } else {

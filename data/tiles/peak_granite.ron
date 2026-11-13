@@ -1,0 +1,33 @@
+// A single-tile granite peak (P4, owner A40 O1; spec 2026-11-13 single-tile hills, pending owner
+// approval): a craggy summit about 18 m high with buttresses, scree in the gullies and grassy lower
+// slopes, rising inside the hex. Its six edges are plain Grass at its own level, like a raised
+// Meadow's (spec D2-D4). Meadow's five scatter rules, in its order, which `scatter::prepare` scales
+// by the peak's free grass against a Meadow's so instances per m² of grass match, then the pines in
+// small drifts within `scatter::PEAK_PINE_BAND` (spec D9). Without `look_period: Some(6)` the
+// all-Grass sockets would fold its six turns into one.
+(
+    id: "peak_granite",
+    biome: Grass,
+    base: "peak_granite",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "outcrop_granite", density: 0.03),
+            (piece: "boulder_granite", density: 0.06),
+            (piece: "wildflower_clump", density: 4.0, drift: true),
+            (piece: "rock_small", density: 0.3),
+            (piece: "wildflower_single", density: 6.0, vary: 0.8),
+            (piece: "tree_forest", density: 0.2, drift: true),
+            (piece: "sapling_spruce", density: 0.2, drift: true),
+        ],
+    ),
+    look_period: Some(6),
+    raisable: true,
+)

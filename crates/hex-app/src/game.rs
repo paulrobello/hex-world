@@ -366,15 +366,23 @@ impl GameState {
     }
 
     /// The top (m) of the tile covering `cell`, `(level + def.top()) * LEVEL_STEP`, and over a
-    /// footprint tile's anchor its peak too (`hex_play::play::MASSIF_PEAK`); `None` on an empty
+    /// footprint tile's anchor its peak too (`hex_play::play::MASSIF_PEAK`), over a single-tile
+    /// landform its top (`hex_play::play::landform_top`, spec 2026-11-13 D12); `None` on an empty
     /// cell. Pointer picking and the orbit pivot stand on it (`camera::pick_cell`).
     pub fn top_of(&self, cell: Axial) -> Option<f32> {
         let t = self.world.tile(cell)?;
         let def = self.catalog.get(&t.def);
         let top = def.map_or(0, |d| d.top());
-        let peak = (def.is_some_and(TileDef::is_mega) && self.world.anchor_of(cell) == Some(cell))
-            .then_some(hex_play::play::MASSIF_PEAK);
-        Some(f32::from(t.level + top) * hex_core::LEVEL_STEP + peak.unwrap_or(0.0))
+        let peak = if def.is_some_and(TileDef::is_mega) {
+            if self.world.anchor_of(cell) == Some(cell) {
+                hex_play::play::MASSIF_PEAK
+            } else {
+                0.0
+            }
+        } else {
+            hex_play::play::landform_top(&t.def)
+        };
+        Some(f32::from(t.level + top) * hex_core::LEVEL_STEP + peak)
     }
 
     /// The level each free slot's outline sits on, where it is not 0 ([`PlayView::slot_levels`]):

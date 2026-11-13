@@ -704,6 +704,11 @@ P4 decisions (owner, 2026-10-27, open questions A38–A42, recommended options):
   - Each ring cell's planned count is scaled by its free mask area over a meadow's, so instances per m² of free ground match a meadow.
   - Scatter stays off the rock and scree. The centre cell scatters nothing, and grass grows on all seven cells' grass cap.
   - Spruces and saplings follow at 0.3 per 100 m² each, in small drifts 17 to 28 m from the centre (`scatter::PINE_BAND`).
+- Single-tile hills and peaks (A40 O1; owner-approved 2026-11-13, "yes to all (hero pack)", `docs/review/2026-11-13-owner-queue.md` HL; spec `docs/superpowers/specs/2026-11-13-single-tile-hills-design.md`, D1 to D19, approved as HL-A1). Both pieces follow ref-1 (HL-Q1) and load in the hero pack (HL-Q3). The peak keeps its original rock: after an in-engine A/B against a jointed pass (four passes), the owner chose the original (HL-Q4, "i still like original better"), and the jointing passes did not land:
+  - Two raisable single tiles, `hill_meadow` ("Grassy hill", an 8.5 m grass dome with a few low granite slabs) and `peak_granite` ("Granite peak", an 18 m craggy granite summit in grass flanks with scree fans), listed after the massif. Each meets its neighbours at its own level on its outer edge, as a raised Meadow does, and carries no road, rail, river or tunnel.
+  - Each is a kind-base piece in the hero pack, with a unique rock and scree bake at 1024 px under a kit-gate texel floor scoped to the piece (as A54), and the Meadow grass on its cap.
+  - Each scatters Meadow's rules at Meadow's density per m² of free grass, off the rock and scree. The peak adds spruces and saplings 8.5 to 12.5 m from its centre (`scatter::PEAK_PINE_BAND`). The hill carries no pines (owner HL-Q2).
+  - Picking stands on each landform's top (`play::LANDFORM_TOPS`). The walker climbs the grass and is stopped at the rock. Boids, saves, the simulation and sound are unchanged.
 
 ### P5 — Atmosphere
 

@@ -1,0 +1,82 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/hill_meadow/hills-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        4.65,
+        7.01,
+        12.45
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 39.4,
+      "load_after": [
+        4.52,
+        6.69,
+        12.08
+      ],
+      "frames": {
+        "hills-overview": {
+          "mean": 0.0848,
+          "problem": null
+        },
+        "hill-play": {
+          "mean": 0.1931,
+          "problem": null
+        },
+        "peak-play": {
+          "mean": 0.1958,
+          "problem": null
+        },
+        "hill-low": {
+          "mean": 0.2239,
+          "problem": null
+        },
+        "peak-low": {
+          "mean": 0.1939,
+          "problem": null
+        },
+        "hill-seam-low": {
+          "mean": 0.2564,
+          "problem": null
+        },
+        "peak-road-low": {
+          "mean": 0.1411,
+          "problem": null
+        },
+        "hill-raised-low": {
+          "mean": 0.1732,
+          "problem": null
+        },
+        "peak-raised-low": {
+          "mean": 0.0942,
+          "problem": null
+        },
+        "hills-raised-play": {
+          "mean": 0.1657,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

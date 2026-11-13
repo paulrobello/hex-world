@@ -220,6 +220,22 @@
       "massif_granite-r4.webp",
       "massif_granite-r5.webp"
     ],
+    "hill_meadow": [
+      "hill_meadow-r0.webp",
+      "hill_meadow-r1.webp",
+      "hill_meadow-r2.webp",
+      "hill_meadow-r3.webp",
+      "hill_meadow-r4.webp",
+      "hill_meadow-r5.webp"
+    ],
+    "peak_granite": [
+      "peak_granite-r0.webp",
+      "peak_granite-r1.webp",
+      "peak_granite-r2.webp",
+      "peak_granite-r3.webp",
+      "peak_granite-r4.webp",
+      "peak_granite-r5.webp"
+    ],
     "road_ramp": [
       "road_ramp-r0.webp",
       "road_ramp-r1.webp",

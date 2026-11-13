@@ -1,0 +1,129 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "piece",
+  "generator": {
+    "path": "scripts/blender/kit/hill_meadow.py",
+    "sha256": "d10b743284bc5cacf46636e58d0e9a1fa6fc9bc59b4cc767696f96246b8986cb"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_hills.py",
+      "sha256": "8694babe1fb333d6487162533ee9bf4cd5a1d8ef5c732115bcb74f718af737c6"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "lodTris": {
+    "hill_meadow_lod0": 3684,
+    "hill_meadow_lod1": 1758,
+    "hill_meadow_lod2": 486
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "anchor-prop-3",
+    "anchor-prop-4",
+    "anchor-prop-5",
+    "hill_meadow",
+    "hill_meadow_collider",
+    "hill_meadow_lod0",
+    "hill_meadow_lod1",
+    "hill_meadow_lod2"
+  ],
+  "pieceId": "hill_meadow",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.66025447845459,
+        3.3046891689300537,
+        -5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        6.123233998228043e-16,
+        3.5763492584228516,
+        -10.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.66025447845459,
+        3.3849337100982666,
+        -5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -8.66025447845459,
+        3.1833138465881348,
+        5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -1.6996617117955178e-15,
+        2.720947504043579,
+        10.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        8.66025447845459,
+        2.6826963424682617,
+        5.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

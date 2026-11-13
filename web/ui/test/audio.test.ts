@@ -1055,6 +1055,8 @@ test("placement stingers: every catalog tile has a family whose stinger is a mas
     hillside_011011: "meadow",
     hillside_011111: "meadow",
     massif_granite: "meadow",
+    hill_meadow: "meadow",
+    peak_granite: "meadow",
     road_ramp: "road",
     road_tunnel_portal: "road",
     rail_straight: "rail",
@@ -1130,7 +1132,7 @@ test("placement: a water tile selects the slosh pool and a land tile does not", 
   const land = ["meadow", "forest", "oak", "farm", "windmill", "wheat_field", "house_cluster", "bakery"];
   land.push("road_straight", "road_bend_120", "road_bend_60", "road_junction", "road_ramp", "road_tunnel_portal");
   land.push(...pats.map((p) => `hillside_${p}`));
-  land.push("massif_granite");
+  land.push("massif_granite", "hill_meadow", "peak_granite");
   land.push("rail_straight", "rail_bend_60", "rail_bend_120", "rail_junction", "rail_station", "rail_road_crossing");
   for (const id of land) assert.equal(poolOf(id), null, `${id} has no slosh`);
   assert.equal(water.length + land.length, schema.catalog.tiles.length, "every catalog tile is classified");

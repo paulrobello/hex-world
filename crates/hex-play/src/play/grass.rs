@@ -1598,8 +1598,10 @@ mod tests {
                 "beach_grass",
                 "forest_base_edge",
                 "forest_base_rim",
+                "hill_meadow_cap",
                 "massif_granite_cap",
                 "meadow_base_cap",
+                "peak_granite_cap",
                 "river_grass",
                 "road_tunnel_portal_turf",
                 "road_verge"

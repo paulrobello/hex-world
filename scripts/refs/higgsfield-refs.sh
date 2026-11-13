@@ -13,6 +13,7 @@
 #   Scatter sets (owner A19, 2026-10-26): boulders (B1) water_props (B3) walls_hedges (B2)
 #   P4 elevation (owner 2026-10-29): road_tunnel_portal
 #   P4 mega tiles (owner A52, 2026-10-29): massif_granite
+#   P4 single-tile hills and peaks (owner A40 O1, 2026-10-27): hill_meadow peak_granite
 set -euo pipefail
 id="$1"; out="assets-source/refs/$id"; mkdir -p "$out"
 style="stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
@@ -283,6 +284,38 @@ case "$id" in
     "$flower $crag. $meadow $foot The whole tile is $high"
     "$flower $heath. $meadow Between the heather patches and around the boulders grows the same fresh green meadow grass, never pale, dry or yellow. The whole tile is $high"
     "$flower $crag. $meadow $foot The whole tile is $low") ;;
+  # Single-tile hills and peaks (P4, owner A40 O1, 2026-10-27): one regular hexagon with 16 m sides whose
+  # six edges sit flat at the tile's level as plain Meadow, the landform rising inside. $granite,
+  # $meadow's wording and the two cameras follow massif_granite's approved ref-2 (whose strings are local
+  # to its case, so they are copied). ref-1..ref-3 differ in character; ref-4 is ref-1 from the low
+  # camera, to judge the seam and silhouette. Loose boulders and pines are runtime scatter. First rolls
+# (2026-11-13): hill ref-4 came back as a square tile from the low camera, so its slot names the three
+# front side walls; every other string pairs with a kept image.
+  hill_meadow|peak_granite) granite="weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface"
+    hex="one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and $skirt, the same shallow depth all the way round, with no rock in the side walls."
+    meadow="The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls."
+    foot="The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside."
+    high="a clean photoreal 3D computer graphics render, $look, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    low="a clean photoreal 3D computer graphics render, $look, seen from a very low camera close to the ground just beyond the front rim, looking almost level across the tile at only about 15 degrees above the horizon, so the flat meadow at the front foreshortens into a narrow strip, the front rim and its dark earth side walls run across the bottom of the frame, and the full silhouette rises against the plain grey backdrop"
+    if [ "$id" = hill_meadow ]; then
+      dome="Over the hexagon rises one smooth rounded grassy hill about 8 m high, its summit near the centre, its broad round shoulders easing down on every side into the flat meadow at the rim, with two or three low flat granite outcrops breaking through the turf near the crown, each a low ledge of rounded slabs standing less than a metre above the grass, every rock $granite"
+      tor="Over the hexagon rises one rounded grassy hill about 9 m high, its summit a little off centre, crowned by a single low granite tor of a few big rounded blocks stacked like piled cushions about 2 m high, with one or two small flat granite outcrops lower on the slopes, every rock $granite"
+      ledge="Over the hexagon rises one broad rounded grassy hill about 8 m high, gentler on one side and steeper on the other, where a single low granite outcrop ledge breaks the steeper slope just below the crown, a short band of rounded weathered slabs about 1.5 m high, every rock $granite"
+      prompts=(
+      "Hill tile: $hex $dome. $meadow $foot The whole tile is $high"
+      "Hill tile: $hex $tor. $meadow $foot The whole tile is $high"
+      "Hill tile: $hex $ledge. $meadow $foot The whole tile is $high"
+      "Hill tile: $hex $dome. $meadow $foot The whole tile is $low, with three of the hexagon's six side walls and the two corners between them along the front, never a square or diamond outline")
+    else
+      crag="Over the hexagon rises one craggy granite peak about 18 m high with a jagged summit near the centre, steep exposed cliffs and buttresses of $granite, split by vertical joints on its upper half, grey scree fans in the gullies between the buttresses, its lower slopes grassy all the way round and easing out into the flat meadow at the rim, with two small hardy Scots pines low on the lower slopes"
+      horn="Over the hexagon rises one steep granite peak about 18 m high shaped like a rugged blunt horn, its summit a stack of massive squared granite blocks with sheer jointed faces of $granite, a skirt of pale grey scree at its foot, and steep grassy lower slopes all the way round easing out into the flat meadow at the rim"
+      tail="Over the hexagon rises one granite crag about 16 m high, with a sheer cliff face on one side and a steep grassy ridge climbing to its summit from the other, buttresses of $granite split by vertical joints, a grey scree fan below the cliff, its lower slopes grassy all the way round and easing out into the flat meadow at the rim"
+      prompts=(
+      "Mountain peak tile: $hex $crag. $meadow $foot The whole tile is $high"
+      "Mountain peak tile: $hex $horn. $meadow $foot The whole tile is $high"
+      "Mountain peak tile: $hex $tail. $meadow $foot The whole tile is $high"
+      "Mountain peak tile: $hex $crag. $meadow $foot The whole tile is $low")
+    fi ;;
   *) echo "unknown piece $id" >&2; exit 2 ;;
 esac
 entries=()

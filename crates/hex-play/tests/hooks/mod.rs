@@ -88,6 +88,14 @@ const MASKS_EXEMPT: &[(&str, &str)] = &[
         "tile skirt: the O4 cutaway cross-section, not a world surface",
     ),
     (
+        "hill_meadow_skirt",
+        "tile skirt: the O4 cutaway cross-section, not a world surface",
+    ),
+    (
+        "peak_granite_skirt",
+        "tile skirt: the O4 cutaway cross-section, not a world surface",
+    ),
+    (
         "river_skirt",
         "tile skirt: the O4 cutaway cross-section, not a world surface",
     ),

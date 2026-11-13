@@ -1,0 +1,30 @@
+// A single-tile grassy hill (P4, owner A40 O1; spec 2026-11-13 single-tile hills, pending owner
+// approval): a rounded dome of meadow about 8.5 m high with a few low granite ledges near the crown,
+// rising inside the hex. Its six edges are plain Grass at its own level, like a raised Meadow's
+// (spec D2-D4). Meadow's five scatter rules, in its order; `scatter::prepare` scales each by the
+// hill's free grass against a Meadow's, so instances per m² of grass match (spec D9). Without
+// `look_period: Some(6)` the all-Grass sockets would fold its six turns into one.
+(
+    id: "hill_meadow",
+    biome: Grass,
+    base: "hill_meadow",
+    edges: (
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    props: (
+        scatter: [
+            (piece: "outcrop_granite", density: 0.03),
+            (piece: "boulder_granite", density: 0.06),
+            (piece: "wildflower_clump", density: 4.0, drift: true),
+            (piece: "rock_small", density: 0.3),
+            (piece: "wildflower_single", density: 6.0, vary: 0.8),
+        ],
+    ),
+    look_period: Some(6),
+    raisable: true,
+)

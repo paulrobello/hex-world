@@ -126,20 +126,29 @@ const BUCKETS: usize = 33;
 /// A piece not listed has none, so it is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
     match family(piece) {
-        // The massif's lower-slope pines (owner A54 Q2 O1) stand on its cap in [`ring_band`].
-        "tree_forest" | "sapling_spruce" => &["forest_base_floor", MASSIF_CAP],
+        // The massif's and the peak's lower-slope pines (owner A54 Q2 O1; spec 2026-11-13 D9) stand
+        // on their caps in [`ring_band`].
+        "tree_forest" | "sapling_spruce" => &["forest_base_floor", MASSIF_CAP, PEAK_CAP],
         "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest" => &["forest_base_floor"],
-        "rock_small" | "wildflower_clump" => &["forest_base_floor", "meadow_base_cap", MASSIF_CAP],
+        "rock_small" | "wildflower_clump" => &[
+            "forest_base_floor",
+            "meadow_base_cap",
+            MASSIF_CAP,
+            HILL_CAP,
+            PEAK_CAP,
+        ],
         // The granite boulders and outcrop (owner A25): the meadow, the forest and oak litter, and
         // on a coast the grass-to-sand band ([`coast_band`]).
         "boulder_granite" | "outcrop_granite" => &[
             "forest_base_floor",
             "meadow_base_cap",
             MASSIF_CAP,
+            HILL_CAP,
+            PEAK_CAP,
             "beach_grass",
             BEACH_FLOOR,
         ],
-        "wildflower_single" | "bush_verge" => &["meadow_base_cap", MASSIF_CAP],
+        "wildflower_single" | "bush_verge" => &["meadow_base_cap", MASSIF_CAP, HILL_CAP, PEAK_CAP],
         "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
         "river_stones" | "river_reeds" => &BANK_FLOORS,
         "lily_cluster" => &[WATER_FLOOR],
@@ -151,17 +160,31 @@ pub fn floor_slots(piece: &str) -> &'static [&'static str] {
 
 /// The massif's Meadow-matched grass cap: the meadow pieces stand on it as on `meadow_base_cap`.
 pub const MASSIF_CAP: &str = "massif_granite_cap";
+/// The single-tile hill's and peak's Meadow-matched grass caps (spec 2026-11-13 D9), likewise.
+pub const HILL_CAP: &str = "hill_meadow_cap";
+pub const PEAK_CAP: &str = "peak_granite_cap";
 
 /// The massif's lower slopes (m from its centre): the grass between the rock foot and the ring's
 /// outer half, where its pines stand in small drifts (owner A54 Q2 O1, a runtime rule, never baked;
 /// `docs/checkpoints/massif_granite/integration.md`).
 pub const PINE_BAND: (f32, f32) = (17.0, 28.0);
 
-/// The band of distances from a footprint tile's centre that a rule's instance centres keep to:
-/// [`PINE_BAND`] for a footprint tile's pines, `None` for every other rule and every single tile.
+/// The peak's lower slopes (m from the tile's centre): the grass between its rock foot and scree
+/// fans (about 9 m out) and the rim, where its pines stand in small drifts (spec 2026-11-13 D9, a
+/// runtime rule, never baked; docs/checkpoints/peak_granite/integration.md).
+pub const PEAK_PINE_BAND: (f32, f32) = (8.5, 12.5);
+
+/// The band of distances from a footprint tile's centre (a single tile's own) that a rule's
+/// instance centres keep to: [`PINE_BAND`] for a footprint tile's pines, [`PEAK_PINE_BAND`] for the
+/// peak's, `None` for every other rule and tile.
 pub fn ring_band(def: &TileDef, piece: &str) -> Option<(f32, f32)> {
-    (def.is_mega() && matches!(family(piece), "tree_forest" | "sapling_spruce"))
-        .then_some(PINE_BAND)
+    if !matches!(family(piece), "tree_forest" | "sapling_spruce") {
+        None
+    } else if def.is_mega() {
+        Some(PINE_BAND)
+    } else {
+        (def.id == "peak_granite").then_some(PEAK_PINE_BAND)
+    }
 }
 
 /// Farthest a verge piece's centre stands from the nearest road or river centreline (m): it keeps
@@ -339,9 +362,17 @@ pub fn pick_variant(def: &TileDef, piece: &str, seed: u64, rule: usize, n: u32) 
 /// Slots no scatter may stand on whatever [`floor_slots`] says: roads, river beds and banks,
 /// house pads and driveways, beaches and the coast, bridges, every base's rim, mossy edge band
 /// and skirt, and the massif's rock and scree (exact names: a `_rock` suffix would catch other
-/// pieces' slots). They stay ground for the walker, so they are not [`NOT_GROUND`].
+/// pieces' slots), and the single-tile hill's and peak's (spec 2026-11-13 D9). They stay ground for
+/// the walker, so they are not [`NOT_GROUND`].
 pub fn excluded_slot(slot: &str) -> bool {
-    const EXACT: [&str; 2] = ["massif_granite_rock", "massif_granite_scree"];
+    const EXACT: [&str; 6] = [
+        "massif_granite_rock",
+        "massif_granite_scree",
+        "hill_meadow_rock",
+        "hill_meadow_scree",
+        "peak_granite_rock",
+        "peak_granite_scree",
+    ];
     const PREFIXES: [&str; 6] = [
         "road_",
         "river_",
@@ -1540,7 +1571,8 @@ pub struct Mask {
 /// footprint tile's are its centre cell's, and `ring` holds each ring member (in the tile frame),
 /// its offset from the centre and its ground in its own frame, since a [`Surface`] spans one hex.
 /// A ring cell's `share` scales each rule's planned count by its mask area over the same rule's on
-/// a [`RING_GROUND`] cell, so it places as many per m² of free ground; a single tile's is empty.
+/// a [`RING_GROUND`] cell, so it places as many per m² of free ground ([`meadow_share`]), and so
+/// does a single-tile landform's ([`LANDFORMS`]); every other single tile's is empty.
 pub struct Prepared {
     pub surface: Surface,
     pub masks: Vec<Mask>,
@@ -1811,6 +1843,29 @@ fn mask(
     Mask { cells, area }
 }
 
+/// The single-tile landforms (spec 2026-11-13 D9): like a footprint tile's ring cells, they
+/// scatter their Meadow rules at a Meadow's density per m² of free ground ([`meadow_share`]).
+pub const LANDFORMS: [&str; 2] = ["hill_meadow", "peak_granite"];
+
+/// Each of `def`'s rules' share of its planned count on ground whose masks are `masks`: the mask's
+/// area over the same rule's mask on a [`RING_GROUND`] cell (`reference`), so a rule places as many
+/// instances per m² of its free ground as on a Meadow; 1 for a banded rule (the pines), which has no
+/// Meadow counterpart, and for a rule with no Meadow ground.
+fn meadow_share(def: &TileDef, masks: &[Mask], reference: &[Mask]) -> Vec<f32> {
+    def.props
+        .scatter
+        .iter()
+        .zip(masks.iter().zip(reference))
+        .map(|(r, (m, base))| {
+            if ring_band(def, r.piece.as_str()).is_some() || base.area <= 0.0 {
+                1.0
+            } else {
+                m.area / base.area
+            }
+        })
+        .collect()
+}
+
 /// Builds a definition's ground from its ground pieces' LOD0 triangles (`tris_of`, tile-local
 /// before the piece's turn), or `None` while one is missing. A sloped definition stands on its
 /// runtime ground ([`super::slope_ground::tile_ground_tris`]).
@@ -1821,7 +1876,14 @@ pub fn prepare(
 ) -> Option<Prepared> {
     let all = super::slope_ground::tile_ground_tris(def, catalog, tris_of)?;
     if !def.is_mega() {
-        return Some(prepare_cell(def, all, Vec2::ZERO));
+        let mut out = prepare_cell(def, all, Vec2::ZERO);
+        if LANDFORMS.contains(&def.id.as_str()) {
+            let meadow = catalog.get(RING_GROUND)?;
+            let meadow_tris = super::slope_ground::tile_ground_tris(meadow, catalog, tris_of)?;
+            let reference = prepare_cell(def, meadow_tris, Vec2::ZERO);
+            out.share = meadow_share(def, &out.masks, &reference.masks);
+        }
+        return Some(out);
     }
     let cells = hex_core::footprint::members(Axial::ORIGIN).map(|m| {
         let at = Vec2::from(m.to_world(HEX_RADIUS));
@@ -1834,20 +1896,7 @@ pub fn prepare(
     let meadow_tris = super::slope_ground::tile_ground_tris(meadow, catalog, tris_of)?;
     let reference = prepare_cell(def, meadow_tris, Vec2::ZERO);
     for (_, _, cell) in &mut ring {
-        cell.share = def
-            .props
-            .scatter
-            .iter()
-            .zip(cell.masks.iter().zip(&reference.masks))
-            .map(|(r, (m, base))| {
-                // A banded rule (the pines) has no meadow counterpart: its density is its own.
-                if ring_band(def, r.piece.as_str()).is_some() || base.area <= 0.0 {
-                    1.0
-                } else {
-                    m.area / base.area
-                }
-            })
-            .collect();
+        cell.share = meadow_share(def, &cell.masks, &reference.masks);
     }
     out.ring = ring;
     Some(out)
@@ -3158,6 +3207,139 @@ mod tests {
         assert!(ring_band(c.get("forest").unwrap(), "tree_forest").is_none());
     }
 
+    /// Spec 2026-11-13 D9: the single-tile hill and peak scatter Meadow's rules (theirs lead with
+    /// Meadow's, in its order) at a Meadow's density per m² of free ground. Over 64 seeds each rule
+    /// places as many instances per m² of its mask as a Meadow with the same seeds, within three
+    /// standard errors of the per-tile rounding on both sides plus 3%, and at least 99% of its
+    /// planned count. Every instance's ground footprint stands on the grass cap, off the rock and
+    /// scree.
+    #[test]
+    fn landform_scatter_matches_meadow_density() {
+        let c = catalog();
+        let meadow = c.get(RING_GROUND).unwrap();
+        let rules = &meadow.props.scatter;
+        let mg = prepared(meadow).unwrap();
+        let seeds = 64u64;
+        for id in LANDFORMS {
+            let def = c.get(id).unwrap();
+            assert_eq!(&def.props.scatter[..rules.len()], &rules[..], "{id}");
+            let g = prepared(def).unwrap();
+            assert_eq!(g.share.len(), def.props.scatter.len(), "{id}");
+            let cap = format!("{id}_cap");
+            let n = rules.len();
+            let (mut hill, mut base) = (vec![0.0f64; n], vec![0.0f64; n]);
+            let (mut placed, mut planned) = (vec![0usize; n], vec![0usize; n]);
+            for seed in 0..seeds {
+                let seed = cell_seed(1, Axial::new(seed as i32, -(seed as i32)));
+                let l = layout(def, seed, &g);
+                let ml = layout(meadow, seed, &mg);
+                for ri in 0..n {
+                    planned[ri] += l.planned[ri] as usize;
+                    placed[ri] += l.placed(ri);
+                    hill[ri] += l.placed(ri) as f64 / f64::from(l.area[ri]);
+                    base[ri] += ml.placed(ri) as f64 / f64::from(ml.area[ri]);
+                }
+                for i in &l.instances {
+                    let piece = i.piece(def.props.scatter[i.rule as usize].piece.as_str());
+                    let reach = footprint(piece).ground;
+                    let p = i.pos.xz();
+                    for q in std::iter::once(p).chain(ring16().map(|d| p + reach * d)) {
+                        let (_, slot) = g.surface.at(q.x, q.y).unwrap();
+                        if (i.rule as usize) < n {
+                            assert_eq!(slot, cap, "{id}: {piece} at {p} on {slot}");
+                        } else {
+                            assert_eq!(slot, PEAK_CAP, "{id}: {piece} at {p} on {slot}");
+                        }
+                    }
+                }
+            }
+            println!(
+                "{id}: share {:?}, placed {placed:?} of {planned:?}",
+                &g.share[..n]
+            );
+            for (ri, r) in rules.iter().enumerate() {
+                let se = |want: f64, area: f32| {
+                    let f = want.fract();
+                    (f * (1.0 - f) / seeds as f64).sqrt() / f64::from(area)
+                };
+                let want = f64::from(r.density * CAP_AREA / 100.0);
+                let (ha, ma) = (g.masks[ri].area, mg.masks[ri].area);
+                // An outcrop's footprint finds no grass on the peak flat and wide enough for it.
+                if ha <= 0.0 {
+                    assert_eq!(g.share[ri], 0.0, "{id} {}", r.piece.as_str());
+                    assert_eq!(planned[ri], 0, "{id} {}", r.piece.as_str());
+                    continue;
+                }
+                let tol = 3.0
+                    * (se(want * f64::from(g.share[ri]), ha).powi(2) + se(want, ma).powi(2)).sqrt()
+                    + 0.03 * base[ri] / seeds as f64;
+                let (hill, base) = (hill[ri] / seeds as f64, base[ri] / seeds as f64);
+                assert!(
+                    (hill - base).abs() <= tol,
+                    "{id} {}: {hill} per m² of mask vs meadow's {base} (tolerance {tol})",
+                    r.piece.as_str()
+                );
+                assert!(
+                    placed[ri] * 100 >= planned[ri] * 99,
+                    "{id} {}: placed {} of {}",
+                    r.piece.as_str(),
+                    placed[ri],
+                    planned[ri]
+                );
+            }
+        }
+        // Every other single tile keeps its own densities.
+        assert!(prepared(meadow).unwrap().share.is_empty());
+    }
+
+    /// Spec 2026-11-13 D9: the peak's pines stand on its grass cap in [`PEAK_PINE_BAND`] from its
+    /// centre, on the slope (not the tile's level), and the hill has none.
+    #[test]
+    fn peak_pines_stand_on_the_lower_slopes() {
+        let c = catalog();
+        let def = c.get("peak_granite").unwrap();
+        let g = prepared(def).unwrap();
+        let pine = |r: u8| {
+            matches!(
+                family(def.props.scatter[r as usize].piece.as_str()),
+                "tree_forest" | "sapling_spruce"
+            )
+        };
+        let (mut n, mut raised) = (0, 0);
+        for seed in 0..32u64 {
+            for i in layout(def, cell_seed(3, Axial::new(seed as i32, 0)), &g)
+                .instances
+                .iter()
+                .filter(|i| pine(i.rule))
+            {
+                let d = i.pos.xz().length();
+                assert!(
+                    (PEAK_PINE_BAND.0..=PEAK_PINE_BAND.1).contains(&d),
+                    "a pine {d} m out"
+                );
+                let (y, slot) = g.surface.at(i.pos.x, i.pos.z).unwrap();
+                assert_eq!(slot, PEAK_CAP);
+                assert!(
+                    i.pos.y <= y + 1e-4 && i.pos.y > y - 0.6,
+                    "a pine at {} over ground {y}",
+                    i.pos
+                );
+                raised += usize::from(i.pos.y > 0.5);
+                n += 1;
+            }
+        }
+        assert!(n >= 32, "{n} pines over 32 seeds");
+        assert!(2 * raised > n, "{raised} of {n} pines stand on the slope");
+        let hill = c.get("hill_meadow").unwrap();
+        assert!(
+            hill.props
+                .scatter
+                .iter()
+                .all(|r| ring_band(hill, r.piece.as_str()).is_none())
+        );
+        assert!(ring_band(c.get("meadow").unwrap(), "tree_forest").is_none());
+    }
+
     /// `Surface::top`, with each triangle's divisor found once in `Surface::new`, answers as a scan
     /// of every triangle whose (x, z) box meets the point's 1 m bucket, in order, computing it.
     #[test]
@@ -3541,7 +3723,7 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 46, "every inventory tile ran");
+        assert_eq!(counts.len(), 48, "every inventory tile ran");
         for id in [
             "forest",
             "oak",
@@ -3549,6 +3731,8 @@ mod tests {
             "farm",
             "wheat_field",
             "meadow",
+            "hill_meadow",
+            "peak_granite",
             "road_straight",
             "house_cluster",
             "beach",

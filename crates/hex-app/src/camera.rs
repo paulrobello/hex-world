@@ -330,6 +330,28 @@ mod tests {
         assert_eq!(pick_cell(ray, |c| g.top_of(c)), Some(centre));
     }
 
+    /// Spec 2026-11-13 D12: a ray into a single-tile peak's upper half picks the peak, not the
+    /// cell behind it that its lower crossings lie over.
+    #[test]
+    fn pick_into_a_single_tile_peak_takes_the_peak() {
+        let mut g = crate::game::GameState::new(1);
+        let peak = Axial::new(1, 0);
+        g.world
+            .place(
+                &g.catalog,
+                peak,
+                "peak_granite",
+                hex_core::Orientation::new(0, 0),
+            )
+            .unwrap();
+        let top = g.top_of(peak).unwrap();
+        assert_eq!(top, hex_play::play::landform_top("peak_granite"));
+        let [x, z] = peak.to_world(HEX_RADIUS);
+        let ray = ray_at(Vec3::new(x, top - 2.0, z));
+        assert_ne!(pick_cell(ray, |_| None), Some(peak));
+        assert_eq!(pick_cell(ray, |c| g.top_of(c)), Some(peak));
+    }
+
     /// The orbit pivot over a raised tile is its top, so zooming in stops above it, not inside.
     #[test]
     fn focus_over_lands_on_a_raised_top() {

@@ -1,0 +1,666 @@
+{
+  "pieceId": "peak_granite",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/peak_granite.py",
+    "sha256": "951878f229b5f49d8b2d83c8b99d2db27f1a34ffa03a1aae24cc1328e15658b1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_hills.py",
+      "sha256": "8694babe1fb333d6487162533ee9bf4cd5a1d8ef5c732115bcb74f718af737c6"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.8,
+    "bakeStats": {
+      "groundAO": {
+        "mean": 0.9594,
+        "min": 0,
+        "p01": 0.2196,
+        "p05": 0.6549,
+        "texels": 27534
+      },
+      "normalMissFraction": 0.0004,
+      "rockAO": {
+        "mean": 0.8449,
+        "min": 0,
+        "p01": 0.1255,
+        "p05": 0.3451,
+        "texels": 477976
+      },
+      "rockAlbedoLuma": {
+        "mean": 0.5216,
+        "min": 0,
+        "p01": 0.183,
+        "p05": 0.183,
+        "texels": 477976
+      },
+      "rockFaceAO": {
+        "areaMean": 0.8544,
+        "areaUnder0.1": 0.0074
+      },
+      "rockRoughness": {
+        "mean": 0.8389,
+        "min": 0,
+        "p01": 0.8392,
+        "p05": 0.8392,
+        "texels": 477976
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.12,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "groundStats": {
+      "lod0": {
+        "capTris": 1620,
+        "capTrisUnderRock": 600,
+        "groundMaxErrorAt": [
+          -3.2,
+          -3.7,
+          5.01
+        ],
+        "groundMaxHeightErrorM": 0.392,
+        "trisPerSlot": {
+          "cap": 1493,
+          "scree": 127
+        }
+      },
+      "lod1": {
+        "capTris": 850,
+        "capTrisUnderRock": 258,
+        "groundMaxErrorAt": [
+          -1.72,
+          -3.65,
+          5.51
+        ],
+        "groundMaxHeightErrorM": 0.489,
+        "trisPerSlot": {
+          "cap": 786,
+          "scree": 64
+        }
+      },
+      "lod2": {
+        "capTris": 226,
+        "capTrisUnderRock": 26,
+        "groundMaxErrorAt": [
+          0,
+          -3.23,
+          5.63
+        ],
+        "groundMaxHeightErrorM": 1.224,
+        "trisPerSlot": {
+          "cap": 219,
+          "scree": 7
+        }
+      }
+    },
+    "lod2Drops": {},
+    "marginPx": 6,
+    "masksDensityPxPerM": {
+      "lod0_cap": {
+        "areaM2": 544.4,
+        "faces": 1493,
+        "max": 3.82,
+        "median": 3.53,
+        "min": 2.82
+      }
+    },
+    "maxRayDistanceM": 0.25,
+    "receiverSignature": "0627925b20be45f07551a048d84b1e3a2aa4b0905668e081a9d89b0da48f2203",
+    "rockReachM": 10.546,
+    "rockStats": {
+      "lod0": {
+        "highToLodM": [
+          0.544,
+          0.215
+        ],
+        "rockTris": 1713,
+        "toHighM": [
+          0.132,
+          0.102
+        ]
+      },
+      "lod1": {
+        "highToLodM": [
+          0.671,
+          0.337
+        ],
+        "rockTris": 663,
+        "toHighM": [
+          0.325,
+          0.239
+        ]
+      },
+      "lod2": {
+        "highToLodM": [
+          1.46,
+          0.949
+        ],
+        "rockTris": 89,
+        "toHighM": [
+          0.612,
+          0.578
+        ]
+      }
+    },
+    "samples": 32,
+    "screeRoute": "unique",
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "lod0_rock": {
+        "areaM2": 799.7,
+        "faces": 1713,
+        "max": 36.64,
+        "median": 24.52,
+        "min": 12.27
+      },
+      "lod0_scree": {
+        "areaM2": 33.5,
+        "faces": 127,
+        "max": 24.71,
+        "median": 24.52,
+        "min": 24.36
+      },
+      "lod1_rock": {
+        "areaM2": 752.4,
+        "faces": 663,
+        "max": 55.97,
+        "median": 24.17,
+        "min": 4.07
+      },
+      "lod1_scree": {
+        "areaM2": 37.3,
+        "faces": 64,
+        "max": 30.46,
+        "median": 30.34,
+        "min": 30.11
+      },
+      "lod2_rock": {
+        "areaM2": 701.7,
+        "faces": 89,
+        "max": 7.79,
+        "median": 5.93,
+        "min": 1.12
+      },
+      "lod2_scree": {
+        "areaM2": 21.1,
+        "faces": 7,
+        "max": 5.91,
+        "median": 5.91,
+        "min": 5.91
+      }
+    },
+    "topM": 17.678
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3525,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1705,
+      "ratio": 0.4836879432624113
+    },
+    {
+      "lod": 2,
+      "tris": 507,
+      "ratio": 0.14382978723404255
+    }
+  ],
+  "collider": {
+    "node": "peak_granite_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.66025447845459,
+        2.4633238315582275,
+        -5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        6.123233998228043e-16,
+        2.1150848865509033,
+        -10
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.66025447845459,
+        1.9210025072097778,
+        -5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -8.66025447845459,
+        2.8582382202148438,
+        5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -1.6996617117955178e-15,
+        2.662299394607544,
+        10
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        8.66025447845459,
+        1.399441123008728,
+        5
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "lod0_rock": {
+      "areaM2": 799.7,
+      "faces": 1713,
+      "max": 36.64,
+      "median": 24.52,
+      "min": 12.27
+    },
+    "lod0_scree": {
+      "areaM2": 33.5,
+      "faces": 127,
+      "max": 24.71,
+      "median": 24.52,
+      "min": 24.36
+    },
+    "lod1_rock": {
+      "areaM2": 752.4,
+      "faces": 663,
+      "max": 55.97,
+      "median": 24.17,
+      "min": 4.07
+    },
+    "lod1_scree": {
+      "areaM2": 37.3,
+      "faces": 64,
+      "max": 30.46,
+      "median": 30.34,
+      "min": 30.11
+    },
+    "lod2_rock": {
+      "areaM2": 701.7,
+      "faces": 89,
+      "max": 7.79,
+      "median": 5.93,
+      "min": 1.12
+    },
+    "lod2_scree": {
+      "areaM2": 21.1,
+      "faces": 7,
+      "max": 5.91,
+      "median": 5.91,
+      "min": 5.91
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1235302,
+        "astc": 1241627
+      },
+      "glbBytes": 216168
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/peak_granite/peak_granite.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 824262,
+        "sha256": "fa1d18ffd2f6a0377266ed0c5640382fe0c9ee61bbc6475c0a5019db7ea30844"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/peak_granite/peak_granite.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 823126,
+        "sha256": "c96a651ffcac51cdaecbab57c23eba06b3ef2ee6e43f874e3b82d8d4060db958"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/peak_granite/peak_granite.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1398690,
+        "sha256": "b1f3388aa8968a21a8fd4adc0b078bff343a521c460a8eebf87c45ccb0583d19"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/peak_granite/peak_granite.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 25178,
+        "sha256": "4e7d54dac16d71302f4955ff85e7d0e0f0776b5cbce698506051ac29bf1f1d00"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/peak_granite/peak_granite.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 24575,
+        "sha256": "3b55cee9f920b6a21d76ced39c2b278d0dbb781f74db1a629bb152ee4539c4d8"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/peak_granite/peak_granite.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 29131,
+        "sha256": "d0695f76a3fbac15c2f88d9ef49c7ac1a4850a11b0c090b704164789c45c3c71"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/peak_granite/peak_granite.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 236710,
+        "sha256": "eeddcb97b600552eac26c60fcd3e83c15f733c32595fd81e1e84bab4810e11e4"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/peak_granite/peak_granite.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 235049,
+        "sha256": "9e5a680f295768be059242d1fdcec344b670e8f445179e3b54b37d8aa2059c68"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/peak_granite/peak_granite.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 429937,
+        "sha256": "6bfc3826a3ab71798dad02af26524fe803d8c931cbe25d54967853ba8a8f5d1a"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/peak_granite/peak_granite.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 149152,
+        "sha256": "41d86af48cd261aba071443d3bc3ec103cdb0b437522cdd6f2ee4f0b1a4b2e04"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/peak_granite/peak_granite.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 158877,
+        "sha256": "3f293912d7a05bc1639a0e1c0f2b6e7ae8af800fcc71e6e5bb852d526475d312"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/peak_granite/peak_granite.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 225557,
+        "sha256": "d25e5ad09fcfc8912459d19e31992a2a2d97ea11acb316f690d0ef92558e1bd6"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.glb",
+      "sha256": "e53859d8c02d62828b081cba8b57de5bd8c4aa209c64f9a84be0eb9d83a61b08",
+      "bytes": 216168
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.albedo.bc7.ktx2",
+      "sha256": "fa1d18ffd2f6a0377266ed0c5640382fe0c9ee61bbc6475c0a5019db7ea30844",
+      "bytes": 824262
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.albedo.astc.ktx2",
+      "sha256": "c96a651ffcac51cdaecbab57c23eba06b3ef2ee6e43f874e3b82d8d4060db958",
+      "bytes": 823126
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.albedo.png",
+      "sha256": "b1f3388aa8968a21a8fd4adc0b078bff343a521c460a8eebf87c45ccb0583d19",
+      "bytes": 1398690
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.masks.bc7.ktx2",
+      "sha256": "4e7d54dac16d71302f4955ff85e7d0e0f0776b5cbce698506051ac29bf1f1d00",
+      "bytes": 25178
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.masks.astc.ktx2",
+      "sha256": "3b55cee9f920b6a21d76ced39c2b278d0dbb781f74db1a629bb152ee4539c4d8",
+      "bytes": 24575
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.masks.png",
+      "sha256": "d0695f76a3fbac15c2f88d9ef49c7ac1a4850a11b0c090b704164789c45c3c71",
+      "bytes": 29131
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.normal.bc7.ktx2",
+      "sha256": "eeddcb97b600552eac26c60fcd3e83c15f733c32595fd81e1e84bab4810e11e4",
+      "bytes": 236710
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.normal.astc.ktx2",
+      "sha256": "9e5a680f295768be059242d1fdcec344b670e8f445179e3b54b37d8aa2059c68",
+      "bytes": 235049
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.normal.png",
+      "sha256": "6bfc3826a3ab71798dad02af26524fe803d8c931cbe25d54967853ba8a8f5d1a",
+      "bytes": 429937
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.orm.bc7.ktx2",
+      "sha256": "41d86af48cd261aba071443d3bc3ec103cdb0b437522cdd6f2ee4f0b1a4b2e04",
+      "bytes": 149152
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.orm.astc.ktx2",
+      "sha256": "3f293912d7a05bc1639a0e1c0f2b6e7ae8af800fcc71e6e5bb852d526475d312",
+      "bytes": 158877
+    },
+    {
+      "path": "assets/kit/p1/peak_granite/peak_granite.orm.png",
+      "sha256": "d25e5ad09fcfc8912459d19e31992a2a2d97ea11acb316f690d0ef92558e1bd6",
+      "bytes": 225557
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/peak_granite/ref-1.jpg",
+      "sha256": "5e4a9f3b6af7dfe5169cafc544f51bbbe0edd19b1d26fd0cb7134c481c7b15ae",
+      "sourceSha256": "3ff1d509e04bd8e9339c0ff5ab035e3793f05ac7e05dbb38fe5755c652596552",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "7f8de254-a45d-4f6c-84ec-ac66b76ec79d",
+      "prompt": "Mountain peak tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one craggy granite peak about 18 m high with a jagged summit near the centre, steep exposed cliffs and buttresses of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, split by vertical joints on its upper half, grey scree fans in the gullies between the buttresses, its lower slopes grassy all the way round and easing out into the flat meadow at the rim, with two small hardy Scots pines low on the lower slopes. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/peak_granite/ref-2.jpg",
+      "sha256": "fd57cbdb84516fc106f11528011fc1f5e14e52948d18a68e2d8d4375d2356a71",
+      "sourceSha256": "5b4271bd9efffaa714e50cc40163bcb906357380b4cc159c1a41c881cb14815e",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "15553bf1-ebdc-479e-a6e6-8e317eeebafa",
+      "prompt": "Mountain peak tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one steep granite peak about 18 m high shaped like a rugged blunt horn, its summit a stack of massive squared granite blocks with sheer jointed faces of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, a skirt of pale grey scree at its foot, and steep grassy lower slopes all the way round easing out into the flat meadow at the rim. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/peak_granite/ref-3.jpg",
+      "sha256": "841afaeecd561627af8238f9db83fd17fb0762ac098f3c3c56842b125436e5b7",
+      "sourceSha256": "0455f7cef84eea8fdf1cc6283fffd7b41af2df0a872cc6f4826aadbe2cc631b2",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "cdc510c8-b768-4058-8d5a-5fa3205abf44",
+      "prompt": "Mountain peak tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one granite crag about 16 m high, with a sheer cliff face on one side and a steep grassy ridge climbing to its summit from the other, buttresses of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface split by vertical joints, a grey scree fan below the cliff, its lower slopes grassy all the way round and easing out into the flat meadow at the rim. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/peak_granite/ref-4.jpg",
+      "sha256": "3184aea70c1aef9793aa0a76e9da23f3f0082817373e56af7518aac03544778c",
+      "sourceSha256": "0f0727473fe5cd2f63ec3855f8924c86efa2c9a067ee887c2d3890c04f7b96f4",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "04e848f5-e89c-4214-8d2d-dc0a67f1ab5c",
+      "prompt": "Mountain peak tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one craggy granite peak about 18 m high with a jagged summit near the centre, steep exposed cliffs and buttresses of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface, split by vertical joints on its upper half, grey scree fans in the gullies between the buttresses, its lower slopes grassy all the way round and easing out into the flat meadow at the rim, with two small hardy Scots pines low on the lower slopes. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a very low camera close to the ground just beyond the front rim, looking almost level across the tile at only about 15 degrees above the horizon, so the flat meadow at the front foreshortens into a narrow strip, the front rim and its dark earth side walls run across the bottom of the frame, and the full silhouette rises against the plain grey backdrop"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-11-13T15:57:29.052Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/peak_granite/ref-1.jpg"
+      ],
+      "notes": "ref-1, per HL-Q1. Answered in chat (\"yes to all (hero pack)\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-11-13",
+      "notes": "Pending owner review; not an approval. peak_granite, built ahead of the reference pick (spec docs/superpowers/specs/2026-11-13-single-tile-hills-design.md, Q1 recommends ref-1) against assets-source/refs/peak_granite/ref-1.jpg: a single-tile granite peak (A40 O1) on the massif's pipeline carried to one hex, whose six edges are plain Grass, flat at the tile's level where a Meadow's are. A summit 17.68 m up (LOD0) with five lower pinnacles and six spines, cleft between them, rises from grass flanks; scree fans run down the gullies (195 m² of visible rock, 21 m² of scree). Kind base, pack hero, LOD0/1/2 3525/1705/507 tris, a unique 1024 atlas at 24.52 px/m on the rock (the scoped floor is 20 px/m, as the massif's A54 Q1 O1, D8), runtime grass on the cap (D10), Meadow's scatter at Meadow density per m² of free ground plus lower-slope pines 8.5-12.5 m from the centre (D9, a runtime rule, never baked). Review sheet: docs/checkpoints/peak_granite/review-sheet.jpg (ref-1 beside headless EEVEE stills of the baked LOD0 among six meadow_base tiles); in-engine views come from the orchestrator (docs/checkpoints/hill_meadow/hills-shots.json). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"yes to all (hero pack)\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: HL-A1 hills spec approved; HL-Q1 ref-1 for both pieces; HL-Q2 no pines on the hill (the peak keeps its pine band); HL-Q3 pack hero; HL-Q4 the original peak is kept, the jointing passes are rejected (after an in-engine A/B: \"i still like original better\")."
+    }
+  ]
+}

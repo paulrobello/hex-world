@@ -44,9 +44,10 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 }
 
 /// Plan F1 with the owner O1 coast corners, the U3 oak split from the forest and the windmill, the
-/// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4) and the massif (A52):
+/// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4), the massif (A52) and the
+/// single-tile hill and peak (spec 2026-11-13):
 /// edges 0..5 for each inventory tile (the centre's, for a footprint tile).
-const F1: [(&str, [SocketKind; 6]); 46] = [
+const F1: [(&str, [SocketKind; 6]); 48] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -108,6 +109,8 @@ const F1: [(&str, [SocketKind; 6]); 46] = [
         [Grass, Grass, Grass, Grass, Grass, Grass],
     ),
     ("massif_granite", [Grass, Grass, Grass, Grass, Grass, Grass]),
+    ("hill_meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
+    ("peak_granite", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("road_ramp", [Road, Grass, Grass, Road, Grass, Grass]),
     (
         "road_tunnel_portal",
@@ -433,6 +436,11 @@ fn thumbnails_are_no_longer_pending() {
     );
 }
 
+/// Tiles built ahead whose thumbnails come from the orchestrator's `make thumbs` run
+/// (docs/checkpoints/hill_meadow/integration.md). Once that run lists them, this test fails until
+/// they leave this list.
+const AWAITING_THUMBNAILS: &[&str] = &[];
+
 /// PRD §5.3: every rotation of every tile has a thumbnail. Rotations may share an image only when
 /// their world-edge sockets are equal, and must share one when they are.
 #[test]
@@ -441,13 +449,22 @@ fn every_tile_rotation_has_a_thumbnail() {
     let dir = repo_root().join("assets/thumbs");
     let manifest = thumbnail_manifest();
     let listed: BTreeSet<&str> = manifest.keys().map(String::as_str).collect();
-    let tiles: BTreeSet<&str> = c.tiles().iter().map(|t| t.id.as_str()).collect();
+    let tiles: BTreeSet<&str> = c
+        .tiles()
+        .iter()
+        .map(|t| t.id.as_str())
+        .filter(|id| !AWAITING_THUMBNAILS.contains(id))
+        .collect();
     assert_eq!(
         listed, tiles,
         "assets/thumbs/manifest.json must list every catalog tile (run `make thumbs`)"
     );
     let mut problems: Vec<String> = vec![];
-    for t in c.tiles() {
+    for t in c
+        .tiles()
+        .iter()
+        .filter(|t| !AWAITING_THUMBNAILS.contains(&t.id.as_str()))
+    {
         let files = &manifest[&t.id];
         if files.len() != 6 {
             problems.push(format!(

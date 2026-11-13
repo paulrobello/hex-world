@@ -521,6 +521,8 @@ mod tests {
             ("hillside_011011", 3),
             ("hillside_011111", 6),
             ("massif_granite", 6),
+            ("hill_meadow", 6),
+            ("peak_granite", 6),
             ("road_ramp", 6),
             ("road_tunnel_portal", 6),
             ("rail_straight", 3),
@@ -546,7 +548,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 46 + 222);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 48 + 234);
     }
 
     #[test]
@@ -632,6 +634,40 @@ mod tests {
             widest >= 0.6,
             "the footprint fills {widest} of the half-width"
         );
+    }
+
+    /// Spec 2026-11-13 D14: the single-tile landforms keep the shared pose, and each summit
+    /// (anywhere within 2 m of the centre, so any rotation) lands inside the render, below the far
+    /// corner's height in the frame.
+    #[test]
+    fn landform_summits_fit_the_shared_pose() {
+        let far = (0..6)
+            .map(|i| {
+                let a = (30.0 + 60.0 * i as f32).to_radians();
+                ndc(
+                    LOOK_AT,
+                    DISTANCE,
+                    Vec3::new(a.cos(), 0.0, a.sin()) * hex_core::HEX_RADIUS,
+                )
+                .y
+            })
+            .fold(f32::MIN, f32::max);
+        for (id, h) in hex_play::play::LANDFORM_TOPS {
+            for i in 0..12 {
+                let a = (30.0 * i as f32).to_radians();
+                let p = Vec3::new(2.0 * a.cos(), *h, 2.0 * a.sin());
+                let n = ndc(LOOK_AT, DISTANCE, p);
+                assert!(
+                    n.x.abs() <= 0.9 && n.y.abs() <= 0.9,
+                    "{id}: {p} lands at {n}"
+                );
+                assert!(
+                    n.y < far,
+                    "{id}: summit at {} over the far corner's {far}",
+                    n.y
+                );
+            }
+        }
     }
 
     /// Every stage of a footprint tile, warm-up included, pins LOD0; every single tile's stage

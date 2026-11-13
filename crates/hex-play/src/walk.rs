@@ -174,14 +174,219 @@ pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
     ],
 )];
 
-/// Footprint tiles' standing parts that block the walker, as (tile, part, convex parts of its
+/// Landform tiles' standing rock that blocks the walker, as (tile, part, convex parts of its
 /// footprint in the tile frame, x and z). The massif's is its rock foot as measured top-down on its
 /// LOD0: the outermost rock along each 5-degree bearing from the anchor (the spines reach 14-20 m,
 /// just into every ring cell), split into convex fans from the anchor
-/// (`docs/checkpoints/massif_granite/walk_parts.py` over `form/form-measure.json`). The grass
-/// slopes and scree fans below it are walkable ground.
-pub const FOOTPRINT_OBSTACLES: &[(&str, &str, &[&[[f32; 2]]])] =
-    &[("massif_granite", "massif_granite", MASSIF_ROCK_FOOT)];
+/// (`docs/checkpoints/massif_granite/walk_parts.py` over `form/form-measure.json`). The single-tile
+/// landforms' (spec 2026-11-13 D13) are measured the same way on the rock visible from above on
+/// their LOD0: peak_granite's as fans from its summit, hill_meadow's as one hull per slab
+/// (`docs/checkpoints/hill_meadow/walk_parts.py`). The grass slopes and scree below the rock are
+/// walkable ground.
+pub const FOOTPRINT_OBSTACLES: &[(&str, &str, &[&[[f32; 2]]])] = &[
+    ("massif_granite", "massif_granite", MASSIF_ROCK_FOOT),
+    ("hill_meadow", "hill_meadow", HILL_ROCK_FOOT),
+    ("peak_granite", "peak_granite", PEAK_ROCK_FOOT),
+];
+
+/// hill_meadow's four granite slabs: 4 convex hulls, 62 m² (their top-down cover measures 57 m²).
+const HILL_ROCK_FOOT: &[&[[f32; 2]]] = &[
+    &[
+        [-1.15, 0.75],
+        [-0.85, 0.05],
+        [-0.05, -1.15],
+        [0.85, -1.85],
+        [2.05, -2.35],
+        [2.85, -2.45],
+        [6.35, -1.85],
+        [6.85, -1.35],
+        [7.05, -0.65],
+        [6.75, -0.05],
+        [6.05, 0.45],
+        [3.35, 2.25],
+        [1.75, 2.55],
+        [1.45, 2.55],
+        [0.35, 2.35],
+        [-0.35, 2.15],
+        [-0.85, 1.65],
+        [-1.15, 1.05],
+    ],
+    &[
+        [-6.35, -6.55],
+        [-6.15, -6.95],
+        [-5.75, -7.25],
+        [-4.95, -7.25],
+        [-2.85, -6.25],
+        [-2.05, -5.55],
+        [-1.45, -4.75],
+        [-1.35, -4.45],
+        [-1.35, -3.85],
+        [-1.95, -3.15],
+        [-2.45, -2.85],
+        [-3.15, -2.75],
+        [-4.65, -3.05],
+        [-5.15, -3.35],
+        [-5.55, -3.75],
+        [-6.25, -5.95],
+    ],
+    &[
+        [-0.25, -7.65],
+        [1.35, -9.15],
+        [2.15, -9.75],
+        [3.25, -9.65],
+        [3.55, -9.25],
+        [3.85, -8.35],
+        [3.95, -7.85],
+        [3.75, -6.95],
+        [3.45, -6.45],
+        [3.15, -6.15],
+        [2.15, -5.65],
+        [1.45, -5.55],
+        [0.75, -5.75],
+        [-0.05, -6.35],
+        [-0.15, -6.65],
+    ],
+    &[
+        [-3.45, 3.05],
+        [-3.15, 2.25],
+        [-2.35, 1.85],
+        [-1.65, 1.85],
+        [-1.25, 1.95],
+        [-0.75, 2.45],
+        [-0.75, 3.45],
+        [-0.85, 3.75],
+        [-1.55, 4.15],
+        [-2.45, 4.25],
+        [-3.25, 3.85],
+    ],
+];
+
+/// peak_granite's rock foot from its summit (-0.6, -0.2): 18 convex fans, 206 m² (the rock's
+/// top-down cover measures 195 m²).
+const PEAK_ROCK_FOOT: &[&[[f32; 2]]] = &[
+    &[[-0.60, -0.20], [1.95, -3.24], [2.17, -4.15]],
+    &[
+        [-0.60, -0.20],
+        [2.17, -4.15],
+        [2.60, -5.75],
+        [2.22, -6.26],
+        [1.69, -6.49],
+        [1.13, -6.64],
+        [0.53, -6.58],
+    ],
+    &[[-0.60, -0.20], [0.53, -6.58], [-0.03, -6.73]],
+    &[
+        [-0.60, -0.20],
+        [-0.03, -6.73],
+        [-0.60, -7.36],
+        [-1.25, -7.68],
+        [-1.94, -7.80],
+        [-2.55, -7.49],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-2.55, -7.49],
+        [-3.46, -8.05],
+        [-4.33, -8.20],
+        [-5.00, -7.82],
+        [-5.61, -7.35],
+        [-6.12, -6.78],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-6.12, -6.78],
+        [-6.64, -6.24],
+        [-7.04, -5.60],
+        [-7.19, -4.82],
+        [-7.30, -4.07],
+        [-6.97, -3.17],
+        [-6.18, -2.23],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-6.18, -2.23],
+        [-6.79, -1.86],
+        [-7.24, -1.37],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-7.24, -1.37],
+        [-9.33, -0.96],
+        [-9.75, -0.20],
+        [-9.84, 0.61],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-9.84, 0.61],
+        [-10.02, 1.46],
+        [-9.88, 2.29],
+        [-9.65, 3.10],
+        [-9.33, 3.87],
+        [-8.86, 4.57],
+        [-8.05, 5.02],
+        [-7.30, 5.43],
+    ],
+    &[
+        [-0.60, -0.20],
+        [-7.30, 5.43],
+        [-6.64, 5.84],
+        [-5.82, 6.02],
+        [-4.88, 5.92],
+        [-4.00, 5.68],
+        [-2.45, 3.78],
+    ],
+    &[[-0.60, -0.20], [-2.45, 3.78], [-2.06, 3.81]],
+    &[
+        [-0.60, -0.20],
+        [-2.06, 3.81],
+        [-2.02, 5.10],
+        [-1.64, 5.71],
+        [-1.16, 6.23],
+        [-0.60, 6.45],
+        [-0.02, 6.44],
+        [0.46, 5.81],
+        [0.71, 4.71],
+    ],
+    &[[-0.60, -0.20], [0.71, 4.71], [1.18, 4.70], [1.65, 4.63]],
+    &[
+        [-0.60, -0.20],
+        [1.65, 4.63],
+        [2.44, 5.06],
+        [3.00, 4.94],
+        [3.44, 4.61],
+    ],
+    &[
+        [-0.60, -0.20],
+        [3.44, 4.61],
+        [6.64, 7.04],
+        [7.62, 6.70],
+        [8.41, 6.11],
+        [8.94, 5.31],
+        [9.34, 4.43],
+        [9.57, 3.50],
+        [9.35, 2.47],
+        [8.89, 1.47],
+    ],
+    &[
+        [-0.60, -0.20],
+        [8.89, 1.47],
+        [9.23, 0.66],
+        [9.46, -0.20],
+        [9.44, -1.08],
+        [9.32, -1.95],
+    ],
+    &[
+        [-0.60, -0.20],
+        [9.32, -1.95],
+        [9.27, -2.84],
+        [8.93, -3.67],
+        [8.18, -4.29],
+        [7.27, -4.74],
+        [6.14, -4.92],
+        [4.68, -4.63],
+    ],
+    &[[-0.60, -0.20], [4.68, -4.63], [3.69, -4.49], [1.95, -3.24]],
+];
 
 /// The massif's rock foot: 20 convex parts, 543 m² (the rock's top-down cover measures 544 m²;
 /// form pass 3, the rock half buried in the raised grass).
@@ -3728,6 +3933,132 @@ pub(crate) mod tests {
                 "{dir}: the rock's foot at {foot}, {} m up",
                 foot.y - LEVEL_STEP
             );
+        }
+    }
+
+    /// The single-tile landforms without their scatter, whose boulders and pines would stop a walk
+    /// short of the rock.
+    fn bare_landform_catalog() -> TileCatalog {
+        let base = catalog();
+        let tiles = base.tiles().iter().cloned().map(|mut t| {
+            if crate::play::scatter::LANDFORMS.contains(&t.id.as_str()) {
+                t.props.scatter.clear();
+            }
+            t
+        });
+        TileCatalog::new(base.sockets().clone(), tiles.collect()).unwrap()
+    }
+
+    /// Spec 2026-11-13 D13: a landform at level 1 ringed by level-1 meadows is ground across its hex
+    /// at the piece's own LOD0 height, turned with the tile, and at the meadows' level along its
+    /// border, rising under 0.3 m within 0.6 m of it (the massif's rim bar: the grass is flat there and
+    /// the LOD0 triangles ease it in). Its rock (`FOOTPRINT_OBSTACLES`) blocks the walker. The
+    /// steepest grass or scree triangle stays under gradient 2, half the walker's limit (measured 1.26
+    /// on the hill, 1.53 on the peak), and walks in from the meadows on twelve bearings climb without
+    /// a refused step to the rock: a slab more than 4 m up on the hill (the lowest measures 4.6 m), the
+    /// peak's rock more than 1 m up (its spine tips come down to the grass 10 m out, 1.1 m up).
+    #[test]
+    fn walker_climbs_the_landforms_to_their_rock() {
+        let c = bare_landform_catalog();
+        let apothem = HEX_RADIUS * 3f32.sqrt() / 2.0;
+        for id in crate::play::scatter::LANDFORMS {
+            let lowest_foot = if id == "hill_meadow" { 4.0 } else { 1.0 };
+            let def = c.get(id).unwrap();
+            let tris =
+                crate::play::slope_ground::tile_ground_tris(def, &c, &mut |p| mesh_tris(p, "lod0"))
+                    .unwrap();
+            let steepest = tris
+                .iter()
+                .filter(|(_, s)| s.ends_with("_cap") || s.ends_with("_scree"))
+                .map(|([a, b, d], _)| {
+                    let u = Vec3::from(*b) - Vec3::from(*a);
+                    let v = Vec3::from(*d) - Vec3::from(*a);
+                    let n = u.cross(v);
+                    n.xz().length() / n.y.abs().max(1e-9)
+                })
+                .fold(0.0f32, f32::max);
+            assert!(
+                steepest < 2.0,
+                "{id}: steepest ground {steepest} (the walker's limit is {})",
+                MAX_STEP / SUBSTEP
+            );
+            let parts = FOOTPRINT_OBSTACLES
+                .iter()
+                .find(|(t, _, _)| *t == id)
+                .map(|(_, _, p)| *p)
+                .unwrap();
+            let mut tiles: Vec<(i32, i32, &str, u8, u8)> = vec![(0, 0, id, 0, 1)];
+            for d in 0..6u8 {
+                let m = Axial::ORIGIN.neighbor(d);
+                tiles.push((m.q, m.r, "meadow", 0, 1));
+            }
+            for k in [0u8, 1, 5] {
+                tiles[0].3 = k;
+                let g = world_at(&c, &tiles);
+                assert_eq!(g.obstacles[&Axial::ORIGIN].len(), parts.len(), "{id} k{k}");
+                for b in 0..12 {
+                    let dir = Vec2::from_angle(b as f32 * std::f32::consts::FRAC_PI_6);
+                    for r in [0.0, 3.0, 6.0, 9.0, 12.0] {
+                        let p = dir * r;
+                        let want = massif_ground(&tris, k, p);
+                        let got = g.ground(p).unwrap();
+                        assert!(
+                            (got - want).abs() < 0.02,
+                            "{id} k{k} at {p}: ground {got}, the piece's {want}"
+                        );
+                    }
+                }
+                for d in 0..6u8 {
+                    let m = Axial::ORIGIN.neighbor(d);
+                    let n = centre(m.q, m.r).normalize();
+                    for s in [-6.0, -3.0, 0.0, 3.0, 6.0] {
+                        for (inset, most) in [(0.05, 0.05), (0.6, 0.3)] {
+                            let p = n * (apothem - inset) + n.perp() * s * (1.0 - inset / apothem);
+                            let y = g.ground(p).unwrap() - LEVEL_STEP;
+                            assert!(
+                                y.abs() < most,
+                                "{id} k{k}: {inset} m inside edge {d} at {p}, {y} m up"
+                            );
+                        }
+                    }
+                }
+                for part in parts {
+                    let n = part.len() as f32;
+                    let mid = part.iter().fold(Vec2::ZERO, |a, p| a + Vec2::from(*p)) / n;
+                    let w = turn(k, [mid.x, 0.0, mid.y]);
+                    assert_eq!(
+                        g.stand(Vec2::new(w[0], w[2])),
+                        Err(Blocked::Obstacle(id.into())),
+                        "{id} k{k}: the rock at {mid}"
+                    );
+                }
+            }
+            tiles[0].3 = 0;
+            let g = world_at(&c, &tiles);
+            for b in 0..12 {
+                let dir = Vec2::from_angle(b as f32 * std::f32::consts::FRAC_PI_6);
+                let start = dir * (HEX_RADIUS + 2.0);
+                let mut pos = Vec3::new(start.x, g.ground(start).unwrap(), start.y);
+                let mut rock = None;
+                for _ in 0..640 {
+                    let s = g.step(pos, -dir * 0.05);
+                    assert_ne!(
+                        s.blocked,
+                        Some(Blocked::Steep),
+                        "{id} {dir}: refused a step at {pos}"
+                    );
+                    pos = s.pos;
+                    if s.blocked == Some(Blocked::Obstacle(id.into())) {
+                        rock = Some(pos);
+                        break;
+                    }
+                }
+                let foot = rock.unwrap_or_else(|| panic!("{id} {dir}: never reached the rock"));
+                assert!(
+                    foot.y - LEVEL_STEP > lowest_foot,
+                    "{id} {dir}: the rock's foot at {foot}"
+                );
+            }
         }
     }
 

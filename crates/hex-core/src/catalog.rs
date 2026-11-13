@@ -12,7 +12,8 @@ use crate::tile::{KitRef, TileDef, local_edge, opposite_edge};
 
 /// Every file in `data/tiles/`, as `(id, RON text)`, in inventory order (plan F1, with the owner O1
 /// coast corners after the straight beach, as PRD §5.4 lists them, the windmill, the farm and the
-/// wheat field after the oak, and the massif after the hillsides, its own picker entry, A52 Q4 O1).
+/// wheat field after the oak, the massif after the hillsides, its own picker entry, A52 Q4 O1, and the
+/// single-tile hill and peak after the massif, each its own entry, spec 2026-11-13 D1).
 pub const BUILTIN_TILES: &[(&str, &str)] = &[
     ("meadow", include_str!("../../../data/tiles/meadow.ron")),
     ("forest", include_str!("../../../data/tiles/forest.ron")),
@@ -95,6 +96,14 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
     (
         "massif_granite",
         include_str!("../../../data/tiles/massif_granite.ron"),
+    ),
+    (
+        "hill_meadow",
+        include_str!("../../../data/tiles/hill_meadow.ron"),
+    ),
+    (
+        "peak_granite",
+        include_str!("../../../data/tiles/peak_granite.ron"),
     ),
     (
         "road_ramp",
@@ -641,6 +650,21 @@ mod tests {
         assert_eq!(p[i + 1].id, "massif_granite");
         assert_eq!(p[i + 1].tiles, ["massif_granite"]);
         assert_eq!(c.siblings("massif_granite").len(), 1);
+    }
+
+    /// Spec 2026-11-13 D1 (single-tile hills): the hill and the peak are lone Tiles sheet entries,
+    /// right after the massif.
+    #[test]
+    fn picker_lists_the_single_tile_hills_after_the_massif() {
+        let c = TileCatalog::builtin().unwrap();
+        let p = c.picker();
+        let i = p.iter().position(|e| e.id == "massif_granite").unwrap();
+        assert_eq!(p[i + 1].tiles, ["hill_meadow"]);
+        assert_eq!(p[i + 2].tiles, ["peak_granite"]);
+        for id in ["hill_meadow", "peak_granite"] {
+            assert_eq!(c.siblings(id).len(), 1, "{id}");
+            assert!(!c.get(id).unwrap().is_mega(), "{id}");
+        }
     }
 
     #[test]

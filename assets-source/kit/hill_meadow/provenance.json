@@ -1,0 +1,666 @@
+{
+  "pieceId": "hill_meadow",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/hill_meadow.py",
+    "sha256": "d10b743284bc5cacf46636e58d0e9a1fa6fc9bc59b4cc767696f96246b8986cb"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_hills.py",
+      "sha256": "8694babe1fb333d6487162533ee9bf4cd5a1d8ef5c732115bcb74f718af737c6"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.6,
+    "bakeStats": {
+      "groundAO": {
+        "mean": 0.9719,
+        "min": 0,
+        "p01": 0.1255,
+        "p05": 0.9686,
+        "texels": 36074
+      },
+      "normalMissFraction": 0.00001,
+      "rockAO": {
+        "mean": 0.8108,
+        "min": 0,
+        "p01": 0.0627,
+        "p05": 0.1569,
+        "texels": 406873
+      },
+      "rockAlbedoLuma": {
+        "mean": 0.5288,
+        "min": 0,
+        "p01": 0.183,
+        "p05": 0.183,
+        "texels": 406873
+      },
+      "rockFaceAO": {
+        "areaMean": 0.8308,
+        "areaUnder0.1": 0.0251
+      },
+      "rockRoughness": {
+        "mean": 0.8391,
+        "min": 0,
+        "p01": 0.8392,
+        "p05": 0.8392,
+        "texels": 406873
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.12,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "groundStats": {
+      "lod0": {
+        "capTris": 3028,
+        "capTrisUnderRock": 182,
+        "groundMaxErrorAt": [
+          12.65,
+          -6.72,
+          0.21
+        ],
+        "groundMaxHeightErrorM": 0.177,
+        "trisPerSlot": {
+          "cap": 2950,
+          "scree": 78
+        }
+      },
+      "lod1": {
+        "capTris": 1332,
+        "capTrisUnderRock": 46,
+        "groundMaxErrorAt": [
+          -2.72,
+          -13.74,
+          0.2
+        ],
+        "groundMaxHeightErrorM": 0.198,
+        "trisPerSlot": {
+          "cap": 1299,
+          "scree": 33
+        }
+      },
+      "lod2": {
+        "capTris": 266,
+        "capTrisUnderRock": 0,
+        "groundMaxErrorAt": [
+          0.47,
+          14.37,
+          0.54
+        ],
+        "groundMaxHeightErrorM": 0.523,
+        "trisPerSlot": {
+          "cap": 262,
+          "scree": 4
+        }
+      }
+    },
+    "lod2Drops": {},
+    "marginPx": 6,
+    "masksDensityPxPerM": {
+      "lod0_cap": {
+        "areaM2": 759.9,
+        "faces": 2950,
+        "max": 3.82,
+        "median": 3.4,
+        "min": 3.01
+      }
+    },
+    "maxRayDistanceM": 0.25,
+    "receiverSignature": "b7d21b261d5a7561bf57ad77ac0eb88af9ab43a0c87dbd321c5dc6b21359114a",
+    "rockReachM": 10.517,
+    "rockStats": {
+      "lod0": {
+        "highToLodM": [
+          0.577,
+          0.078
+        ],
+        "rockTris": 464,
+        "toHighM": [
+          0.158,
+          0.107
+        ]
+      },
+      "lod1": {
+        "highToLodM": [
+          0.556,
+          0.202
+        ],
+        "rockTris": 234,
+        "toHighM": [
+          0.162,
+          0.133
+        ]
+      },
+      "lod2": {
+        "highToLodM": [
+          5.551,
+          5.312
+        ],
+        "rockTris": 28,
+        "toHighM": [
+          0.486,
+          0.458
+        ]
+      }
+    },
+    "samples": 32,
+    "screeRoute": "unique",
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "lod0_rock": {
+        "areaM2": 137.7,
+        "faces": 464,
+        "max": 61.1,
+        "median": 54.65,
+        "min": 41.99
+      },
+      "lod0_scree": {
+        "areaM2": 16.8,
+        "faces": 78,
+        "max": 54.48,
+        "median": 54.36,
+        "min": 54.18
+      },
+      "lod1_rock": {
+        "areaM2": 135.6,
+        "faces": 234,
+        "max": 131.1,
+        "median": 54.18,
+        "min": 31.84
+      },
+      "lod1_scree": {
+        "areaM2": 18.2,
+        "faces": 33,
+        "max": 39.95,
+        "median": 39.79,
+        "min": 39.49
+      },
+      "lod2_rock": {
+        "areaM2": 141.7,
+        "faces": 28,
+        "max": 16.61,
+        "median": 15.46,
+        "min": 14.62
+      },
+      "lod2_scree": {
+        "areaM2": 8.1,
+        "faces": 4,
+        "max": 15.46,
+        "median": 15.46,
+        "min": 15.46
+      }
+    },
+    "topM": 9.701
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3684,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1758,
+      "ratio": 0.4771986970684039
+    },
+    {
+      "lod": 2,
+      "tris": 486,
+      "ratio": 0.13192182410423453
+    }
+  ],
+  "collider": {
+    "node": "hill_meadow_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.66025447845459,
+        3.3046891689300537,
+        -5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        6.123233998228043e-16,
+        3.5763492584228516,
+        -10
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.66025447845459,
+        3.3849337100982666,
+        -5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -8.66025447845459,
+        3.1833138465881348,
+        5
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -1.6996617117955178e-15,
+        2.720947504043579,
+        10
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        8.66025447845459,
+        2.6826963424682617,
+        5
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "lod0_rock": {
+      "areaM2": 137.7,
+      "faces": 464,
+      "max": 61.1,
+      "median": 54.65,
+      "min": 41.99
+    },
+    "lod0_scree": {
+      "areaM2": 16.8,
+      "faces": 78,
+      "max": 54.48,
+      "median": 54.36,
+      "min": 54.18
+    },
+    "lod1_rock": {
+      "areaM2": 135.6,
+      "faces": 234,
+      "max": 131.1,
+      "median": 54.18,
+      "min": 31.84
+    },
+    "lod1_scree": {
+      "areaM2": 18.2,
+      "faces": 33,
+      "max": 39.95,
+      "median": 39.79,
+      "min": 39.49
+    },
+    "lod2_rock": {
+      "areaM2": 141.7,
+      "faces": 28,
+      "max": 16.61,
+      "median": 15.46,
+      "min": 14.62
+    },
+    "lod2_scree": {
+      "areaM2": 8.1,
+      "faces": 4,
+      "max": 15.46,
+      "median": 15.46,
+      "min": 15.46
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 882996,
+        "astc": 901535
+      },
+      "glbBytes": 163084
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 595037,
+        "sha256": "b1d8e39699be8d60c10954f54bdc4db05acd1fb73a59c7a992918f2ca3458ad0"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 604516,
+        "sha256": "f90971095a2fd3e4d1900eb9922f4a628585485ee64cf3a701cba7b2422542cd"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 928424,
+        "sha256": "e0db4062addf2f825b920352c1bd7eaea3fc56fffbd1a9621db6f478ede530fc"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 21355,
+        "sha256": "0e7935c1d6609c27a2e268d7a9f17d1d5fce992ab3dea8698d89e5561bac2b04"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 20938,
+        "sha256": "74f3fd3bc6a0e410bcfc23c6b16b6d04412d589b2ae7d56dd52098b31bb6ddea"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 25820,
+        "sha256": "bc26d74086cd58167bce36203a4f9f02c3c7d36a83c527f991db8c41c78cb0a8"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 154063,
+        "sha256": "c33de2044afd748a643cfbe157b36e2201489c587a03ca3944ab4e84e16f01da"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 158348,
+        "sha256": "88b4db447cbc5bd717128b5deb8f8eba475c67f42a8c2a92e6bf8b46d85e9c45"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 235760,
+        "sha256": "9a060b1ea906f6f1c4fe32e44326803886996aa9000d2ee6c6dc1c91374e26b4"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 112541,
+        "sha256": "2773f43074abc2021b41888b2dc775d0b66a3e5c46138e5176a7d861fa4df0b4"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 117733,
+        "sha256": "cce4c8f87e94fc3bcb69efed35cac7f4af31279e7d1a464fcf8137c9e0932747"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 153453,
+        "sha256": "87e50a2fa52ad75fbb479a34fb10cf8feca54a0853c2cf88f7143fa3607bf6f5"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.glb",
+      "sha256": "966473b2945a95a88d8074cc451d716704c7de70e4f10c6b9ec4d38674e28bde",
+      "bytes": 163084
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.bc7.ktx2",
+      "sha256": "b1d8e39699be8d60c10954f54bdc4db05acd1fb73a59c7a992918f2ca3458ad0",
+      "bytes": 595037
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.astc.ktx2",
+      "sha256": "f90971095a2fd3e4d1900eb9922f4a628585485ee64cf3a701cba7b2422542cd",
+      "bytes": 604516
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.albedo.png",
+      "sha256": "e0db4062addf2f825b920352c1bd7eaea3fc56fffbd1a9621db6f478ede530fc",
+      "bytes": 928424
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.bc7.ktx2",
+      "sha256": "0e7935c1d6609c27a2e268d7a9f17d1d5fce992ab3dea8698d89e5561bac2b04",
+      "bytes": 21355
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.astc.ktx2",
+      "sha256": "74f3fd3bc6a0e410bcfc23c6b16b6d04412d589b2ae7d56dd52098b31bb6ddea",
+      "bytes": 20938
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.masks.png",
+      "sha256": "bc26d74086cd58167bce36203a4f9f02c3c7d36a83c527f991db8c41c78cb0a8",
+      "bytes": 25820
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.bc7.ktx2",
+      "sha256": "c33de2044afd748a643cfbe157b36e2201489c587a03ca3944ab4e84e16f01da",
+      "bytes": 154063
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.astc.ktx2",
+      "sha256": "88b4db447cbc5bd717128b5deb8f8eba475c67f42a8c2a92e6bf8b46d85e9c45",
+      "bytes": 158348
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.normal.png",
+      "sha256": "9a060b1ea906f6f1c4fe32e44326803886996aa9000d2ee6c6dc1c91374e26b4",
+      "bytes": 235760
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.bc7.ktx2",
+      "sha256": "2773f43074abc2021b41888b2dc775d0b66a3e5c46138e5176a7d861fa4df0b4",
+      "bytes": 112541
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.astc.ktx2",
+      "sha256": "cce4c8f87e94fc3bcb69efed35cac7f4af31279e7d1a464fcf8137c9e0932747",
+      "bytes": 117733
+    },
+    {
+      "path": "assets/kit/p1/hill_meadow/hill_meadow.orm.png",
+      "sha256": "87e50a2fa52ad75fbb479a34fb10cf8feca54a0853c2cf88f7143fa3607bf6f5",
+      "bytes": 153453
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/hill_meadow/ref-1.jpg",
+      "sha256": "d51a78ebbe543312d97967bc16fc8db0974305fa0928e1b7749b4a867404c410",
+      "sourceSha256": "556a6d30596b7d93ef164aff43ec4be58a54fb201630d8b2f2edca074bd662c9",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3d560ff4-f05c-4a1a-91df-acdbdf2ea516",
+      "prompt": "Hill tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one smooth rounded grassy hill about 8 m high, its summit near the centre, its broad round shoulders easing down on every side into the flat meadow at the rim, with two or three low flat granite outcrops breaking through the turf near the crown, each a low ledge of rounded slabs standing less than a metre above the grass, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/hill_meadow/ref-2.jpg",
+      "sha256": "f04201a1770d3c173054f391e4d2d2b1e4e37388d85552ab2a1ba435778ab462",
+      "sourceSha256": "af0657a6837bf0f12e584e5e3ef7145b71402a31b338179e416fdd842ab77aa8",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "6b2006d1-407e-4984-b051-8d0305da3c9f",
+      "prompt": "Hill tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one rounded grassy hill about 9 m high, its summit a little off centre, crowned by a single low granite tor of a few big rounded blocks stacked like piled cushions about 2 m high, with one or two small flat granite outcrops lower on the slopes, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/hill_meadow/ref-3.jpg",
+      "sha256": "fa8bddee3c7a252f89e9db0f85b840c6dbb4b936940d59e09dc5cf744f08640b",
+      "sourceSha256": "8ac11bf50e938cd8d32f117916fedaaf14615dee7bf04314b37e48f31cda939c",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "3234ff4e-63de-448c-8d9e-abb9cdb01699",
+      "prompt": "Hill tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one broad rounded grassy hill about 8 m high, gentler on one side and steeper on the other, where a single low granite outcrop ledge breaks the steeper slope just below the crown, a short band of rounded weathered slabs about 1.5 m high, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/hill_meadow/ref-4.jpg",
+      "sha256": "c2a57374bd9579afc50a46eabb13847bfc40749781be6d5d82796bffb1347429",
+      "sourceSha256": "121df28ff922ab4d35e360e3735f28bd9aff85e302726e0a1943186a5801585a",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b48308bf-97bc-4966-aea2-9e604f6636a0",
+      "prompt": "Hill tile: one single solid regular hexagonal diorama tile with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, not a circle, the whole tile centred in frame with plain grey margin all round, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth, the same shallow depth all the way round, with no rock in the side walls. Over the hexagon rises one smooth rounded grassy hill about 8 m high, its summit near the centre, its broad round shoulders easing down on every side into the flat meadow at the rim, with two or three low flat granite outcrops breaking through the turf near the crown, each a low ledge of rounded slabs standing less than a metre above the grass, every rock weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen and a little dark moss in the crevices on the shaded side, the stone reading as a matte surface. The whole top is one continuous lush dense long clumpy meadow of fresh green grass with a few small wildflowers, one single even colour and texture from the rim right up to the rock, never short moss or lawn, with no stripes, rings, borders, frames or lines of different grass anywhere and no raised lip along the rim. Toward the rim the slopes ease out into flat ground, so all the way round the rim the meadow lies flat and level with it, the rim the same height on all six sides, and the rock stays well inside the rim, never reaching it or the side walls. The same lush fresh green meadow grass carries on unbroken up the slopes to the foot of the rock, with no change of colour, tone or texture where the slopes begin and no paler or yellower grass on the hillside. The whole tile is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a very low camera close to the ground just beyond the front rim, looking almost level across the tile at only about 15 degrees above the horizon, so the flat meadow at the front foreshortens into a narrow strip, the front rim and its dark earth side walls run across the bottom of the frame, and the full silhouette rises against the plain grey backdrop, with three of the hexagon's six side walls and the two corners between them along the front, never a square or diamond outline"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-11-13T15:57:18.851Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/hill_meadow/ref-1.jpg"
+      ],
+      "notes": "ref-1, per HL-Q1. Answered in chat (\"yes to all (hero pack)\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-11-13",
+      "notes": "Pending owner review; not an approval. hill_meadow, built ahead of the reference pick (spec docs/superpowers/specs/2026-11-13-single-tile-hills-design.md, Q1 recommends ref-1) against assets-source/refs/hill_meadow/ref-1.jpg: a single-tile grassy dome (A40 O1) whose six edges are plain Grass, flat at the tile's level where a Meadow's are, rising to a crown 9.44 m up (LOD0), with four low granite slabs spread over the upper slope (57 m² of visible rock, 9 m² of scree aprons). Kind base, pack hero, LOD0/1/2 3684/1758/486 tris, a unique 1024 atlas for the rock and scree at 54.65 px/m (the scoped floor is 50 px/m, D8), runtime grass on the cap (D10), Meadow's scatter at Meadow density per m² of free ground (D9), no pines (Q2 O1). Review sheet: docs/checkpoints/hill_meadow/review-sheet.jpg (ref-1 beside headless EEVEE stills of the baked LOD0 among six meadow_base tiles); in-engine views come from the orchestrator (docs/checkpoints/hill_meadow/hills-shots.json). The controller records the owner's decision."
+    },
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "piece",
+      "status": "approved",
+      "notes": "Approved in chat (\"yes to all (hero pack)\", 2026-11-13) against docs/review/2026-11-13-owner-queue.md: HL-A1 hills spec approved; HL-Q1 ref-1 for both pieces; HL-Q2 no pines on the hill (the peak keeps its pine band); HL-Q3 pack hero; HL-Q4 the original peak is kept, the jointing passes are rejected (after an in-engine A/B: \"i still like original better\")."
+    }
+  ]
+}

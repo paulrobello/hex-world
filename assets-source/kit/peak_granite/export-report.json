@@ -1,0 +1,129 @@
+{
+  "blender": "5.2.2 LTS",
+  "budgetClass": "piece",
+  "generator": {
+    "path": "scripts/blender/kit/peak_granite.py",
+    "sha256": "951878f229b5f49d8b2d83c8b99d2db27f1a34ffa03a1aae24cc1328e15658b1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_hills.py",
+      "sha256": "8694babe1fb333d6487162533ee9bf4cd5a1d8ef5c732115bcb74f718af737c6"
+    },
+    {
+      "path": "scripts/blender/kit/_massif.py",
+      "sha256": "9e15aa5b2309d0fe7a0fda152a41a41f44ea74e336036f71de06532a730321b9"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_terrain.py",
+      "sha256": "59a6fcc557ff5cb832206542af54288784ddf5e6e95aeadbc2ab4929d543841f"
+    }
+  ],
+  "lodTris": {
+    "peak_granite_lod0": 3525,
+    "peak_granite_lod1": 1705,
+    "peak_granite_lod2": 507
+  },
+  "nodes": [
+    "anchor-prop-0",
+    "anchor-prop-1",
+    "anchor-prop-2",
+    "anchor-prop-3",
+    "anchor-prop-4",
+    "anchor-prop-5",
+    "peak_granite",
+    "peak_granite_collider",
+    "peak_granite_lod0",
+    "peak_granite_lod1",
+    "peak_granite_lod2"
+  ],
+  "pieceId": "peak_granite",
+  "sockets": [
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-0",
+      "position": [
+        8.66025447845459,
+        2.4633238315582275,
+        -5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-1",
+      "position": [
+        6.123233998228043e-16,
+        2.1150848865509033,
+        -10.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-2",
+      "position": [
+        -8.66025447845459,
+        1.9210025072097778,
+        -5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-3",
+      "position": [
+        -8.66025447845459,
+        2.8582382202148438,
+        5.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-4",
+      "position": [
+        -1.6996617117955178e-15,
+        2.662299394607544,
+        10.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "kind": "prop",
+        "radius": 2.0
+      },
+      "name": "anchor-prop-5",
+      "position": [
+        8.66025447845459,
+        1.399441123008728,
+        5.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

@@ -31,6 +31,8 @@ export const TILE_NAMES: Record<string, string> = {
   hillside_011011: "Hillside",
   hillside_011111: "Hillside",
   massif_granite: "Granite massif",
+  hill_meadow: "Grassy hill",
+  peak_granite: "Granite peak",
   road_ramp: "Road ramp",
   road_tunnel_portal: "Tunnel portal",
   rail_straight: "Rail straight",

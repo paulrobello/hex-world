@@ -504,6 +504,10 @@ pub fn kit_layout() -> Vec<Placement> {
     // stay empty for the piece's footprint, and nothing stands within a cell of them, so its 18
     // outer edges and the open sun side to -x/-z read clear of the rest of the layout.
     v.push(place("massif_granite", -3, -2, 0));
+    // The single-tile hills (spec 2026-11-13 D18) at rotation 0 beside the massif: the hill on
+    // (0, -3) and the peak on (2, -4), each two cells clear of the massif's ring and the houses.
+    v.push(place("hill_meadow", 0, -3, 0));
+    v.push(place("peak_granite", 2, -4, 0));
     v
 }
 
