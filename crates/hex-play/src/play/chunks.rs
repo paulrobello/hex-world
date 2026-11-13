@@ -1,7 +1,7 @@
 //! Settled kit parts draw through GPU instance records. Tile roots and scatter layout records
 //! remain authoritative.
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     ops::Range,
     sync::Arc,
 };
@@ -10,7 +10,7 @@ use bevy::camera::primitives::Aabb;
 use bevy::mesh::Indices;
 use bevy::pbr::StandardMaterialKey;
 use bevy::prelude::*;
-use hex_core::{Axial, HEX_RADIUS};
+use hex_core::{Axial, HEX_RADIUS, TileDef};
 use hex_render::{
     chunks::chunk_center,
     kit_instances::{
@@ -22,8 +22,8 @@ use hex_render::{
 };
 
 use super::{
-    KitMaterial, KitPart, PlaySpawned, PlayView, RisePart, SceneEntity, coalesce::CoalescedGroup,
-    rise::PlayRises,
+    KitMaterial, KitPart, PlayCatalog, PlaySpawned, PlayTile, PlayView, RisePart, SceneEntity,
+    coalesce::CoalescedGroup, rise::PlayRises,
 };
 
 #[derive(Clone)]
@@ -155,10 +155,18 @@ impl KitFamilies {
             .unwrap_or([None, None, None])
     }
 }
+/// How far from a footprint's ring cell `sync` redraws pieces: a field's boundaries read the
+/// tiles up to two cells away (`boundary::within(_, 2)` there), which also covers the pair pieces
+/// and buffer stops of the ring's neighbours.
+const RING_REACH: i32 = 2;
+
 /// Restore the original hierarchy before the normal tile sync starts a sink or replaces children.
+/// A single tile change restores the tiles beside it; a footprint tile change restores every tile
+/// within [`RING_REACH`] of its ring cells.
 pub(super) fn restore(
     mut commands: Commands,
     view: Res<PlayView>,
+    catalog: Res<PlayCatalog>,
     spawned: Option<ResMut<PlaySpawned>>,
     mut chunks: ResMut<PlayChunks>,
     parents: Query<(), With<Transform>>,
@@ -170,11 +178,20 @@ pub(super) fn restore(
     }
     let want: HashMap<_, _> = view.tiles.iter().map(|t| (t.cell, t)).collect();
     let old: HashMap<_, _> = spawned.tiles.iter().map(|(c, (t, _))| (*c, t)).collect();
-    let changed: Vec<_> = old
+    let changed: BTreeSet<Axial> = old
         .keys()
         .chain(want.keys())
         .copied()
         .filter(|c| old.get(c) != want.get(c))
+        .collect();
+    // A footprint coming or going changes its ring cells too, as in `sync`.
+    let mega = |t: Option<&&PlayTile>| {
+        t.is_some_and(|t| catalog.0.get(&t.tile).is_some_and(TileDef::is_mega))
+    };
+    let rings: Vec<Axial> = changed
+        .iter()
+        .filter(|&&c| view.is_footprint(c) || mega(old.get(&c)))
+        .flat_map(|&c| hex_core::footprint::members(c))
         .collect();
     let roots: Vec<_> = chunks
         .tiles
@@ -183,6 +200,7 @@ pub(super) fn restore(
             refresh
                 || !parents.contains(**root)
                 || changed.iter().any(|c| c.distance(tile.cell) <= 1)
+                || rings.iter().any(|c| c.distance(tile.cell) <= RING_REACH)
         })
         .map(|(root, _)| *root)
         .collect();
@@ -641,13 +659,14 @@ fn update_report(chunks: &PlayChunks, report: &mut super::scatter::ScatterReport
 
 #[cfg(test)]
 mod tests {
-    use super::super::{PlayTile, RiseRole};
+    use super::super::RiseRole;
     use super::*;
 
     fn app() -> (App, Entity, Entity) {
         let mut app = App::new();
         app.init_resource::<PlayChunks>()
             .init_resource::<PlayView>()
+            .init_resource::<PlayCatalog>()
             .init_resource::<PlaySpawned>()
             .init_resource::<PlayRises>()
             .init_resource::<Assets<Mesh>>()
@@ -948,6 +967,220 @@ mod tests {
                 .resource::<PlayChunks>()
                 .slot_entities
                 .is_empty()
+        );
+    }
+
+    /// The builtin catalog plus a Forest/Grass pair piece: a forest two cells from a massif's
+    /// anchor, beside one of its ring cells, pairs with the massif's Grass outer sockets.
+    fn pair_beside_ring_catalog() -> hex_core::TileCatalog {
+        let base = hex_core::TileCatalog::builtin().unwrap();
+        let mut file = base.sockets().file().clone();
+        file.pair_edge_pieces.push(hex_core::PairEdgePiece {
+            own: hex_core::SocketKind::Forest,
+            neighbour: hex_core::SocketKind::Grass,
+            piece: "forest_grass_edge".into(),
+            per_base_edge: false,
+            corners: hex_core::socket::PairCorners::Straight,
+        });
+        hex_core::TileCatalog::new(
+            hex_core::SocketTable::new(file).unwrap(),
+            base.tiles().to_vec(),
+        )
+        .unwrap()
+    }
+
+    /// The play view of `w`, without the massif anchored at `anchor` unless `massif`.
+    fn view_of(w: &hex_core::World, anchor: Axial, massif: bool) -> PlayView {
+        let mut v = PlayView {
+            tiles: w
+                .tiles()
+                .iter()
+                .filter(|(cell, _)| massif || **cell != anchor)
+                .map(|(cell, t)| PlayTile {
+                    cell: *cell,
+                    tile: t.def.clone(),
+                    rotation: t.rotation,
+                    level: t.level,
+                })
+                .collect(),
+            members: if massif {
+                w.members().iter().map(|(m, a)| (*m, *a)).collect()
+            } else {
+                HashMap::new()
+            },
+            ..default()
+        };
+        v.index_tiles();
+        v
+    }
+
+    /// A headless play app running the real restore, tile sync and settle, with every rise
+    /// rested before settling, and a kit holding only the `forest_grass_edge` pair piece (every
+    /// tile body draws placeholders, which never settle).
+    fn sync_app(catalog: hex_core::TileCatalog) -> App {
+        fn rest_all(mut rises: ResMut<PlayRises>, spawned: Res<PlaySpawned>) {
+            for c in spawned.tiles.keys() {
+                rises.rest(*c);
+            }
+        }
+        let mut app = App::new();
+        app.insert_resource(crate::ActiveScenario(crate::Scenario::Play))
+            .insert_resource(PlayCatalog(catalog))
+            .insert_resource(super::super::ReducedMotion(true))
+            .init_resource::<PlayChunks>()
+            .init_resource::<PlayView>()
+            .init_resource::<PlaySpawned>()
+            .init_resource::<PlayRises>()
+            .init_resource::<Assets<Mesh>>()
+            .init_resource::<Assets<Image>>()
+            .init_resource::<Assets<StandardMaterial>>()
+            .init_resource::<Assets<KitMaterial>>()
+            .init_resource::<Assets<crate::water::WaterMaterial>>()
+            .init_resource::<Assets<crate::water::TerrainMaterial>>()
+            .init_resource::<hex_render::GateConfig>()
+            .init_resource::<super::super::scatter::ScatterReport>()
+            .init_resource::<super::super::SlopeMeshes>()
+            .init_resource::<super::super::NoBufferStops>()
+            .init_resource::<super::super::NoBoundaries>()
+            .add_message::<super::super::RiseMessage>();
+        let world = app.world_mut();
+        let plain = world.resource_scope(|world, mut meshes: Mut<Assets<Mesh>>| {
+            let mut mats = world.resource_mut::<Assets<StandardMaterial>>();
+            super::super::PlainAssets::new(&mut meshes, &mut mats)
+        });
+        let material = world
+            .resource_mut::<Assets<KitMaterial>>()
+            .add(KitMaterial {
+                base: StandardMaterial::default(),
+                extension: Default::default(),
+            });
+        let parts: Vec<KitPart> = (0..3)
+            .map(|lod| KitPart {
+                lod,
+                mesh: world
+                    .resource_mut::<Assets<Mesh>>()
+                    .add(Cuboid::new(1.0, 1.0, 1.0)),
+                material: material.clone(),
+                slot: "edge".into(),
+                rotor: None,
+            })
+            .collect();
+        let kit = HashMap::from([("forest_grass_edge".to_owned(), parts)]);
+        world.insert_resource(KitFamilies::build(&kit, &HashMap::new()));
+        world.insert_resource(super::super::PlayKit::Ready(kit));
+        world.insert_resource(plain);
+        app.add_systems(
+            Update,
+            (restore, super::super::sync, rest_all, settle).chain(),
+        );
+        app
+    }
+
+    /// What `app` draws of the kit at `cell`: its live kit parts and its settled (cached) ones,
+    /// each as (LOD, placement), sorted.
+    fn drawn_at(app: &mut App, cell: Axial) -> Vec<(u8, [u32; 10])> {
+        let root = app.world().resource::<PlaySpawned>().tiles[&cell].1;
+        let mut out: Vec<(u8, [u32; 10])> = app
+            .world()
+            .resource::<PlayChunks>()
+            .tiles
+            .get(&root)
+            .map_or(vec![], |t| {
+                t.parts
+                    .iter()
+                    .map(|p| (p.lod, placement_bits(&p.local)))
+                    .collect()
+            });
+        let mut q = app
+            .world_mut()
+            .query_filtered::<(&Lod, &Transform, &ChildOf), With<MeshMaterial3d<KitMaterial>>>();
+        out.extend(
+            q.iter(app.world())
+                .filter(|(_, _, p)| p.parent() == root)
+                .map(|(lod, t, _)| (lod.0, placement_bits(t))),
+        );
+        out.sort();
+        out
+    }
+
+    fn show(app: &mut App, view: PlayView) {
+        *app.world_mut().resource_mut::<PlayView>() = view;
+        for _ in 0..3 {
+            app.update();
+        }
+    }
+
+    /// Placing and removing a massif changes the pair pieces of a forest two cells from its
+    /// anchor (beside a ring cell). With those pieces already settled into instance records,
+    /// restore must hand them back to the sync, so the forest then draws exactly what a fresh
+    /// spawn of the same world draws: the edge pieces after the placement, none after removal.
+    #[test]
+    fn a_footprint_change_restores_settled_pair_pieces_beside_its_ring() {
+        let c = pair_beside_ring_catalog();
+        let anchor = Axial::new(2, 0);
+        let forest = anchor.neighbor(0).neighbor(1);
+        assert_eq!(anchor.distance(forest), 2);
+        let mut w = hex_core::World::new(1);
+        w.place(
+            &c,
+            anchor,
+            "massif_granite",
+            hex_core::Orientation::new(2, 0),
+        )
+        .unwrap();
+        w.place(&c, forest, "forest", hex_core::Orientation::new(1, 0))
+            .unwrap();
+        let fresh = |massif: bool| {
+            let mut app = sync_app(c.clone());
+            show(&mut app, view_of(&w, anchor, massif));
+            drawn_at(&mut app, forest)
+        };
+        let (with, without) = (fresh(true), fresh(false));
+        assert!(!with.is_empty(), "the massif gives the forest edge pieces");
+        assert!(without.is_empty());
+
+        let mut app = sync_app(c.clone());
+        show(&mut app, view_of(&w, anchor, false));
+        show(&mut app, view_of(&w, anchor, true));
+        let root = app.world().resource::<PlaySpawned>().tiles[&forest].1;
+        assert!(
+            !app.world().resource::<PlayChunks>().tiles[&root]
+                .parts
+                .is_empty(),
+            "the edge pieces settled"
+        );
+        assert_eq!(drawn_at(&mut app, forest), with, "after placing");
+        show(&mut app, view_of(&w, anchor, false));
+        assert_eq!(drawn_at(&mut app, forest), without, "after removing");
+        show(&mut app, view_of(&w, anchor, true));
+        assert_eq!(drawn_at(&mut app, forest), with, "after placing again");
+    }
+
+    /// A single tile change still restores only the settled tiles beside it: a settled tile two
+    /// cells away keeps its instance records.
+    #[test]
+    fn a_single_tile_change_does_not_restore_a_tile_two_cells_away() {
+        let (mut app, root, _) = app();
+        app.add_systems(First, restore);
+        app.add_systems(Update, settle);
+        app.update();
+        let far = Axial::new(2, 0);
+        assert_eq!(far.distance(Axial::ORIGIN), 2);
+        app.world_mut()
+            .resource_mut::<PlayView>()
+            .tiles
+            .push(PlayTile {
+                cell: far,
+                tile: "meadow".into(),
+                rotation: 0,
+                level: 0,
+            });
+        app.update();
+        assert_eq!(
+            app.world().resource::<PlayChunks>().tiles[&root]
+                .parts
+                .len(),
+            50
         );
     }
 }
