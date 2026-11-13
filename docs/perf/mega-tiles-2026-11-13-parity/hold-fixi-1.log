@@ -1,0 +1,145 @@
+command frame 119 vt 1.9833 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 120 vt 2.0000 SelectTile { id: "meadow" }
+command frame 121 vt 2.0167 Place { q: 1, r: 0, level: None }
+command frame 122 vt 2.0333 SelectTile { id: "river_bend" }
+command frame 123 vt 2.0500 Place { q: 2, r: 0, level: None }
+command frame 124 vt 2.0667 SelectTile { id: "river_mouth" }
+command frame 125 vt 2.0833 Place { q: 3, r: 0, level: None }
+command frame 126 vt 2.1000 SelectTile { id: "ocean" }
+command frame 127 vt 2.1167 Place { q: 4, r: 0, level: None }
+command frame 128 vt 2.1333 SelectTile { id: "ocean" }
+command frame 129 vt 2.1500 Place { q: 3, r: 1, level: None }
+command frame 130 vt 2.1667 SelectTile { id: "beach" }
+command frame 131 vt 2.1833 Place { q: 4, r: -1, level: None }
+command frame 132 vt 2.2000 SelectTile { id: "beach" }
+command frame 133 vt 2.2167 Place { q: 2, r: 1, level: None }
+command frame 134 vt 2.2333 SelectTile { id: "river_straight" }
+command frame 135 vt 2.2500 Place { q: 1, r: 1, level: None }
+command frame 136 vt 2.2667 SelectTile { id: "river_spring" }
+command frame 137 vt 2.2833 Place { q: 0, r: 2, level: None }
+command frame 138 vt 2.3000 SelectTile { id: "ocean" }
+command frame 139 vt 2.3167 Place { q: 5, r: -1, level: None }
+command frame 140 vt 2.3333 SelectTile { id: "meadow" }
+command frame 141 vt 2.3500 Place { q: -1, r: 0, level: None }
+command frame 142 vt 2.3667 SelectTile { id: "meadow" }
+command frame 143 vt 2.3833 Place { q: -2, r: 0, level: None }
+command frame 144 vt 2.4000 SelectTile { id: "river_mouth_l" }
+command frame 145 vt 2.4167 Place { q: -3, r: 0, level: None }
+command frame 146 vt 2.4333 SelectTile { id: "ocean" }
+command frame 147 vt 2.4500 Place { q: -4, r: 0, level: None }
+command frame 148 vt 2.4667 SelectTile { id: "ocean" }
+command frame 149 vt 2.4833 Place { q: -3, r: -1, level: None }
+command frame 150 vt 2.5000 SelectTile { id: "river_straight" }
+command frame 151 vt 2.5167 Place { q: -3, r: 1, level: None }
+command frame 152 vt 2.5333 SelectTile { id: "river_bend" }
+command frame 153 vt 2.5500 Place { q: -3, r: 2, level: None }
+command frame 154 vt 2.5667 SelectTile { id: "river_spring" }
+command frame 155 vt 2.5833 Place { q: -4, r: 3, level: None }
+command frame 156 vt 2.6000 SelectTile { id: "forest" }
+command frame 157 vt 2.6167 Place { q: 0, r: -1, level: None }
+command frame 158 vt 2.6333 SelectTile { id: "forest" }
+command frame 159 vt 2.6500 Place { q: 1, r: -1, level: None }
+command frame 160 vt 2.6667 SelectTile { id: "oak" }
+command frame 161 vt 2.6833 Place { q: 2, r: -1, level: None }
+command frame 162 vt 2.7000 SelectTile { id: "road_straight" }
+command frame 163 vt 2.7167 Place { q: 0, r: -2, level: None }
+command frame 164 vt 2.7333 SelectTile { id: "road_straight" }
+command frame 165 vt 2.7500 Place { q: 1, r: -2, level: None }
+command frame 166 vt 2.7667 SelectTile { id: "road_straight" }
+command frame 167 vt 2.7833 Place { q: 2, r: -2, level: None }
+command frame 168 vt 2.8000 SelectTile { id: "forest" }
+command frame 169 vt 2.8167 Place { q: 2, r: -3, level: None }
+command frame 170 vt 2.8333 SelectTile { id: "forest" }
+command frame 171 vt 2.8500 Place { q: -1, r: 1, level: None }
+command frame 172 vt 2.8667 SelectTile { id: "oak" }
+command frame 173 vt 2.8833 Place { q: -1, r: -1, level: None }
+command frame 174 vt 2.9000 SelectTile { id: "beach" }
+command frame 175 vt 2.9167 Place { q: 2, r: 2, level: None }
+command frame 176 vt 2.9333 SelectTile { id: "beach" }
+command frame 177 vt 2.9500 Place { q: 6, r: -1, level: None }
+command frame 178 vt 2.9667 SelectTile { id: "river_bend" }
+command frame 179 vt 2.9833 Place { q: 0, r: 3, level: None }
+command frame 180 vt 3.0000 SelectTile { id: "forest" }
+command frame 181 vt 3.0167 Place { q: 1, r: -3, level: None }
+command frame 182 vt 3.0333 SelectTile { id: "beach" }
+command frame 183 vt 3.0500 Place { q: -4, r: 1, level: None }
+command frame 184 vt 3.0667 SelectTile { id: "house_cluster" }
+command frame 185 vt 3.0833 Place { q: 3, r: -2, level: None }
+command frame 186 vt 3.1000 SelectTile { id: "house_cluster" }
+command frame 187 vt 3.1167 Place { q: -1, r: -2, level: None }
+command frame 188 vt 3.1333 SelectTile { id: "farm" }
+command frame 189 vt 3.1500 Place { q: 0, r: -3, level: None }
+command frame 190 vt 3.1667 SelectTile { id: "farm" }
+command frame 191 vt 3.1833 Place { q: -1, r: -3, level: None }
+command frame 192 vt 3.2000 SelectTile { id: "wheat_field" }
+command frame 193 vt 3.2167 Place { q: 1, r: -4, level: None }
+command frame 194 vt 3.2333 SelectTile { id: "farm" }
+command frame 195 vt 3.2500 Place { q: 0, r: -4, level: None }
+command frame 196 vt 3.2667 SelectTile { id: "meadow" }
+command frame 197 vt 3.2833 Place { q: -1, r: -4, level: None }
+command frame 198 vt 3.3000 SelectTile { id: "meadow" }
+command frame 199 vt 3.3167 Place { q: -2, r: -3, level: None }
+command frame 200 vt 3.3333 SelectTile { id: "meadow" }
+command frame 201 vt 3.3500 Place { q: 0, r: -5, level: None }
+command frame 202 vt 3.3667 SelectTile { id: "meadow" }
+command frame 203 vt 3.3833 Place { q: 0, r: 1, level: Some(1) }
+command frame 204 vt 3.4000 SelectTile { id: "meadow" }
+command frame 205 vt 3.4167 Place { q: -1, r: 2, level: Some(1) }
+command frame 206 vt 3.4333 SelectTile { id: "meadow" }
+command frame 207 vt 3.4500 Place { q: -2, r: 2, level: Some(1) }
+command frame 208 vt 3.4667 Hover { q: 12, r: -12 }
+command frame 209 vt 3.4833 Wait { frames: 900 }
+command frame 1110 vt 18.5000 Toggle { what: Photo }
+command frame 1111 vt 18.5167 Photo { dof: Some(Off), focus: None, aperture: None, exposure: None, fov: None, roll: None, pause_agents: Some(true), fx: PhotoFxPatch { filter: None, filter_strength: None, vignette: None, vignette_softness: None, grain: None, aberration: None }, focus_at: None }
+command frame 1112 vt 18.5333 Wait { frames: 60 }
+command frame 1173 vt 19.5500 DumpState { name: "flat-state" }
+command frame 1174 vt 19.5667 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1175 vt 19.5833 Wait { frames: 240 }
+command frame 1416 vt 23.6000 Screenshot { name: "flat-overview" }
+hold pause frame 1416 vt 23.6000
+readback flat-overview frame 1420
+hold resume frame 1480 after 64 frames vt 23.6000
+command frame 1481 vt 23.6167 Camera { pos: [30.0, 60.0, 90.0], look_at: [0.0, 0.0, 0.0] }
+command frame 1482 vt 23.6333 Wait { frames: 240 }
+command frame 1723 vt 27.6500 Screenshot { name: "flat-play" }
+hold pause frame 1723 vt 27.6500
+readback flat-play frame 1726
+hold resume frame 1787 after 64 frames vt 27.6500
+command frame 1788 vt 27.6667 Camera { pos: [-20.0, 70.0, 40.0], look_at: [-25.0, 0.0, -55.0] }
+command frame 1789 vt 27.6833 Wait { frames: 240 }
+command frame 2030 vt 31.7000 Screenshot { name: "flat-play-road-farm" }
+hold pause frame 2030 vt 31.7000
+readback flat-play-road-farm frame 2033
+hold resume frame 2094 after 64 frames vt 31.7000
+command frame 2095 vt 31.7167 Camera { pos: [10.0, 12.0, 40.0], look_at: [0.0, 0.0, 0.0] }
+command frame 2096 vt 31.7333 Wait { frames: 240 }
+command frame 2337 vt 35.7500 Screenshot { name: "flat-close" }
+hold pause frame 2337 vt 35.7500
+readback flat-close frame 2340
+hold resume frame 2401 after 64 frames vt 35.7500
+command frame 2402 vt 35.7667 Camera { pos: [-40.0, 4.0, -44.0], look_at: [20.0, 1.0, -48.0] }
+command frame 2403 vt 35.7833 Wait { frames: 240 }
+command frame 2644 vt 39.8000 Screenshot { name: "flat-low-road-cars" }
+hold pause frame 2644 vt 39.8000
+readback flat-low-road-cars frame 2647
+hold resume frame 2708 after 64 frames vt 39.8000
+command frame 2709 vt 39.8167 Camera { pos: [-14.0, 9.0, 85.0], look_at: [-6.0, 4.0, 36.0] }
+command frame 2710 vt 39.8333 Wait { frames: 240 }
+command frame 2951 vt 43.8500 Screenshot { name: "flat-low-level1" }
+hold pause frame 2951 vt 43.8500
+readback flat-low-level1 frame 2954
+hold resume frame 3015 after 64 frames vt 43.8500
+command frame 3016 vt 43.8667 Camera { pos: [40.0, 6.0, 60.0], look_at: [80.0, 0.0, 8.0] }
+command frame 3017 vt 43.8833 Wait { frames: 240 }
+command frame 3258 vt 47.9000 Screenshot { name: "flat-low-coast" }
+hold pause frame 3258 vt 47.9000
+readback flat-low-coast frame 3261
+hold resume frame 3322 after 64 frames vt 47.9000
+command frame 3323 vt 47.9167 Camera { pos: [-20.0, 6.0, -50.0], look_at: [-50.0, 2.0, -82.0] }
+command frame 3324 vt 47.9333 Wait { frames: 240 }
+command frame 3565 vt 51.9500 Screenshot { name: "flat-low-farm" }
+hold pause frame 3565 vt 51.9500
+readback flat-low-farm frame 3568
+hold resume frame 3629 after 64 frames vt 51.9500
+command frame 3630 vt 51.9667 Wait { frames: 30 }
+command frame 3661 vt 52.4833 Exit

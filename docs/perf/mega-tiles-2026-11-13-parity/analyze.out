@@ -1,0 +1,346 @@
+ok runs: {"main": ["main-1", "main-2", "main-3", "main-4", "main-5", "main-6"], "fix": ["fix-1", "fix-2", "fix-3", "fix-4", "fix-5", "fix-6"], "branch": ["branch-1", "branch-2", "branch-3", "branch-4", "branch-5", "branch-6"], "fixi": ["fixi-1", "fixi-2"], "branchi": ["branchi-1", "branchi-2"], "fix-lod0": ["fix-lod0-1", "fix-lod0-2"], "branch-lod0": ["branch-lod0-1", "branch-lod0-2"]}
+| arm | pair | overview | play | play-road-farm | close | low-road-cars | low-level1 | low-coast | low-farm |
+|---|---|---|---|---|---|---|---|---|---|
+| main vs main | main-1:main-2 | 231 / 6 / 6 | 247 / 6 / 5 | 61 / 1 / 3 | 575 / 2 / 5 | 502 / 0 / 2 | 33 / 1 / 8 | 4 / 0 / 1 | 7 / 0 / 1 |
+| main vs main | main-1:main-3 | 212 / 9 / 6 | 227 / 7 / 6 | 297,312 / 26,907 / 130 | 731,754 / 130,030 / 73 | 535,797 / 84,785 / 69 | 300,323 / 42,989 / 65 | 246,318 / 52,456 / 91 | 429,030 / 56,385 / 82 |
+| main vs main | main-1:main-4 | 159 / 3 / 3 | 227 / 6 / 4 | 33 / 2 / 3 | 2 / 0 / 1 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 4 / 0 / 1 | 1 / 0 / 1 |
+| main vs main | main-1:main-5 | 158 / 6 / 6 | 182 / 4 / 5 | 297,285 / 26,909 / 130 | 731,751 / 130,031 / 73 | 535,801 / 84,784 / 69 | 300,323 / 42,989 / 65 | 246,321 / 52,455 / 91 | 429,030 / 56,384 / 82 |
+| main vs main | main-1:main-6 | 414 / 6 / 5 | 255 / 9 / 6 | 67 / 3 / 11 | 54 / 2 / 4 | 470 / 0 / 2 | 22 / 0 / 1 | 9 / 0 / 1 | 7 / 0 / 1 |
+| main vs main | main-2:main-3 | 176 / 2 / 6 | 177 / 5 / 6 | 297,319 / 26,908 / 130 | 731,736 / 130,032 / 73 | 535,804 / 84,784 / 69 | 300,322 / 42,988 / 65 | 246,318 / 52,457 / 91 | 429,029 / 56,385 / 82 |
+| main vs main | main-2:main-4 | 236 / 8 / 6 | 270 / 5 / 5 | 64 / 1 / 3 | 577 / 2 / 5 | 502 / 0 / 2 | 33 / 1 / 8 | 0 / 0 / 0 (=) | 6 / 0 / 1 |
+| main vs main | main-2:main-5 | 240 / 5 / 4 | 234 / 4 / 4 | 297,287 / 26,910 / 130 | 731,733 / 130,032 / 73 | 535,809 / 84,783 / 69 | 300,322 / 42,988 / 65 | 246,321 / 52,456 / 91 | 429,031 / 56,384 / 82 |
+| main vs main | main-2:main-6 | 438 / 7 / 4 | 220 / 8 / 6 | 64 / 2 / 11 | 560 / 4 / 5 | 437 / 0 / 1 | 21 / 1 / 8 | 5 / 0 / 1 | 0 / 0 / 0 (=) |
+| main vs main | main-3:main-4 | 226 / 9 / 6 | 260 / 8 / 6 | 297,320 / 26,909 / 130 | 731,754 / 130,030 / 73 | 535,797 / 84,785 / 69 | 300,323 / 42,989 / 65 | 246,318 / 52,457 / 91 | 429,030 / 56,385 / 82 |
+| main vs main | main-3:main-5 | 223 / 7 / 6 | 218 / 4 / 6 | 164 / 1 / 4 | 16 / 1 / 3 | 19 / 0 / 1 | 0 / 0 / 0 (=) | 100 / 1 / 4 | 4 / 0 / 1 |
+| main vs main | main-3:main-6 | 440 / 9 / 6 | 196 / 4 / 4 | 297,327 / 26,908 / 130 | 731,754 / 130,029 / 73 | 535,805 / 84,784 / 69 | 300,327 / 42,989 / 65 | 246,318 / 52,457 / 91 | 429,029 / 56,385 / 82 |
+| main vs main | main-4:main-5 | 189 / 7 / 6 | 245 / 5 / 5 | 297,291 / 26,911 / 130 | 731,751 / 130,031 / 73 | 535,801 / 84,784 / 69 | 300,323 / 42,989 / 65 | 246,321 / 52,456 / 91 | 429,030 / 56,384 / 82 |
+| main vs main | main-4:main-6 | 408 / 6 / 5 | 256 / 8 / 6 | 50 / 1 / 11 | 56 / 2 / 4 | 470 / 0 / 2 | 22 / 0 / 1 | 5 / 0 / 1 | 6 / 0 / 1 |
+| main vs main | main-5:main-6 | 404 / 3 / 5 | 199 / 6 / 6 | 297,297 / 26,910 / 130 | 731,751 / 130,029 / 73 | 535,810 / 84,783 / 69 | 300,327 / 42,989 / 65 | 246,321 / 52,456 / 91 | 429,031 / 56,384 / 82 |
+| fix vs fix | fix-1:fix-2 | 177 / 4 / 6 | 162 / 2 / 3 | 19 / 1 / 4 | 1 / 0 / 1 | 3 / 0 / 1 | 2 / 0 / 1 | 118 / 0 / 2 | 438 / 39 / 23 |
+| fix vs fix | fix-1:fix-3 | 211 / 4 / 6 | 256 / 6 / 7 | 46 / 2 / 4 | 408 / 10 / 7 | 476 / 1 / 3 | 23 / 0 / 2 | 118 / 0 / 2 | 441 / 39 / 23 |
+| fix vs fix | fix-1:fix-4 | 200 / 4 / 6 | 161 / 3 / 7 | 31 / 2 / 5 | 2 / 0 / 1 | 2 / 0 / 1 | 2 / 0 / 1 | 121 / 0 / 2 | 441 / 39 / 23 |
+| fix vs fix | fix-1:fix-5 | 187 / 5 / 5 | 198 / 5 / 7 | 27 / 1 / 4 | 1 / 0 / 1 | 3 / 0 / 1 | 11 / 0 / 1 | 118 / 0 / 2 | 444 / 39 / 23 |
+| fix vs fix | fix-1:fix-6 | 186 / 3 / 7 | 144 / 1 / 3 | 22 / 1 / 4 | 2 / 0 / 1 | 1 / 0 / 1 | 2 / 0 / 1 | 120 / 0 / 2 | 442 / 39 / 23 |
+| fix vs fix | fix-2:fix-3 | 206 / 3 / 4 | 269 / 8 / 9 | 53 / 1 / 3 | 407 / 10 / 7 | 479 / 1 / 3 | 21 / 0 / 2 | 0 / 0 / 0 (=) | 9 / 0 / 1 |
+| fix vs fix | fix-2:fix-4 | 157 / 0 / 2 | 183 / 3 / 9 | 18 / 3 / 5 | 1 / 0 / 1 | 5 / 0 / 1 | 0 / 0 / 0 (=) | 3 / 0 / 1 | 9 / 0 / 1 |
+| fix vs fix | fix-2:fix-5 | 160 / 4 / 5 | 160 / 5 / 7 | 12 / 0 / 1 | 0 / 0 / 0 (=) | 6 / 0 / 1 | 9 / 0 / 1 | 0 / 0 / 0 (=) | 6 / 0 / 1 |
+| fix vs fix | fix-2:fix-6 | 178 / 3 / 3 | 194 / 3 / 5 | 5 / 0 / 1 | 1 / 0 / 1 | 4 / 0 / 1 | 0 / 0 / 0 (=) | 2 / 0 / 1 | 4 / 0 / 1 |
+| fix vs fix | fix-3:fix-4 | 199 / 2 / 4 | 232 / 5 / 7 | 71 / 4 / 5 | 408 / 10 / 7 | 474 / 1 / 3 | 21 / 0 / 2 | 3 / 0 / 1 | 0 / 0 / 0 (=) |
+| fix vs fix | fix-3:fix-5 | 212 / 5 / 5 | 247 / 7 / 7 | 59 / 1 / 3 | 407 / 10 / 7 | 475 / 1 / 3 | 30 / 0 / 2 | 0 / 0 / 0 (=) | 3 / 0 / 1 |
+| fix vs fix | fix-3:fix-6 | 212 / 3 / 4 | 234 / 5 / 7 | 56 / 1 / 3 | 408 / 10 / 7 | 477 / 1 / 3 | 21 / 0 / 2 | 2 / 0 / 1 | 5 / 0 / 1 |
+| fix vs fix | fix-4:fix-5 | 141 / 4 / 5 | 157 / 4 / 7 | 28 / 3 / 5 | 1 / 0 / 1 | 1 / 0 / 1 | 9 / 0 / 1 | 3 / 0 / 1 | 3 / 0 / 1 |
+| fix vs fix | fix-4:fix-6 | 178 / 2 / 3 | 175 / 2 / 7 | 23 / 3 / 5 | 2 / 0 / 1 | 3 / 0 / 1 | 0 / 0 / 0 (=) | 1 / 0 / 1 | 5 / 0 / 1 |
+| fix vs fix | fix-5:fix-6 | 171 / 5 / 5 | 182 / 4 / 7 | 17 / 0 / 1 | 1 / 0 / 1 | 2 / 0 / 1 | 9 / 0 / 1 | 2 / 0 / 1 | 2 / 0 / 1 |
+| branch vs branch | branch-1:branch-2 | 226 / 2 / 4 | 275 / 7 / 7 | 44 / 1 / 3 | 83 / 9 / 7 | 475 / 1 / 3 | 22 / 0 / 2 | 115 / 0 / 2 | 3 / 0 / 1 |
+| branch vs branch | branch-1:branch-3 | 220 / 5 / 6 | 237 / 4 / 4 | 60 / 4 / 5 | 84 / 9 / 7 | 477 / 1 / 3 | 21 / 0 / 2 | 115 / 0 / 2 | 2 / 0 / 1 |
+| branch vs branch | branch-1:branch-4 | 190 / 3 / 6 | 240 / 4 / 7 | 57 / 4 / 5 | 72 / 4 / 4 | 454 / 0 / 2 | 16 / 0 / 2 | 0 / 0 / 0 (=) | 437 / 39 / 23 |
+| branch vs branch | branch-1:branch-5 | 184 / 5 / 5 | 255 / 5 / 7 | 46 / 3 / 5 | 35 / 5 / 7 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 115 / 0 / 2 | 7 / 0 / 1 |
+| branch vs branch | branch-1:branch-6 | 179 / 2 / 7 | 204 / 7 / 4 | 28 / 2 / 5 | 1 / 0 / 1 | 3 / 0 / 1 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 7 / 0 / 1 |
+| branch vs branch | branch-2:branch-3 | 167 / 3 / 6 | 210 / 9 / 7 | 24 / 3 / 5 | 1 / 0 / 1 | 2 / 0 / 1 | 1 / 0 / 1 | 0 / 0 / 0 (=) | 5 / 0 / 1 |
+| branch vs branch | branch-2:branch-4 | 192 / 5 / 7 | 224 / 5 / 7 | 48 / 3 / 5 | 68 / 6 / 7 | 463 / 0 / 2 | 14 / 0 / 1 | 115 / 0 / 2 | 440 / 39 / 23 |
+| branch vs branch | branch-2:branch-5 | 210 / 5 / 5 | 175 / 5 / 7 | 48 / 4 / 5 | 95 / 8 / 4 | 475 / 1 / 3 | 22 / 0 / 2 | 0 / 0 / 0 (=) | 4 / 0 / 1 |
+| branch vs branch | branch-2:branch-6 | 237 / 5 / 8 | 259 / 8 / 7 | 62 / 3 / 5 | 84 / 9 / 7 | 476 / 1 / 3 | 22 / 0 / 2 | 115 / 0 / 2 | 4 / 0 / 1 |
+| branch vs branch | branch-3:branch-4 | 195 / 8 / 6 | 215 / 8 / 7 | 32 / 0 / 1 | 67 / 6 / 7 | 461 / 0 / 2 | 13 / 0 / 1 | 115 / 0 / 2 | 435 / 39 / 23 |
+| branch vs branch | branch-3:branch-5 | 214 / 2 / 4 | 246 / 8 / 7 | 42 / 3 / 4 | 94 / 8 / 4 | 477 / 1 / 3 | 21 / 0 / 2 | 0 / 0 / 0 (=) | 9 / 0 / 1 |
+| branch vs branch | branch-3:branch-6 | 219 / 5 / 7 | 247 / 5 / 4 | 52 / 2 / 4 | 83 / 9 / 7 | 474 / 1 / 3 | 21 / 0 / 2 | 115 / 0 / 2 | 9 / 0 / 1 |
+| branch vs branch | branch-4:branch-5 | 212 / 8 / 6 | 235 / 3 / 4 | 54 / 3 / 4 | 94 / 7 / 7 | 454 / 0 / 2 | 16 / 0 / 2 | 115 / 0 / 2 | 444 / 39 / 23 |
+| branch vs branch | branch-4:branch-6 | 179 / 4 / 4 | 248 / 4 / 7 | 45 / 2 / 4 | 71 / 4 / 4 | 451 / 0 / 2 | 16 / 0 / 2 | 0 / 0 / 0 (=) | 444 / 39 / 23 |
+| branch vs branch | branch-5:branch-6 | 211 / 5 / 7 | 210 / 4 / 7 | 36 / 1 / 4 | 34 / 5 / 7 | 3 / 0 / 1 | 0 / 0 / 0 (=) | 115 / 0 / 2 | 0 / 0 / 0 (=) |
+| fixi vs fixi | fixi-1:fixi-2 | 440 / 8 / 5 | 262 / 4 / 4 | 53 / 3 / 5 | 88 / 9 / 7 | 475 / 1 / 3 | 21 / 0 / 2 | 2 / 0 / 1 | 438 / 39 / 23 |
+| branchi vs branchi | branchi-1:branchi-2 | 187 / 6 / 6 | 163 / 2 / 5 | 21 / 3 / 5 | 1 / 0 / 1 | 2 / 0 / 1 | 0 / 0 / 0 (=) | 2 / 0 / 1 | 5 / 0 / 1 |
+| fix-lod0 vs fix-lod0 | fix-lod0-1:fix-lod0-2 | 812 / 7 / 9 | 167 / 15 / 11 | 25 / 2 / 4 | 5 / 0 / 1 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 2 / 0 / 1 | 335 / 30 / 16 |
+| branch-lod0 vs branch-lod0 | branch-lod0-1:branch-lod0-2 | 1,194 / 9 / 8 | 604 / 21 / 14 | 194 / 6 / 7 | 450 / 6 / 9 | 650 / 0 / 2 | 39 / 0 / 1 | 0 / 0 / 0 (=) | 245 / 9 / 5 |
+| fix vs branch | fix-1:branch-1 | 511 / 58 / 20 | 237 / 4 / 4 | 54 / 2 / 4 | 84 / 9 / 7 | 804 / 8 / 3 | 23 / 0 / 2 | 5 / 0 / 1 | 439 / 39 / 23 |
+| fix vs branch | fix-1:branch-2 | 462 / 55 / 20 | 182 / 9 / 7 | 18 / 1 / 4 | 1 / 0 / 1 | 331 / 7 / 3 | 3 / 0 / 1 | 120 / 0 / 2 | 442 / 39 / 23 |
+| fix vs branch | fix-1:branch-3 | 441 / 57 / 20 | 146 / 4 / 4 | 30 / 2 / 5 | 2 / 0 / 1 | 329 / 7 / 3 | 2 / 0 / 1 | 120 / 0 / 2 | 441 / 39 / 23 |
+| fix vs branch | fix-1:branch-4 | 501 / 58 / 20 | 210 / 5 / 7 | 48 / 2 / 5 | 69 / 6 / 7 | 790 / 7 / 3 | 15 / 0 / 1 | 5 / 0 / 1 | 6 / 0 / 1 |
+| fix vs branch | fix-1:branch-5 | 511 / 58 / 20 | 241 / 4 / 7 | 60 / 5 / 5 | 96 / 8 / 4 | 804 / 8 / 3 | 23 / 0 / 2 | 120 / 0 / 2 | 438 / 39 / 23 |
+| fix vs branch | fix-1:branch-6 | 519 / 56 / 20 | 237 / 3 / 3 | 70 / 4 / 5 | 85 / 9 / 7 | 803 / 8 / 3 | 23 / 0 / 2 | 5 / 0 / 1 | 438 / 39 / 23 |
+| fix vs branch | fix-2:branch-1 | 476 / 56 / 20 | 248 / 5 / 4 | 43 / 1 / 3 | 83 / 9 / 7 | 807 / 8 / 3 | 21 / 0 / 2 | 117 / 0 / 2 | 7 / 0 / 1 |
+| fix vs branch | fix-2:branch-2 | 448 / 55 / 20 | 189 / 9 / 9 | 7 / 0 / 1 | 0 / 0 / 0 (=) | 334 / 7 / 3 | 1 / 0 / 1 | 2 / 0 / 1 | 4 / 0 / 1 |
+| fix vs branch | fix-2:branch-3 | 462 / 59 / 20 | 188 / 5 / 4 | 19 / 3 / 5 | 1 / 0 / 1 | 332 / 7 / 3 | 0 / 0 / 0 (=) | 2 / 0 / 1 | 9 / 0 / 1 |
+| fix vs branch | fix-2:branch-4 | 467 / 58 / 20 | 210 / 5 / 9 | 47 / 3 / 5 | 68 / 6 / 7 | 793 / 7 / 3 | 13 / 0 / 1 | 117 / 0 / 2 | 444 / 39 / 23 |
+| fix vs branch | fix-2:branch-5 | 502 / 60 / 20 | 267 / 5 / 9 | 51 / 4 / 5 | 95 / 8 / 4 | 807 / 8 / 3 | 21 / 0 / 2 | 2 / 0 / 1 | 0 / 0 / 0 (=) |
+| fix vs branch | fix-2:branch-6 | 488 / 58 / 20 | 227 / 3 / 3 | 59 / 3 / 5 | 84 / 9 / 7 | 806 / 8 / 3 | 21 / 0 / 2 | 117 / 0 / 2 | 0 / 0 / 0 (=) |
+| fix vs branch | fix-3:branch-1 | 436 / 53 / 20 | 208 / 7 / 7 | 28 / 0 / 1 | 324 / 1 / 3 | 328 / 7 / 3 | 0 / 0 / 0 (=) | 117 / 0 / 2 | 2 / 0 / 1 |
+| fix vs branch | fix-3:branch-2 | 515 / 56 / 20 | 218 / 5 / 4 | 52 / 1 / 3 | 407 / 10 / 7 | 803 / 8 / 3 | 22 / 0 / 2 | 2 / 0 / 1 | 5 / 0 / 1 |
+| fix vs branch | fix-3:branch-3 | 505 / 58 / 20 | 270 / 7 / 7 | 68 / 4 / 5 | 408 / 10 / 7 | 805 / 8 / 3 | 21 / 0 / 2 | 2 / 0 / 1 | 0 / 0 / 0 (=) |
+| fix vs branch | fix-3:branch-4 | 469 / 57 / 20 | 229 / 5 / 7 | 71 / 4 / 5 | 396 / 5 / 4 | 782 / 7 / 3 | 16 / 0 / 2 | 117 / 0 / 2 | 435 / 39 / 23 |
+| fix vs branch | fix-3:branch-5 | 479 / 58 / 20 | 205 / 7 / 7 | 52 / 3 / 5 | 359 / 6 / 7 | 328 / 7 / 3 | 0 / 0 / 0 (=) | 2 / 0 / 1 | 9 / 0 / 1 |
+| fix vs branch | fix-3:branch-6 | 456 / 55 / 20 | 220 / 7 / 7 | 36 / 2 / 5 | 325 / 1 / 3 | 331 / 7 / 3 | 0 / 0 / 0 (=) | 117 / 0 / 2 | 9 / 0 / 1 |
+| fix vs branch | fix-4:branch-1 | 486 / 55 / 20 | 276 / 5 / 7 | 57 / 4 / 5 | 84 / 9 / 7 | 802 / 8 / 3 | 21 / 0 / 2 | 116 / 0 / 2 | 2 / 0 / 1 |
+| fix vs branch | fix-4:branch-2 | 458 / 56 / 20 | 148 / 6 / 7 | 21 / 3 / 5 | 1 / 0 / 1 | 329 / 7 / 3 | 1 / 0 / 1 | 1 / 0 / 1 | 5 / 0 / 1 |
+| fix vs branch | fix-4:branch-3 | 453 / 58 / 20 | 194 / 8 / 7 | 5 / 0 / 1 | 0 / 0 / 0 (=) | 331 / 7 / 3 | 0 / 0 / 0 (=) | 1 / 0 / 1 | 0 / 0 / 0 (=) |
+| fix vs branch | fix-4:branch-4 | 463 / 59 / 20 | 187 / 2 / 4 | 31 / 0 / 1 | 67 / 6 / 7 | 792 / 7 / 3 | 13 / 0 / 1 | 116 / 0 / 2 | 435 / 39 / 23 |
+| fix vs branch | fix-4:branch-5 | 478 / 60 / 20 | 193 / 1 / 3 | 41 / 3 / 4 | 94 / 8 / 4 | 802 / 8 / 3 | 21 / 0 / 2 | 1 / 0 / 1 | 9 / 0 / 1 |
+| fix vs branch | fix-4:branch-6 | 507 / 57 / 20 | 226 / 4 / 7 | 49 / 2 / 4 | 83 / 9 / 7 | 805 / 8 / 3 | 21 / 0 / 2 | 116 / 0 / 2 | 9 / 0 / 1 |
+| fix vs branch | fix-5:branch-1 | 489 / 57 / 20 | 260 / 5 / 7 | 53 / 1 / 3 | 83 / 9 / 7 | 803 / 8 / 3 | 30 / 0 / 2 | 117 / 0 / 2 | 5 / 0 / 1 |
+| fix vs branch | fix-5:branch-2 | 468 / 57 / 20 | 165 / 6 / 7 | 13 / 0 / 1 | 0 / 0 / 0 (=) | 328 / 7 / 3 | 10 / 0 / 1 | 2 / 0 / 1 | 2 / 0 / 1 |
+| fix vs branch | fix-5:branch-3 | 464 / 59 / 20 | 195 / 8 / 7 | 29 / 3 / 5 | 1 / 0 / 1 | 330 / 7 / 3 | 9 / 0 / 1 | 2 / 0 / 1 | 3 / 0 / 1 |
+| fix vs branch | fix-5:branch-4 | 479 / 59 / 20 | 223 / 5 / 7 | 57 / 3 / 5 | 68 / 6 / 7 | 791 / 7 / 3 | 22 / 0 / 1 | 117 / 0 / 2 | 438 / 39 / 23 |
+| fix vs branch | fix-5:branch-5 | 500 / 60 / 20 | 234 / 4 / 7 | 59 / 4 / 5 | 95 / 8 / 4 | 803 / 8 / 3 | 30 / 0 / 2 | 2 / 0 / 1 | 6 / 0 / 1 |
+| fix vs branch | fix-5:branch-6 | 513 / 59 / 20 | 228 / 6 / 7 | 71 / 3 / 5 | 84 / 9 / 7 | 804 / 8 / 3 | 30 / 0 / 2 | 117 / 0 / 2 | 6 / 0 / 1 |
+| fix vs branch | fix-6:branch-1 | 505 / 55 / 20 | 227 / 4 / 4 | 48 / 1 / 3 | 84 / 9 / 7 | 805 / 8 / 3 | 21 / 0 / 2 | 115 / 0 / 2 | 3 / 0 / 1 |
+| fix vs branch | fix-6:branch-2 | 448 / 53 / 20 | 174 / 7 / 7 | 10 / 0 / 1 | 1 / 0 / 1 | 330 / 7 / 3 | 1 / 0 / 1 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) |
+| fix vs branch | fix-6:branch-3 | 422 / 57 / 20 | 131 / 6 / 5 | 24 / 3 / 5 | 2 / 0 / 1 | 328 / 7 / 3 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 5 / 0 / 1 |
+| fix vs branch | fix-6:branch-4 | 497 / 59 / 20 | 214 / 5 / 7 | 50 / 3 / 5 | 69 / 6 / 7 | 789 / 7 / 3 | 13 / 0 / 1 | 115 / 0 / 2 | 440 / 39 / 23 |
+| fix vs branch | fix-6:branch-5 | 505 / 59 / 20 | 237 / 4 / 7 | 54 / 4 / 5 | 96 / 8 / 4 | 805 / 8 / 3 | 21 / 0 / 2 | 0 / 0 / 0 (=) | 4 / 0 / 1 |
+| fix vs branch | fix-6:branch-6 | 519 / 58 / 20 | 243 / 3 / 3 | 62 / 3 / 5 | 85 / 9 / 7 | 802 / 8 / 3 | 21 / 0 / 2 | 115 / 0 / 2 | 4 / 0 / 1 |
+| fixi vs branchi | fixi-1:branchi-1 | 422 / 57 / 20 | 140 / 3 / 5 | 1 / 0 / 1 | 0 / 0 / 0 (=) | 331 / 7 / 3 | 0 / 0 / 0 (=) | 0 / 0 / 0 (=) | 7 / 0 / 1 |
+| fixi vs branchi | fixi-1:branchi-2 | 476 / 60 / 20 | 178 / 4 / 4 | 22 / 3 / 5 | 1 / 0 / 1 | 333 / 7 / 3 | 0 / 0 / 0 (=) | 2 / 0 / 1 | 6 / 0 / 1 |
+| fixi vs branchi | fixi-2:branchi-1 | 736 / 60 / 20 | 284 / 5 / 5 | 54 / 3 / 5 | 88 / 9 / 7 | 804 / 8 / 3 | 21 / 0 / 2 | 2 / 0 / 1 | 441 / 39 / 23 |
+| fixi vs branchi | fixi-2:branchi-2 | 732 / 63 / 20 | 275 / 6 / 4 | 44 / 2 / 4 | 87 / 9 / 7 | 806 / 8 / 3 | 21 / 0 / 2 | 0 / 0 / 0 (=) | 444 / 39 / 23 |
+| fix-lod0 vs branch-lod0 | fix-lod0-1:branch-lod0-1 | 1,135 / 68 / 20 | 223 / 13 / 10 | 133 / 4 / 7 | 109 / 9 / 7 | 913 / 2 / 3 | 26 / 0 / 1 | 2 / 0 / 1 | 339 / 30 / 16 |
+| fix-lod0 vs branch-lod0 | fix-lod0-1:branch-lod0-2 | 856 / 74 / 20 | 577 / 12 / 15 | 162 / 6 / 7 | 440 / 7 / 9 | 814 / 2 / 3 | 47 / 0 / 1 | 2 / 0 / 1 | 581 / 39 / 16 |
+| fix-lod0 vs branch-lod0 | fix-lod0-2:branch-lod0-1 | 515 / 69 / 20 | 217 / 18 / 5 | 144 / 4 / 7 | 112 / 9 / 7 | 913 / 2 / 3 | 26 / 0 / 1 | 0 / 0 / 0 (=) | 4 / 0 / 1 |
+| fix-lod0 vs branch-lod0 | fix-lod0-2:branch-lod0-2 | 1,481 / 74 / 20 | 602 / 13 / 14 | 173 / 6 / 7 | 435 / 7 / 9 | 814 / 2 / 3 | 47 / 0 / 1 | 0 / 0 / 0 (=) | 247 / 9 / 5 |
+| fix vs main | fix-1:main-1 | 209 / 7 / 6 | 401,006 / 46,902 / 87 | 320,456 / 27,018 / 130 | 810,678 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,243 / 56,256 / 87 | 483,895 / 74,374 / 92 |
+| fix vs main | fix-1:main-2 | 185 / 2 / 4 | 401,003 / 46,905 / 87 | 320,460 / 27,017 / 130 | 810,689 / 159,287 / 74 | 592,624 / 110,476 / 75 | 150,826 / 286 / 14 | 270,246 / 56,256 / 87 | 483,894 / 74,373 / 92 |
+| fix vs main | fix-1:main-3 | 153 / 5 / 6 | 400,998 / 46,908 / 87 | 117,927 / 673 / 19 | 796,970 / 166,366 / 86 | 601,941 / 112,450 / 69 | 326,760 / 43,510 / 65 | 279,387 / 64,808 / 84 | 467,911 / 54,948 / 85 |
+| fix vs main | fix-1:main-4 | 230 / 8 / 6 | 400,999 / 46,901 / 87 | 320,459 / 27,017 / 130 | 810,680 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,246 / 56,256 / 87 | 483,895 / 74,374 / 92 |
+| fix vs main | fix-1:main-5 | 214 / 4 / 4 | 401,004 / 46,899 / 87 | 117,877 / 674 / 19 | 796,972 / 166,366 / 86 | 601,941 / 112,448 / 69 | 326,760 / 43,510 / 65 | 279,387 / 64,806 / 84 | 467,911 / 54,948 / 85 |
+| fix vs main | fix-1:main-6 | 432 / 4 / 4 | 401,009 / 46,908 / 87 | 320,463 / 27,017 / 130 | 810,679 / 159,290 / 74 | 592,613 / 110,477 / 75 | 150,821 / 287 / 14 | 270,246 / 56,256 / 87 | 483,894 / 74,373 / 92 |
+| fix vs main | fix-2:main-1 | 187 / 7 / 5 | 400,998 / 46,905 / 87 | 320,455 / 27,021 / 130 | 810,678 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,239 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-2:main-2 | 184 / 5 / 6 | 400,998 / 46,908 / 87 | 320,461 / 27,020 / 130 | 810,689 / 159,287 / 74 | 592,624 / 110,476 / 75 | 150,826 / 286 / 14 | 270,242 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-2:main-3 | 183 / 8 / 6 | 400,993 / 46,908 / 87 | 117,929 / 674 / 19 | 796,971 / 166,366 / 86 | 601,942 / 112,450 / 69 | 326,760 / 43,510 / 65 | 279,379 / 64,808 / 84 | 467,898 / 54,949 / 85 |
+| fix vs main | fix-2:main-4 | 229 / 6 / 5 | 400,991 / 46,904 / 87 | 320,458 / 27,020 / 130 | 810,680 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,242 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-2:main-5 | 201 / 7 / 6 | 401,001 / 46,903 / 87 | 117,877 / 675 / 19 | 796,973 / 166,366 / 86 | 601,942 / 112,448 / 69 | 326,760 / 43,510 / 65 | 279,381 / 64,806 / 84 | 467,898 / 54,949 / 85 |
+| fix vs main | fix-2:main-6 | 405 / 5 / 4 | 401,005 / 46,910 / 87 | 320,462 / 27,020 / 130 | 810,679 / 159,290 / 74 | 592,613 / 110,477 / 75 | 150,821 / 287 / 14 | 270,242 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-3:main-1 | 150 / 2 / 5 | 400,990 / 46,904 / 87 | 320,460 / 27,019 / 130 | 810,680 / 159,286 / 74 | 592,632 / 110,468 / 75 | 150,830 / 287 / 14 | 270,239 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-3:main-2 | 231 / 4 / 6 | 400,985 / 46,908 / 87 | 320,464 / 27,018 / 130 | 810,685 / 159,281 / 74 | 592,640 / 110,468 / 75 | 150,830 / 286 / 14 | 270,242 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-3:main-3 | 213 / 6 / 6 | 400,977 / 46,908 / 87 | 117,930 / 675 / 19 | 796,978 / 166,367 / 86 | 601,953 / 112,451 / 69 | 326,759 / 43,511 / 65 | 279,379 / 64,808 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-3:main-4 | 153 / 3 / 5 | 400,985 / 46,904 / 87 | 320,463 / 27,018 / 130 | 810,682 / 159,286 / 74 | 592,632 / 110,468 / 75 | 150,830 / 287 / 14 | 270,242 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-3:main-5 | 166 / 5 / 6 | 400,996 / 46,903 / 87 | 117,879 / 676 / 19 | 796,980 / 166,367 / 86 | 601,953 / 112,449 / 69 | 326,759 / 43,511 / 65 | 279,381 / 64,806 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-3:main-6 | 388 / 4 / 4 | 400,999 / 46,910 / 87 | 320,466 / 27,018 / 130 | 810,678 / 159,287 / 74 | 592,622 / 110,468 / 75 | 150,825 / 287 / 14 | 270,242 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-4:main-1 | 200 / 4 / 5 | 401,006 / 46,903 / 87 | 320,458 / 27,022 / 130 | 810,678 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,241 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-4:main-2 | 191 / 4 / 6 | 401,001 / 46,906 / 87 | 320,464 / 27,021 / 130 | 810,689 / 159,287 / 74 | 592,624 / 110,476 / 75 | 150,826 / 286 / 14 | 270,244 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-4:main-3 | 187 / 6 / 6 | 401,000 / 46,911 / 87 | 117,931 / 674 / 19 | 796,970 / 166,366 / 86 | 601,941 / 112,450 / 69 | 326,760 / 43,510 / 65 | 279,381 / 64,808 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-4:main-4 | 210 / 5 / 5 | 400,996 / 46,903 / 87 | 320,461 / 27,021 / 130 | 810,680 / 159,288 / 74 | 592,616 / 110,477 / 75 | 150,824 / 287 / 14 | 270,244 / 56,256 / 87 | 483,894 / 74,379 / 92 |
+| fix vs main | fix-4:main-5 | 214 / 7 / 6 | 401,003 / 46,901 / 87 | 117,879 / 675 / 19 | 796,972 / 166,366 / 86 | 601,941 / 112,448 / 69 | 326,760 / 43,510 / 65 | 279,383 / 64,806 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-4:main-6 | 413 / 5 / 4 | 401,004 / 46,910 / 87 | 320,465 / 27,021 / 130 | 810,679 / 159,290 / 74 | 592,613 / 110,477 / 75 | 150,821 / 287 / 14 | 270,244 / 56,256 / 87 | 483,893 / 74,378 / 92 |
+| fix vs main | fix-5:main-1 | 189 / 5 / 4 | 401,006 / 46,903 / 87 | 320,458 / 27,021 / 130 | 810,678 / 159,288 / 74 | 592,615 / 110,477 / 75 | 150,819 / 287 / 14 | 270,239 / 56,256 / 87 | 483,893 / 74,379 / 92 |
+| fix vs main | fix-5:main-2 | 203 / 7 / 5 | 401,001 / 46,905 / 87 | 320,464 / 27,020 / 130 | 810,689 / 159,287 / 74 | 592,623 / 110,476 / 75 | 150,821 / 286 / 14 | 270,242 / 56,256 / 87 | 483,892 / 74,378 / 92 |
+| fix vs main | fix-5:main-3 | 184 / 8 / 6 | 401,000 / 46,909 / 87 | 117,923 / 674 / 19 | 796,971 / 166,366 / 86 | 601,940 / 112,450 / 69 | 326,760 / 43,510 / 65 | 279,379 / 64,808 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-5:main-4 | 219 / 3 / 4 | 400,995 / 46,904 / 87 | 320,461 / 27,020 / 130 | 810,680 / 159,288 / 74 | 592,615 / 110,477 / 75 | 150,819 / 287 / 14 | 270,242 / 56,256 / 87 | 483,893 / 74,379 / 92 |
+| fix vs main | fix-5:main-5 | 207 / 7 / 5 | 401,005 / 46,901 / 87 | 117,871 / 675 / 19 | 796,973 / 166,366 / 86 | 601,940 / 112,448 / 69 | 326,760 / 43,510 / 65 | 279,381 / 64,806 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-5:main-6 | 402 / 5 / 5 | 401,005 / 46,908 / 87 | 320,465 / 27,020 / 130 | 810,679 / 159,290 / 74 | 592,612 / 110,477 / 75 | 150,816 / 287 / 14 | 270,242 / 56,256 / 87 | 483,892 / 74,378 / 92 |
+| fix vs main | fix-6:main-1 | 228 / 7 / 5 | 401,001 / 46,902 / 87 | 320,454 / 27,021 / 130 | 810,678 / 159,288 / 74 | 592,615 / 110,477 / 75 | 150,824 / 287 / 14 | 270,240 / 56,256 / 87 | 483,893 / 74,379 / 92 |
+| fix vs main | fix-6:main-2 | 142 / 3 / 6 | 400,993 / 46,906 / 87 | 320,460 / 27,020 / 130 | 810,689 / 159,287 / 74 | 592,623 / 110,476 / 75 | 150,826 / 286 / 14 | 270,243 / 56,256 / 87 | 483,892 / 74,378 / 92 |
+| fix vs main | fix-6:main-3 | 169 / 6 / 6 | 400,996 / 46,910 / 87 | 117,931 / 674 / 19 | 796,971 / 166,366 / 86 | 601,940 / 112,450 / 69 | 326,760 / 43,510 / 65 | 279,380 / 64,808 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-6:main-4 | 244 / 6 / 5 | 400,988 / 46,903 / 87 | 320,457 / 27,020 / 130 | 810,680 / 159,288 / 74 | 592,615 / 110,477 / 75 | 150,824 / 287 / 14 | 270,243 / 56,256 / 87 | 483,893 / 74,379 / 92 |
+| fix vs main | fix-6:main-5 | 223 / 7 / 7 | 400,994 / 46,900 / 87 | 117,879 / 675 / 19 | 796,973 / 166,366 / 86 | 601,940 / 112,448 / 69 | 326,760 / 43,510 / 65 | 279,382 / 64,806 / 84 | 467,899 / 54,949 / 85 |
+| fix vs main | fix-6:main-6 | 422 / 6 / 4 | 401,002 / 46,910 / 87 | 320,461 / 27,020 / 130 | 810,679 / 159,290 / 74 | 592,612 / 110,477 / 75 | 150,821 / 287 / 14 | 270,243 / 56,256 / 87 | 483,892 / 74,378 / 92 |
+
+## fixi-1
+command frame 119 vt 1.9833 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1110 vt 18.5000 Toggle { what: Photo }
+command frame 1111 vt 18.5167 Photo { dof: Some(Off), focus: None, aperture: None, exposure: None, fov: None, roll: None, pause_agents: Some(true), fx: PhotoFxP
+command frame 1173 vt 19.5500 DumpState { name: "flat-state" }
+command frame 1174 vt 19.5667 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1416 vt 23.6000 Screenshot { name: "flat-overview" }
+hold pause frame 1416 vt 23.6000
+readback flat-overview frame 1420
+hold resume frame 1480 after 64 frames vt 23.6000
+command frame 1481 vt 23.6167 Camera { pos: [30.0, 60.0, 90.0], look_at: [0.0, 0.0, 0.0] }
+command frame 1723 vt 27.6500 Screenshot { name: "flat-play" }
+hold pause frame 1723 vt 27.6500
+readback flat-play frame 1726
+hold resume frame 1787 after 64 frames vt 27.6500
+command frame 1788 vt 27.6667 Camera { pos: [-20.0, 70.0, 40.0], look_at: [-25.0, 0.0, -55.0] }
+command frame 2030 vt 31.7000 Screenshot { name: "flat-play-road-farm" }
+hold pause frame 2030 vt 31.7000
+readback flat-play-road-farm frame 2033
+hold resume frame 2094 after 64 frames vt 31.7000
+command frame 2095 vt 31.7167 Camera { pos: [10.0, 12.0, 40.0], look_at: [0.0, 0.0, 0.0] }
+command frame 2337 vt 35.7500 Screenshot { name: "flat-close" }
+hold pause frame 2337 vt 35.7500
+readback flat-close frame 2340
+hold resume frame 2401 after 64 frames vt 35.7500
+command frame 2402 vt 35.7667 Camera { pos: [-40.0, 4.0, -44.0], look_at: [20.0, 1.0, -48.0] }
+command frame 2644 vt 39.8000 Screenshot { name: "flat-low-road-cars" }
+hold pause frame 2644 vt 39.8000
+readback flat-low-road-cars frame 2647
+hold resume frame 2708 after 64 frames vt 39.8000
+command frame 2709 vt 39.8167 Camera { pos: [-14.0, 9.0, 85.0], look_at: [-6.0, 4.0, 36.0] }
+command frame 2951 vt 43.8500 Screenshot { name: "flat-low-level1" }
+hold pause frame 2951 vt 43.8500
+readback flat-low-level1 frame 2954
+hold resume frame 3015 after 64 frames vt 43.8500
+command frame 3016 vt 43.8667 Camera { pos: [40.0, 6.0, 60.0], look_at: [80.0, 0.0, 8.0] }
+command frame 3258 vt 47.9000 Screenshot { name: "flat-low-coast" }
+hold pause frame 3258 vt 47.9000
+readback flat-low-coast frame 3261
+hold resume frame 3322 after 64 frames vt 47.9000
+command frame 3323 vt 47.9167 Camera { pos: [-20.0, 6.0, -50.0], look_at: [-50.0, 2.0, -82.0] }
+command frame 3565 vt 51.9500 Screenshot { name: "flat-low-farm" }
+hold pause frame 3565 vt 51.9500
+readback flat-low-farm frame 3568
+hold resume frame 3629 after 64 frames vt 51.9500
+
+## fixi-2
+command frame 119 vt 1.9833 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1110 vt 18.5000 Toggle { what: Photo }
+command frame 1111 vt 18.5167 Photo { dof: Some(Off), focus: None, aperture: None, exposure: None, fov: None, roll: None, pause_agents: Some(true), fx: PhotoFxP
+command frame 1173 vt 19.5500 DumpState { name: "flat-state" }
+command frame 1174 vt 19.5667 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1416 vt 23.6000 Screenshot { name: "flat-overview" }
+hold pause frame 1416 vt 23.6000
+readback flat-overview frame 1419
+hold resume frame 1480 after 64 frames vt 23.6000
+command frame 1481 vt 23.6167 Camera { pos: [30.0, 60.0, 90.0], look_at: [0.0, 0.0, 0.0] }
+command frame 1723 vt 27.6500 Screenshot { name: "flat-play" }
+hold pause frame 1723 vt 27.6500
+readback flat-play frame 1726
+hold resume frame 1787 after 64 frames vt 27.6500
+command frame 1788 vt 27.6667 Camera { pos: [-20.0, 70.0, 40.0], look_at: [-25.0, 0.0, -55.0] }
+command frame 2030 vt 31.7000 Screenshot { name: "flat-play-road-farm" }
+hold pause frame 2030 vt 31.7000
+readback flat-play-road-farm frame 2033
+hold resume frame 2094 after 64 frames vt 31.7000
+command frame 2095 vt 31.7167 Camera { pos: [10.0, 12.0, 40.0], look_at: [0.0, 0.0, 0.0] }
+command frame 2337 vt 35.7500 Screenshot { name: "flat-close" }
+hold pause frame 2337 vt 35.7500
+readback flat-close frame 2341
+hold resume frame 2401 after 64 frames vt 35.7500
+command frame 2402 vt 35.7667 Camera { pos: [-40.0, 4.0, -44.0], look_at: [20.0, 1.0, -48.0] }
+command frame 2644 vt 39.8000 Screenshot { name: "flat-low-road-cars" }
+hold pause frame 2644 vt 39.8000
+readback flat-low-road-cars frame 2647
+hold resume frame 2708 after 64 frames vt 39.8000
+command frame 2709 vt 39.8167 Camera { pos: [-14.0, 9.0, 85.0], look_at: [-6.0, 4.0, 36.0] }
+command frame 2951 vt 43.8500 Screenshot { name: "flat-low-level1" }
+hold pause frame 2951 vt 43.8500
+readback flat-low-level1 frame 2954
+hold resume frame 3015 after 64 frames vt 43.8500
+command frame 3016 vt 43.8667 Camera { pos: [40.0, 6.0, 60.0], look_at: [80.0, 0.0, 8.0] }
+command frame 3258 vt 47.9000 Screenshot { name: "flat-low-coast" }
+hold pause frame 3258 vt 47.9000
+readback flat-low-coast frame 3261
+hold resume frame 3322 after 64 frames vt 47.9000
+command frame 3323 vt 47.9167 Camera { pos: [-20.0, 6.0, -50.0], look_at: [-50.0, 2.0, -82.0] }
+command frame 3565 vt 51.9500 Screenshot { name: "flat-low-farm" }
+hold pause frame 3565 vt 51.9500
+readback flat-low-farm frame 3568
+hold resume frame 3629 after 64 frames vt 51.9500
+
+## branchi-1
+command frame 119 vt 1.9833 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1110 vt 18.5000 Toggle { what: Photo }
+command frame 1111 vt 18.5167 Photo { dof: Some(Off), focus: None, aperture: None, exposure: None, fov: None, roll: None, pause_agents: Some(true), fx: PhotoFxP
+command frame 1173 vt 19.5500 DumpState { name: "flat-state" }
+command frame 1174 vt 19.5667 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1416 vt 23.6000 Screenshot { name: "flat-overview" }
+hold pause frame 1416 vt 23.6000
+readback flat-overview frame 1420
+hold resume frame 1480 after 64 frames vt 23.6000
+command frame 1481 vt 23.6167 Camera { pos: [30.0, 60.0, 90.0], look_at: [0.0, 0.0, 0.0] }
+command frame 1723 vt 27.6500 Screenshot { name: "flat-play" }
+hold pause frame 1723 vt 27.6500
+readback flat-play frame 1726
+hold resume frame 1787 after 64 frames vt 27.6500
+command frame 1788 vt 27.6667 Camera { pos: [-20.0, 70.0, 40.0], look_at: [-25.0, 0.0, -55.0] }
+command frame 2030 vt 31.7000 Screenshot { name: "flat-play-road-farm" }
+hold pause frame 2030 vt 31.7000
+readback flat-play-road-farm frame 2033
+hold resume frame 2094 after 64 frames vt 31.7000
+command frame 2095 vt 31.7167 Camera { pos: [10.0, 12.0, 40.0], look_at: [0.0, 0.0, 0.0] }
+command frame 2337 vt 35.7500 Screenshot { name: "flat-close" }
+hold pause frame 2337 vt 35.7500
+readback flat-close frame 2341
+hold resume frame 2401 after 64 frames vt 35.7500
+command frame 2402 vt 35.7667 Camera { pos: [-40.0, 4.0, -44.0], look_at: [20.0, 1.0, -48.0] }
+command frame 2644 vt 39.8000 Screenshot { name: "flat-low-road-cars" }
+hold pause frame 2644 vt 39.8000
+readback flat-low-road-cars frame 2647
+hold resume frame 2708 after 64 frames vt 39.8000
+command frame 2709 vt 39.8167 Camera { pos: [-14.0, 9.0, 85.0], look_at: [-6.0, 4.0, 36.0] }
+command frame 2951 vt 43.8500 Screenshot { name: "flat-low-level1" }
+hold pause frame 2951 vt 43.8500
+readback flat-low-level1 frame 2954
+hold resume frame 3015 after 64 frames vt 43.8500
+command frame 3016 vt 43.8667 Camera { pos: [40.0, 6.0, 60.0], look_at: [80.0, 0.0, 8.0] }
+command frame 3258 vt 47.9000 Screenshot { name: "flat-low-coast" }
+hold pause frame 3258 vt 47.9000
+readback flat-low-coast frame 3261
+hold resume frame 3322 after 64 frames vt 47.9000
+command frame 3323 vt 47.9167 Camera { pos: [-20.0, 6.0, -50.0], look_at: [-50.0, 2.0, -82.0] }
+command frame 3565 vt 51.9500 Screenshot { name: "flat-low-farm" }
+hold pause frame 3565 vt 51.9500
+readback flat-low-farm frame 3568
+hold resume frame 3629 after 64 frames vt 51.9500
+
+## branchi-2
+command frame 119 vt 1.9833 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1110 vt 18.5000 Toggle { what: Photo }
+command frame 1111 vt 18.5167 Photo { dof: Some(Off), focus: None, aperture: None, exposure: None, fov: None, roll: None, pause_agents: Some(true), fx: PhotoFxP
+command frame 1173 vt 19.5500 DumpState { name: "flat-state" }
+command frame 1174 vt 19.5667 Camera { pos: [0.0, 300.0, 270.0], look_at: [0.0, 0.0, -10.0] }
+command frame 1416 vt 23.6000 Screenshot { name: "flat-overview" }
+hold pause frame 1416 vt 23.6000
+readback flat-overview frame 1420
+hold resume frame 1480 after 64 frames vt 23.6000
+command frame 1481 vt 23.6167 Camera { pos: [30.0, 60.0, 90.0], look_at: [0.0, 0.0, 0.0] }
+command frame 1723 vt 27.6500 Screenshot { name: "flat-play" }
+hold pause frame 1723 vt 27.6500
+readback flat-play frame 1726
+hold resume frame 1787 after 64 frames vt 27.6500
+command frame 1788 vt 27.6667 Camera { pos: [-20.0, 70.0, 40.0], look_at: [-25.0, 0.0, -55.0] }
+command frame 2030 vt 31.7000 Screenshot { name: "flat-play-road-farm" }
+hold pause frame 2030 vt 31.7000
+readback flat-play-road-farm frame 2033
+hold resume frame 2094 after 64 frames vt 31.7000
+command frame 2095 vt 31.7167 Camera { pos: [10.0, 12.0, 40.0], look_at: [0.0, 0.0, 0.0] }
+command frame 2337 vt 35.7500 Screenshot { name: "flat-close" }
+hold pause frame 2337 vt 35.7500
+readback flat-close frame 2340
+hold resume frame 2401 after 64 frames vt 35.7500
+command frame 2402 vt 35.7667 Camera { pos: [-40.0, 4.0, -44.0], look_at: [20.0, 1.0, -48.0] }
+command frame 2644 vt 39.8000 Screenshot { name: "flat-low-road-cars" }
+hold pause frame 2644 vt 39.8000
+readback flat-low-road-cars frame 2647
+hold resume frame 2708 after 64 frames vt 39.8000
+command frame 2709 vt 39.8167 Camera { pos: [-14.0, 9.0, 85.0], look_at: [-6.0, 4.0, 36.0] }
+command frame 2951 vt 43.8500 Screenshot { name: "flat-low-level1" }
+hold pause frame 2951 vt 43.8500
+readback flat-low-level1 frame 2954
+hold resume frame 3015 after 64 frames vt 43.8500
+command frame 3016 vt 43.8667 Camera { pos: [40.0, 6.0, 60.0], look_at: [80.0, 0.0, 8.0] }
+command frame 3258 vt 47.9000 Screenshot { name: "flat-low-coast" }
+hold pause frame 3258 vt 47.9000
+readback flat-low-coast frame 3261
+hold resume frame 3322 after 64 frames vt 47.9000
+command frame 3323 vt 47.9167 Camera { pos: [-20.0, 6.0, -50.0], look_at: [-50.0, 2.0, -82.0] }
+command frame 3565 vt 51.9500 Screenshot { name: "flat-low-farm" }
+hold pause frame 3565 vt 51.9500
+readback flat-low-farm frame 3568
+hold resume frame 3629 after 64 frames vt 51.9500
+branch-1 load_before { 21.38 16.13 16.34 } 09:56:17Z load_after { 17.91 15.73 16.19 } 09:56:43Z 
+branch-2 load_before { 17.01 15.78 16.18 } 09:57:33Z load_after { 16.94 15.90 16.21 } 09:58:01Z 
+branch-3 load_before { 17.08 16.14 16.28 } 09:58:55Z load_after { 16.24 16.03 16.24 } 09:59:23Z 
+branch-4 load_before { 17.54 16.79 16.45 } 10:03:54Z load_after { 15.72 16.42 16.33 } 10:04:20Z 
+branch-5 load_before { 19.20 16.91 16.49 } 10:05:08Z load_after { 25.93 18.53 17.08 } 10:05:34Z 
+branch-6 load_before { 34.23 22.70 18.75 } 10:06:24Z load_after { 30.02 22.62 18.84 } 10:06:49Z 
+branch-late-1 load_before { 19.65 21.08 18.52 } 10:07:50Z load_after { 16.40 20.12 18.27 } 10:08:22Z 
+branch-late-2 load_before { 14.43 19.26 18.03 } 10:08:53Z load_after { 14.25 18.76 17.89 } 10:09:24Z 
+branch-lod0-1 load_before { 16.12 15.70 16.04 } 10:02:07Z load_after { 16.59 15.82 16.07 } 10:02:35Z 
+branch-lod0-2 load_before { 19.67 16.86 16.45 } 10:03:02Z load_after { 19.71 17.08 16.54 } 10:03:28Z 
+branchi-1 load_before { 15.48 15.80 16.13 } 10:00:16Z load_after { 15.52 15.78 16.12 } 10:00:43Z 
+branchi-2 load_before { 13.90 15.38 15.96 } 10:01:09Z load_after { 14.57 15.43 15.96 } 10:01:36Z 
+fix-1 load_before { 29.24 16.32 16.42 } 09:55:30Z load_after { 21.38 16.13 16.34 } 09:56:17Z 
+fix-2 load_before { 17.34 15.75 16.19 } 09:57:06Z load_after { 17.01 15.78 16.18 } 09:57:32Z 
+fix-3 load_before { 17.89 16.20 16.31 } 09:58:27Z load_after { 17.08 16.14 16.28 } 09:58:55Z 
+fix-4 load_before { 19.71 17.08 16.54 } 10:03:28Z load_after { 17.54 16.79 16.45 } 10:03:54Z 
+fix-5 load_before { 14.22 16.01 16.18 } 10:04:43Z load_after { 19.20 16.91 16.49 } 10:05:08Z 
+fix-6 load_before { 40.97 22.81 18.67 } 10:05:58Z load_after { 34.23 22.70 18.75 } 10:06:24Z 
+fix-late-1 load_before { 24.21 21.93 18.72 } 10:07:18Z load_after { 19.65 21.08 18.52 } 10:07:50Z 
+fix-late-2 load_before { 16.40 20.12 18.27 } 10:08:22Z load_after { 14.43 19.26 18.03 } 10:08:53Z 
+fix-lod0-1 load_before { 14.57 15.43 15.96 } 10:01:37Z load_after { 16.12 15.70 16.04 } 10:02:07Z 
+fix-lod0-2 load_before { 16.59 15.82 16.07 } 10:02:35Z load_after { 19.67 16.86 16.45 } 10:03:02Z 
+fixi-1 load_before { 15.50 15.86 16.17 } 09:59:49Z load_after { 15.48 15.80 16.13 } 10:00:16Z 
+fixi-2 load_before { 15.52 15.78 16.12 } 10:00:43Z load_after { 13.90 15.38 15.96 } 10:01:09Z 
+main-1 load_before { 17.91 15.73 16.19 } 09:56:43Z load_after { 17.34 15.75 16.19 } 09:57:06Z 
+main-2 load_before { 16.94 15.90 16.21 } 09:58:01Z load_after { 17.89 16.20 16.31 } 09:58:27Z 
+main-3 load_before { 16.24 16.03 16.24 } 09:59:24Z load_after { 15.50 15.86 16.17 } 09:59:49Z 
+main-4 load_before { 15.72 16.42 16.33 } 10:04:20Z load_after { 14.22 16.01 16.18 } 10:04:42Z 
+main-5 load_before { 25.93 18.53 17.08 } 10:05:35Z load_after { 40.97 22.81 18.67 } 10:05:58Z 
+main-6 load_before { 30.02 22.62 18.84 } 10:06:49Z load_after { 25.27 22.09 18.76 } 10:07:12Z 

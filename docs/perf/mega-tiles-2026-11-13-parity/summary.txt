@@ -1,0 +1,99 @@
+== main vs main (15 pairs)
+overview: diff 158-440 over2 2-9 max 3-6
+play: diff 177-270 over2 4-9 max 4-6
+play-road-farm: diff 33-297,327 over2 1-26,911 max 3-130
+close: diff 2-731,754 over2 0-130,032 max 1-73
+low-road-cars: diff 0-535,810 over2 0-84,785 max 0-69
+low-level1: diff 0-300,327 over2 0-42,989 max 0-65
+low-coast: diff 0-246,321 over2 0-52,457 max 0-91
+low-farm: diff 0-429,031 over2 0-56,385 max 0-82
+== fix vs fix (15 pairs)
+overview: diff 141-212 over2 0-5 max 2-7
+play: diff 144-269 over2 1-8 max 3-9
+play-road-farm: diff 5-71 over2 0-4 max 1-5
+close: diff 0-408 over2 0-10 max 0-7
+low-road-cars: diff 1-479 over2 0-1 max 1-3
+low-level1: diff 0-30 over2 0-0 max 0-2
+low-coast: diff 0-121 over2 0-0 max 0-2
+low-farm: diff 0-444 over2 0-39 max 0-23
+== branch vs branch (15 pairs)
+overview: diff 167-237 over2 2-8 max 4-8
+play: diff 175-275 over2 3-9 max 4-7
+play-road-farm: diff 24-62 over2 0-4 max 1-5
+close: diff 1-95 over2 0-9 max 1-7
+low-road-cars: diff 0-477 over2 0-1 max 0-3
+low-level1: diff 0-22 over2 0-0 max 0-2
+low-coast: diff 0-115 over2 0-0 max 0-2
+low-farm: diff 0-444 over2 0-39 max 0-23
+== fixi vs fixi (1 pairs)
+overview: diff 440-440 over2 8-8 max 5-5
+play: diff 262-262 over2 4-4 max 4-4
+play-road-farm: diff 53-53 over2 3-3 max 5-5
+close: diff 88-88 over2 9-9 max 7-7
+low-road-cars: diff 475-475 over2 1-1 max 3-3
+low-level1: diff 21-21 over2 0-0 max 2-2
+low-coast: diff 2-2 over2 0-0 max 1-1
+low-farm: diff 438-438 over2 39-39 max 23-23
+== branchi vs branchi (1 pairs)
+overview: diff 187-187 over2 6-6 max 6-6
+play: diff 163-163 over2 2-2 max 5-5
+play-road-farm: diff 21-21 over2 3-3 max 5-5
+close: diff 1-1 over2 0-0 max 1-1
+low-road-cars: diff 2-2 over2 0-0 max 1-1
+low-level1: diff 0-0 over2 0-0 max 0-0
+low-coast: diff 2-2 over2 0-0 max 1-1
+low-farm: diff 5-5 over2 0-0 max 1-1
+== fix-lod0 vs fix-lod0 (1 pairs)
+overview: diff 812-812 over2 7-7 max 9-9
+play: diff 167-167 over2 15-15 max 11-11
+play-road-farm: diff 25-25 over2 2-2 max 4-4
+close: diff 5-5 over2 0-0 max 1-1
+low-road-cars: diff 0-0 over2 0-0 max 0-0
+low-level1: diff 0-0 over2 0-0 max 0-0
+low-coast: diff 2-2 over2 0-0 max 1-1
+low-farm: diff 335-335 over2 30-30 max 16-16
+== branch-lod0 vs branch-lod0 (1 pairs)
+overview: diff 1,194-1,194 over2 9-9 max 8-8
+play: diff 604-604 over2 21-21 max 14-14
+play-road-farm: diff 194-194 over2 6-6 max 7-7
+close: diff 450-450 over2 6-6 max 9-9
+low-road-cars: diff 650-650 over2 0-0 max 2-2
+low-level1: diff 39-39 over2 0-0 max 1-1
+low-coast: diff 0-0 over2 0-0 max 0-0
+low-farm: diff 245-245 over2 9-9 max 5-5
+== fix vs branch (36 pairs)
+overview: diff 422-519 over2 53-60 max 20-20
+play: diff 131-276 over2 1-9 max 3-9
+play-road-farm: diff 5-71 over2 0-5 max 1-5
+close: diff 0-408 over2 0-10 max 0-7
+low-road-cars: diff 328-807 over2 7-8 max 3-3
+low-level1: diff 0-30 over2 0-0 max 0-2
+low-coast: diff 0-120 over2 0-0 max 0-2
+low-farm: diff 0-444 over2 0-39 max 0-23
+== fixi vs branchi (4 pairs)
+overview: diff 422-736 over2 57-63 max 20-20
+play: diff 140-284 over2 3-6 max 4-5
+play-road-farm: diff 1-54 over2 0-3 max 1-5
+close: diff 0-88 over2 0-9 max 0-7
+low-road-cars: diff 331-806 over2 7-8 max 3-3
+low-level1: diff 0-21 over2 0-0 max 0-2
+low-coast: diff 0-2 over2 0-0 max 0-1
+low-farm: diff 6-444 over2 0-39 max 1-23
+== fix-lod0 vs branch-lod0 (4 pairs)
+overview: diff 515-1,481 over2 68-74 max 20-20
+play: diff 217-602 over2 12-18 max 5-15
+play-road-farm: diff 133-173 over2 4-6 max 7-7
+close: diff 109-440 over2 7-9 max 7-9
+low-road-cars: diff 814-913 over2 2-2 max 3-3
+low-level1: diff 26-47 over2 0-0 max 1-1
+low-coast: diff 0-2 over2 0-0 max 0-1
+low-farm: diff 4-581 over2 0-39 max 1-16
+== fix vs main (36 pairs)
+overview: diff 142-432 over2 2-8 max 4-7
+play: diff 400,977-401,009 over2 46,899-46,911 max 87-87
+play-road-farm: diff 117,871-320,466 over2 673-27,022 max 19-130
+close: diff 796,970-810,689 over2 159,281-166,367 max 74-86
+low-road-cars: diff 592,612-601,953 over2 110,468-112,451 max 69-75
+low-level1: diff 150,816-326,760 over2 286-43,511 max 14-65
+low-coast: diff 270,239-279,387 over2 56,256-64,808 max 84-87
+low-farm: diff 467,898-483,895 over2 54,948-74,379 max 85-92
