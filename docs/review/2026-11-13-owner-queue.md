@@ -46,6 +46,8 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
 
 ## MT. Mega tiles (massif) merge notes
 
+**Merged 2026-11-13 at 4:30 AM PST (`5930c0b`).** CI is green and deployed. Nothing here needs a decision. These notes are for the record.
+
 - **MT-N1. Tangent bytes changed since your C3 approval.** The massif's exported tangents were not deterministic, because Blender's threaded MikkTSpace gave a different result on each run of a large mesh. The export now runs single-threaded. The GLB bytes changed but the look did not. A parity proof against main is running, and its results go here before the merge.
 - **MT-N2. Parity, 2026-11-13 (1:55–2:09 AM PST).**
   - Play camera: fixed. It is at the run-to-run noise floor, where on 10-30 300k pixels differed.
