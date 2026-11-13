@@ -1,0 +1,10 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-11-13",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/rail_viaduct/ref-2.jpg",
+    "assets-source/refs/rail_viaduct/ref-4.jpg"
+  ],
+  "notes": "ref-2's form (three tall arches on tapering piers) with ref-4's stone and deck detail, scaled by pier height for the three levels (RL-Q2). One design for every height (RL-Q4). No walking on the deck from a raised neighbour (RL-Q3). Answered in chat 2026-11-13 against docs/review/2026-11-13-owner-queue.md RL: \"Q1 O2 / Q2 approved for O2 look / Q3 no / Q4 one design\"."
+}

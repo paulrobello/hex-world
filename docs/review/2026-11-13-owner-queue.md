@@ -59,6 +59,8 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
 
 ## RL. Rail tunnel portal and rail viaduct references (deferred P4 work, prepared ahead)
 
+**Answered 2026-11-13: "Q1 O2 / Q2 approved for O2 look / Q3 no / Q4 one design".** References recorded in `assets-source/refs/rail_tunnel_portal/approval.json` and `assets-source/refs/rail_viaduct/approval.json`. Rail at levels stays deferred: no modelling until the owner lifts it.
+
 Branch `worktree-agent-afe993181be01799e`. Rail on raised ground, viaducts and rail tunnels are still deferred, and nothing gets modelled until you lift that. These are only the R2 reference candidates, so the pick is ready when you do. Notes: `docs/checkpoints/rail-levels/refs-notes.md`.
 - Sheets: `docs/checkpoints/rail_tunnel_portal/refs-sheet.jpg` and `docs/checkpoints/rail_viaduct/refs-sheet.jpg`.
 - Candidates: `assets-source/refs/rail_tunnel_portal/ref-1..4.jpg` and `assets-source/refs/rail_viaduct/ref-1..4.jpg`.
