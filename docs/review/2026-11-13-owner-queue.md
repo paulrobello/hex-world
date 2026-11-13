@@ -6,7 +6,8 @@ Requests waiting on you, collected overnight while you slept. Nothing here is ap
 
 Branch `worktree-agent-a3ab85e959e4f444d`. The surface lines you said read as stamped are now a refined fracture network. Every gate is green on the branch (checkall 0). Its ROCK_BASES outline refit is committed with it.
 - Review sheet, same views before and after: `docs/checkpoints/outcrop_granite/redo-sheet.jpg`.
-- In-engine shots: `docs/checkpoints/outcrop_granite/redo-play/` and `redo-kit/` (pending capture).
+- In-engine shots, taken 2:25 AM PST on the variant branch `worktree-agent-ac1c48909c2a99abc`: `docs/checkpoints/outcrop_granite_b/play/` and `kit/`. These show single outcrops. A frame with several outcrops (OC-Q2) is still to be taken.
+- Thumbnails: unchanged. The 14 tiles that carry the outcrop rule render byte-identically with b added.
 
 - **OC-Q1. Does the new fracture network read as natural in engine?** Recommendation: approve if the play shots read as weathered granite and not as a pattern.
 - **OC-Q2. Two outcrops in one view share one mesh.** They are rotated and scaled copies of each other, so the branching repeats. Ruling made overnight: a second variant, `outcrop_granite_b`, is being built ahead from the same approved refs, with placed outcrops alternating a/b per slot. It is pending your review, and nothing merges without it. The alternative is fainter or fewer fractures on the single mesh, which is cheaper.
@@ -25,7 +26,8 @@ Branch `worktree-agent-a3ab85e959e4f444d`. The surface lines you said read as st
 Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/2026-11-13-single-tile-hills-design.md`, is itself pending your approval. Two pieces, `hill_meadow` (top 9.4 m) and `peak_granite` (top 17.7 m), go in the `hero` pack, so the initial download is unchanged. Every gate is green apart from `kit-provenance`, which fails, as it must, until you pick references (R2). The runtime changes are in `docs/checkpoints/hill_meadow/integration.patch`. The steps after approval are in `docs/checkpoints/hill_meadow/integration.md`.
 - References: `assets-source/refs/hill_meadow/ref-1..4.jpg` and `assets-source/refs/peak_granite/ref-1..4.jpg`.
 - Review sheets: `docs/checkpoints/hill_meadow/review-sheet.jpg` and `docs/checkpoints/peak_granite/review-sheet.jpg`.
-- Thumbnails and in-engine shots: `docs/checkpoints/hill_meadow/` (pending capture).
+- In-engine shots: current peak on `worktree-agent-a5c9b226ddc2c72f5` in `docs/checkpoints/hill_meadow/play/`; jointed pass-4 peak on `worktree-agent-a83978ad28323d671` in `docs/checkpoints/peak_granite/jointed-play/`. Same script and cameras, so the files compare one to one. Compare `peak-low.jpg` first.
+- Thumbnails: rendered and committed on the jointed branch (ced99a7). The validator checks every tile again.
 
 - **HL-A1. Approve the hills spec?** Recommendation: approve.
 - **HL-Q1. Reference picks.** Recommendation: ref-1 for both pieces.
@@ -40,11 +42,16 @@ Branch `worktree-agent-a5c9b226ddc2c72f5`. The spec, `docs/superpowers/specs/202
     - Pass 3 adds dark joint lines (`#3b3329`), breaks the melted foot into stepped blocks and brings scree to 35 m².
     - Pass 4 is colour only: a mid grey with a faint green-grey cast, ±14% shading per block, about 6.7% moss, 2.4% yellow lichen and faint weathering streaks.
   - Pass 4 tris: 3597 / 1696 / 508. Top 18.03 m. The hill is still byte-identical.
-  - In Blender's stills the rock still reads lighter than ref-1. I'm judging that from the in-engine shots rather than starting a fifth pass blind. Recommendation: the pass-4 jointed peak over the current one.
+  - In Blender's stills the rock still reads lighter than ref-1. I'm judging that from the in-engine shots rather than starting a fifth pass blind. Recommendation: the pass-4 jointed peak over the current one. In engine it reads as a jointed mid-grey crag, and the current peak's blotchy mustard and black patches are gone, so it needs no fifth pass.
 
 ## MT. Mega tiles (massif) merge notes
 
 - **MT-N1. Tangent bytes changed since your C3 approval.** The massif's exported tangents were not deterministic, because Blender's threaded MikkTSpace gave a different result on each run of a large mesh. The export now runs single-threaded. The GLB bytes changed but the look did not. A parity proof against main is running, and its results go here before the merge.
+- **MT-N2. Parity, 2026-11-13 (1:55–2:09 AM PST).**
+  - Play camera: fixed. It is at the run-to-run noise floor, where on 10-30 300k pixels differed.
+  - Overview camera: still about 300 of 1.6M pixels differ, the same in every run (max 20/255). They are small marks on the beach sand and seabed by the east river mouth, shaded differently. The cause is unknown.
+  - The merge is held. A debug agent is tracing the overview difference in a GPU window booked for 3:45–5:45 AM PST. Evidence: `docs/perf/mega-tiles-2026-11-13-parity/` on `worktree-agent-ae7322c2c6b46f949`.
+- **MT-N3. Massif thumbnails were stale.** The committed ones predate form pass 3. They are regenerated on mega-tiles (7d896ec) and now show the approved grassy flanks. The tangent fix changes no thumbnail.
 
 ## RL. Rail tunnel portal and rail viaduct references (deferred P4 work, prepared ahead)
 
