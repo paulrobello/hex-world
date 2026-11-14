@@ -67,4 +67,5 @@
         (agent: Car, max: 2),
         (agent: Bird, max: 3),
     ],
+    raisable: true,
 )

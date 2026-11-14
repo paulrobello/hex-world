@@ -2961,7 +2961,9 @@ fn fence_map(
             .get(&c)
             .and_then(|(t, _)| Some((catalog.get(&t.tile)?, t.rotation)))
     });
-    let all = super::boundaries::all_placements(world_seed, tiles.keys().copied(), &tile_at);
+    let level = |c: Axial| tiles.get(&c).map_or(0, |(t, _)| t.level);
+    let all =
+        super::boundaries::all_placements(world_seed, tiles.keys().copied(), &tile_at, &level);
     // The drawn tiles beside a field tile, a footprint's ring cell standing for its anchor, whose
     // entry gathers every cell it covers.
     let near: std::collections::BTreeSet<Axial> = all

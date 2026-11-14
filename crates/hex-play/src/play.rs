@@ -639,7 +639,10 @@ fn stops_and_fences(
         .map_or(vec![], |(def, rot)| {
             rail_end::open_stops(def, cell, rot, &tile_at)
         });
-    let fences = bounds.map_or(vec![], |seed| boundaries::placements(seed, cell, &tile_at));
+    let level = |c: Axial| tiles.get(&c).map_or(0, |(t, _)| t.level);
+    let fences = bounds.map_or(vec![], |seed| {
+        boundaries::placements(seed, cell, &tile_at, &level)
+    });
     (stops, fences)
 }
 

@@ -27,4 +27,5 @@
             (piece: "sapling_spruce", density: 0.3),
         ],
     ),
+    raisable: true,
 )

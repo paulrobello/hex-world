@@ -101,23 +101,26 @@ pub fn placements<'a>(
     world_seed: u64,
     owner: Axial,
     at: &impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    level: &impl Fn(Axial) -> u8,
 ) -> Vec<boundary::Placement> {
-    all_placements(world_seed, [owner], at)
+    all_placements(world_seed, [owner], at, level)
         .remove(&owner)
         .unwrap_or_default()
 }
 
 /// The boundary pieces of every field tile among `cells`, through one view, so each farm's gate is
 /// worked out once; tiles that draw none are left out. None under `kit_ablate=boundaries`.
+/// `level` is each cell's level (P4): a field and its neighbour on two levels meet at a cliff.
 pub fn all_placements<'a>(
     world_seed: u64,
     cells: impl IntoIterator<Item = Axial>,
     at: &impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    level: &impl Fn(Axial) -> u8,
 ) -> BTreeMap<Axial, Vec<boundary::Placement>> {
     if hex_render::kit_instances::kit_ablate().boundaries {
         return BTreeMap::new();
     }
-    let view = View::new(world_seed, at, |c: Axial, s: &Seg| blocked(at, c, s));
+    let view = View::new(world_seed, at, level, |c: Axial, s: &Seg| blocked(at, c, s));
     cells
         .into_iter()
         .filter(|c| at(*c).is_some_and(|(d, _)| boundary::FIELD_TILES.contains(&d.id.as_str())))
@@ -177,8 +180,9 @@ pub fn local_segments<'a>(
     world_seed: u64,
     cell: Axial,
     at: &impl Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    level: &impl Fn(Axial) -> u8,
 ) -> Vec<Seg> {
-    let all = all_placements(world_seed, boundary::within(cell, 1), at);
+    let all = all_placements(world_seed, boundary::within(cell, 1), at, level);
     local_segments_from(&all, cell, at)
 }
 
@@ -253,7 +257,7 @@ pub(crate) mod tests {
             Axial::new(1, 0),
             Axial::new(2, -1),
         ] {
-            let segs = local_segments(1, cell, &at);
+            let segs = local_segments(1, cell, &at, &|_| 0);
             assert!(!segs.is_empty(), "{cell:?} sees no boundary");
             for s in &segs {
                 let mid = (Vec2::from(s.a) + Vec2::from(s.b)) / 2.0;
@@ -275,7 +279,7 @@ pub(crate) mod tests {
             );
         }
         // The wheat field's edge to the farm carries nothing; its edge to the meadow at (2, -1) does.
-        let wheat = local_segments(1, Axial::new(2, 0), &at);
+        let wheat = local_segments(1, Axial::new(2, 0), &at, &|_| 0);
         let on_edge_3 = |p: [f32; 2]| cos_sin_deg(180.0).dot(Vec2::from(p)) > APOTHEM - 0.1;
         assert!(!wheat.is_empty());
         assert!(
@@ -307,11 +311,14 @@ pub(crate) mod tests {
         assert!(at(Axial::new(5, 0)).is_none(), "past the ring is empty");
         assert!(at(Axial::new(0, 0)).is_none(), "beside the farm is empty");
         assert!(
-            !placements(1, farm, &bare).is_empty(),
+            !placements(1, farm, &bare, &|_| 0).is_empty(),
             "the meadow edge is fenced"
         );
         let no_massif = |x: Axial| (x != anchor).then(|| tiles.get(&x).copied()).flatten();
-        assert_eq!(placements(1, farm, &at), placements(1, farm, &no_massif));
+        assert_eq!(
+            placements(1, farm, &at, &|_| 0),
+            placements(1, farm, &no_massif, &|_| 0)
+        );
     }
 
     /// Owner A31 Q3: boundaries keep off hero props. The farm's barn stands 0.5 m inside its edge
@@ -322,7 +329,7 @@ pub(crate) mod tests {
         let at = |x: Axial| w.tile(x).and_then(|t| Some((c.get(&t.def)?, t.rotation)));
         let farm = Axial::new(1, 0);
         for seed in [1u64, 2, 3, 4, 5] {
-            let p = placements(seed, farm, &at);
+            let p = placements(seed, farm, &at, &|_| 0);
             assert_eq!(
                 p.iter().filter(|x| x.piece == "wall_gate").count(),
                 1,

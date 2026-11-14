@@ -1704,29 +1704,28 @@ mod tests {
     #[test]
     fn rotate_on_a_fully_symmetric_tile_keeps_its_one_orientation() {
         let mut g = game();
-        g.apply(Action::SelectTile("forest".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        assert_eq!(g.chosen, Orientation::new(0, 0));
-        for dir in [RotateDir::Forward, RotateDir::Back] {
-            let e = g.apply(Action::Rotate(dir));
-            assert_eq!(g.chosen, Orientation::new(0, 0));
+        // A fully symmetric raisable tile (forest, meadow) has one orientation per level: R keeps
+        // rotation 0 and steps the level, ground first, and wraps.
+        for id in ["forest", "meadow"] {
+            g.apply(Action::SelectTile(id.into()));
+            assert_eq!(g.chosen, Orientation::new(0, 0), "{id}");
+            let e = g.apply(Action::Rotate(RotateDir::Forward));
+            assert_eq!(g.chosen, Orientation::new(0, 1), "{id}");
             assert_eq!(
                 e,
                 [GameEvent::GhostRotated {
                     rotation: 0,
-                    level: 0,
+                    level: 1,
                     valid: true
                 }]
             );
+            g.apply(Action::Rotate(RotateDir::Back));
+            g.apply(Action::Rotate(RotateDir::Back));
+            assert_eq!(g.chosen, Orientation::new(0, 3), "{id}");
+            g.apply(Action::Rotate(RotateDir::Forward));
+            assert_eq!(g.chosen, Orientation::new(0, 0), "{id}");
         }
-        // A raisable meadow has one orientation per level: R steps it up, ground first.
-        g.apply(Action::SelectTile("meadow".into()));
-        assert_eq!(g.chosen, Orientation::new(0, 0));
-        g.apply(Action::Rotate(RotateDir::Forward));
-        assert_eq!(g.chosen, Orientation::new(0, 1));
-        g.apply(Action::Rotate(RotateDir::Back));
-        g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!(g.chosen, Orientation::new(0, 3));
     }
 
     #[test]
@@ -2410,8 +2409,8 @@ mod tests {
 
     /// Elevation (P4): a free slot's outline sits on the level the selected tile's default
     /// orientation takes there. Beside a lone level-1 meadow a meadow goes cliff-free on level 1;
-    /// between it and the level-0 start every level makes a cliff, so the ground wins. A flat
-    /// world lists no slot.
+    /// between it and the level-0 start every level makes one cliff of the same drop, so the higher
+    /// level wins (owner O1, 2026-11-13). A flat world lists no slot.
     /// The published `slot_levels` follow the selected tile: it rides the selection fields, so a
     /// selection change republishes it without a world change.
     #[test]
@@ -2426,7 +2425,7 @@ mod tests {
                 .unwrap()
                 .len()
         };
-        assert_eq!(published(&g), 3, "meadow goes up beside the plateau");
+        assert_eq!(published(&g), 5, "meadow goes up beside the plateau");
         g.apply(Action::SelectTile("river_straight".into()));
         assert_eq!(published(&g), g.view().slot_levels.len());
         assert_eq!(published(&g), 0, "a river stays on the ground");
@@ -2442,7 +2441,11 @@ mod tests {
             .unwrap();
         let v = g.view();
         let raised: Vec<Axial> = v.slot_levels.keys().copied().collect();
-        assert_eq!(raised, vec![ax(1, 1), ax(2, -1), ax(2, 0)], "{v:?}");
+        assert_eq!(
+            raised,
+            vec![ax(0, 1), ax(1, -1), ax(1, 1), ax(2, -1), ax(2, 0)],
+            "{v:?}"
+        );
         assert!(v.slot_levels.values().all(|&l| l == 1));
         for c in &v.frontier {
             if !raised.contains(c) {

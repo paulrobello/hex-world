@@ -429,17 +429,23 @@ function clashes(def: TileDef, k: number, needs: Needs, level = 0): number[] {
 }
 
 /**
- * Whether `def` turned by k on `level` meets any placed neighbour across a cliff (hex-core
- * `World::cliff_edges`): an accepted seam whose corners differ, a stopped rail end included.
+ * The cliffs `def` turned by k on `level` makes against placed neighbours (hex-core `World::cliffs`):
+ * how many accepted seams have differing corners, a stopped rail end included, and the summed
+ * corner drop across them.
  */
-function hasCliff(def: TileDef, k: number, needs: Needs, level: number): boolean {
-  return [0, 1, 2, 3, 4, 5].some((w) => {
+function cliffs(def: TileDef, k: number, needs: Needs, level: number): [number, number] {
+  let n = 0;
+  let drop = 0;
+  for (let w = 0; w < 6; w++) {
     const s = seam(def, k, level, needs, w);
-    return (
-      s !== null &&
-      absoluteMeet(s.mine.heights, s.mine.lane !== null, s.theirs.heights, s.theirs.lane !== null) !== "Seamless"
-    );
-  });
+    if (s === null) continue;
+    const [m0, m1] = s.mine.heights;
+    const [t0, t1] = s.theirs.heights;
+    if (absoluteMeet([m0, m1], s.mine.lane !== null, [t0, t1], s.theirs.lane !== null) === "Seamless") continue;
+    n++;
+    drop += Math.abs(m0 - t1) + Math.abs(m1 - t0);
+  }
+  return [n, drop];
 }
 
 /** A rotation and the level a tile stands on (hex-core `Orientation`). */
@@ -449,24 +455,40 @@ export interface Orientation {
 }
 
 /**
- * Orientations in which `def` fits a slot with these needs, in hex-core `legal_orientations` order:
- * cliff-free first, then by level, then by rotation. A tile that is not raisable stands on level 0.
+ * Orientations in which `def` fits a slot with these needs, in hex-core `legal_orientations` order
+ * ({@link placementRank}, then rotation). A tile that is not raisable stands on level 0.
  * None for a footprint tile, whose centre is never a frontier slot.
  */
 export function legalOrientations(def: TileDef, needs: Needs): Orientation[] {
   return legalEntries(def, needs).map((e) => e.o);
 }
 
-/** {@link legalOrientations} with each orientation's cliff flag (hex-core `cliff_edges` has any). */
-function legalEntries(def: TileDef, needs: Needs): { o: Orientation; cliff: boolean }[] {
+/**
+ * hex-core `World::placement_key` without the rotation: fewest cliff faces, then the smallest drop
+ * across them, then among cliff-free orientations the lowest level and among cliffed ones the
+ * highest (owner O1, 2026-11-13).
+ */
+function placementRank([n, drop]: [number, number], level: number): Rank {
+  return [n, drop, n === 0 ? level : MAX_LEVEL - level];
+}
+
+/** Lexicographic order of two {@link placementRank}s. */
+function byRank(a: Rank, b: Rank): number {
+  return a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+}
+
+type Rank = [number, number, number];
+
+/** {@link legalOrientations} with each orientation's {@link placementRank}. */
+function legalEntries(def: TileDef, needs: Needs): { o: Orientation; rank: Rank }[] {
   if (def.footprint) return [];
   const top = def.raisable ? MAX_LEVEL - def.top : 0;
-  const out: { o: Orientation; cliff: boolean }[] = [];
+  const out: { o: Orientation; rank: Rank }[] = [];
   for (let level = 0; level <= top; level++)
     for (let rotation = 0; rotation < 6; rotation++)
       if (clashes(def, rotation, needs, level).length === 0)
-        out.push({ o: { rotation, level }, cliff: hasCliff(def, rotation, needs, level) });
-  out.sort((a, b) => Number(a.cliff) - Number(b.cliff) || a.o.level - b.o.level || a.o.rotation - b.o.rotation);
+        out.push({ o: { rotation, level }, rank: placementRank(cliffs(def, rotation, needs, level), level) });
+  out.sort((a, b) => byRank(a.rank, b.rank) || a.o.rotation - b.o.rotation);
   return out;
 }
 
@@ -588,8 +610,8 @@ export interface EntryFit {
   /** Whether any member fits. */
   ok: boolean;
   /**
-   * Every member's distinct legal orientations, cliff-free first, then by level, then member after
-   * member, then by rotation (hex-core `group_orientations`): the steps R takes, every level included.
+   * Every member's distinct legal orientations by placement rank (fewest cliffs, smallest drop;
+   * lowest level when cliff-free, highest when not), then member after member, then by rotation (hex-core `group_orientations`): the steps R takes, every level included.
    */
   seq: Turn[];
   /** Why no member fits, from the member with the fewest clashes; empty when one fits. */
@@ -663,15 +685,13 @@ export function fitEntry(entry: PickerEntry, needs: Needs, mega?: MegaContext): 
     return { ok: false, seq: [], why: FOOTPRINT_INNER, best: { def: first, k: 0, level: 0 } };
   const fits = entry.tiles.map((def) => ({ def, f: fit(def, needs) }));
   const keyed = entry.tiles.flatMap((def, i) => {
-    const reps: { def: TileDef; o: Orientation; cliff: boolean }[] = [];
-    for (const { o, cliff } of legalEntries(def, needs))
+    const reps: { def: TileDef; o: Orientation; rank: Rank }[] = [];
+    for (const { o, rank } of legalEntries(def, needs))
       if (!reps.some((r) => r.o.level === o.level && orientation(def, r.o.rotation) === orientation(def, o.rotation)))
-        reps.push({ def, o, cliff });
+        reps.push({ def, o, rank });
     return reps.map((r) => ({ ...r, i }));
   });
-  keyed.sort(
-    (a, b) => Number(a.cliff) - Number(b.cliff) || a.o.level - b.o.level || a.i - b.i || a.o.rotation - b.o.rotation,
-  );
+  keyed.sort((a, b) => byRank(a.rank, b.rank) || a.i - b.i || a.o.rotation - b.o.rotation);
   const seq = keyed.map((e) => ({ def: e.def, k: e.o.rotation, level: e.o.level }));
   if (seq.length) return { ok: true, seq, why: "", best: seq[0]! };
   const least = (def: TileDef, k: number) => clashes(def, k, needs).length;

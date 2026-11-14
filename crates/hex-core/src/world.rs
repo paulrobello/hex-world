@@ -44,6 +44,9 @@ impl Orientation {
     }
 }
 
+/// [`World::placement_key`]: (cliff faces, cliff drop, level rank, rotation).
+type PlacementKey = (u8, u16, u8, u8);
+
 /// Whether `def` may stand at `level`: level 0, or a raisable tile whose top stays within
 /// [`MAX_LEVEL`].
 pub fn level_allowed(def: &TileDef, level: u8) -> bool {
@@ -447,11 +450,50 @@ impl World {
         }
     }
 
-    /// Whether any face of `def` at `cell` in `o` meets its occupant as a cliff.
-    fn has_cliff(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> bool {
-        !each_face(cell, def, o, |m, w, mine| {
-            !self.face(catalog, m, w, mine, true).cliff
-        })
+    /// The cliffs `def` at `cell` in `o` makes: how many faces meet their occupant as a cliff, and
+    /// the summed corner drop across them.
+    fn cliffs(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> (u8, u16) {
+        let (mut n, mut drop) = (0, 0);
+        each_face(cell, def, o, |m, w, mine| {
+            if self.face(catalog, m, w, mine, true).cliff {
+                n += 1;
+                if let Some(theirs) = self.facing(catalog, m.neighbor(w), opposite_edge(w)) {
+                    let abs = |f: Facing, c: u8| i32::from(c) + i32::from(f.level);
+                    let ((a0, a1), (b0, b1)) = (mine.socket.corners(), theirs.socket.corners());
+                    let d = (abs(mine, a0) - abs(theirs, b1)).abs()
+                        + (abs(mine, a1) - abs(theirs, b0)).abs();
+                    drop += u16::try_from(d).unwrap_or(u16::MAX);
+                }
+            }
+            true
+        });
+        (n, drop)
+    }
+
+    /// Placement preference for `o` (smaller first): fewest cliff faces, then the smallest drop
+    /// across them; among cliff-free orientations the lowest level, among cliffed ones the highest
+    /// (owner O1, 2026-11-13: a tile in a mixed-level slot rises to the side it shares the most
+    /// edges with); then rotation.
+    fn placement_key(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> PlacementKey {
+        let (cliffs, drop) = self.cliffs(catalog, cell, def, o);
+        let level = if cliffs == 0 {
+            o.level
+        } else {
+            MAX_LEVEL - o.level
+        };
+        (cliffs, drop, level, o.rotation)
     }
 
     /// Glow for each world edge of `def` ghosted at `cell` in orientation `o` ([`World::faces`]
@@ -504,8 +546,8 @@ impl World {
             })
     }
 
-    /// The orientations `test` accepts, cliff-free first, then by level, then by rotation, so
-    /// placement never defaults to a cliff. A tile that is not raisable stands at level 0 only.
+    /// The orientations `test` accepts in [`World::placement_key`] order, so placement never
+    /// defaults to a cliff it can avoid. A tile that is not raisable stands at level 0 only.
     fn ordered_orientations(
         &self,
         catalog: &TileCatalog,
@@ -519,27 +561,27 @@ impl World {
             .collect()
     }
 
-    /// [`World::ordered_orientations`] with each orientation's "has a cliff edge" flag, computed
-    /// once per orientation.
+    /// [`World::ordered_orientations`] with each orientation's [`World::placement_key`],
+    /// computed once per orientation.
     fn ordered_with_cliff(
         &self,
         catalog: &TileCatalog,
         cell: Axial,
         def: &TileDef,
         test: impl Fn(Orientation) -> bool,
-    ) -> Vec<(bool, Orientation)> {
-        let mut out: Vec<(bool, Orientation)> = (0..=MAX_LEVEL)
+    ) -> Vec<(PlacementKey, Orientation)> {
+        let mut out: Vec<(PlacementKey, Orientation)> = (0..=MAX_LEVEL)
             .filter(|&l| level_allowed(def, l))
             .flat_map(|l| (0..6).map(move |k| Orientation::new(k, l)))
             .filter(|&o| test(o))
-            .map(|o| (self.has_cliff(catalog, cell, def, o), o))
+            .map(|o| (self.placement_key(catalog, cell, def, o), o))
             .collect();
-        out.sort_by_key(|&(cliff, o)| (cliff, o.level, o.rotation));
+        out.sort_by_key(|&(key, _)| key);
         out
     }
 
-    /// Orientations in which `def` fits with its anchor at `cell`: cliff-free first, then by
-    /// level, then by rotation. Empty when `cell` is not a slot for `def` ([`World::is_slot_for`]).
+    /// Orientations in which `def` fits with its anchor at `cell`, in [`World::placement_key`]
+    /// order. Empty when `cell` is not a slot for `def` ([`World::is_slot_for`]).
     pub fn legal_orientations(
         &self,
         catalog: &TileCatalog,
@@ -615,7 +657,7 @@ impl World {
     /// What R steps through at `cell` for a picker entry (`members`, a group in rotation order or one
     /// lone tile): each member's distinct legal orientations (orientations at one level whose
     /// rotations give every world edge an equal socket count once, PRD §4.7 Q6), across the whole
-    /// entry cliff-free first, then by level, then member after member (owner, 2026-10-20: the
+    /// entry in [`World::placement_key`] order with member after member before rotation (owner, 2026-10-20: the
     /// Beach Curve's headland orientations, then its bay ones), then by rotation.
     pub fn group_orientations<'a>(
         &self,
@@ -624,25 +666,25 @@ impl World {
         members: &[&'a TileDef],
     ) -> Vec<(&'a TileDef, Orientation)> {
         let mut seq: Vec<(&'a TileDef, Orientation)> = vec![];
-        let mut keys: Vec<(bool, u8, usize, u8)> = vec![];
+        let mut keys: Vec<(u8, u16, u8, usize, u8)> = vec![];
         for (i, &d) in members.iter().enumerate() {
-            let mut reps: Vec<(bool, Orientation)> = vec![];
+            let mut reps: Vec<(PlacementKey, Orientation)> = vec![];
             let legal = if self.is_slot_for(cell, d) {
                 self.ordered_with_cliff(catalog, cell, d, |o| self.fits(catalog, cell, d, o))
             } else {
                 vec![]
             };
-            for (cliff, o) in legal {
+            for (key, o) in legal {
                 if !reps
                     .iter()
                     .any(|(_, r)| r.level == o.level && d.same_orientation(r.rotation, o.rotation))
                 {
-                    reps.push((cliff, o));
+                    reps.push((key, o));
                 }
             }
-            for (cliff, o) in reps {
+            for ((cliffs, drop, level, rotation), o) in reps {
                 seq.push((d, o));
-                keys.push((cliff, o.level, i, o.rotation));
+                keys.push((cliffs, drop, level, i, rotation));
             }
         }
         let mut order: Vec<usize> = (0..seq.len()).collect();
@@ -680,7 +722,7 @@ impl World {
             });
         }
         let own = members.iter().find(|d| d.id == id).and_then(|&d| {
-            let key = |o: Orientation| (self.has_cliff(catalog, cell, d, o), o.level, o.rotation);
+            let key = |o: Orientation| self.placement_key(catalog, cell, d, o);
             let at = key(o);
             let mine: Vec<_> = seq
                 .iter()
@@ -2156,9 +2198,8 @@ pub(crate) mod tests {
     fn cycling_a_fully_symmetric_tile_stays_on_its_one_orientation() {
         let c = catalog();
         let w = World::new(1);
-        // Forest: every edge alike and not raisable, so one orientation on level 0.
+        // Forest: every edge alike, so every step keeps rotation 0 (R steps only its level).
         let forest = def(&c, "forest");
-        assert!(!forest.raisable);
         for dir in [RotateDir::Forward, RotateDir::Back] {
             assert_eq!(cycle(&w, &c, EAST, forest, 0, dir), Some(0));
             assert_eq!(cycle(&w, &c, EAST, forest, 3, dir), Some(0));
@@ -2842,6 +2883,116 @@ pub(crate) mod tests {
         w.cliff_edges(c, cell, def, o).contains(&true)
     }
 
+    /// A world whose cell `HOLLOW` (3, 0) is ringed by level-1 tiles: a raised meadow bridge at
+    /// (1, 0) over the level-0 start meadow, then level-1 meadows round the hollow, except a
+    /// level-1 straight road on each world edge in `roads` (its road running into the hollow).
+    fn raised_ring(c: &TileCatalog, roads: &[u8]) -> World {
+        let mut w = World::new(1);
+        w.place(c, Axial::new(1, 0), "meadow", o(0, 1)).unwrap();
+        let mut todo: Vec<u8> = (0..6).collect();
+        while !todo.is_empty() {
+            let before = todo.len();
+            todo.retain(|&e| {
+                let cell = HOLLOW.neighbor(e);
+                let (id, k) = if roads.contains(&e) {
+                    ("road_straight", e % 3)
+                } else {
+                    ("meadow", 0)
+                };
+                w.place(c, cell, id, o(k, 1)).is_err()
+            });
+            assert!(todo.len() < before, "ring cells {todo:?} never fit");
+        }
+        w
+    }
+
+    const HOLLOW: Axial = Axial { q: 3, r: 0 };
+
+    /// Raised tiles (owner, 2026-11-13: "placing tiles like windmill should elevate them to
+    /// matching edge heights"): every land tile the first elevation round deferred, dropped into a
+    /// hollow ringed by level-1 ground, auto-orients to level 1 with no cliff (A38 O1), and R can
+    /// still step a tile without roads down to the ground, where every edge is a cliff.
+    #[test]
+    fn deferred_land_tiles_take_the_raised_level_of_their_ring() {
+        let c = catalog();
+        for (id, roads) in [
+            ("windmill", &[][..]),
+            ("forest", &[]),
+            ("oak", &[]),
+            ("farm", &[]),
+            ("wheat_field", &[]),
+            ("house_cluster", &[1]),
+            ("bakery", &[1, 4]),
+        ] {
+            let w = raised_ring(&c, roads);
+            let d = def(&c, id);
+            assert!(d.raisable, "{id}");
+            let legal = w.legal_orientations(&c, HOLLOW, d);
+            let first = *legal
+                .first()
+                .unwrap_or_else(|| panic!("{id}: no legal orientation"));
+            assert_eq!(first.level, 1, "{id}: auto-orients to {first:?}");
+            assert!(
+                !cliffs(&w, &c, HOLLOW, d, first),
+                "{id}: {first:?} has a cliff"
+            );
+            assert_eq!(w.auto_orient(&c, HOLLOW, d), Some(first), "{id}");
+            // A road edge never meets a road on another level, so a road tile stays raised.
+            let ground = legal.iter().find(|k| k.level == 0);
+            if roads.is_empty() {
+                let ground = ground.unwrap_or_else(|| panic!("{id}: no level-0 orientation"));
+                assert!(
+                    w.cliff_edges(&c, HOLLOW, d, *ground).iter().all(|&e| e),
+                    "{id}: on the ground every edge is a cliff"
+                );
+            } else {
+                assert_eq!(ground, None, "{id}: a road meets a road on its own level");
+            }
+            let mut placed = w.clone();
+            placed.place(&c, HOLLOW, id, first).unwrap();
+            assert_eq!(placed.tile(HOLLOW).unwrap().level, 1, "{id}");
+        }
+    }
+
+    /// The owner's screenshot (2026-11-13): a windmill in a hollow with level-1 ground on three
+    /// sides and open cells on the others takes level 1. Beside level-0 ground as well, every
+    /// level has a cliff, and it still rises to the side with the most edges (owner O1).
+    #[test]
+    fn a_windmill_in_a_three_sided_hollow_takes_level_one() {
+        let c = catalog();
+        let mut w = World::new(1);
+        for (q, r) in [(1, 0), (2, 0), (3, -1), (2, 1)] {
+            w.place(&c, Axial::new(q, r), "meadow", o(0, 1)).unwrap();
+        }
+        let mill = def(&c, "windmill");
+        let first = w.auto_orient(&c, HOLLOW, mill).unwrap();
+        assert_eq!(first.level, 1);
+        assert!(!cliffs(&w, &c, HOLLOW, mill, first));
+        w.place(&c, Axial::new(3, 1), "meadow", o(0, 0)).unwrap();
+        let mixed = w.auto_orient(&c, HOLLOW, mill).unwrap();
+        assert_eq!(mixed.level, 1);
+        assert_eq!(w.cliffs(&c, HOLLOW, mill, mixed).0, 1);
+    }
+
+    /// Owner O1 (2026-11-13): with a cliff on every level, the fewest cliff faces win, and a tie
+    /// takes the higher level. Cliff-free orientations still prefer the ground.
+    #[test]
+    fn a_mixed_level_slot_takes_the_fewest_cliffs_then_the_higher_level() {
+        let c = catalog();
+        let mut w = World::new(1);
+        let meadow = def(&c, "meadow");
+        // EAST meets the level-0 start meadow; give it one level-1 neighbour too: one cliff either way.
+        w.place(&c, Axial::new(1, -1), "meadow", o(0, 1)).unwrap();
+        let tie = w.legal_orientations(&c, EAST, meadow);
+        assert_eq!(w.cliffs(&c, EAST, meadow, tie[0]), (1, 2));
+        assert_eq!(tie[0].level, 1);
+        // A second level-0 neighbour makes level 0 the fewer-cliff side.
+        w.place(&c, Axial::new(0, 1), "meadow", o(0, 0)).unwrap();
+        let low = w.legal_orientations(&c, EAST, meadow);
+        assert_eq!(low[0].level, 0);
+        assert_eq!(w.cliffs(&c, EAST, meadow, low[0]).0, 1);
+    }
+
     #[test]
     fn meadow_beside_meadow_defaults_to_level_zero() {
         let c = catalog();
@@ -3001,7 +3152,7 @@ pub(crate) mod tests {
             Err(ReplaceError::Unchanged)
         );
         assert_eq!(
-            w.replace(&c, EAST, "forest", o(0, 1)),
+            w.replace(&c, EAST, "rail_straight", o(0, 1)),
             Err(ReplaceError::LevelOutOfRange(1))
         );
         let old = w.replace(&c, EAST, "meadow", o(0, 2)).unwrap();

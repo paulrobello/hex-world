@@ -1015,6 +1015,53 @@ mod tests {
         }
     }
 
+    /// Elevation (P4, raised village tiles 2026-11-13): on a level-1 bakery or house cluster, a
+    /// car on the through road, at each parking spot and along every parking path stands level on
+    /// the raised road crown, one `LEVEL_STEP` above where it stands on the ground.
+    #[test]
+    fn a_car_parks_on_a_raised_bakery_and_house_cluster() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let top = hex_core::LEVEL_STEP + ROAD_SURFACE_Y;
+        for id in ["bakery", "house_cluster"] {
+            let def = c.get(id).unwrap();
+            let mut pts: Vec<(Vec2, Vec2)> = vec![];
+            for line in road_lines(def) {
+                for w in line.windows(2) {
+                    pts.push((w[0].lerp(w[1], 0.5), (w[1] - w[0]).normalize()));
+                }
+            }
+            for spot in &def.parking {
+                for p in [spot.pose()]
+                    .iter()
+                    .chain(&spot.enter)
+                    .chain(&spot.back)
+                    .chain(&spot.back_alt)
+                    .chain(&spot.leave)
+                {
+                    let a = p.yaw_deg.to_radians();
+                    pts.push((Vec2::from(p.at), Vec2::new(a.cos(), a.sin())));
+                }
+            }
+            assert!(def.parking.len() >= 2, "{id}");
+            for rotation in [0u8, 3] {
+                let g = crate::walk::tests::world_at(&c, &[(0, 0, id, rotation, 1)]);
+                for &(p, d) in &pts {
+                    let [x, _, z] = crate::play::scatter::turn(rotation, [p.x, 0.0, p.y]);
+                    let [dx, _, dz] = crate::play::scatter::turn(rotation, [d.x, 0.0, d.y]);
+                    let (p, d) = (Vec2::new(x, z), Vec2::new(dx, dz));
+                    for kind in CarKind::ALL {
+                        let t = placed(Some(&g), &pose(kind, p, d));
+                        assert!(
+                            (t.translation.y - top).abs() < 1e-3
+                                && (t.rotation * Vec3::X).y.abs() < 1e-3,
+                            "{id} r{rotation} {kind:?} at {p}: {t:?}"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     /// Elevation (P4): a car nearing a tunnel's arch stays level on the portal's road while it
     /// fades. Its front wheels reach past edge 0 into the cover meadow one level up, which has no
     /// road: they ride the car's own level there, not the cover's top. So do wheels past a raised

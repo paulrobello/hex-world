@@ -1,0 +1,70 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/raised-tiles/raised-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        110.61,
+        107.08,
+        83.15
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 40.3,
+      "load_after": [
+        82.0,
+        100.07,
+        81.67
+      ],
+      "frames": {
+        "raised-overview": {
+          "mean": 0.0918,
+          "problem": null
+        },
+        "raised-windmill-hollow": {
+          "mean": 0.2183,
+          "problem": null
+        },
+        "raised-forest-oak-cliff": {
+          "mean": 0.2262,
+          "problem": null
+        },
+        "raised-farm-wheat-cliff": {
+          "mean": 0.2269,
+          "problem": null
+        },
+        "raised-village-cars-0": {
+          "mean": 0.2455,
+          "problem": null
+        },
+        "raised-village-cars-1": {
+          "mean": 0.2446,
+          "problem": null
+        },
+        "raised-village-low": {
+          "mean": 0.2149,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

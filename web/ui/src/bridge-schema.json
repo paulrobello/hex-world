@@ -464,7 +464,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "outcrop_granite",
           "boulder_granite",
@@ -542,7 +542,7 @@
         "outer": null,
         "period": 6,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "rock_small",
           "wildflower_clump",
@@ -616,7 +616,7 @@
         "outer": null,
         "period": 6,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -688,7 +688,7 @@
         "outer": null,
         "period": 6,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -760,7 +760,7 @@
         "outer": null,
         "period": 3,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_clump",
           "rock_small"
@@ -835,7 +835,7 @@
         "outer": null,
         "period": 6,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [],
         "stopped": [
           false,
@@ -910,7 +910,7 @@
         "outer": null,
         "period": 6,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [],
         "stopped": [
           false,

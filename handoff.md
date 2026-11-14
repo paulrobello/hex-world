@@ -27,7 +27,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
   Evidence: `docs/checkpoints/elevation/` and `docs/perf/elevation-2026-10-28/` (flat world2066 within 0.4% of main on MiniMac, plus a raised-world orbit measurement). Core grass, soil and asphalt halved their png fallback normals (owner P2) for png-family headroom.
 
-  Deferred by the owner: rivers, waterfalls and rail at levels; other raised tile types (only Meadow rises); portal lamps stay inert until P5.
+  Deferred by the owner: rivers, waterfalls and rail at levels; portal lamps stay inert until P5. Raised tile types were lifted 2026-11-13: forest, oak, farm, wheat field, houses, bakery and windmill rise too (only raised Meadow may still cover a tunnel).
 
   Open:
   - KTX2 re-encode drift card 01a185e1f1a6: root cause found 2026-10-29. It is the b6cd857/6e96b12 encoder settings change, not drift: the old flags reproduce the committed core-set bytes. kit-compress now warns on legacy re-encodes (`171d4e6`). Blocked on the owner: re-encode the 95 legacy items now, or with the KTX-Software 5.x upgrade (recommended, card 01a179379e46);

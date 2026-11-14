@@ -28,4 +28,5 @@
             (piece: "rock_small", density: 0.2),
         ],
     ),
+    raisable: true,
 )

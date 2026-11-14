@@ -1,0 +1,46 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/raised-tiles/mixed-slot-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        13.06,
+        21.12,
+        21.4
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 25.2,
+      "load_after": [
+        27.28,
+        23.8,
+        22.36
+      ],
+      "frames": {
+        "mixed-slot-windmill": {
+          "mean": 0.2348,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

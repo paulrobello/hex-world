@@ -23,4 +23,5 @@
             (piece: "windmill", at: (0.0, 0.0), yaw_deg: 120.0),
         ],
     ),
+    raisable: true,
 )

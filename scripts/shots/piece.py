@@ -68,6 +68,13 @@ def script_outputs(script: pathlib.Path) -> tuple[list[str], list[str]]:
     return frames, dumps
 
 
+def ends_with_exit(script: pathlib.Path) -> bool:
+    """Whether the script's last command is `exit`: without it the app hands the window back
+    and never exits, so every attempt runs to the timeout."""
+    cmds = json.loads(script.read_text())
+    return bool(cmds) and cmds[-1].get("cmd") == "exit"
+
+
 def load() -> list[float]:
     return [round(x, 2) for x in os.getloadavg()]
 
@@ -138,6 +145,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--timeout", type=float, default=900)
     ap.add_argument("extra", nargs="*", help="hex-world flags after --, e.g. -- --scenario play")
     a = ap.parse_args(argv)
+    if not ends_with_exit(a.script):
+        print(f"{a.script}: the last command must be {{\"cmd\": \"exit\"}}, or the run waits out its "
+              f"{a.timeout:.0f} s timeout twice", file=sys.stderr)
+        return 2
     frames, dumps = script_outputs(a.script)
     app = [a.bin, "--script", str(a.script), "--size", a.size, *BASE_FLAGS, *a.extra]
     log = SHOTS / f"{a.script.stem}-shots.log"

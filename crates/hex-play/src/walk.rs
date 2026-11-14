@@ -1330,6 +1330,8 @@ impl WalkGround {
             .filter_map(|t| Some((t.cell, (catalog.get(&t.tile)?, t.rotation))))
             .collect();
         let at = crate::play::covering(|c: Axial| tile_at.get(&c).copied());
+        let levels: HashMap<Axial, u8> = tiles.iter().map(|t| (t.cell, t.level)).collect();
+        let level = |c: Axial| levels.get(&c).copied().unwrap_or(0);
         for piece in ["boat_rowing", "boat_sail", "landing_stage"] {
             out.boat_shapes
                 .insert(piece.to_owned(), Arc::new(shape_of(piece)));
@@ -1461,7 +1463,7 @@ impl WalkGround {
             }
             // The field boundaries this tile owns (`play::respawn_pairs` draws them), and the
             // hedgerow oaks they carry.
-            for f in crate::play::boundaries::placements(world_seed, t.cell, &at) {
+            for f in crate::play::boundaries::placements(world_seed, t.cell, &at, &level) {
                 if OBSTACLES.contains(&f.piece) {
                     let local = crate::play::boundaries::transform(&f);
                     place(&mut obs, f.piece, &shape(f.piece), &(root * local));
@@ -2158,7 +2160,7 @@ pub(crate) mod tests {
             .collect();
         let at = |x: Axial| defs.get(&x).copied();
         let farm = centre(1, 0);
-        let runs: Vec<_> = crate::play::boundaries::placements(1, Axial::new(1, 0), &at)
+        let runs: Vec<_> = crate::play::boundaries::placements(1, Axial::new(1, 0), &at, &|_| 0)
             .into_iter()
             .filter(|p| {
                 p.piece.contains("_run") || p.piece == "wall_gate" || p.piece == "hedge_oak"
@@ -2200,7 +2202,7 @@ pub(crate) mod tests {
         // From the land side, every hedge run stops a walker coming at it square from 1.8 m out
         // (one standing clear of the neighbour's trees).
         let mut hedges = 0;
-        for p in crate::play::boundaries::placements(1, Axial::new(1, 0), &at)
+        for p in crate::play::boundaries::placements(1, Axial::new(1, 0), &at, &|_| 0)
             .iter()
             .filter(|p| p.piece.starts_with("hedge_") && p.piece != "hedge_end")
         {

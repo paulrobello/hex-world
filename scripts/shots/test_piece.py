@@ -84,6 +84,14 @@ class FrameCheck(unittest.TestCase):
         )
         self.assertEqual(piece.script_outputs(s), (["a", "b"], ["d"]))
 
+    def test_a_script_must_end_with_exit(self) -> None:
+        s = self.d / "s.json"
+        s.write_text(json.dumps([{"cmd": "screenshot", "name": "a"}]))
+        self.assertFalse(piece.ends_with_exit(s))
+        self.assertEqual(piece.main(["--script", str(s), "--out", str(self.d)]), 2)
+        s.write_text(json.dumps([{"cmd": "screenshot", "name": "a"}, {"cmd": "exit"}]))
+        self.assertTrue(piece.ends_with_exit(s))
+
 
 class Shoot(unittest.TestCase):
     def setUp(self) -> None:

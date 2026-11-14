@@ -2089,8 +2089,8 @@ mod tests {
              hero: [(piece: \"tree_hero_oak\", at: (0.0, 0.0))],",
         );
         forest.1 = forest.1.replace(
-            "    ),\n)",
-            "    ),\n    agents: [(agent: Bird, max: 12)],\n)",
+            "    ),\n    raisable: true,\n)",
+            "    ),\n    agents: [(agent: Bird, max: 12)],\n    raisable: true,\n)",
         );
         let refs: Vec<(&str, &str)> = tiles.iter().map(|(id, t)| (*id, t.as_str())).collect();
         let c = TileCatalog::from_ron(hex_core::SOCKETS_RON, &refs).unwrap();

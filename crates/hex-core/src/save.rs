@@ -1437,8 +1437,13 @@ mod tests {
             }))
         );
 
-        // A tile that is not raisable stands on level 0 only.
-        let mut w = wire(&sample(&c));
+        // A tile that is not raisable (rail) stands on level 0 only.
+        let mut rail = sample(&c);
+        rail.world = World::new(42);
+        rail.world
+            .place(&c, WEST, "rail_straight", Orientation::new(1, 0))
+            .unwrap();
+        let mut w = wire(&rail);
         tile_at(&mut w, -1, 0).level = 1;
         assert_eq!(
             decode(&file(&w)),

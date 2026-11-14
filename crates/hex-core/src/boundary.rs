@@ -15,7 +15,8 @@
 //!   edge and a hedge edge meeting at a corner each end there. Under the field/land rule at most
 //!   two of the three edges at a corner are boundaries (the third would join two fields or two land
 //!   tiles), so the junction pieces are built but never placed.
-//! - **Breaks.** Only edges whose two sockets are both grass or forest with no lane carry a
+//! - **Breaks.** Only edges whose two sockets are both grass or forest with no lane, between two
+//!   tiles on one level (P4: a raised field beside lower land meets it at a cliff), carry a
 //!   boundary, so roads, rivers, rail and coast break them (every field and land tile listed has
 //!   grass or forest edges only today, so the check is a guard for later tiles). A run or corner arm
 //!   over a hero prop's footprint (the farm's barn stands 0.5 m inside its edge 5) is left out,
@@ -179,29 +180,34 @@ fn edge_hash(world_seed: u64, a: Axial, e: u8, salt: u64) -> u64 {
 type Spot = (&'static str, [f32; 2], f32, Vec<Seg>, Vec<Axial>);
 
 /// The world-frame view of the placed tiles boundaries read.
-pub struct View<'a, A, B>
+pub struct View<'a, A, L, B>
 where
     A: Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    L: Fn(Axial) -> u8,
     B: Fn(Axial, &Seg) -> bool,
 {
     pub world_seed: u64,
     /// The definition and rotation of the tile at a cell.
     pub at: A,
+    /// The level of the tile at a cell (P4): an edge between two levels is a cliff, never a boundary.
+    pub level: L,
     /// Whether a boundary footprint would overlap something on the tile at a cell (its hero props).
     pub blocked: B,
     /// Each farm's gate edge once worked out (`placements` asks for it on every edge and corner).
     gates: std::cell::RefCell<std::collections::BTreeMap<Axial, Option<u8>>>,
 }
 
-impl<'a, A, B> View<'a, A, B>
+impl<'a, A, L, B> View<'a, A, L, B>
 where
     A: Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    L: Fn(Axial) -> u8,
     B: Fn(Axial, &Seg) -> bool,
 {
-    pub fn new(world_seed: u64, at: A, blocked: B) -> Self {
+    pub fn new(world_seed: u64, at: A, level: L, blocked: B) -> Self {
         Self {
             world_seed,
             at,
+            level,
             blocked,
             gates: Default::default(),
         }
@@ -216,6 +222,9 @@ where
             s.lane.is_none() && matches!(s.kind, SocketKind::Grass | SocketKind::Forest)
         };
         if !open(da.edge(e % 6, ra)) || !open(db.edge((e + 3) % 6, rb)) {
+            return None;
+        }
+        if (self.level)(a) != (self.level)(b) {
             return None;
         }
         match (class(da)?, class(db)?) {
@@ -445,12 +454,13 @@ where
 }
 
 /// Every world footprint line of the boundaries drawn by `owners` (field tiles; others add none).
-pub fn segments<'a, A, B>(
-    view: &View<'a, A, B>,
+pub fn segments<'a, A, L, B>(
+    view: &View<'a, A, L, B>,
     owners: impl IntoIterator<Item = Axial>,
 ) -> Vec<Seg>
 where
     A: Fn(Axial) -> Option<(&'a TileDef, u8)>,
+    L: Fn(Axial) -> u8,
     B: Fn(Axial, &Seg) -> bool,
 {
     owners
@@ -483,6 +493,7 @@ mod tests {
         let view = View::new(
             seed,
             |x: Axial| w.tile(x).and_then(|t| Some((c.get(&t.def)?, t.rotation))),
+            |x: Axial| w.tile(x).map_or(0, |t| t.level),
             |_: Axial, _: &Seg| false,
         );
         view.placements(cell)
@@ -529,6 +540,43 @@ mod tests {
                 assert!((13.0..=16.01).contains(&d), "{q:?} at {d}");
             }
         }
+    }
+
+    /// Elevation (P4, raised fields 2026-11-13): a field one level above its land neighbour meets
+    /// it at a cliff, so the edge carries no wall, hedge or gate; raised beside raised land, the
+    /// edge is fenced as on the ground.
+    #[test]
+    fn a_cliff_edge_carries_no_boundary_and_a_raised_pair_keeps_it() {
+        let c = catalog();
+        let at_level = |tiles: &[(i32, i32, &str, u8)]| {
+            let mut w = World::new(1);
+            for &(q, r, id, level) in tiles {
+                w.place(
+                    &c,
+                    Axial::new(q, r),
+                    id,
+                    crate::world::Orientation::new(0, level),
+                )
+                .unwrap_or_else(|e| panic!("{id} at {q},{r}: {e:?}"));
+            }
+            w
+        };
+        let farm = Axial::new(1, 0);
+        // The raised farm over the level-0 start meadow: a cliff, no boundary.
+        let w = at_level(&[(1, 0, "farm", 1)]);
+        assert!(placements(&c, &w, farm, 7).is_empty());
+        // A raised meadow on its far side (world edge 0) is fenced, gate included; the cliff edge
+        // to the start meadow (world edge 3) still is not.
+        let w = at_level(&[(1, 0, "farm", 1), (2, 0, "meadow", 1)]);
+        let p = placements(&c, &w, farm, 7);
+        assert!(p.iter().any(|p| p.piece == "wall_gate"), "{p:?}");
+        let fc = farm.to_world(HEX_RADIUS);
+        assert!(
+            p.iter()
+                .flat_map(|p| &p.segs)
+                .all(|s| s.a[0] > fc[0] && s.b[0] > fc[0]),
+            "a footprint on the cliff side: {p:?}"
+        );
     }
 
     #[test]

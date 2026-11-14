@@ -38,7 +38,7 @@
 use std::collections::BTreeMap;
 
 use bevy::{mesh::MeshTag, prelude::*};
-use hex_core::{Axial, HEX_RADIUS, TileDef, cell_seed};
+use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, TileDef, cell_seed};
 use hex_render::{
     animal::{self, AnimalRig},
     kit_material::KitMaterial,
@@ -731,6 +731,8 @@ pub struct WalkerAt(pub Option<Vec2>);
 pub struct TileHerd {
     pub tile: String,
     pub rotation: u8,
+    /// The tile's level (P4): the herd poses under the tile root, which stands this level up.
+    pub level: u8,
     pub herd: Herd,
 }
 
@@ -840,9 +842,9 @@ pub fn sync(
         herds.seed = view.world_seed;
     }
     herds.herds.retain(|c, h| {
-        view.tiles
-            .iter()
-            .any(|t| t.cell == *c && t.tile == h.tile && t.rotation == h.rotation)
+        view.tiles.iter().any(|t| {
+            t.cell == *c && t.tile == h.tile && t.rotation == h.rotation && t.level == h.level
+        })
     });
     for t in &view.tiles {
         if herds.herds.contains_key(&t.cell) {
@@ -865,6 +867,7 @@ pub fn sync(
                 TileHerd {
                     tile: t.tile.clone(),
                     rotation: t.rotation,
+                    level: t.level,
                     herd,
                 },
             );
@@ -899,6 +902,19 @@ type HerdParts<'w, 's> = (
     Query<'w, 's, Option<&'static mut MeshTag>, With<MeshMaterial3d<KitMaterial>>>,
 );
 
+/// The ground under a herd animal at tile-frame `p`, in the tile root's frame: the walk ground
+/// there less the tile's level height `y0` (the root stands `y0` up), or the relief formula until
+/// the walk ground is built.
+pub fn herd_ground(
+    ground: Option<&WalkGround>,
+    (cell, rotation, y0): (Axial, u8, f32),
+    p: Vec2,
+) -> f32 {
+    ground
+        .and_then(|g| g.ground(to_world(cell, rotation, p)).ok())
+        .map_or_else(|| relief_ground(p), |h| h - y0)
+}
+
 /// Poses every herd animal entity between the last two ticks on the drawn ground (the walk
 /// ground's kit surface, the relief formula until it is built), writes its motion word on every
 /// kit part under it (an untagged part draws at rest, so a word of 0 inserts nothing), and gives
@@ -931,12 +947,8 @@ pub fn pose(
             continue;
         };
         let (cell, rotation) = (a.cell, h.rotation);
-        let on = |p: Vec2| {
-            ground
-                .as_deref()
-                .and_then(|g| g.ground(to_world(cell, rotation, p)).ok())
-                .unwrap_or_else(|| relief_ground(p))
-        };
+        let y0 = f32::from(h.level) * LEVEL_STEP;
+        let on = |p: Vec2| herd_ground(ground.as_deref(), (cell, rotation, y0), p);
         let p = h.herd.pose(i, *held, &on);
         if *t != p {
             *t = p;
@@ -1615,6 +1627,7 @@ mod tests {
             TileHerd {
                 tile: "farm".into(),
                 rotation: 0,
+                level: 0,
                 herd,
             },
         );
@@ -1664,5 +1677,37 @@ mod tests {
             }
         }
         assert!(walked, "the first animal never walked");
+    }
+
+    /// Elevation (P4, raised farm 2026-11-13): the herd poses under its tile root, which stands
+    /// on the farm's level, so a cow on a level-1 farm stands on the same tile-frame ground as one
+    /// on a level-0 farm (not a second level up), and in the world on the raised cap.
+    #[test]
+    fn a_raised_farm_herd_stands_on_its_cap() {
+        let def = farm();
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let (low, high) = (Axial::new(0, 0), Axial::new(2, 0));
+        let g = walk_tests::world_at(&c, &[(0, 0, "farm", 0, 0), (2, 0, "farm", 0, 1)]);
+        let h = Herd::new(&def, low, 1, &rocks(&def, low)).unwrap();
+        for i in 0..h.animals.len() {
+            let at_low = |p: Vec2| herd_ground(Some(&g), (low, 0, 0.0), p);
+            let at_high = |p: Vec2| herd_ground(Some(&g), (high, 0, LEVEL_STEP), p);
+            let (a, b) = (h.pose(i, 1.0, &at_low), h.pose(i, 1.0, &at_high));
+            assert!(
+                (a.translation.y - b.translation.y).abs() < 1e-3,
+                "{}: {} on level 0, {} on level 1 (tile frame)",
+                h.animals[i].piece,
+                a.translation.y,
+                b.translation.y
+            );
+            let world = root(high, 0) * Transform::from_xyz(0.0, LEVEL_STEP, 0.0) * b;
+            let under = g.ground(world.translation.xz()).unwrap();
+            assert!(
+                (world.translation.y - under).abs() < 0.3,
+                "{}: stands at {} over ground {under}",
+                h.animals[i].piece,
+                world.translation.y
+            );
+        }
     }
 }
