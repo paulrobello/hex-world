@@ -16,6 +16,7 @@ if [ ! -x "$bin/ktx" ]; then
   mkdir -p "$root/tools"
   pkg="$root/tools/KTX-Software-4.4.2-Darwin-arm64.pkg"
   curl -fL --max-time 120 https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Darwin-arm64.pkg -o "$pkg"
+  echo "500bd8f9d63358c3f3a0d83b724c8574436a72c37dc0e4bad90ec1ca38032c3c  $pkg" | shasum -a 256 --check --strict
   rm -rf "$dest"
   pkgutil --expand-full "$pkg" "$dest"
 fi
