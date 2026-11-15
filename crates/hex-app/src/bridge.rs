@@ -198,37 +198,31 @@ pub fn cell_rect(view: &View, cell: Axial, level: u8, rise: u8) -> Option<[f32; 
 
 #[cfg(target_arch = "wasm32")]
 mod exports {
+    use hex_play_state::locked;
     use wasm_bindgen::prelude::*;
 
     use crate::{capture, control};
 
     #[wasm_bindgen]
     pub fn hex_world_ready() -> bool {
-        *super::READY.lock().unwrap_or_else(|p| p.into_inner())
+        *locked(&super::READY)
     }
 
     #[wasm_bindgen]
     pub fn hex_world_state_json() -> String {
-        super::STATE_JSON
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .take_patch()
+        locked(&super::STATE_JSON).take_patch()
     }
 
     #[wasm_bindgen]
     pub fn hex_world_diag_json() -> String {
-        let s = super::DIAG_JSON.lock().unwrap_or_else(|p| p.into_inner());
+        let s = locked(&super::DIAG_JSON);
         if s.is_empty() { "{}".into() } else { s.clone() }
     }
 
     /// Drains the game event queue as a JSON array (`[]` when empty).
     #[wasm_bindgen]
     pub fn hex_world_events() -> String {
-        let drained: Vec<String> = super::EVENTS
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .drain(..)
-            .collect();
+        let drained: Vec<String> = locked(&super::EVENTS).drain(..).collect();
         format!("[{}]", drained.join(","))
     }
 
@@ -236,7 +230,7 @@ mod exports {
     /// `null` before the camera exists or when the cell is behind it.
     #[wasm_bindgen]
     pub fn hex_world_cell_rect(q: i32, r: i32, level: u8, rise: u8) -> String {
-        let view = *super::VIEW.lock().unwrap_or_else(|p| p.into_inner());
+        let view = *locked(&super::VIEW);
         match view.and_then(|v| super::cell_rect(&v, hex_core::Axial::new(q, r), level, rise)) {
             Some(r) => format!("[{},{},{},{}]", r[0], r[1], r[2], r[3]),
             None => "null".into(),
@@ -253,10 +247,7 @@ mod exports {
         };
         match parsed {
             Ok(cmds) => {
-                control::INBOX
-                    .lock()
-                    .unwrap_or_else(|p| p.into_inner())
-                    .extend(cmds);
+                locked(&control::INBOX).extend(cmds);
                 true
             }
             Err(e) => {
@@ -269,29 +260,20 @@ mod exports {
     /// Commands `hex_world_cmd` took that no frame has drained into the command queue yet.
     #[wasm_bindgen]
     pub fn hex_world_inbox_len() -> usize {
-        control::INBOX
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .len()
+        locked(&control::INBOX).len()
     }
 
     /// Queues a screenshot behind any pending commands; poll `hex_world_take_shot` for the result.
     #[wasm_bindgen]
     pub fn hex_world_screenshot(name: String) {
-        capture::SHOTS
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .retain(|(n, _)| *n != name);
-        control::INBOX
-            .lock()
-            .unwrap()
-            .push(control::Command::Screenshot { name });
+        locked(&capture::SHOTS).retain(|(n, _)| *n != name);
+        locked(&control::INBOX).push(control::Command::Screenshot { name });
     }
 
     /// Removes and returns the PNG data URL for `name` once the capture has landed.
     #[wasm_bindgen]
     pub fn hex_world_take_shot(name: String) -> Option<String> {
-        let mut shots = capture::SHOTS.lock().unwrap_or_else(|p| p.into_inner());
+        let mut shots = locked(&capture::SHOTS);
         let i = shots.iter().position(|(n, _)| *n == name)?;
         Some(shots.remove(i).1)
     }

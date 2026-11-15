@@ -2,6 +2,11 @@
 use bevy::prelude::*;
 use hex_core::{Axial, EdgeStatus, PairPieces, TileCatalog};
 use std::collections::{BTreeMap, HashMap, HashSet};
+/// Locks `m`, taking the data even if another thread panicked while holding it.
+pub fn locked<T>(m: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// The play systems (kit loading, the view sync, the rise and the affordances), in order. `hex-app`
 /// orders its view writer before this set and the car mirror after it.
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]

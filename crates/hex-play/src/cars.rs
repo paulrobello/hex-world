@@ -7,6 +7,7 @@
 //! per-entity [`MeshTag`], which keeps every car of a type and LOD in one instanced batch
 //! (`car_material.rs`). Until the kit pieces load (or if they fail) every car draws as the
 //! placeholder mesh.
+use hex_play_state::locked;
 use std::{
     collections::{HashMap, HashSet},
     sync::Mutex,
@@ -398,7 +399,7 @@ pub fn finish_kit(
     let mut kinds: Vec<_> = ready.keys().map(|k| k.piece()).collect();
     kinds.sort();
     info!("cars: kit car pieces ready: {kinds:?}");
-    *CAR_MESHES.lock().unwrap() = labels;
+    *locked(&CAR_MESHES) = labels;
     *kit = CarKit::Ready(ready);
 }
 
@@ -674,8 +675,7 @@ fn census_bins(
     if !CENSUS_REQUESTED.swap(false, std::sync::atomic::Ordering::Relaxed) {
         return;
     }
-    let labels: HashMap<UntypedAssetId, String> =
-        CAR_MESHES.lock().unwrap().iter().cloned().collect();
+    let labels: HashMap<UntypedAssetId, String> = locked(&CAR_MESHES).iter().cloned().collect();
     for v in &cameras {
         let Some(p) = opaque.get(&v.retained_view_entity) else {
             continue;

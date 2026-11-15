@@ -14,6 +14,7 @@
 //! every cascade. The main pass uses Bevy's `MeshPipeline` layout and `apply_pbr_lighting`, so
 //! they receive shadows like `StandardMaterial` meshes; SSAO is sampled in the fragment shader
 //! the way `pbr_input_from_standard_material` does, since `apply_pbr_lighting` only consumes it.
+use hex_play_state::locked;
 use std::{
     collections::HashMap,
     ops::Range,
@@ -421,7 +422,7 @@ pub fn request_census() {
 
 /// The latest instanced census, if one has been recorded since the scene was built.
 pub fn latest_census() -> Option<InstancedCensus> {
-    CENSUS.lock().unwrap().clone()
+    locked(&CENSUS).clone()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -682,7 +683,7 @@ fn prepare_pieces(
             usage: BufferUsages::STORAGE,
         }));
         gpu.scene = Some(scene.0.clone());
-        *CENSUS.lock().unwrap() = None;
+        *locked(&CENSUS) = None;
     }
     let d = scene.0.clone();
     let Some(camera) = cameras.iter().next() else {
@@ -759,7 +760,7 @@ fn prepare_pieces(
                 }
             }
         }
-        *CENSUS.lock().unwrap() = Some(c);
+        *locked(&CENSUS) = Some(c);
     }
     if gpu.ids.is_empty() {
         gpu.ids.push(0);

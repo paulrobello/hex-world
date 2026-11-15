@@ -36,6 +36,7 @@
 //! tonemapping (the UI and upscale passes are not measured). Chrome quantizes timestamps to 100 µs
 //! unless WebGPU developer features are on. `HEXW_GPU_TIMING_DEBUG=1` logs one frame's raw stamps
 //! every 200 frames.
+use hex_play_state::locked;
 use std::{
     collections::VecDeque,
     sync::{
@@ -182,15 +183,13 @@ struct Published {
 static PUBLISHED: Mutex<Option<Published>> = Mutex::new(None);
 
 fn publish(f: impl FnOnce(&mut Published)) {
-    let mut g = PUBLISHED.lock().unwrap();
+    let mut g = locked(&PUBLISHED);
     f(g.get_or_insert_with(Published::default));
 }
 
 /// GPU frames whose `frame` lies in `range`, newest last (for the stall-tail join in `diag`).
 pub fn frames_in(range: std::ops::RangeInclusive<u32>) -> Vec<GpuFrame> {
-    PUBLISHED
-        .lock()
-        .unwrap()
+    locked(&PUBLISHED)
         .as_ref()
         .map(|p| {
             p.ring
@@ -242,7 +241,7 @@ fn frame_json(f: &GpuFrame) -> serde_json::Value {
 
 /// The `gpu` object of the diag snapshot: `null` fields until timing is on and supported.
 pub fn diag_json(enabled: bool) -> serde_json::Value {
-    let g = PUBLISHED.lock().unwrap();
+    let g = locked(&PUBLISHED);
     let p = g.as_ref();
     let supported = p.and_then(|p| p.supported);
     let reason = match (enabled, supported) {

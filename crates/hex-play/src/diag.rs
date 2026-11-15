@@ -1,4 +1,5 @@
 //! Frame-time percentiles and render-mode facts for the engine gate (PRD P0).
+use hex_play_state::locked;
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{
@@ -64,7 +65,7 @@ fn count_acquired(
             .iter()
             .any(|(m, w)| m.id() == e && w.swap_chain_texture_view.is_some())
     });
-    let mut ring = ACQUIRED.lock().unwrap();
+    let mut ring = locked(&ACQUIRED);
     if ring.len() == RING {
         ring.pop_front();
     }
@@ -76,7 +77,7 @@ fn count_acquired(
 /// `frames` render frames, `not_acquired` (frames a window got no swap-chain texture, so the
 /// camera drew nothing to it).
 pub fn window_json(focused: Option<bool>) -> serde_json::Value {
-    let ring = ACQUIRED.lock().unwrap();
+    let ring = locked(&ACQUIRED);
     serde_json::json!({
         "focused": focused,
         "frames": ring.len(),
@@ -215,9 +216,7 @@ pub struct Stall {
 static WAITING_PIPELINES: Mutex<VecDeque<(u32, u32)>> = Mutex::new(VecDeque::new());
 
 fn waiting_near(frame: u32) -> u32 {
-    WAITING_PIPELINES
-        .lock()
-        .unwrap()
+    locked(&WAITING_PIPELINES)
         .iter()
         .filter(|(f, _)| f.abs_diff(frame) <= TAIL_JOIN)
         .map(|(_, w)| *w)
@@ -445,7 +444,7 @@ fn census_passes(
                 count_kit_draws(&mut k, set, &kit_draws, non_mesh_entities(p), 1);
             }
         }
-        *KIT_CENSUS.lock().unwrap() = Some(k);
+        *locked(&KIT_CENSUS) = Some(k);
     }
     let phases = CameraPhases {
         opaque: &opaque,
@@ -465,7 +464,7 @@ fn census_passes(
         }
     }
     out.sort_by(|a, b| (a.phase, &a.view).cmp(&(b.phase, &b.view)));
-    *PASS_CENSUS.lock().unwrap() = out;
+    *locked(&PASS_CENSUS) = out;
 }
 
 pub struct DiagPlugin;
@@ -507,7 +506,7 @@ fn probe_render_modes(
     frame: Res<FrameCount>,
 ) {
     {
-        let mut w = WAITING_PIPELINES.lock().unwrap();
+        let mut w = locked(&WAITING_PIPELINES);
         if w.len() == 64 {
             w.pop_front();
         }
@@ -531,7 +530,7 @@ fn probe_render_modes(
         "{} | {:?} | {:?} | {}",
         adapter.name, adapter.backend, adapter.device_type, adapter.driver
     );
-    *RENDER_MODES.lock().unwrap() = Some(RenderModes {
+    *locked(&RENDER_MODES) = Some(RenderModes {
         ssao,
         gpu_preprocessing_supported,
         adapter,
@@ -547,7 +546,7 @@ fn sync_render_modes(
     if st.frames < 10 {
         return;
     }
-    let Some(latest) = RENDER_MODES.lock().unwrap().clone() else {
+    let Some(latest) = locked(&RENDER_MODES).clone() else {
         return;
     };
     if *modes != latest {
@@ -659,9 +658,7 @@ fn sample(
             (c.bounds.len(), c.bounds.last().copied().unwrap_or(0.0))
         });
         let casters = workload.map_or("all", |c| c.shadow_casters.name());
-        let passes = PASS_CENSUS
-            .lock()
-            .unwrap()
+        let passes = locked(&PASS_CENSUS)
             .iter()
             .map(|p| {
                 format!(
@@ -735,7 +732,7 @@ fn sample(
             "gpu": crate::gpu_timing::diag_json(gpu_timing.is_some_and(|g| g.enabled)),
             "stall": stall_json(&st.stats, &st.stalls),
             "window": window_json(windows.iter().next().map(|w| w.focused)),
-            "kit_draws": KIT_CENSUS.lock().unwrap().as_ref().map(kit_census_json),
+            "kit_draws": locked(&KIT_CENSUS).as_ref().map(kit_census_json),
             "kit_queue": hex_render::kit_instances::queue_stats().map(|q| kit_queue_json(&q)),
         });
         snap.json = merge_json(&snap.json, &extra);

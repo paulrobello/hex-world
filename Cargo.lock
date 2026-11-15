@@ -3048,6 +3048,7 @@ dependencies = [
  "bevy",
  "hex-core",
  "hex-play",
+ "hex-play-state",
  "hex-render",
  "hex-sim",
  "image",

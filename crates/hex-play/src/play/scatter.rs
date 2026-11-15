@@ -3041,6 +3041,7 @@ fn fence_map(
 
 #[cfg(test)]
 mod tests {
+    use hex_play_state::locked;
     #[test]
     fn portable_atan2_matches_atan2() {
         let mut worst = 0.0f32;
@@ -3115,11 +3116,11 @@ mod tests {
     fn lod0(id: &str) -> Tris {
         static CACHE: OnceLock<Mutex<HashMap<String, Tris>>> = OnceLock::new();
         let cache = CACHE.get_or_init(Default::default);
-        if let Some(t) = cache.lock().unwrap().get(id) {
+        if let Some(t) = locked(cache).get(id) {
             return t.clone();
         }
         let t = glb_mesh_tris(id, "lod0");
-        cache.lock().unwrap().insert(id.to_owned(), t.clone());
+        locked(cache).insert(id.to_owned(), t.clone());
         t
     }
 

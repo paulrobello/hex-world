@@ -2151,6 +2151,7 @@ pub fn sync(
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use hex_play_state::locked;
     use std::sync::{Mutex, OnceLock};
 
     use hex_assets::parse_manifest;
@@ -2917,7 +2918,7 @@ pub(crate) mod tests {
         static CACHE: OnceLock<Mutex<HashMap<String, Tris>>> = OnceLock::new();
         let key = format!("{id}_{mesh}");
         let cache = CACHE.get_or_init(Default::default);
-        if let Some(t) = cache.lock().unwrap().get(&key) {
+        if let Some(t) = locked(cache).get(&key) {
             return t.clone();
         }
         let read = || -> Tris {
@@ -2939,7 +2940,7 @@ pub(crate) mod tests {
             Some(out)
         };
         let t = read();
-        cache.lock().unwrap().insert(key, t.clone());
+        locked(cache).insert(key, t.clone());
         t
     }
 

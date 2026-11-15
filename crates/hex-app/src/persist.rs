@@ -2,6 +2,7 @@
 //! bytes behind `hexWorld.takeSave(tag)` and `hexWorld.load(bytes)` on the web, and `--save` and
 //! `--load` natively. The byte format is hex-core's (`docs/save-format.md`); this module maps it to
 //! the running game: the world and its history, the orbit camera and the settings.
+use hex_play_state::locked;
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
@@ -204,7 +205,7 @@ fn tile_count(world: &World) -> u32 {
 
 /// Keeps `bytes` for `hexWorld.takeSave(tag)`.
 pub fn store_save(tag: &str, bytes: Vec<u8>) {
-    let mut saved = SAVED.lock().unwrap();
+    let mut saved = locked(&SAVED);
     saved.retain(|(t, _)| t != tag);
     saved.push((tag.to_owned(), bytes));
     while saved.len() > SAVED_CAP {
@@ -215,7 +216,7 @@ pub fn store_save(tag: &str, bytes: Vec<u8>) {
 /// Removes and returns the bytes saved under `tag`, once its `saved` event has fired.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn take_save(tag: &str) -> Option<Vec<u8>> {
-    let mut saved = SAVED.lock().unwrap();
+    let mut saved = locked(&SAVED);
     let i = saved.iter().position(|(t, _)| t == tag)?;
     Some(saved.remove(i).1)
 }
@@ -228,11 +229,8 @@ pub fn request_load(bytes: &[u8]) -> Result<(u32, u16), Refusal> {
     match decode(bytes) {
         Ok((save, version)) => {
             let tiles = tile_count(&save.world);
-            PENDING_LOADS.lock().unwrap().push_back((save, version));
-            control::INBOX
-                .lock()
-                .unwrap()
-                .push(Command::Load { path: None });
+            locked(&PENDING_LOADS).push_back((save, version));
+            locked(&control::INBOX).push(Command::Load { path: None });
             Ok((tiles, version))
         }
         Err(r) => {
@@ -301,9 +299,7 @@ fn load_source(path: Option<&str>) -> Result<(SaveData, u16), Refusal> {
             "io",
             format!("the web build has no file system ({p}); pass the bytes to hexWorld.load"),
         )),
-        None => PENDING_LOADS
-            .lock()
-            .unwrap()
+        None => locked(&PENDING_LOADS)
             .pop_front()
             .ok_or_else(|| Refusal::new("no_file", "no file was given to load")),
     }
@@ -487,7 +483,7 @@ pub fn keep_latest(
         tilt_shift_strength: tilt.strength,
         volumes: saved.volumes,
     };
-    let mut latest = LATEST.lock().unwrap();
+    let mut latest = locked(&LATEST);
     let fresh = latest.world_rev == game.world_rev;
     match latest.save.as_mut() {
         Some(s) if fresh => {
@@ -510,7 +506,7 @@ pub fn keep_latest(
 /// before the first frame. For a page hide, which cannot wait for a queued `save` command.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn save_now(volumes: Option<Volumes>) -> Option<Vec<u8>> {
-    let mut latest = LATEST.lock().unwrap();
+    let mut latest = locked(&LATEST);
     let save = latest.save.as_mut()?;
     if let Some(v) = volumes {
         save.settings.volumes = v.into();
@@ -557,7 +553,7 @@ mod tests {
     // evict other tests' entries, so every test that touches them holds this lock.
     static OUTBOX: std::sync::Mutex<()> = std::sync::Mutex::new(());
     fn outbox() -> std::sync::MutexGuard<'static, ()> {
-        OUTBOX.lock().unwrap_or_else(|e| e.into_inner())
+        locked(&OUTBOX)
     }
     use crate::actions::Action;
     use hex_core::Axial;
@@ -793,7 +789,7 @@ mod tests {
             7,
         );
         let good = take_save("inspect-src").unwrap();
-        let loads = PENDING_LOADS.lock().unwrap().len();
+        let loads = locked(&PENDING_LOADS).len();
         let ok: serde_json::Value = serde_json::from_str(&inspect_json(&good)).unwrap();
         assert_eq!(ok["ok"], true);
         assert_eq!(ok["version"], SAVE_FORMAT_VERSION);
@@ -808,7 +804,7 @@ mod tests {
         assert_eq!(bad["code"], "newer_version");
         assert_eq!(bad["version"], SAVE_FORMAT_VERSION + 1);
         assert_eq!(bad["supported"], SAVE_FORMAT_VERSION);
-        assert_eq!(PENDING_LOADS.lock().unwrap().len(), loads);
+        assert_eq!(locked(&PENDING_LOADS).len(), loads);
     }
 
     /// The web path: `hexWorld.load(bytes)` validates at once, then queues a `load` command that
@@ -841,7 +837,7 @@ mod tests {
             "{r:?}"
         );
         assert!(
-            PENDING_LOADS.lock().unwrap().is_empty(),
+            locked(&PENDING_LOADS).is_empty(),
             "a refused file queues nothing"
         );
 
@@ -852,7 +848,7 @@ mod tests {
             json,
             serde_json::json!({ "ok": true, "tiles": 5, "version": SAVE_FORMAT_VERSION })
         );
-        let queued: Vec<Command> = control::INBOX.lock().unwrap().drain(..).collect();
+        let queued: Vec<Command> = locked(&control::INBOX).drain(..).collect();
         assert_eq!(queued, [Command::Load { path: None }]);
 
         let mut g2 = GameState::new(7);
@@ -1053,7 +1049,7 @@ mod tests {
             Some(vec![2]),
             "a newer save replaces its tag's"
         );
-        assert!(SAVED.lock().unwrap().len() <= SAVED_CAP);
+        assert!(locked(&SAVED).len() <= SAVED_CAP);
     }
 
     /// Owner decision A21 (2026-10-14): a save the player never toggled tilt-shift in (the

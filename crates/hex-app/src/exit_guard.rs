@@ -12,6 +12,7 @@
 //! `HEXW_EXIT_WATCHDOG_SECS` (default 20) later, it samples every thread's stack to
 //! `target/exit-hang-<pid>.txt` and exits by [`verdict`]: 0 with a warning when every expected
 //! output is on disk, [`WATCHDOG_EXIT`] naming the missing ones otherwise.
+use hex_play_state::locked;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -48,14 +49,14 @@ pub fn init(dump_state: Option<&str>, save: Option<&str>) {
 /// Records a file this run will write; the watchdog's verdict checks it is on disk.
 pub fn expect(path: impl Into<PathBuf>) {
     let path = path.into();
-    let mut expected = EXPECTED.lock().unwrap_or_else(|p| p.into_inner());
+    let mut expected = locked(&EXPECTED);
     if !expected.contains(&path) {
         expected.push(path);
     }
 }
 
 fn expected() -> Vec<PathBuf> {
-    EXPECTED.lock().unwrap_or_else(|p| p.into_inner()).clone()
+    locked(&EXPECTED).clone()
 }
 
 /// The watchdog's exit code and message after waiting `waited`: 0 when every expected file is a

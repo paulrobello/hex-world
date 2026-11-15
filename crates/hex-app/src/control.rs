@@ -1,4 +1,5 @@
 //! Agent command model: scripted camera moves, screenshots, scenario switches, state dumps.
+use hex_play_state::locked;
 use std::collections::VecDeque;
 use std::sync::Mutex;
 
@@ -446,10 +447,8 @@ pub fn run_commands(
         mut car_cap,
         mut frame_cap,
     } = settings;
-    queue
-        .items
-        .extend(INBOX.lock().unwrap_or_else(|p| p.into_inner()).drain(..));
-    if !*bridge::READY.lock().unwrap_or_else(|p| p.into_inner()) {
+    queue.items.extend(locked(&INBOX).drain(..));
+    if !*locked(&bridge::READY) {
         return;
     }
     let Some(cmd) = queue.next(capture::holding(&time)) else {
@@ -734,10 +733,7 @@ fn apply_debug(
 }
 
 fn dump_state(name: &str) {
-    let json = bridge::STATE_JSON
-        .lock()
-        .unwrap_or_else(|p| p.into_inner())
-        .snapshot();
+    let json = locked(&bridge::STATE_JSON).snapshot();
     info!("dump_state {name}: {json}");
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -944,14 +940,13 @@ pub fn publish_state(
         photo_focus,
         fx,
     } = capture;
-    *bridge::VIEW.lock().unwrap_or_else(|p| p.into_inner()) =
-        views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
-            Some(bridge::View {
-                clip_from_world: c.clip_from_view() * gt.to_matrix().inverse(),
-                origin: c.logical_viewport_rect()?.min,
-                size: c.logical_viewport_size()?,
-            })
-        });
+    *locked(&bridge::VIEW) = views.iter().find(|(c, _)| c.is_active).and_then(|(c, gt)| {
+        Some(bridge::View {
+            clip_from_world: c.clip_from_view() * gt.to_matrix().inverse(),
+            origin: c.logical_viewport_rect()?.min,
+            size: c.logical_viewport_size()?,
+        })
+    });
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
@@ -964,7 +959,7 @@ pub fn publish_state(
                             "maxTextureDimension2D": g.max_texture_dimension_2d })
     });
     let play = active.0 == Scenario::Play;
-    let mut publication = bridge::STATE_JSON.lock().unwrap_or_else(|p| p.into_inner());
+    let mut publication = locked(&bridge::STATE_JSON);
     publication.set("play", if play { "{}" } else { "null" }.into());
     if play
         && published.is_none_or(|(_, revision, was_play)| !was_play || revision != game.world_rev)
@@ -1013,7 +1008,7 @@ pub fn publish_state(
     let state = serde_json::json!({
         "scenario": format!("{:?}", active.0),
         "tiles": if play { game.world.tiles().len() } else { active.0.tile_count(kit_src) },
-        "events_pending": bridge::EVENTS.lock().unwrap_or_else(|p| p.into_inner()).len(),
+        "events_pending": locked(&bridge::EVENTS).len(),
         "gpu": gpu,
         "tilt": { "enabled": tilt.enabled, "strength": tilt.strength, "taps": tilt.taps, "chosen": tilt_chosen.0 },
         "tier": tier.json(),
@@ -1064,15 +1059,7 @@ pub fn publish_state(
             scatter.as_ref().filter(|_| play).map(|s| s.0.as_str()),
         ),
         ("grass", grass.as_ref().map(|g| g.0.as_str())),
-        (
-            "diag",
-            Some(
-                bridge::DIAG_JSON
-                    .lock()
-                    .unwrap_or_else(|p| p.into_inner())
-                    .as_str(),
-            ),
-        ),
+        ("diag", Some(locked(&bridge::DIAG_JSON).as_str())),
     ] {
         publication.set_raw(key, report.filter(|s| !s.is_empty()).unwrap_or("null"));
     }
@@ -1092,10 +1079,7 @@ pub fn dump_state_on_exit(flags: Res<RunFlags>, mut exits: MessageReader<AppExit
     }
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(path) = &flags.0.dump_state {
-        let json = bridge::STATE_JSON
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .snapshot();
+        let json = locked(&bridge::STATE_JSON).snapshot();
         match std::fs::write(path, json) {
             Ok(()) => info!("wrote {path}"),
             Err(e) => warn!("cannot write {path}: {e}"),

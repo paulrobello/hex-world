@@ -1,5 +1,6 @@
 //! Play-scenario game state (PRD §4.1–4.2, D20): the hex-core world plus the player's selection,
 //! ghost rotation and tool. [`GameState::apply`] is the only way an action changes it.
+use hex_play_state::locked;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::sync::{Arc, Mutex};
 
@@ -273,7 +274,7 @@ impl GameState {
     /// state.
     fn mega_slots_of(&self, d: &TileDef) -> MegaSlots {
         let stamp = self.world.stamp();
-        let mut cache = self.mega_slots.lock().unwrap_or_else(|e| e.into_inner());
+        let mut cache = locked(&self.mega_slots);
         if let Some((at, slots)) = cache.get(&d.id)
             && *at == stamp
         {
@@ -1310,7 +1311,7 @@ pub const EVENT_QUEUE_CAP: usize = 256;
 pub fn publish_event(e: &GameEvent) {
     let json = serde_json::to_string(e).unwrap_or_default();
     info!("event: {json}");
-    let mut q = bridge::EVENTS.lock().unwrap();
+    let mut q = locked(&bridge::EVENTS);
     q.push_back(json);
     while q.len() > EVENT_QUEUE_CAP {
         q.pop_front();

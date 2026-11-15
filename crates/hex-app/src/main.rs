@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::window::WindowResolution;
+use hex_play_state::locked;
 use hex_render::{HexRenderPlugin, MeshoptGlbPlugin};
 
 mod actions;
@@ -281,7 +282,7 @@ fn frame_hooks(
 ) {
     frames.0 += 1;
     if frames.0 == SHOT_FRAME {
-        *bridge::READY.lock().unwrap() = true;
+        *locked(&bridge::READY) = true;
     }
     if frames.0 == SHOT_FRAME
         && let Some(name) = &flags.0.shot
@@ -291,13 +292,10 @@ fn frame_hooks(
     if frames.0 == SHOT_FRAME
         && let Some(scale) = flags.0.photo_export
     {
-        control::INBOX
-            .lock()
-            .unwrap()
-            .push(control::Command::PhotoExport {
-                scale,
-                name: format!("photo-{scale}x"),
-            });
+        locked(&control::INBOX).push(control::Command::PhotoExport {
+            scale,
+            name: format!("photo-{scale}x"),
+        });
     }
     if flags.0.exit_after_frames.is_some_and(|n| frames.0 >= n) {
         exit.0 = true;
@@ -318,7 +316,7 @@ fn request_selected_packs(
 /// Copies the diag snapshot read by `hexWorld.diag()` every 30 frames.
 fn publish_diag(frames: Res<FrameCount>, snap: Res<hex_play::diag::DiagSnapshot>) {
     if frames.0.is_multiple_of(30) && !snap.json.is_empty() {
-        *bridge::DIAG_JSON.lock().unwrap() = snap.json.clone();
+        *locked(&bridge::DIAG_JSON) = snap.json.clone();
     }
 }
 

@@ -4,6 +4,8 @@
 //! the image the game camera draws into instead ([`shot_for`]). On macOS an occluded window gets
 //! no swap-chain texture, so a window capture comes back all black however long it is retaken;
 //! the offscreen image draws whatever the window's state, and capture runs turn it on by default.
+#[cfg(target_arch = "wasm32")]
+use hex_play_state::locked;
 use std::io::Cursor;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -297,7 +299,7 @@ fn store(name: &str, png: Result<Vec<u8>, String>) -> Result<(), String> {
     match png {
         Ok(bytes) => {
             let url = format!("data:image/png;base64,{}", base64(&bytes));
-            let mut shots = SHOTS.lock().unwrap();
+            let mut shots = locked(&SHOTS);
             shots.retain(|(n, _)| n != name);
             shots.push((name.to_string(), url));
             info!("captured screenshot {name}");
