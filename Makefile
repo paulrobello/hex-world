@@ -13,6 +13,9 @@ fmt-check:
 
 lint:
 	cargo clippy --workspace --all-targets -- -D warnings
+	# The wasm32-only modules (bridge, capture, frame_cap, persist) are invisible to the
+	# native workspace lint above; the toolchain file supplies the target.
+	cargo clippy -p hex-app --target wasm32-unknown-unknown -- -D warnings
 
 typecheck:
 	cargo check --workspace --all-targets
