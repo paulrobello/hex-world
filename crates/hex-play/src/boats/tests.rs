@@ -388,8 +388,14 @@ fn the_stage_deck_is_ground_and_the_boats_block_the_walker() {
     assert!(s.on_deck(deck) && g.on_deck(deck));
     assert!((g.ground(deck).unwrap() - (-0.95)).abs() < 1e-4);
     let o = g.obstacle(bp).expect("the moored boat blocks");
-    assert_eq!(crate::walk::prop_kind(&o.piece), "boat");
-    assert_eq!(crate::walk::prop_kind("landing_stage"), "stage");
+    assert_eq!(
+        crate::walk::prop_kind(&o.piece),
+        crate::walk::PropLabel::Boat
+    );
+    assert_eq!(
+        crate::walk::prop_kind("landing_stage"),
+        crate::walk::PropLabel::Stage
+    );
     let _ = plan;
 }
 

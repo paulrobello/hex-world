@@ -734,7 +734,7 @@ fn spawn_column(
 /// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included). The
 /// single-storey longhouse and the low paddock fence rise in one step. The fence is not a tree:
 /// its origin is the tile centre, so a uniform scale would slide its runs in from the border.
-fn prop_kind(piece: &str) -> PropKind {
+fn rise_kind(piece: &str) -> PropKind {
     if piece.contains("tree") {
         PropKind::Tree
     } else if piece.contains("twostorey") {
@@ -912,7 +912,7 @@ fn tile_children(
         let role = RiseRole::Prop {
             order: i.min(u8::MAX as usize) as u8,
             count,
-            kind: prop_kind(piece),
+            kind: rise_kind(piece),
         };
         if herd.contains(&i) && kit.contains_key(piece) {
             // A wandering animal (`farm`): a parent at its slot that `farm::pose` moves, its
@@ -1472,7 +1472,7 @@ pub(crate) mod tests {
     /// three, the single-storey longhouse and the paddock fence one.
     #[test]
     fn houses_rise_by_their_floors() {
-        let floors = |p| match prop_kind(p) {
+        let floors = |p| match rise_kind(p) {
             PropKind::Building { floors } => floors,
             PropKind::Tree => 0,
         };
@@ -1483,7 +1483,73 @@ pub(crate) mod tests {
         assert_eq!(floors("house_twostorey_c"), 3);
         assert_eq!(floors("house_longhouse"), 1);
         assert_eq!(floors("fence_paddock"), 1, "a low fence rises in one step");
-        assert_eq!(prop_kind("tree_hero_oak"), PropKind::Tree);
+        assert_eq!(rise_kind("tree_hero_oak"), PropKind::Tree);
+    }
+
+    /// `rise_kind` defaults to a two-floor building for every piece that is not a tree, so a new
+    /// hero piece rises as one unless its name says otherwise. This pins the kind of every hero
+    /// piece in the catalog, variants included: a new piece fails here and its row is a
+    /// reviewable decision.
+    #[test]
+    fn every_hero_piece_has_a_pinned_rise_kind() {
+        const PINNED_RISES: &[&str] = &[
+            "animal_cow=2",
+            "animal_cow_b=2",
+            "animal_cow_c=2",
+            "animal_sheep=2",
+            "animal_sheep_b=2",
+            "animal_sheep_c=2",
+            "bakery_shop=2",
+            "bakery_shop_b=2",
+            "barn_red=2",
+            "barn_red_b=2",
+            "fence_paddock=1",
+            "hay_bale_round=2",
+            "hay_bale_round_b=2",
+            "hay_bale_stack=2",
+            "hay_bale_stack_b=2",
+            "house_cottage=2",
+            "house_cottage_b=2",
+            "house_longhouse=1",
+            "house_twostorey=3",
+            "house_twostorey_b=3",
+            "house_twostorey_c=3",
+            "rail_station_platform=2",
+            "rail_station_shelter=2",
+            "rail_tunnel_portal=2",
+            "road_tunnel_portal=2",
+            "tree_hero_oak=tree",
+            "tree_hero_oak_b=tree",
+            "tree_hero_oak_c=tree",
+            "well_stone=2",
+            "well_stone_b=2",
+            "windmill=2",
+            "windmill_b=2",
+        ];
+        let catalog = TileCatalog::builtin().unwrap();
+        let mut seen = std::collections::BTreeSet::new();
+        for def in catalog.tiles() {
+            for h in &def.props.hero {
+                let piece = h.piece.as_str();
+                seen.insert(piece.to_owned());
+                seen.extend(
+                    hex_core::hero_variants(piece)
+                        .iter()
+                        .map(|v| (*v).to_owned()),
+                );
+            }
+        }
+        let rises: Vec<String> = seen
+            .iter()
+            .map(|p| {
+                let rise = match rise_kind(p) {
+                    PropKind::Tree => "tree".to_owned(),
+                    PropKind::Building { floors } => format!("{floors}"),
+                };
+                format!("{p}={rise}")
+            })
+            .collect();
+        assert_eq!(rises, PINNED_RISES, "{rises:#?}");
     }
 
     /// A hero's rotor (the windmill's sails) spawns under its LOD's body at its node transform with

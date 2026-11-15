@@ -654,13 +654,13 @@ pub enum Blocked {
 }
 
 impl Blocked {
-    /// A [`prop_kind`] for an obstacle, else `water`, `edge` or `steep`.
+    /// A [`prop_kind`] string for an obstacle, else `water`, `edge` or `steep`.
     pub fn reason(&self) -> &'static str {
         match self {
             Blocked::Edge => "edge",
             Blocked::Water => "water",
             Blocked::Steep => "steep",
-            Blocked::Obstacle(p) => prop_kind(p),
+            Blocked::Obstacle(p) => prop_kind(p).as_str(),
         }
     }
 
@@ -1171,10 +1171,48 @@ impl PieceShape {
     }
 }
 
-/// What a prop is to the player: `building`, `tree`, `hay`, `animal`, `log`, `fence`, `lever`,
-/// `buffer_stop`, `boat`, `stage`, `well` or `rock`.
-/// Walk mode's [`Blocked::reason`] and photo mode's click to focus both report it.
-pub fn prop_kind(piece: &str) -> &'static str {
+/// What a prop is to the player. [`PropLabel::as_str`] is the string walk mode's
+/// [`Blocked::reason`] and photo mode's click to focus report, which the bridge and
+/// `docs/agent-operability.md` publish.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PropLabel {
+    Building,
+    Tree,
+    Hay,
+    Animal,
+    Log,
+    Fence,
+    Lever,
+    BufferStop,
+    Boat,
+    Stage,
+    Well,
+    Rock,
+}
+
+impl PropLabel {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            PropLabel::Building => "building",
+            PropLabel::Tree => "tree",
+            PropLabel::Hay => "hay",
+            PropLabel::Animal => "animal",
+            PropLabel::Log => "log",
+            PropLabel::Fence => "fence",
+            PropLabel::Lever => "lever",
+            PropLabel::BufferStop => "buffer_stop",
+            PropLabel::Boat => "boat",
+            PropLabel::Stage => "stage",
+            PropLabel::Well => "well",
+            PropLabel::Rock => "rock",
+        }
+    }
+}
+
+/// What `piece` is to the player. Every piece that can block the walker or be clicked has an arm;
+/// an unlisted one panics, and `every_collider_piece_has_a_label` fails first for any piece in
+/// [`OBSTACLES`], the [`CENTRE_OBSTACLES`] and [`FOOTPRINT_OBSTACLES`] parts, and the boats.
+pub fn prop_kind(piece: &str) -> PropLabel {
     match piece {
         p if p.starts_with("house")
             || p.starts_with("barn")
@@ -1183,7 +1221,7 @@ pub fn prop_kind(piece: &str) -> &'static str {
             || p == "bakery_shop_b"
             || p == "rail_station_shelter" =>
         {
-            "building"
+            PropLabel::Building
         }
         p if p.starts_with("tree")
             || p.starts_with("sapling_")
@@ -1191,18 +1229,27 @@ pub fn prop_kind(piece: &str) -> &'static str {
             || p.starts_with("bush_")
             || p.starts_with("hedge_") =>
         {
-            "tree"
+            PropLabel::Tree
         }
-        p if p.starts_with("hay_") => "hay",
-        p if p.starts_with("animal_") => "animal",
-        p if p.starts_with("log_") || p.starts_with("beach_driftwood") => "log",
-        p if p.starts_with("fence") || p.starts_with("wall_") => "fence",
-        "rail_lever" => "lever",
-        "rail_buffer_stop" => "buffer_stop",
-        p if p.starts_with("boat_") => "boat",
-        "landing_stage" => "stage",
-        p if p.starts_with("well_") => "well",
-        _ => "rock",
+        p if p.starts_with("hay_") => PropLabel::Hay,
+        p if p.starts_with("animal_") => PropLabel::Animal,
+        p if p.starts_with("log_") || p.starts_with("beach_driftwood") => PropLabel::Log,
+        p if p.starts_with("fence") || p.starts_with("wall_") => PropLabel::Fence,
+        "rail_lever" => PropLabel::Lever,
+        BUFFER_STOP => PropLabel::BufferStop,
+        p if p.starts_with("boat_") => PropLabel::Boat,
+        "landing_stage" => PropLabel::Stage,
+        p if p.starts_with("well_") => PropLabel::Well,
+        p if p.starts_with("rock_")
+            || p.starts_with("river_stones")
+            || p.starts_with("boulder_granite")
+            || p.starts_with("outcrop_granite")
+            || p == VIADUCT_PIER
+            || FOOTPRINT_OBSTACLES.iter().any(|(_, part, _)| *part == p) =>
+        {
+            PropLabel::Rock
+        }
+        _ => unreachable!("{piece} has no PropLabel: add an arm to walk::prop_kind"),
     }
 }
 
@@ -2243,9 +2290,39 @@ pub(crate) mod tests {
         );
         for &piece in OBSTACLES {
             let kind = kind_of(piece).unwrap();
-            assert_eq!(prop_kind(piece), kind, "{piece}");
+            assert_eq!(prop_kind(piece).as_str(), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
         }
+    }
+
+    /// `prop_kind` has no default arm, so every piece the walker can hit or a click can pick has to
+    /// name its label: the obstacles, the centre and footprint parts, the viaduct piers, the
+    /// boats and the landing stage. Only rocks report `rock`.
+    #[test]
+    fn every_collider_piece_has_a_label() {
+        let parts = CENTRE_OBSTACLES
+            .iter()
+            .map(|(_, part, _)| *part)
+            .chain(FOOTPRINT_OBSTACLES.iter().map(|(_, part, _)| *part));
+        let pieces: Vec<&str> = OBSTACLES
+            .iter()
+            .copied()
+            .chain(parts)
+            .chain(["boat_rowing", "boat_sail", "landing_stage"])
+            .collect();
+        for piece in pieces {
+            let label = prop_kind(piece);
+            let is_rock = piece.starts_with("rock_")
+                || piece.starts_with("river_stones")
+                || piece.starts_with("boulder_granite")
+                || piece.starts_with("outcrop_granite")
+                || piece == VIADUCT_PIER
+                || FOOTPRINT_OBSTACLES
+                    .iter()
+                    .any(|(_, part, _)| *part == piece);
+            assert_eq!(label == PropLabel::Rock, is_rock, "{piece} is {label:?}");
+        }
+        assert_eq!(prop_kind("rail_lever"), PropLabel::Lever);
     }
 
     /// Only the paddock fence's collider has disjoint parts (one box per run) and only
@@ -2348,7 +2425,10 @@ pub(crate) mod tests {
         // A click on the north run, at rail height from the yard.
         let eye = Vec3::new(-5.0, 0.8, -1.0);
         let (t, piece) = g.pick_prop(ray(eye, Vec3::Z), 1000.0).unwrap();
-        assert_eq!((piece, prop_kind(piece)), ("fence_paddock", "fence"));
+        assert_eq!(
+            (piece, prop_kind(piece).as_str()),
+            ("fence_paddock", "fence")
+        );
         assert!((3.35..3.45).contains(&t), "hit {t} m out");
         // Through the gate, at rail height, the first fence hit is the far north-east run's
         // (z 11.27 at x 5).
@@ -2435,8 +2515,8 @@ pub(crate) mod tests {
             }
         }
         assert!(hedges >= 1, "no hedge run checked");
-        assert_eq!(prop_kind("wall_gate"), "fence");
-        assert_eq!(prop_kind("hedge_run"), "tree");
+        assert_eq!(prop_kind("wall_gate").as_str(), "fence");
+        assert_eq!(prop_kind("hedge_run").as_str(), "tree");
         // Edge 0 has no boundary (farm and wheat are both fields): the walker crosses it.
         let s = walk(&g, farm + Vec2::new(6.0, 1.5), Vec2::X, 12.0);
         assert!(
@@ -2485,7 +2565,7 @@ pub(crate) mod tests {
     #[test]
     fn a_placed_farm_tile_blocks_at_the_barn() {
         assert_eq!(Blocked::Obstacle("barn_red".into()).reason(), "building");
-        assert_eq!(prop_kind("barn_red"), "building");
+        assert_eq!(prop_kind("barn_red").as_str(), "building");
         let def = catalog().get("farm").unwrap().clone();
         let barn = def
             .props
@@ -2785,7 +2865,10 @@ pub(crate) mod tests {
             let target = Vec3::new(at.x, 2.0, at.y);
             let eye = target + Vec3::new(side.x, 0.0, side.y) * 30.0;
             let (t, piece) = g.pick_prop(ray(eye, target - eye), 1000.0).unwrap();
-            assert_eq!((piece, prop_kind(piece)), ("bakery_shop", "building"));
+            assert_eq!(
+                (piece, prop_kind(piece).as_str()),
+                ("bakery_shop", "building")
+            );
             assert!(
                 (30.0 - b.max[0] - 0.1..29.0).contains(&t),
                 "r{rotation}: hit {} m out",
@@ -3609,7 +3692,7 @@ pub(crate) mod tests {
             .contains(&piece),
             "{piece}"
         );
-        assert_eq!(prop_kind(piece), "tree");
+        assert_eq!(prop_kind(piece).as_str(), "tree");
         assert!(t > 25.0 && t < 40.0, "the crown's near side: {t}");
         // Beside the tree the ray meets nothing here (the ground is the caller's).
         let beside = Vec3::new(oak.x + 14.0, 8.7, oak.y);
@@ -3622,7 +3705,7 @@ pub(crate) mod tests {
         let foot = house.poly.iter().copied().sum::<Vec2>() / house.poly.len() as f32;
         let from = Vec3::new(foot.x, 3.0, foot.y + 30.0);
         let (t, piece) = g.pick_prop(ray(from, Vec3::NEG_Z), 1000.0).unwrap();
-        assert_eq!(prop_kind(piece), "building");
+        assert_eq!(prop_kind(piece).as_str(), "building");
         assert!(t < 30.0, "{t}");
     }
 
@@ -4040,7 +4123,7 @@ pub(crate) mod tests {
                 .pick_prop(ray(o, Vec3::new(wall.x, o.y, wall.y) - o), 100.0)
                 .expect("the shelter is pickable");
             assert_eq!(piece, "rail_station_shelter", "r{rotation}");
-            assert_eq!(prop_kind(piece), "building");
+            assert_eq!(prop_kind(piece).as_str(), "building");
             assert!(t > 9.0 && t < 10.5, "r{rotation}: front wall at {t}");
             // Above its ridge the ray meets nothing.
             let high = Vec3::new(eye.x, 1.38 + 9.0, eye.y);

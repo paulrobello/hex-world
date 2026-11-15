@@ -397,7 +397,7 @@ pub fn pick_point(
     });
     let prop = g
         .pick_prop(ray, max)
-        .map(|(d, piece)| (d, ray.get_point(d), prop_kind(piece)));
+        .map(|(d, piece)| (d, ray.get_point(d), prop_kind(piece).as_str()));
     land.into_iter()
         .chain(prop)
         .min_by(|a, b| a.0.total_cmp(&b.0))
