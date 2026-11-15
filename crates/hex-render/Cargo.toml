@@ -14,8 +14,8 @@ gate-tools = []
 hex-play-state = { path = "../hex-play-state" }
 hex-core = { path = "../hex-core" }
 hex-assets = { path = "../hex-assets", features = ["bevy"] }
-bytemuck = { version = "1", features = ["derive"] }
-serde_json = "1"
+bytemuck = { workspace = true }
+serde_json = { workspace = true }
 # No `bluenoise_texture`: it binds a blue-noise texture in every mesh pipeline's view bind group
 # (read only by contact shadows, SSR and runtime env-map filtering, none used here), and with it the
 # kit forward pipeline needs 17 sampled textures in a refracting-water view, over WebGPU's default 16
@@ -42,8 +42,8 @@ type_complexity = "allow"
 too_many_arguments = "allow"
 
 [dev-dependencies]
-gltf = { version = "1", features = ["extras"] }
-serde_json = "1"
-sha2 = "0.10"
+gltf = { workspace = true, features = ["extras"] }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
 # Bevy 0.20's own wgpu, to run kit_common.wesl functions in a compute shader (tests/kit_normal_basis.rs).
-wgpu = { version = "=30.0.1", default-features = false, features = ["wgsl", "metal", "vulkan", "dx12"] }
+wgpu = { workspace = true, features = ["wgsl", "metal", "vulkan", "dx12"] }

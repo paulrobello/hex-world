@@ -17,8 +17,8 @@ bevy = [
 ]
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { workspace = true }
+serde_json = { workspace = true }
 meshoptimizer-rs = "=0.2.1"
 bevy = { workspace = true, optional = true, features = ["bevy_asset", "bevy_log", "std"] }
 
@@ -32,7 +32,7 @@ wasm-bindgen-futures = { version = "0.4", optional = true }
 web-sys = { version = "0.3", optional = true, features = ["Window"] }
 
 [dev-dependencies]
-gltf = "1"
+gltf = { workspace = true }
 
 [lints]
 workspace = true
