@@ -21,14 +21,16 @@ use bevy::{
 use hex_assets::{KitManifest, TextureFamily, parse_manifest, select_family};
 
 use crate::{
+    cars::{CAR_PACK, CarPart, paint_tag},
+    play::packs::{PackState, PlayPacks},
+    walk::WalkGround,
+};
+use hex_render::{
     ActiveScenario, Scenario, SceneEntity,
     car_material::{CarMaterial, build_material},
-    cars::{CAR_PACK, CarPart, paint_tag},
     kit_material::slot_requests,
     kit_scene::MANIFEST,
-    play::packs::{PackState, PlayPacks},
     scene::{Lod, lod_range},
-    walk::WalkGround,
     workload::GateConfig,
 };
 

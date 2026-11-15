@@ -1,9 +1,5 @@
 //! Play presentation and its runtime consumers. Game rules remain in hex-core and hex-app.
 use bevy::prelude::*;
-#[cfg(feature = "gate-tools")]
-pub use hex_render::instanced;
-pub use hex_render::{ActiveScenario, ActiveView, AgentsPaused, GpuLimits, Scenario, SceneEntity};
-pub use hex_render::{car_material, kit_material, kit_scene, post, scene, tilt_shift, workload};
 pub mod boats;
 pub mod boids;
 pub mod cars;

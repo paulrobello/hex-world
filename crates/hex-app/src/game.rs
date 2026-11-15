@@ -7,10 +7,8 @@ use bevy::prelude::*;
 use hex_core::{
     Axial, EdgeStatus, Orientation, ReplaceError, RotateDir, TileCatalog, TileDef, World,
 };
-use hex_play::{
-    ActiveScenario, Scenario,
-    play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage},
-};
+use hex_play::play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage};
+use hex_render::{ActiveScenario, Scenario};
 use serde::Serialize;
 use serde_json::{Value, json};
 

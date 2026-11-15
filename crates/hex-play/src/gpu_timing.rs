@@ -472,10 +472,10 @@ impl Plugin for GpuTimingPlugin {
                     mark::<8>
                         .in_set(PostProcess)
                         .after(EarlyPostProcess)
-                        .before(crate::tilt_shift::TiltShiftPass),
+                        .before(hex_render::tilt_shift::TiltShiftPass),
                     mark::<9>
                         .in_set(PostProcess)
-                        .after(crate::tilt_shift::TiltShiftPass)
+                        .after(hex_render::tilt_shift::TiltShiftPass)
                         .before(bloom),
                     mark::<10>
                         .in_set(PostProcess)

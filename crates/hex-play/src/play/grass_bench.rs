@@ -11,7 +11,8 @@ use super::{
     grass::{Clear, GrassInstances, GrassLayout, exclusions, grass_slots, layout},
     scatter::{self, Surface},
 };
-use crate::{kit_scene::MANIFEST, walk::tests::mesh_tris};
+use crate::walk::tests::mesh_tris;
+use hex_render::kit_scene::MANIFEST;
 
 /// One tile build's inputs, as `grass::sync` gathers them before it starts the clock.
 struct Case {

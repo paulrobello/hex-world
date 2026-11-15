@@ -32,16 +32,18 @@ pub mod plan;
 use plan::{BoatCue, BoatKind, BoatPlan, Motion, TICK_SECONDS};
 
 use crate::{
-    ActiveScenario, AgentsPaused, Scenario, SceneEntity,
     boids::plan::cell_at,
-    kit_material::{KitMaterial, build_material, slot_requests},
     play::{PlayCatalog, PlayKit, PlaySystems, PlayView, packs::PlayPacks, rise::PlayRises},
-    scene::{Lod, lod_range},
     walk::WalkGround,
     water::{
         HULL_SLOTS, MAX_HULLS, WASH_AMP, WaterClock, WaterField, WaterMaterial, tiles::WATER_Y,
         tiles::water_kind,
     },
+};
+use hex_render::{
+    ActiveScenario, AgentsPaused, Scenario, SceneEntity,
+    kit_material::{KitMaterial, build_material, slot_requests},
+    scene::{Lod, lod_range},
 };
 
 /// The landing stage piece.
@@ -264,7 +266,7 @@ fn build_parts(
     (server, mut materials, config): (
         Res<AssetServer>,
         ResMut<Assets<KitMaterial>>,
-        Res<crate::workload::GateConfig>,
+        Res<hex_render::workload::GateConfig>,
     ),
 ) {
     let (Some(kit), Some(packs)) = (kit, packs) else {

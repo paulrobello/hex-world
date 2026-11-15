@@ -26,17 +26,19 @@ use hex_core::{Axial, HEX_RADIUS};
 use hex_render::kit_instances::KitLodDebug;
 
 use crate::{
-    car_material::CarMaterial,
-    kit_material::KitMaterial,
-    kit_scene::piece_rotation,
     play::{
         PlayCatalog, PlayView,
         affordances::socket_rgb,
         grass::{Clear, exclusions},
         scatter::{ScatterLayouts, footprint},
     },
-    scene::{Lod, LodCover, lod_cover_range},
     walk::WalkGround,
+};
+use hex_render::{
+    car_material::CarMaterial,
+    kit_material::KitMaterial,
+    kit_scene::piece_rotation,
+    scene::{Lod, LodCover, lod_cover_range},
 };
 
 /// The overlay switches. `Default` is everything off.

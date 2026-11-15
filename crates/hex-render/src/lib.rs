@@ -14,7 +14,6 @@ pub mod kit_scene;
 #[cfg(feature = "gate-tools")]
 mod kit_test;
 pub mod lighting;
-pub use lighting as lookdev;
 pub mod photo_fx;
 pub mod post;
 pub mod scene;

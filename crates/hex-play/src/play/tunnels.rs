@@ -20,7 +20,7 @@ use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, NetworkKind, Tunnel};
 use hex_play_state::{PlayCatalog, PlayTileRoot, RisePart};
 
 use super::{PlayKit, PlayView, piece_rotation, spawn_kit};
-use crate::{ActiveScenario, Scenario, SceneEntity};
+use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
 /// A bore entity, drawn under a cover cell.
 #[derive(Component)]

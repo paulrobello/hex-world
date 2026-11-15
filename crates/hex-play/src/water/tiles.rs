@@ -23,7 +23,7 @@ use super::{
     cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep,
     spawn_fixed_mesh, surface_mesh, surface_mesh_where, terrain_color, terrain_mesh_for,
 };
-use crate::{SceneEntity, post::QualityTier};
+use hex_render::{SceneEntity, post::QualityTier};
 
 /// Water surface (m): [`LAND`] below the meadow cap's border ring at y = 0, the prototype's
 /// plateau-to-water drop, which the terrain shader's grass line and wet band are tuned to.
@@ -175,7 +175,7 @@ fn lane_point(def: &TileDef, local: u8) -> Vec2 {
 
 /// A tile-local offset turned to world orientation by `rotation`.
 fn turn(rotation: u8, p: Vec2) -> Vec2 {
-    let r = crate::kit_scene::piece_rotation(rotation) * Vec3::new(p.x, 0.0, p.y);
+    let r = hex_render::kit_scene::piece_rotation(rotation) * Vec3::new(p.x, 0.0, p.y);
     Vec2::new(r.x, r.z)
 }
 
@@ -221,7 +221,7 @@ fn center(cell: Axial) -> Vec2 {
 
 /// Tile-local XZ to world XZ (local edge e lands on world edge e + rotation).
 fn to_world(cell: Axial, rotation: u8, p: Vec2) -> Vec2 {
-    let r = crate::kit_scene::piece_rotation(rotation) * Vec3::new(p.x, 0.0, p.y);
+    let r = hex_render::kit_scene::piece_rotation(rotation) * Vec3::new(p.x, 0.0, p.y);
     center(cell) + Vec2::new(r.x, r.z)
 }
 

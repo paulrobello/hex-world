@@ -43,12 +43,12 @@ use slope_ground::{GroundBuild, SlopeMeshes};
 
 use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
 
-use crate::{
+use crate::water;
+use hex_render::{
     ActiveScenario, Scenario, SceneEntity,
     kit_material::{KitMaterial, build_material, slot_requests},
     kit_scene::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
     scene::{Lod, LodCover, lod_cover, lod_cover_range, lod_range},
-    water,
     workload::GateConfig,
 };
 
@@ -369,7 +369,7 @@ fn build_piece(
         &Assets<GltfNode>,
         &mut Assets<KitMaterial>,
     ),
-    hooks: crate::workload::KitHooks,
+    hooks: hex_render::workload::KitHooks,
 ) -> Vec<KitPart> {
     let (manifest, family) = (&packs.manifest, packs.family);
     let failed = |h: &Handle<Gltf>| {
@@ -476,7 +476,7 @@ fn spawn_kit(
 /// [`spawn_kit`], returning the spawned part entities (`None` when the piece is not in the kit).
 ///
 /// A rotor part spawns as a child of its LOD's first body part, at its node transform, so it rides
-/// the hero's placement and rise (scale and visibility) and [`crate::kit_scene::spin_rotors`] turns
+/// the hero's placement and rise (scale and visibility) and [`hex_render::kit_scene::spin_rotors`] turns
 /// it in its parent's frame. Its phase comes from the cell and where its hub stands on the tile.
 fn spawn_kit_parts(
     p: &mut ChildSpawnerCommands,

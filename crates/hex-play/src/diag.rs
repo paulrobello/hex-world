@@ -32,8 +32,8 @@ use bevy::{
     window::Window,
 };
 
-use crate::scene::{Chunk, Lod, SceneFacts, Tile, Tris, Vehicle};
 use hex_render::kit_instances::{KitInstanceSet, KitInstanceSetData, KitSlotDraw};
+use hex_render::scene::{Chunk, Lod, SceneFacts, Tile, Tris, Vehicle};
 
 const RING: usize = 600;
 
@@ -584,8 +584,8 @@ fn sample(
     cars: Query<(), With<crate::cars::PlayCar>>,
     cameras: Query<(Has<TemporalAntiAliasing>, Has<Bloom>, Has<DepthOfField>), With<Camera3d>>,
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
-    instanced: Option<Res<crate::instanced::InstancedScene>>,
-    config: Option<Res<crate::workload::GateConfig>>,
+    instanced: Option<Res<hex_render::instanced::InstancedScene>>,
+    config: Option<Res<hex_render::workload::GateConfig>>,
     (frame, gpu_timing, virt, windows): (
         Res<FrameCount>,
         Option<Res<crate::gpu_timing::GpuTiming>>,
@@ -635,7 +635,7 @@ fn sample(
         if kit_queue_enabled() {
             hex_render::kit_instances::request_queue_stats();
         }
-        crate::instanced::request_census();
+        hex_render::instanced::request_census();
     }
     if st.frames.is_multiple_of(30) {
         // `ssao` comes from the render-world probe; the rest are the camera's components.
@@ -674,7 +674,7 @@ fn sample(
         let instanced_tiles: usize = instanced
             .as_ref()
             .map_or(0, |s| s.0.set.chunks.iter().map(|c| c.tiles as usize).sum());
-        let inst = match (instanced.is_some(), crate::instanced::latest_census()) {
+        let inst = match (instanced.is_some(), hex_render::instanced::latest_census()) {
             (true, Some(ic)) => format!(
                 "{{\"views\":[{}],\"union_instances_by_lod\":{:?},\"union_tris\":{}}}",
                 ic.views

@@ -1038,7 +1038,7 @@ mod tests {
             }
         }
         let mut app = App::new();
-        app.insert_resource(crate::ActiveScenario(crate::Scenario::Play))
+        app.insert_resource(hex_render::ActiveScenario(hex_render::Scenario::Play))
             .insert_resource(PlayCatalog(catalog))
             .insert_resource(super::super::ReducedMotion(true))
             .init_resource::<PlayChunks>()

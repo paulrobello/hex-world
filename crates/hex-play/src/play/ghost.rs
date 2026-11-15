@@ -49,11 +49,8 @@ use super::{
     scatter::{self, Layout, PlayScatter},
     slope_ground::{self, SlopeMeshes},
 };
-use crate::{
-    ActiveScenario, Scenario, SceneEntity,
-    kit_scene::piece_rotation,
-    water::{self, WaterField, tiles::WaterKind},
-};
+use crate::water::{self, WaterField, tiles::WaterKind};
+use hex_render::{ActiveScenario, Scenario, SceneEntity, kit_scene::piece_rotation};
 
 pub const GHOST_SHADER: &str = "shaders/ghost.wesl";
 

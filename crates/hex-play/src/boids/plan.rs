@@ -13,14 +13,13 @@ use hex_core::{
 };
 
 use crate::{
-    kit_scene::piece_rotation,
     play::PlayTile,
-    post::QualityTier,
     water::{
         WaterField,
         tiles::{self, CellWater, WATER_Y, WaterKind},
     },
 };
+use hex_render::{kit_scene::piece_rotation, post::QualityTier};
 
 /// Boid caps for one quality tier: one budget shared by birds and fish (PRD §7.2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use super::{KitMaterial, KitPart};
-use crate::kit_material::{
+use hex_render::kit_material::{
     FLAG_ANIMAL, FLAG_BLOSSOM, FLAG_SLOT_COLORS, FLAG_VERTEX_ROUGHNESS, FLAG_WET_BAND,
     FLAG_WET_SEABED,
 };

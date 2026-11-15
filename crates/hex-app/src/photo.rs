@@ -18,11 +18,8 @@ use bevy::post_process::dof::DepthOfField;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages};
 use bevy::window::PrimaryWindow;
-use hex_play::{
-    AgentsPaused, GpuLimits,
-    tilt_shift::TiltOverride,
-    walk::{WalkGround, prop_kind},
-};
+use hex_play::walk::{WalkGround, prop_kind};
+use hex_render::{AgentsPaused, GpuLimits, tilt_shift::TiltOverride};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 

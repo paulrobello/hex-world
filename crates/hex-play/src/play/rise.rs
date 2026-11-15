@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, RiseStage, RiseTimeline};
 
-use crate::{ActiveScenario, Scenario, SceneEntity};
+use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
 /// Metres below rest at which a level-0 rising column starts: the cap starts under the ground plane.
 pub const RISE_DEPTH: f32 = LEVEL_STEP + 0.6;
@@ -1162,7 +1162,7 @@ pub struct CameraShake {
 /// state dumps all see the unshaken transform.
 pub fn unshake(
     mut shake: ResMut<CameraShake>,
-    mut cams: Query<&mut Transform, crate::post::GameCamera>,
+    mut cams: Query<&mut Transform, hex_render::post::GameCamera>,
 ) {
     if let Some((e, off)) = shake.applied.take()
         && let Ok(mut t) = cams.get_mut(e)
@@ -1179,7 +1179,7 @@ pub fn shake(
     reduced: Res<ReducedMotion>,
     rises: Res<PlayRises>,
     mut shake: ResMut<CameraShake>,
-    mut cams: Query<(Entity, &mut Transform), crate::post::GameCamera>,
+    mut cams: Query<(Entity, &mut Transform), hex_render::post::GameCamera>,
 ) {
     if active.0 != Scenario::Play || reduced.0 {
         return;

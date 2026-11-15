@@ -6,7 +6,6 @@ use std::collections::BTreeMap;
 use bevy::prelude::*;
 use hex_core::{Axial, PlacedTile, TileCatalog, World};
 use hex_play::{
-    ActiveScenario, AgentsPaused, Scenario,
     cars::{CarKind, CarPose, CarsView},
     play::{
         PlaySystems, affordances,
@@ -14,6 +13,7 @@ use hex_play::{
     },
     trains::{StockKind, StockPose, TrainsView},
 };
+use hex_render::{ActiveScenario, AgentsPaused, Scenario};
 use hex_render::{GateConfig, post::QualityTier};
 use hex_sim::{CAR_FADE_TICKS, HIGH_TIER_CAR_CAP, SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};

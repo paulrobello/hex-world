@@ -14,9 +14,9 @@ use bevy::{
 };
 use hex_play::{
     play::PlaySystems,
-    tilt_shift::TiltOverride,
     walk::{Blocked, WalkGround},
 };
+use hex_render::tilt_shift::TiltOverride;
 use serde_json::{Value, json};
 
 use crate::actions::Action;

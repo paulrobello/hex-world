@@ -68,10 +68,10 @@ pub mod plan;
 pub use plan::{BoidBudget, BoidCounts, BoidPlan};
 
 use crate::{
-    ActiveScenario, Scenario, SceneEntity,
     play::{PlayCatalog, PlayKit, PlaySystems, PlayView, rise::PlayRises, scatter::ScatterLayouts},
     water::tiles::CellWater,
 };
+use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
 /// The drawn scattered trees that have canopy perches, by cell, nearest the centre first.
 fn scatter_trees(
@@ -615,7 +615,7 @@ impl Plugin for BoidsPlugin {
             (move |commands: Commands, buffers: ResMut<Assets<ShaderBuffer>>| {
                 init_boids(budget, commands, buffers)
             })
-            .before(crate::scene::setup),
+            .before(hex_render::scene::setup),
         )
         .add_systems(
             Update,
@@ -732,7 +732,7 @@ fn load_pieces(
     );
     let mut loads = vec![];
     let mut state = PieceState::Loading;
-    match hex_assets::parse_manifest(crate::kit_scene::MANIFEST) {
+    match hex_assets::parse_manifest(hex_render::kit_scene::MANIFEST) {
         Ok(m) => {
             for (id, form) in boid_pieces() {
                 let entry = m.pieces.iter().find(|e| e.id == id);
@@ -742,13 +742,13 @@ fn load_pieces(
                     state = PieceState::Failed;
                     continue;
                 };
-                match crate::kit_material::slot_requests(&m, entry, slot, family) {
+                match hex_render::kit_material::slot_requests(&m, entry, slot, family) {
                     Ok(r) => {
-                        let km = crate::kit_material::build_material(
+                        let km = hex_render::kit_material::build_material(
                             &server,
                             slot,
                             &r,
-                            crate::workload::KitHooks::None,
+                            hex_render::workload::KitHooks::None,
                         );
                         let mut base = km.base;
                         // Wings and fins are single sheets (the GLB material is double-sided).
@@ -935,7 +935,7 @@ struct BoidWorld<'w> {
     rises: Res<'w, PlayRises>,
     kit: Option<Res<'w, PlayKit>>,
     scatter: Option<Res<'w, ScatterLayouts>>,
-    paused: Option<Res<'w, crate::AgentsPaused>>,
+    paused: Option<Res<'w, hex_render::AgentsPaused>>,
     pieces: Option<Res<'w, BoidPieces>>,
     track: Option<Res<'w, FishTrack>>,
 }
@@ -1672,8 +1672,8 @@ mod tests {
     fn fish_slots_never_start_below_the_fish_mesh() {
         for budget in [
             BoidBudget::HIGH,
-            BoidBudget::for_tier(crate::post::QualityTier::Medium),
-            BoidBudget::for_tier(crate::post::QualityTier::Low),
+            BoidBudget::for_tier(hex_render::post::QualityTier::Medium),
+            BoidBudget::for_tier(hex_render::post::QualityTier::Low),
         ] {
             let base = BoidAssets::fish_base(budget);
             for water in 0..200 {
@@ -1691,8 +1691,8 @@ mod tests {
     fn bird_forms_draw_each_slot_once_in_its_flocks_species() {
         for budget in [
             BoidBudget::HIGH,
-            BoidBudget::for_tier(crate::post::QualityTier::Medium),
-            BoidBudget::for_tier(crate::post::QualityTier::Low),
+            BoidBudget::for_tier(hex_render::post::QualityTier::Medium),
+            BoidBudget::for_tier(hex_render::post::QualityTier::Low),
         ] {
             for seed in 0..8u64 {
                 let mut drawn = vec![0u32; budget.total as usize];
@@ -1952,7 +1952,7 @@ mod tests {
         }];
         let roosts = plan::roosts(&tiles, &c, &|_| true);
         assert_eq!(roosts.len(), 12);
-        let trunk = crate::kit_scene::piece_rotation(2) * tree.at;
+        let trunk = hex_render::kit_scene::piece_rotation(2) * tree.at;
         for r in &roosts {
             assert!(
                 (r.face.length() - 1.0).abs() < 1e-4 && r.face.y.abs() < 1e-6,

@@ -22,11 +22,13 @@ use bevy::{
 };
 
 use crate::{
-    SceneEntity,
     play::PlaySpawned,
+    water::{WaterMaterial, retier_materials, tiles::PlayWaterCamera},
+};
+use hex_render::{
+    SceneEntity,
     post::{QualityTier, TierWarmCamera, set_camera_ssao},
     tilt_shift::{TiltPinned, TiltShiftSettings, TiltTierDefault, kept_tilt, settings_for},
-    water::{WaterMaterial, retier_materials, tiles::PlayWaterCamera},
     workload::{GateConfig, PostMode},
 };
 
@@ -415,7 +417,7 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
     }
     info!("tier: {} -> {}", current.name(), tier.name());
     world.resource_mut::<GateConfig>().tier = tier;
-    if world.resource::<crate::ActiveScenario>().0 == crate::Scenario::Play {
+    if world.resource::<hex_render::ActiveScenario>().0 == hex_render::Scenario::Play {
         retier_play(world, tier);
         return;
     }
@@ -436,7 +438,7 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
         }
     }
     crate::boids::set_budget(world, crate::boids::BoidBudget::for_tier(tier));
-    if let Err(e) = world.run_system_cached(crate::scene::setup) {
+    if let Err(e) = world.run_system_cached(hex_render::scene::setup) {
         warn!("tier: scene rebuild failed: {e}");
         let mut choice = world.resource_mut::<TierChoice>();
         choice.drawn = choice.changes;
@@ -589,7 +591,7 @@ fn detect_tier(
 fn track_rebuild(
     mut choice: ResMut<TierChoice>,
     frame: Res<FrameCount>,
-    active: Res<crate::ActiveScenario>,
+    active: Res<hex_render::ActiveScenario>,
     (spawned, water): (Option<Res<PlaySpawned>>, Option<Res<WaterRetier>>),
 ) {
     if !choice.rebuilding() {
@@ -600,7 +602,7 @@ fn track_rebuild(
         choice.drawn = generation;
         return;
     }
-    if active.0 == crate::Scenario::Play
+    if active.0 == hex_render::Scenario::Play
         && (spawned.is_some_and(|s| s.redraw_pending()) || water.is_some())
     {
         return;
@@ -879,7 +881,7 @@ mod tests {
             ..default()
         };
         world.insert_resource(config);
-        world.insert_resource(crate::ActiveScenario(crate::Scenario::Play));
+        world.insert_resource(hex_render::ActiveScenario(hex_render::Scenario::Play));
         world.insert_resource(TierChoice::new(tier, false));
         world.insert_resource(settings_for(&config, true, tier));
         world.init_resource::<TiltPinned>();
@@ -912,7 +914,7 @@ mod tests {
     fn fresh_camera(world: &mut World, tier: QualityTier) -> Entity {
         let mut commands = world.commands();
         let mut cam = commands.spawn((Camera3d::default(), Msaa::Off, SceneEntity));
-        cam.insert(crate::post::camera_post_bundle(tier));
+        cam.insert(hex_render::post::camera_post_bundle(tier));
         set_camera_ssao(&mut cam, tier);
         crate::water::tiles::prepare_camera(&mut cam, tier);
         let id = cam.id();

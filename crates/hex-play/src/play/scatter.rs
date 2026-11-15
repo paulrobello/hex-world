@@ -87,7 +87,7 @@ use super::{
     spawn_kit_parts,
 };
 use crate::water::tiles::{BEACH_TOP_S, Coastline};
-use crate::{ActiveScenario, Scenario, SceneEntity};
+use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
 /// Area of the hex cap in m² (pointy-top, circumradius [`HEX_RADIUS`]): what density counts per.
 pub const CAP_AREA: f32 = 1.5 * 1.732_050_8 * HEX_RADIUS * HEX_RADIUS;
@@ -3038,7 +3038,7 @@ mod tests {
     use hex_core::{AgentKind, SocketKind, World};
 
     use super::*;
-    use crate::kit_scene::{MANIFEST, piece_rotation};
+    use hex_render::kit_scene::{MANIFEST, piece_rotation};
 
     type Tris = Option<Vec<(Tri, String)>>;
 

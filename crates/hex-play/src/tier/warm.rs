@@ -28,10 +28,12 @@ use bevy::{
 
 use super::TierChoice;
 use crate::{
-    AgentsPaused, SceneEntity,
     play::PlayKit,
-    post::{QualityTier, TierWarmCamera, set_camera_ssao},
     water::{WaterKey, WaterMaterial, WaterSurface, tiles::PlayWaterCamera, wave_count},
+};
+use hex_render::{
+    AgentsPaused, SceneEntity,
+    post::{QualityTier, TierWarmCamera, set_camera_ssao},
     workload::{GateConfig, PostMode},
 };
 
@@ -180,7 +182,7 @@ pub(super) fn warm(
     mut choice: ResMut<TierChoice>,
     (config, active, frame, kit, paused): (
         Res<GateConfig>,
-        Res<crate::ActiveScenario>,
+        Res<hex_render::ActiveScenario>,
         Res<FrameCount>,
         Option<Res<PlayKit>>,
         Option<Res<AgentsPaused>>,
@@ -241,7 +243,7 @@ pub(super) fn warm(
         state.stable = state.stable.saturating_add(1);
     }
     let idle = config.tier_warm
-        && active.0 == crate::Scenario::Play
+        && active.0 == hex_render::Scenario::Play
         && frame.0 > WARM_AFTER_FRAME
         && matches!(kit.as_deref(), Some(PlayKit::Ready(_)))
         && !choice.rebuilding()

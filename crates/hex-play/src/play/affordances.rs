@@ -42,8 +42,9 @@ use super::{
     rise::{ReducedMotion, RiseCue, RiseMessage},
     scatter::turn,
 };
-use crate::{ActiveScenario, Scenario, SceneEntity, boids::plan::cell_at};
+use crate::boids::plan::cell_at;
 use hex_core::RiseStage;
+use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
 pub const AFFORDANCE_SHADER: &str = "shaders/affordance.wesl";
 
@@ -1691,7 +1692,7 @@ pub fn occlude(
     view: Res<PlayView>,
     catalog: Res<PlayCatalog>,
     mut aff: ResMut<Affordances>,
-    cams: Query<&GlobalTransform, crate::post::GameCamera>,
+    cams: Query<&GlobalTransform, hex_render::post::GameCamera>,
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     if active.0 != Scenario::Play {

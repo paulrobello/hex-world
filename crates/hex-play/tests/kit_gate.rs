@@ -4811,7 +4811,7 @@ fn citations_must_be_committed_files() {
 const NOT_PIECE_FOLDERS: &[(&str, &str)] = &[
     (
         "assets/kit/p1/ibl",
-        "the image-based light (crates/hex-render/src/lookdev.rs)",
+        "the image-based light (crates/hex-render/src/lighting.rs)",
     ),
     ("assets/kit/p1/materials", "the tileable material sets"),
     (

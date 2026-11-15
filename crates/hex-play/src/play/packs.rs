@@ -15,7 +15,7 @@ use hex_assets::{CORE_PACK, Channel, KitManifest, TextureFamily, map_file};
 use hex_core::{Axial, TileCatalog, TileDef};
 
 use super::PlayView;
-use crate::kit_material::{MapRequest, load_map, slot_requests};
+use hex_render::kit_material::{MapRequest, load_map, slot_requests};
 
 /// Native only: frames a streamed (non-core) pack waits after its request before its files are
 /// fetched, so a shot can catch a tile while it waits (`docs/checkpoints/streaming/`). Disk
@@ -400,8 +400,8 @@ impl PlayPacks {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::kit_scene::MANIFEST;
     use hex_assets::parse_manifest;
+    use hex_render::kit_scene::MANIFEST;
 
     fn packs() -> PlayPacks {
         PlayPacks::new(parse_manifest(MANIFEST).unwrap(), TextureFamily::Png)

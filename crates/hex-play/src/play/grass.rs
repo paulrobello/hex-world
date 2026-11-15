@@ -78,7 +78,7 @@ use super::{
     packs::PlayPacks,
     scatter::{self, Instance, PlayScatter, Rng, ScatterLayouts, Surface},
 };
-use crate::{ActiveScenario, Scenario, SceneEntity, post::QualityTier, workload::GateConfig};
+use hex_render::{ActiveScenario, Scenario, SceneEntity, post::QualityTier, workload::GateConfig};
 
 /// Mean linear albedo of the `grass` tileable set (`p1/materials/grass/grass.albedo.png`, sRGB
 /// decoded per texel, as the GPU samples it). `albedo_mean_matches_the_png` holds it to the file.
@@ -1598,7 +1598,7 @@ mod tests {
         }
     }
 
-    use crate::kit_scene::MANIFEST;
+    use hex_render::kit_scene::MANIFEST;
 
     #[test]
     fn grass_slots_are_the_grass_sets_minus_foliage() {

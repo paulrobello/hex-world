@@ -45,7 +45,6 @@ use hex_render::{
 };
 
 use crate::{
-    ActiveScenario, AgentsPaused, Scenario,
     play::{
         PlayCatalog, PlaySystems, PlayView,
         grass::cos_sin_deg,
@@ -54,6 +53,7 @@ use crate::{
     },
     walk::{BODY_RADIUS, OBSTACLES, WalkGround},
 };
+use hex_render::{ActiveScenario, AgentsPaused, Scenario};
 
 /// Seconds per herd tick: the 20 Hz fixed tick the cars and trains run on.
 pub const TICK_SECONDS: f32 = 1.0 / 20.0;
@@ -978,10 +978,10 @@ mod tests {
 
     use super::*;
     use crate::{
-        kit_scene::piece_rotation,
         play::scatter::{layout, prepare},
         walk::{Blocked, Obstacle, hull, tests as walk_tests},
     };
+    use hex_render::kit_scene::piece_rotation;
 
     fn farm() -> TileDef {
         TileCatalog::builtin().unwrap().get("farm").unwrap().clone()
