@@ -832,6 +832,8 @@ mod schema {
             "directional": directional,
             "hex_radius": HEX_RADIUS,
             "max_level": hex_core::MAX_LEVEL,
+            "max_save_bytes": hex_core::save::MAX_SAVE_BYTES,
+            "save_format": hex_core::SAVE_FORMAT_VERSION,
             // The geometry pin: outer edge j is (ring cell, local edge), so TypeScript reads it.
             "footprint_outer": (0..hex_core::footprint::OUTER_EDGES as u8)
                 .map(hex_core::footprint::outer_edge)

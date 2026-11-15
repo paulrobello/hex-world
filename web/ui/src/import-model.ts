@@ -1,6 +1,7 @@
 // The import preview (S10.6), the refusal checks (S10.8) and the load confirm's words (S10.3),
 // design/ui/legend/saves.html. Pure: the Worlds sheet renders what these return.
 import type { InspectResult, LoadRefusalCode, PlayTile, SocketKind } from "./bridge.ts";
+import schema from "./bridge-schema.json" with { type: "json" };
 import { kb } from "./persist-ux.ts";
 import { refusalText } from "./persist.ts";
 import { rotated, tileDef } from "./rules.ts";
@@ -9,6 +10,10 @@ import { plural } from "./words.ts";
 
 /** The first bytes of every `.hexworld` file (hex-core `SAVE_MAGIC`). */
 export const MAGIC = "HEXWORLD";
+/** Largest file the import reads, checked before it touches the bytes (hex-core `MAX_SAVE_BYTES`). */
+export const MAX_SAVE_BYTES = 16 * 1024 * 1024;
+/** The newest format this build reads (hex-core `SAVE_FORMAT_VERSION`), for refusals decided before any bytes are read. */
+const SUPPORTED = schema.catalog.save_format as number;
 /** Magic, version and payload length: a file shorter than this has no readable version. */
 const PREFIX_LEN = 14;
 
@@ -170,6 +175,16 @@ function todo(code: LoadRefusalCode, head: Uint8Array, reason: string): string {
     return "Export it again from the Hex World that made it.";
   if (code === "io" || code === "no_file") return "Choose the file again.";
   return refusalText(code, reason).sub;
+}
+
+/** The engine's size refusal, shaped like its own, for a file refused before its bytes are read. */
+export function tooLargeRefusal(supported: number): Extract<InspectResult, { ok: false }> {
+  return { ok: false, code: "too_large", reason: "", version: null, supported };
+}
+
+/** The checks panel for a file over [`MAX_SAVE_BYTES`], from the head its File carries. */
+export function oversizedRefusal(name: string, size: number, head: Uint8Array): Refused {
+  return refusedOf(name, head, size, tooLargeRefusal(SUPPORTED));
 }
 
 /** The refusal checks panel for a file `inspect` refused, from the decoder's own code and reason. */

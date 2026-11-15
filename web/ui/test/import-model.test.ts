@@ -2,7 +2,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { InspectResult, PlayTile } from "../src/bridge.ts";
-import { dayText, kindRows, previewOf, refusedOf, sniff, unsavedText } from "../src/import-model.ts";
+import {
+  MAX_SAVE_BYTES,
+  dayText,
+  kindRows,
+  oversizedRefusal,
+  previewOf,
+  refusedOf,
+  sniff,
+  tooLargeRefusal,
+  unsavedText,
+} from "../src/import-model.ts";
 
 type Refusal = Extract<InspectResult, { ok: false }>;
 const refusal = (code: Refusal["code"], reason: string, version: number | null = null): Refusal => ({
@@ -50,6 +60,34 @@ test("a world over the tile cap: the tiles stage names the count and the cap", (
   assert.equal(states(r), "ok ok ok ok bad");
   assert.equal(r.checks[4]?.text, "Tiles and sockets: 20001 tiles exceed the 20000 cap");
   assert.equal(r.todo, "20001 tiles exceed the 20000 cap");
+});
+
+test("a file over the byte limit is refused before its bytes are read", () => {
+  // A File-like whose arrayBuffer() would throw: importFile must decide on size alone, so
+  // reading the bytes never happens.
+  const huge = {
+    name: "harbour-town.hexworld",
+    size: MAX_SAVE_BYTES + 1,
+    arrayBuffer: (): Promise<ArrayBuffer> => {
+      throw new Error("arrayBuffer must not run for a file over the limit");
+    },
+  };
+  assert.ok(huge.size > MAX_SAVE_BYTES);
+  const head = new Uint8Array(16);
+  const r = oversizedRefusal(huge.name, huge.size, head);
+  assert.equal(r.title, "This file is too large to be a world");
+  assert.equal(r.file, "harbour-town.hexworld · 16.0 MB");
+  assert.equal(states(r), "bad skip skip skip skip");
+  assert.equal(r.checks[0]?.text, "Read the file: 16.0 MB, over the 16 MB a world file can be");
+  assert.equal(r.todo, "Hex World files are under 16 MB.");
+  // The engine-shaped refusal the wrapper builds, with the build's own supported version.
+  assert.deepEqual(tooLargeRefusal(3), {
+    ok: false,
+    code: "too_large",
+    reason: "",
+    version: null,
+    supported: 3,
+  });
 });
 
 test("a newer file: header passes, the version fails with both versions, and the advice is to reload", () => {

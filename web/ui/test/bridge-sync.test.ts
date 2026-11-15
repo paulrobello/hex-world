@@ -4,6 +4,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { COMMAND_FIELDS, ENUMS, EVENT_FIELDS, STATE_FIELDS } from "../src/bridge.ts";
+import { MAX_SAVE_BYTES } from "../src/import-model.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
 
 const sorted = (o: Record<string, string[]>): Record<string, string[]> =>
@@ -23,4 +24,8 @@ test("enum spellings match serde (tool snake_case, EdgeStatus PascalCase)", () =
 
 test("play state keys and nested shapes match", () => {
   assert.deepEqual(sorted(STATE_FIELDS), sorted(schema.state));
+});
+
+test("the import's byte limit is the engine's", () => {
+  assert.equal(MAX_SAVE_BYTES, schema.catalog.max_save_bytes);
 });

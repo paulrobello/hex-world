@@ -105,6 +105,7 @@
     ],
     "hex_radius": 16.0,
     "max_level": 3,
+    "max_save_bytes": 16777216,
     "picker": [
       {
         "id": "meadow",
@@ -344,6 +345,7 @@
         ]
       }
     ],
+    "save_format": 3,
     "start": "meadow",
     "stopped_end_ground": "Grass",
     "tiles": [

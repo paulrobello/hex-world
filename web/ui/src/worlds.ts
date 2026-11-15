@@ -7,7 +7,16 @@ import type { SocketKind } from "./bridge.ts";
 import { h, s } from "./dom.ts";
 import { KIND_CLASS } from "./glyph.ts";
 import { icon } from "./icons.ts";
-import { type Preview, type Refused, dayText, previewOf, refusedOf, unsavedText } from "./import-model.ts";
+import {
+  MAX_SAVE_BYTES,
+  type Preview,
+  type Refused,
+  dayText,
+  oversizedRefusal,
+  previewOf,
+  refusedOf,
+  unsavedText,
+} from "./import-model.ts";
 import { type Persistence, stateWords, whenText } from "./persist.ts";
 import { rotated, tileDef } from "./rules.ts";
 import { KIND_ORDER, type MapTile, type Mix, type SlotMeta, mixOf } from "./slots.ts";
@@ -669,6 +678,20 @@ export class Worlds {
 
   /** Reads a picked or dropped file and shows its preview or its refusal; nothing loads yet. */
   private async importFile(f: File): Promise<void> {
+    // Size before bytes: arrayBuffer() never shrinks, so a wrong multi-gigabyte drop could
+    // take the tab down before the engine's own limit ran.
+    if (f.size > MAX_SAVE_BYTES) {
+      const head = new Uint8Array(await f.slice(0, 16).arrayBuffer());
+      this.incoming = {
+        kind: "refused",
+        seq: ++this.incomingSeq,
+        refused: oversizedRefusal(f.name, f.size, head),
+      };
+      this.focusNext = "import-again";
+      if (!this.openState) this.onWantOpen?.();
+      this.render(true);
+      return;
+    }
     const bytes = new Uint8Array(await f.arrayBuffer());
     const r = this.p.inspect(bytes);
     const seq = ++this.incomingSeq;
