@@ -79,6 +79,13 @@ Hex frame shared by every kit generator. Constants are frozen (D8) and tested ag
 ## paths
 - `blend_store() -> Path`, `blend_path(piece) -> Path`, `blend_key(path) -> str`: the main-checkout `.blend` store (`project.md`, "The blend store"). Stdlib only, so system `python3` and the Makefile can call it: `python3 scripts/blender/lib/paths.py store | blend <id> | key <path>`.
 
+## still (no bpy at import; Blender's Python runs it)
+Textured headless EEVEE stills of a kit piece, for owner checkpoints (evidence only: AgX is not Bevy's tonemapper). Slots bind the way `kit_material.wesl` draws them: a tileable slot is its set's albedo (box-projected at `tileM`) times the manifest colour with ORM green as roughness, a colour slot takes its manifest colour and roughness, and every slot is multiplied by the masks alpha when the PNG exists.
+
+- `main(piece_id, out_dir, views=("hero", "back")) -> list[Path]`: writes `<out_dir>/<piece>-<view>.png` at 1600 x 1000 under the kit sun, with the camera derived from the piece's bounds (`VIEWS`, tuned on `barn_red`). CLI: `blender -b --factory-startup --python-exit-code 1 -P scripts/blender/lib/still.py -- <piece> <out dir>`.
+- `load() -> (pieces, sets)`, `masks_of(piece) -> Path | None`, `place(piece_id, pieces, sets, at) -> lod0 object`, `bind(mat, slot, sets, masks_png)`, `scene_setup() -> (scene, camera)`, `camera_pose(view, size, height) -> (location, look_at)`, `image(path, non_color)`.
+- Not covered: foliage slots with their own albedo, ORM and normal images, animated paint, and scale shots beside other pieces. Those keep a script of their own, and every committed `docs/checkpoints/*/still.py` stays as the record of how its frames were made.
+
 ## export
 - `add_socket(name, loc, parent, yaw_deg=0.0, **extras) -> Object`: named empty, exported as a glTF node with extras. Names: `socket-lane-<n>` (network lanes), `anchor-prop-<n>` (prop anchors), `anchor-park-<n>` (parking spots: centre of the parked car, rotated to its heading; extras `kind: "park"`, `house`, `length`, `width`, `heading_deg`). `write_export_report` lists all three prefixes as sockets, so `gate.reimport_check` round-trips them.
 - `export_glb(root, path)`: one root per GLB, no images (`export_image_format="NONE"`), tangents on, float attributes, Y-up, extras on. Then runs `check_unit_vectors(path)`, which raises `ValueError` naming each mesh primitive whose NORMAL or TANGENT xyz is off unit length by more than gltf-validator's 0.00674, so `make kit-build` fails where `kit-compress` used to (`test_export_rejects_zero_area_face_tangents`).
