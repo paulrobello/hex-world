@@ -8,12 +8,11 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
   - **Scope:** one 7-cell `massif_granite` tile (owner A52–A55, in-engine approval C3). Spec `docs/superpowers/specs/2026-10-29-mega-tiles-design.md`.
   - **Determinism:** the massif exports single-threaded, because threaded MikkTSpace flipped a tangent rounding tie. Card 01a1d3d3 generalises this to the whole kit build: the thread count also changes decimation output.
   - **Parity:** a flat world matches main at every capture camera. Held captures pause simulated time for whole 64-frame quanta (`a09e359`). The boids peak lift runs in its own compute entry point only when peaks exist: any edit to `boids_compute.wgsl`, even code that never runs, moves a fixed-clock flock. Evidence: `docs/perf/mega-tiles-2026-11-13-overview/`.
-- Built ahead and waiting on the owner (see `docs/review/2026-11-13-owner-queue.md`); nothing here is merged:
-  - `worktree-agent-a3ab85e959e4f444d`: `outcrop_granite` redo (boulder card criteria 2–3 open).
-  - `worktree-agent-ac1c48909c2a99abc`: `outcrop_granite_b` variant. It contains the redo, so it supersedes `a3ab` if both are approved.
-  - `worktree-agent-a5c9b226ddc2c72f5`: single-tile hills (`hill_meadow`, `peak_granite`). The spec is pending, and the runtime is an uncommitted applied patch plus uncommitted binaries.
-  - `worktree-agent-a83978ad28323d671`: hills branch plus the jointed peak, passes 1–4, with thumbnails. This is the one to land if the owner picks the jointed peak.
-  - `worktree-agent-afe993181be01799e`: rail tunnel portal and viaduct reference candidates (deferred work; RL-Q1 clearance blocks modelling).
+- 2026-11-14: the owner answered the 2026-11-13 queue and everything built ahead is merged (see `docs/review/2026-11-13-owner-queue.md`):
+  - outcrop redo and `outcrop_granite_b` (`1772b55`), single-tile hills `hill_meadow` and `peak_granite` (`96512f3`, hero pack; the original peak stays, the jointed passes were rejected and their branch deleted 2026-11-14), raised land tiles taking matching edge heights (`1ee90b0`), and the rail tunnel portal and viaduct references (`e481ad7`).
+  - Only `worktree-agent-abbcb3566f8fc0322` (parked shared scatter, A45 O1) remains as an agent branch.
+  - 2026-11-14: the owner lifted the rail-at-levels hold (rail on raised ground, rail tunnels, viaducts). The RL answers (Q1 O2, portal ref-2 + ref-3, viaduct ref-2 + ref-4, no deck walking, one viaduct design) are in `assets-source/refs/rail_*/approval.json`.
+  - KTX-Software 5.0.0 is not released (2026-11-14): newest is v5.0.0-rc2 (2026-08-17), stable is 4.4.2. Card 01a179379e46 stays blocked on the release.
 - `main` holds P4 elevation's first round (squash-merged 2026-10-29) and everything before it. Pushed with the P4 merge (CI watched) and deployed; `dist/` rebuilt.
 - P4 elevation first round is complete (plan `docs/superpowers/plans/2026-10-28-elevation-first-round.md`, ledger rulings listed for the owner at close-out). It covers:
   - the level byte live in saves (0..=3, format v3 unchanged);
