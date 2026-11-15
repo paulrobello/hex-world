@@ -315,6 +315,21 @@ impl<'a> Facing<'a> {
     }
 }
 
+/// A placed single tile: its definition, the rotation it is turned by and the level it stands on.
+#[derive(Clone, Copy, Debug)]
+pub struct Placed<'a> {
+    pub def: &'a TileDef,
+    pub rot: u8,
+    pub level: u8,
+}
+
+impl<'a> Placed<'a> {
+    /// This tile's face across its world edge `w`.
+    fn facing(self, w: u8) -> Facing<'a> {
+        Facing::single(self.def, self.rot, self.level, w)
+    }
+}
+
 impl TileCatalog {
     /// Builds the catalog and rejects duplicate ids or any [`TileDef::validate`] issue.
     pub fn new(sockets: SocketTable, tiles: Vec<TileDef>) -> Result<Self, CatalogError> {
@@ -412,45 +427,16 @@ impl TileCatalog {
         self.facing_meets(a, b) || self.facing_meets(b, a)
     }
 
-    /// Whether `def` turned by `rotation` at height `level` may be placed with its world edge `w`
-    /// against the placed single tile `neighbour` turned by `nrot` at `nlevel`
+    /// Whether `a` may be placed with its world edge `w` against the placed single tile `b`
     /// ([`TileCatalog::facing_meets`]).
-    #[allow(clippy::too_many_arguments)]
-    pub fn placement_meets(
-        &self,
-        def: &TileDef,
-        rotation: u8,
-        level: u8,
-        w: u8,
-        neighbour: &TileDef,
-        nrot: u8,
-        nlevel: u8,
-    ) -> bool {
-        let back = opposite_edge(w);
-        self.facing_meets(
-            Facing::single(def, rotation, level, w),
-            Facing::single(neighbour, nrot, nlevel, back),
-        )
+    pub fn placement_meets(&self, a: Placed, w: u8, b: Placed) -> bool {
+        self.facing_meets(a.facing(w), b.facing(opposite_edge(w)))
     }
 
-    /// Whether placed single tiles `a` (turned by `ra`, at level `la`) and `b` (turned by `rb`, at
-    /// level `lb`) may touch across `a`'s world edge `w`, in either placement order
-    /// ([`TileCatalog::facings_meet`]).
-    #[allow(clippy::too_many_arguments)]
-    pub fn edges_meet(
-        &self,
-        a: &TileDef,
-        ra: u8,
-        la: u8,
-        w: u8,
-        b: &TileDef,
-        rb: u8,
-        lb: u8,
-    ) -> bool {
-        self.facings_meet(
-            Facing::single(a, ra, la, w),
-            Facing::single(b, rb, lb, opposite_edge(w)),
-        )
+    /// Whether placed single tiles `a` and `b` may touch across `a`'s world edge `w`, in either
+    /// placement order ([`TileCatalog::facings_meet`]).
+    pub fn edges_meet(&self, a: Placed, w: u8, b: Placed) -> bool {
+        self.facings_meet(a.facing(w), b.facing(opposite_edge(w)))
     }
 
     /// Whether `stopped` is a stopped rail end that meets `other`'s socket as
@@ -695,16 +681,88 @@ mod tests {
         let meadow = c.get("meadow").unwrap();
         for (rail_level, meadow_level) in [(0, 0), (2, 2), (0, 1), (2, 0), (1, 3)] {
             assert!(
-                c.placement_meets(meadow, 0, meadow_level, 3, straight, 0, rail_level),
+                c.placement_meets(
+                    Placed {
+                        def: meadow,
+                        rot: 0,
+                        level: meadow_level
+                    },
+                    3,
+                    Placed {
+                        def: straight,
+                        rot: 0,
+                        level: rail_level
+                    }
+                ),
                 "meadow {meadow_level} beside a stopped end at {rail_level}"
             );
-            assert!(c.edges_meet(straight, 0, rail_level, 0, meadow, 0, meadow_level));
+            assert!(c.edges_meet(
+                Placed {
+                    def: straight,
+                    rot: 0,
+                    level: rail_level
+                },
+                0,
+                Placed {
+                    def: meadow,
+                    rot: 0,
+                    level: meadow_level
+                }
+            ));
         }
         // A rail tile never turns its end toward a raised meadow.
-        assert!(!c.placement_meets(straight, 0, 0, 0, meadow, 0, 1));
-        assert!(c.placement_meets(straight, 0, 2, 0, straight, 0, 2));
-        assert!(!c.placement_meets(straight, 0, 1, 0, straight, 0, 2));
-        assert!(!c.placement_meets(straight, 0, 2, 0, straight, 0, 1));
+        assert!(!c.placement_meets(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 0
+            },
+            0,
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 1
+            }
+        ));
+        assert!(c.placement_meets(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 2
+            },
+            0,
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 2
+            }
+        ));
+        assert!(!c.placement_meets(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 1
+            },
+            0,
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 2
+            }
+        ));
+        assert!(!c.placement_meets(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 2
+            },
+            0,
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 1
+            }
+        ));
     }
 
     /// `facing_meets` and `placement_meets` both match the single-tile rule written out here:
@@ -753,10 +811,38 @@ mod tests {
                         let seam =
                             format!("{} r{ra} l{la} | {} r{rb} l{lb} across {w}", a.id, b.id);
                         assert_eq!(c.facing_meets(fa, fb), want, "{seam}");
-                        assert_eq!(c.placement_meets(a, ra, la, w, b, rb, lb), want, "{seam}");
+                        assert_eq!(
+                            c.placement_meets(
+                                Placed {
+                                    def: a,
+                                    rot: ra,
+                                    level: la
+                                },
+                                w,
+                                Placed {
+                                    def: b,
+                                    rot: rb,
+                                    level: lb
+                                }
+                            ),
+                            want,
+                            "{seam}"
+                        );
                         assert_eq!(
                             c.facings_meet(fa, fb),
-                            c.edges_meet(a, ra, la, w, b, rb, lb),
+                            c.edges_meet(
+                                Placed {
+                                    def: a,
+                                    rot: ra,
+                                    level: la
+                                },
+                                w,
+                                Placed {
+                                    def: b,
+                                    rot: rb,
+                                    level: lb
+                                }
+                            ),
                             "{seam}"
                         );
                     }

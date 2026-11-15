@@ -1231,6 +1231,7 @@ pub fn cell_seed(world_seed: u64, cell: Axial) -> u64 {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use crate::catalog::Placed;
     use crate::footprint;
     use crate::socket::{EdgeProfile, Side, SocketKind};
 
@@ -1839,12 +1840,72 @@ pub(crate) mod tests {
         assert_eq!(crate::rail_end::stopped_edges(&stub), 0);
         assert_eq!(crate::rail_end::stopped_edges(straight), 0b1001);
         // A meadow placed west of a straight's stopped end 0, then the stub's unstopped one.
-        assert!(c.placement_meets(meadow, 0, 0, 3, straight, 0, 0));
-        assert!(c.edges_meet(straight, 0, 0, 0, meadow, 0, 0));
-        assert!(!c.placement_meets(meadow, 0, 0, 3, &stub, 0, 0));
-        assert!(!c.edges_meet(&stub, 0, 0, 0, meadow, 0, 0));
+        assert!(c.placement_meets(
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 0
+            },
+            3,
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 0
+            }
+        ));
+        assert!(c.edges_meet(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 0
+            },
+            0,
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 0
+            }
+        ));
+        assert!(!c.placement_meets(
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 0
+            },
+            3,
+            Placed {
+                def: &stub,
+                rot: 0,
+                level: 0
+            }
+        ));
+        assert!(!c.edges_meet(
+            Placed {
+                def: &stub,
+                rot: 0,
+                level: 0
+            },
+            0,
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 0
+            }
+        ));
         // A rail tile never turns its end toward the meadow.
-        assert!(!c.placement_meets(straight, 0, 0, 0, meadow, 0, 0));
+        assert!(!c.placement_meets(
+            Placed {
+                def: straight,
+                rot: 0,
+                level: 0
+            },
+            0,
+            Placed {
+                def: meadow,
+                rot: 0,
+                level: 0
+            }
+        ));
     }
 
     /// The load rule is symmetric for every pair of catalog tiles, rotations and edges, so load
@@ -1859,13 +1920,52 @@ pub(crate) mod tests {
                     (0..216u16).map(|i| ((i / 36) as u8, (i / 6 % 6) as u8, (i % 6) as u8))
                 {
                     let seam = format!("{} r{ra} | {} r{rb} across {w}", a.id, b.id);
-                    let meet = c.edges_meet(a, ra, 0, w, b, rb, 0);
+                    let meet = c.edges_meet(
+                        Placed {
+                            def: a,
+                            rot: ra,
+                            level: 0,
+                        },
+                        w,
+                        Placed {
+                            def: b,
+                            rot: rb,
+                            level: 0,
+                        },
+                    );
                     assert_eq!(
                         meet,
-                        c.edges_meet(b, rb, 0, opposite_edge(w), a, ra, 0),
+                        c.edges_meet(
+                            Placed {
+                                def: b,
+                                rot: rb,
+                                level: 0
+                            },
+                            opposite_edge(w),
+                            Placed {
+                                def: a,
+                                rot: ra,
+                                level: 0
+                            }
+                        ),
                         "{seam}"
                     );
-                    assert!(meet || !c.placement_meets(a, ra, 0, w, b, rb, 0), "{seam}");
+                    assert!(
+                        meet || !c.placement_meets(
+                            Placed {
+                                def: a,
+                                rot: ra,
+                                level: 0
+                            },
+                            w,
+                            Placed {
+                                def: b,
+                                rot: rb,
+                                level: 0
+                            }
+                        ),
+                        "{seam}"
+                    );
                 }
             }
         }
