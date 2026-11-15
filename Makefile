@@ -1,11 +1,11 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-open-tunnels shots-raised-rail shots-massif shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 build dev dev-start dev-stop dev-restart run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-open-tunnels shots-raised-rail shots-massif shots-test
 
 fmt:
 	cargo fmt --all
 
 clean:
 	rm -rf dist target/kit-stage
-	@for dir in web/ui scripts/assets target; do \
+	@for dir in web/ui scripts/assets e2e target; do \
 	  if test -d "$$dir"; then find "$$dir" -type f -name '*.stamp' -delete; fi; done
 
 fmt-check:
@@ -43,7 +43,7 @@ check-wgpu:
 audit:
 	cargo audit --deny warnings --ignore RUSTSEC-2026-0192
 
-checkall: fmt-check lint typecheck test ui-check shots-test
+checkall: fmt-check ui-check shots-test lint typecheck test
 
 # The shot runner's black-frame check and retry (scripts/shots/piece.py; run.sh uses the same check).
 # Needs Pillow (CI's ui job installs scripts/requirements.txt).
@@ -57,6 +57,11 @@ UI = web/ui
 UI_NPM = $(UI)/node_modules/.npm-ci.stamp
 $(UI_NPM): $(UI)/package-lock.json
 	cd $(UI) && npm ci --no-audit --no-fund
+	touch $@
+
+E2E_NPM = e2e/node_modules/.npm-ci.stamp
+$(E2E_NPM): e2e/package-lock.json
+	cd e2e && npm ci --no-audit --no-fund
 	touch $@
 
 # Also Trunk's pre_build hook (Trunk.toml), so trunk build and trunk serve always carry the current HUD.
@@ -89,8 +94,7 @@ ui-schema:
 # e2e/test-results/version/, or VERSION_OUT=docs/checkpoints/version-check for the committed shots), and
 # e2e/ui-motion.mjs (input never waits on feedback, reduced motion from the OS or the engine flag, and frame
 # strips; e2e/test-results/ui-motion/, or MOTION_OUT=docs/checkpoints/ui-feedback for the committed strips).
-ui-e2e: build-web
-	cd e2e && npm ci --no-audit --no-fund
+ui-e2e: build-web $(E2E_NPM)
 	node e2e/ui.mjs dist
 	node e2e/ui-motion.mjs dist
 	node e2e/photo-fx.mjs dist
@@ -103,8 +107,7 @@ ui-e2e: build-web
 # Local only: the web audio layer (PRD §8) read through hexWorld.audio.state(): nothing loads before a
 # gesture, the context runs after one, events fire their cues, the focus mix, and mute. Writes
 # e2e/test-results/audio/*.json.
-audio-e2e: build-web
-	cd e2e && npm ci --no-audit --no-fund
+audio-e2e: build-web $(E2E_NPM)
 	node e2e/audio.mjs dist
 
 # initial-download runs after web-size, on the dist/ it just built (not a sibling prerequisite: under
@@ -266,24 +269,33 @@ initial-download:
 brand:
 	node scripts/brand/build.mjs
 
-web-smoke: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-smoke: build-web $(E2E_NPM)
 	node e2e/smoke.mjs dist
 	node e2e/initial-download.mjs dist
 
 # Local only (GPU Chromium): ghost evidence for owner feedback U1, written to docs/checkpoints/ghost/.
-shots-ghost: build-web
-	cd e2e && npm ci --no-audit --no-fund
+shots-ghost: build-web $(E2E_NPM)
 	node e2e/ghost-shots.mjs dist
 
-perf-gate: build-web
-	cd e2e && npm ci --no-audit --no-fund
+perf-gate: build-web $(E2E_NPM)
 	node e2e/perf-gate.mjs dist
 
-perf-matrix: build-web
+perf-matrix: build-web $(E2E_NPM)
 	cargo build -p hex-app --release
-	cd e2e && npm ci --no-audit --no-fund
 	node e2e/perf-matrix.mjs dist target/release/hex-world
+
+build:
+	cargo build --workspace
+
+# Native dev server via Trunk on 127.0.0.1:8094 (Trunk.toml); rebuilds the wasm live, HUD included.
+dev dev-start:
+	trunk serve
+
+dev-stop:
+	@lsof -ti tcp:8094 -sTCP:LISTEN | xargs kill 2>/dev/null || true
+
+dev-restart: dev-stop
+	@$(MAKE) --no-print-directory dev
 
 run:
 	cargo run -p hex-app --release -- $(ARGS)
@@ -324,8 +336,7 @@ shots-instanced:
 	@for n in single single-low gate-strategic gate-closeup gate-flock; do test -s target/shots/gallery-instanced-$$n.png || { echo "missing gallery-instanced-$$n.png"; exit 1; }; done
 	@echo "wrote target/shots/gallery-instanced-*.png (layout=instanced)"
 
-web-shots: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-shots: build-web $(E2E_NPM)
 	mkdir -p e2e/test-results
 	rm -f e2e/test-results/web-*.png
 	node e2e/shots.mjs dist scripts/shots/gallery.json
@@ -417,8 +428,7 @@ shots-tilt:
 	@echo "wrote $(TILT_OUT)/tilt-{off,on}-*.png"
 
 # The same pair in Chromium on WebGPU: e2e/test-results/web-tilt-{off,on}-<view>.png.
-web-shots-tilt: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-shots-tilt: build-web $(E2E_NPM)
 	mkdir -p e2e/test-results
 	rm -f e2e/test-results/web-tilt-*.png
 	@for m in off on; do \
@@ -426,8 +436,7 @@ web-shots-tilt: build-web
 	  for n in $(TILT_VIEWS); do mv e2e/test-results/web-tilt-$$n.png e2e/test-results/web-tilt-$$m-$$n.png; done; \
 	done
 
-web-shots-kit: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-shots-kit: build-web $(E2E_NPM)
 	mkdir -p e2e/test-results
 	rm -f e2e/test-results/web-kit-*.png
 	node e2e/shots.mjs dist scripts/shots/kit.json "$(QUERY)"
@@ -455,18 +464,16 @@ shots-water:
 
 # Water frame time at 2560x1440, web (uncapped GPU Chromium) and native, under the host-load guard.
 # WATER_TIERS=high,low (default) and WATER_ONLY=web|native narrow the run.
-perf-water: build-web
+perf-water: build-web $(E2E_NPM)
 	cargo build -p hex-app --release
-	cd e2e && npm ci --no-audit --no-fund
 	node e2e/perf-water.mjs dist target/release/hex-world
 
 # P2 groundwork on the scripted 2,000-tile world (gate2000, instanced, mid600 shadows, High, 2560x1440),
 # web and native, each run inside the host-load guard: the p95 budget run, the tilt-shift cost
 # (tilt on vs off), per-pass GPU times (gpu_timing=on) and the >25 ms stall tail; writes
 # docs/perf/p2-passes.json. PASSES_ONLY=web|native and PASSES_ROUNDS narrow the run.
-perf-passes: build-web
+perf-passes: build-web $(E2E_NPM)
 	cargo build -p hex-app --release
-	cd e2e && npm ci --no-audit --no-fund
 	node e2e/perf-passes.mjs dist target/release/hex-world
 
 # Water- and scatter-heavy play workload (P2 re-run): the deterministic 208-tile world of
@@ -474,17 +481,15 @@ perf-passes: build-web
 # 2560x1440, measured after every rise settles, web (uncapped GPU Chromium) and native, tilt-shift on
 # and off, each run inside the host-load guard. Writes docs/perf/p2-water-world.json (PERF_OUT
 # overrides). WW_ONLY=web|native and WW_ROUNDS narrow the run.
-perf-water-world: build-web
+perf-water-world: build-web $(E2E_NPM)
 	cargo build -p hex-app --release
-	cd e2e && npm ci --no-audit --no-fund
 	caffeinate -d -u node e2e/perf-water-world.mjs dist target/release/hex-world
 
 # Grass cost (crates/hex-play/src/play/grass.rs): e2e/perf-grass.mjs builds the ~2,000-tile play
 # water world (radius 26) at 2560x1440 on High and reads uncapped GPU Chromium from a low camera over
 # the start meadows with grass off, normal and lush, every run inside the host-load guard; writes
 # docs/perf/p2-grass.json (PERF_OUT, GRASS_ROUNDS, GRASS_RADIUS, GRASS_ARMS).
-perf-grass: build-web
-	cd e2e && npm ci --no-audit --no-fund
+perf-grass: build-web $(E2E_NPM)
 	caffeinate -d -u node e2e/perf-grass.mjs dist
 
 # Grass density slider drag (criterion 2 of the grass slider card): e2e/perf-grass-drag.mjs builds
@@ -493,8 +498,7 @@ perf-grass: build-web
 # 50 -> 100 in 5% steps), checks the drag rebuilt nothing, and reads blade counts, bytes and per-tile
 # build ms at 100% and 150%, every run inside the host-load guard; writes docs/perf/p2-grass-drag.json
 # (PERF_OUT, DRAG_RUNS, DRAG_RADIUS, DRAG_MS, DRAG_BASELINE_MS).
-perf-grass-drag: build-web
-	cd e2e && npm ci --no-audit --no-fund
+perf-grass-drag: build-web $(E2E_NPM)
 	caffeinate -d -u node e2e/perf-grass-drag.mjs dist
 
 # Play scenario checkpoint (P2 placement loop): runs the scripted proof docs/checkpoints/play/play.json
@@ -794,8 +798,7 @@ shots-scatter:
 # forward pipeline binds exactly 16 next to refracting water, the per-tile scatter matches the native
 # dump at the same seed, and the overview camera's pass census stays within 500 draws, with the
 # forest-cluster camera's census printed as tracked (owner A2 Q1; e2e/scatter.mjs).
-web-scatter: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-scatter: build-web $(E2E_NPM)
 	caffeinate -d -u node e2e/scatter.mjs dist $(SCATTER_DOCS)
 
 # Legend inventory tile thumbnails (PRD §5.3): every tile's distinct rotations rendered natively
@@ -843,6 +846,5 @@ shots-rail-routing:
 	bash docs/checkpoints/rail-routing/play.sh
 
 # The same evidence on the built site in GPU Chromium (local only), for an idle or occluded display.
-web-shots-rail-routing: build-web
-	cd e2e && npm ci --no-audit --no-fund
+web-shots-rail-routing: build-web $(E2E_NPM)
 	node e2e/rail-routing-shots.mjs dist
