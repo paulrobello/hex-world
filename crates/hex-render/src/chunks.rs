@@ -119,25 +119,6 @@ pub fn merge_by_material(
         .collect()
 }
 
-/// Bakes one static kit instance without losing UV1 wind weights or tangent frames.
-/// Negative colour alpha marks RGB as the original world-space wind pivot in kit shaders.
-/// Callers keep meshes with authored colours on the individual-entity path.
-pub fn transformed_kit_mesh(source: &Mesh, world: Transform, origin: Vec3) -> Mesh {
-    let mut mesh = source.clone();
-    mesh.transform_by(world);
-    if let Some(indices) = mesh.indices() {
-        let indices = indices.iter().map(|i| i as u32).collect();
-        mesh.insert_indices(Indices::U32(indices));
-    }
-    let pivot = world.translation;
-    mesh.insert_attribute(
-        Mesh::ATTRIBUTE_COLOR,
-        vec![[pivot.x, pivot.y, pivot.z, -1.0]; mesh.count_vertices()],
-    );
-    mesh.translate_by(-origin);
-    mesh
-}
-
 #[cfg(test)]
 mod footprint_chunks {
     use hex_core::{Axial, footprint};

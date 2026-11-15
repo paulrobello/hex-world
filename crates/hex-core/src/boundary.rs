@@ -453,23 +453,6 @@ where
     }
 }
 
-/// Every world footprint line of the boundaries drawn by `owners` (field tiles; others add none).
-pub fn segments<'a, A, L, B>(
-    view: &View<'a, A, L, B>,
-    owners: impl IntoIterator<Item = Axial>,
-) -> Vec<Seg>
-where
-    A: Fn(Axial) -> Option<(&'a TileDef, u8)>,
-    L: Fn(Axial) -> u8,
-    B: Fn(Axial, &Seg) -> bool,
-{
-    owners
-        .into_iter()
-        .flat_map(|c| view.placements(c))
-        .flat_map(|p| p.segs)
-        .collect()
-}
-
 /// The cells within `radius` of `cell` (itself included).
 pub fn within(cell: Axial, radius: i32) -> impl Iterator<Item = Axial> {
     (-radius..=radius).flat_map(move |dq| {

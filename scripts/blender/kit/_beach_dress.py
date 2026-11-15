@@ -6,21 +6,17 @@ Colour-only slots plus the piece's §9.4 masks map on the planar UV0 (`masks_fie
 so nothing changes the bed under the water (the water reads the prepass depth as its bed) and
 nothing crosses a seam. Kept apart from `_beach.py` so the bases do not depend on it."""
 import math
-import pathlib
 import random
-import sys
 
 import bmesh
-import bpy
 import numpy as np
 
-from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
+from lib import hexgeo
 
 import _beach
 
 TUFT, WOOD, PEBBLE = "beach_dunegrass", "beach_driftwood", "beach_pebble"
 DRESS_SLOTS = (TUFT, WOOD, PEBBLE)
-BUILT_SLOTS = (PEBBLE,)  # the centres' slots since the logs and tufts moved to the scatter
 COLORS = {TUFT: ("#7d8b45", 0.85), WOOD: ("#a39a8a", 0.9), PEBBLE: ("#6f675d", 0.6)}
 DRY_S = -2.4  # the damp band's top is at s = -1.95
 BORDER_M = 1.5
@@ -109,58 +105,3 @@ def _pebble(bm, layout, x, y, p):
         v.co.x = x + v.co.x * w * j
         v.co.y = y + v.co.y * w * 0.85 * j
         v.co.z = z + v.co.z * h * j
-
-
-def build_centre(piece, layout, generator):
-    """Three LODs of the pebbles: LOD0 all of them, LOD1 the larger half, LOD2 the biggest two. The
-    logs and tufts are placed (`placements`, so the pebbles keep their places) but not built."""
-    out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
-    scene.reset_scene(piece)
-    root = scene.empty(piece)
-    mats = {k: materials.pbr_material(k, materials.srgb(c), r) for k, (c, r) in COLORS.items() if k in BUILT_SLOTS}
-    items = placements(piece, layout)
-    logs = [i for i in items if i[0] == WOOD]
-    tufts = [i for i in items if i[0] == TUFT]
-    pebbles = sorted((i for i in items if i[0] == PEBBLE), key=lambda i: -i[3]["r"])
-    plan = ({"pebbles": pebbles}, {"pebbles": pebbles[: len(pebbles) // 2]}, {"pebbles": pebbles[:2]})
-    lods = []
-    for li, pl in enumerate(plan):
-        bm = bmesh.new()
-        for _k, x, y, p in pl["pebbles"]:
-            _pebble(bm, layout, x, y, p)
-        bm.faces.ensure_lookup_table()
-        for f in bm.faces:
-            f.material_index = BUILT_SLOTS.index(PEBBLE)
-            f.smooth = True
-        bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
-        bmesh.ops.triangulate(bm, faces=bm.faces)
-        mesh = bpy.data.meshes.new(f"{piece}_lod{li}")
-        bm.to_mesh(mesh)
-        bm.free()
-        o = scene.link(bpy.data.objects.new(f"{piece}_lod{li}", mesh))
-        for name in BUILT_SLOTS:
-            o.data.materials.append(mats[name])
-        uv.planar_cap_uv(o)
-        o.parent = root
-        lods.append(o)
-    tris = [geom.tri_count(o) for o in lods]
-    print(f"{piece}: {len(pebbles)} pebbles ({len(logs)} logs and {len(tufts)} tufts placed, not built), "
-          f"tris per LOD {tris}")
-    assert tris[0] <= 1500 and tris[1] <= 0.5 * tris[0] and tris[2] <= 0.15 * tris[0], tris
-    for o in lods:
-        for v in o.data.vertices:
-            s = _beach.seaward(layout, v.co.x, v.co.y)
-            assert s <= DRY_S + 0.6 and hexgeo.dist_to_border(v.co.x, v.co.y) >= 0.5, (o.name, tuple(v.co), s)
-    col = collider.collider_from(lods[2], "box", f"{piece}_collider")
-    col.parent = root
-    bake.write_png(MASK_SIZE, np.stack(masks_field(layout), axis=1), str(out / f"{piece}.masks.png"))
-    export.export_glb(root, str(out / f"{piece}.glb"))
-    export.write_export_report(str(out / "export-report.json"), root, piece, generator)
-    bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=bake.receiver_signature([lods[0]]),
-                           device="none", samples=0, marginPx=0,
-                           channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, skipped=True,
-                           reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-                           masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0},
-                           dressing={"logs": 0, "tufts": 0, "pebbles": len(pebbles), "tris": tris,
-                                     "placedNotBuilt": {"logs": len(logs), "tufts": len(tufts)}})
-    return root, lods

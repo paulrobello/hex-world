@@ -497,11 +497,6 @@ def quat_z_to(axis):
     return Vector((0.0, 0.0, 1.0)).rotation_difference(Vector(axis).normalized())
 
 
-def world_points(o, mat=None):
-    """Vertex positions of o in its parent frame, after an optional extra local transform."""
-    co = [Vector(v.co) for v in o.data.vertices]
-    m = o.matrix_basis if mat is None else o.matrix_basis @ mat
-    return [m @ c for c in co]
 
 
 def rot_z(deg):

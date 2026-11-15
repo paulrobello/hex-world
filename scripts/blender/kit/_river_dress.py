@@ -9,7 +9,7 @@ import sys
 import bpy
 import numpy as np
 
-from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
+from lib import bake, collider, geom, hexgeo, materials, scene, uv
 
 from _river import BEND_C, BEND_R, JOINT_X, LAYOUTS, profile_z
 
@@ -476,15 +476,3 @@ def build_dressing(piece, layout, generator, per_side=14, skip=None, extra=None)
     col.parent = root
     bake.write_png(MASK_SIZE, np.stack(masks_field(dist), axis=1), str(out / f"{piece}.masks.png"))
     return root, lods, out, {"stones": len(stones), "reedClumps": len(reeds), "tris": tris}
-
-
-def finish_dressing(root, lods, out, piece, generator, stats, **report):
-    export.export_glb(root, str(out / f"{piece}.glb"))
-    export.write_export_report(str(out / "export-report.json"), root, piece, generator)
-    bake.write_bake_report(str(out / "bake-report.json"), receiverSignature=bake.receiver_signature([lods[0]]),
-                           device="none", samples=0, marginPx=0,
-                           channels={"masks": {"size": MASK_SIZE, "colorspace": "linear"}}, dressing=stats,
-                           skipped=True,
-                           reason="no Cycles bake: the masks are an analytic field of (x, y) on the planar UV0",
-                           masks={"snow": 1.0, "porosity": list(POROSITY), "night": 0.0, "ao": 1.0},
-                           lod2Drops={CATTAIL: CATTAIL_LOD2_DROP}, **report)

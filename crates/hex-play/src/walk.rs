@@ -985,19 +985,6 @@ fn entry(t0: f32, t1: f32) -> Option<f32> {
     (t0 <= t1 && t0 >= 0.0).then_some(t0)
 }
 
-/// Where `ray` enters a vertical cylinder about `c` (XZ) of radius `r` between `y0` and `y1`.
-pub fn ray_cylinder(ray: Ray3d, c: Vec2, r: f32, y0: f32, y1: f32) -> Option<f32> {
-    let (o, d) = (ray.origin, *ray.direction);
-    let (mut t0, mut t1) = (f32::NEG_INFINITY, f32::INFINITY);
-    if !clip(&mut t0, &mut t1, o.y - y0, d.y) || !clip(&mut t0, &mut t1, y1 - o.y, -d.y) {
-        return None;
-    }
-    if !clip_disc(&mut t0, &mut t1, o.xz() - c, d.xz(), r) {
-        return None;
-    }
-    entry(t0, t1)
-}
-
 /// Where `ray` enters the convex footprint `poly` (XZ, either winding) extruded from `y0` to `y1`.
 pub fn ray_prism(ray: Ray3d, poly: &[Vec2], y0: f32, y1: f32) -> Option<f32> {
     if poly.len() < 3 {

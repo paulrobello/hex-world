@@ -453,22 +453,6 @@ impl TileCatalog {
         )
     }
 
-    /// How the facing sockets of single tiles `a` and `b` meet in height across `a`'s world edge
-    /// `w` ([`heights_meet`]): `Cliff` seams are the ones a cliff skirt is drawn on.
-    #[allow(clippy::too_many_arguments)]
-    pub fn meet_kind(
-        &self,
-        a: &TileDef,
-        ra: u8,
-        la: u8,
-        w: u8,
-        b: &TileDef,
-        rb: u8,
-        lb: u8,
-    ) -> HeightMeet {
-        Facing::single(a, ra, la, w).meet(Facing::single(b, rb, lb, opposite_edge(w)))
-    }
-
     /// Whether `stopped` is a stopped rail end that meets `other`'s socket as
     /// [`STOPPED_END_GROUND`], `other` carrying no rail. A mega outer face has no local edge and
     /// never carries a stop.
