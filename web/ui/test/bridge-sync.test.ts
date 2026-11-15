@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { COMMAND_FIELDS, ENUMS, EVENT_FIELDS, STATE_FIELDS } from "../src/bridge.ts";
 import { MAX_SAVE_BYTES } from "../src/import-model.ts";
+import type { WasmBindings } from "../src/shim.ts";
 import schema from "../src/bridge-schema.json" with { type: "json" };
 
 const sorted = (o: Record<string, string[]>): Record<string, string[]> =>
@@ -28,4 +29,25 @@ test("play state keys and nested shapes match", () => {
 
 test("the import's byte limit is the engine's", () => {
   assert.equal(MAX_SAVE_BYTES, schema.catalog.max_save_bytes);
+});
+
+test("the shim's wasm export names are the engine's", () => {
+  // The keys<true> form forces this table to list every `WasmBindings` member, so a wasm export
+  // added in Rust and named here fails the schema assertion until the shim drives it.
+  const driven: { [K in keyof WasmBindings]: true } = {
+    hex_world_ready: true,
+    hex_world_state_json: true,
+    hex_world_diag_json: true,
+    hex_world_events: true,
+    hex_world_cell_rect: true,
+    hex_world_cmd: true,
+    hex_world_inbox_len: true,
+    hex_world_screenshot: true,
+    hex_world_take_shot: true,
+    hex_world_take_save: true,
+    hex_world_save_now: true,
+    hex_world_load: true,
+    hex_world_inspect: true,
+  };
+  assert.deepEqual(Object.keys(driven).sort(), schema.exports);
 });

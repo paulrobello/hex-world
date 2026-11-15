@@ -625,6 +625,15 @@ export interface State {
 
 export type Rect = [left: number, top: number, right: number, bottom: number];
 
+/** `hexWorld.exportPhoto()`: the offscreen PNG data URL and the export's pixel size (`width` and
+ * `height` are null when the `photoExported` event read was not this call's export). */
+export type PhotoExportResult = {
+  name: string;
+  width: number | null;
+  height: number | null;
+  url: string;
+};
+
 export interface HexWorld {
   ready(): boolean;
   state(): State;
@@ -649,6 +658,29 @@ export interface HexWorld {
   inspect(bytes: Uint8Array): InspectResult;
   /** The world as of the last frame as `.hexworld` bytes, at once; null before the first frame. */
   saveNow(volumes: Volumes | null): Uint8Array | null;
+  /** The engine's diagnostic counters (`?diag=1` and the Settings Debug tab read these). */
+  diag(): Record<string, unknown>;
+  /** The full state as of the last frame, without the queue-count overlays `state()` adds. */
+  dumpState(): State;
+  newWorld(): void;
+  selectTile(id: string): void;
+  hover(q: number, r: number): void;
+  rotateGhost(dir?: "cw" | "ccw"): void;
+  placeTile(q: number, r: number): void;
+  replaceTile(q: number, r: number): void;
+  pin(q: number, r: number): void;
+  unpin(): void;
+  undo(): void;
+  redo(): void;
+  bulldoze(q: number, r: number): void;
+  setTool(mode: Tool): void;
+  toggle(what: ToggleTarget): void;
+  /** Photo-mode panel values (`{ dof, focus, aperture, exposure, fov, roll, pause_agents }`). */
+  photo(values: Partial<Extract<Command, { cmd: "photo" }>>): void;
+  /** Resolves once the offscreen photo export's PNG lands, or rejects with the reason. */
+  exportPhoto(scale?: number, name?: string, timeoutMs?: number): Promise<PhotoExportResult>;
+  /** Resolves a PNG data URL once the capture lands, after any queued commands. */
+  screenshot(name?: string, timeoutMs?: number): Promise<string>;
 }
 
 // ---------- Field tables, checked against bridge-schema.json by test/bridge-sync.test.ts ----------

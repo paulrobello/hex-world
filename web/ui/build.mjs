@@ -53,6 +53,19 @@ await esbuild.build({
   logLevel: "warning",
 });
 
+// The hexWorld shim (index.html loads web/ui/shim.js on TrunkApplicationStarted); typed, tested
+// source in src/shim.ts, standalone (no runtime imports from the HUD bundle).
+await esbuild.build({
+  entryPoints: [join(here, "src/shim.ts")],
+  outfile: join(out, "shim.js"),
+  bundle: true,
+  format: "iife",
+  target: "es2022",
+  minify: true,
+  legalComments: "none",
+  logLevel: "warning",
+});
+
 const styles = ["src/hud.css", "src/photo.css", "src/photo-fx.css"]
   .map((f) => readFileSync(join(here, f), "utf8"))
   .join("\n");
@@ -65,7 +78,7 @@ writeFileSync(join(out, "hud.css"), css.code);
 for (const f of ["manrope-latin-wght.woff2", "OFL-manrope.txt"])
   copyFileSync(join(here, "fonts", f), join(out, "fonts", f));
 
-const report = ["hud.js", "hud.css"].map((f) => {
+const report = ["hud.js", "shim.js", "hud.css"].map((f) => {
   const b = readFileSync(join(out, f));
   return `${f} ${b.length} B (gzip ${gzipSync(b, { level: 9 }).length} B)`;
 });

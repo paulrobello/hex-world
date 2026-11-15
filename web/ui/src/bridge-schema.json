@@ -4794,6 +4794,21 @@
       "on"
     ]
   },
+  "exports": [
+    "hex_world_cell_rect",
+    "hex_world_cmd",
+    "hex_world_diag_json",
+    "hex_world_events",
+    "hex_world_inbox_len",
+    "hex_world_inspect",
+    "hex_world_load",
+    "hex_world_ready",
+    "hex_world_save_now",
+    "hex_world_screenshot",
+    "hex_world_state_json",
+    "hex_world_take_save",
+    "hex_world_take_shot"
+  ],
   "state": {
     "bulldoze": [
       "allowed",
