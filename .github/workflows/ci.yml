@@ -51,6 +51,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/
+            !/assets-source/
+            !/assets/
       - name: Install Rust
         run: rustup show active-toolchain || rustup toolchain install
       - run: make fmt-check
@@ -63,6 +70,12 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/docs/
+            !/assets-source/
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
@@ -75,6 +88,9 @@ jobs:
       - run: make ui-check
       - run: make shots-test
 
+  # lint and typecheck keep full checkouts: their --all-targets compiles test code that
+  # include_str!s fixtures from docs/checkpoints/ and assets-source/kit/, and the data
+  # validator reads assets/kit/manifest.json.
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 30
