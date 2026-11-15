@@ -64,7 +64,8 @@ jobs:
 
   # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via the
   # lockfile stamp target. Also the shot runner's tests (shots-test, and run.test.mjs inside
-  # ui-test), which read frames with Pillow, so Pillow installs before ui-check.
+  # ui-test), which read frames with Pillow, so Pillow installs before ui-check, and the Python
+  # lint (py-lint, ruff from the same requirements file).
   ui:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -85,8 +86,10 @@ jobs:
         run: |
           python3 -m pip install --user --break-system-packages --only-binary=:all: -r scripts/requirements.txt
           python3 -c 'import PIL; print("Pillow", PIL.__version__)'
+          ruff --version
       - run: make ui-check
       - run: make shots-test
+      - run: make py-lint
 
   # lint and typecheck keep full checkouts: their --all-targets compiles test code that
   # include_str!s fixtures from docs/checkpoints/ and assets-source/kit/, and the data

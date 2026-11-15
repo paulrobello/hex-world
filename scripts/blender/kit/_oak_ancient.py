@@ -13,7 +13,6 @@ the wrapper keeps `_oak_fork`'s strands, roots, limbs and secondaries and append
 (level 1 leaders and stubs, level 2 tines), which feed no clump, so they carry bark only."""
 from __future__ import annotations
 
-import math
 import pathlib
 import random
 

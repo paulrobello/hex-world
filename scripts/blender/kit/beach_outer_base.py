@@ -7,6 +7,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _beach  # noqa: E402
+import _beach
 
 _beach.build_base("beach_outer_base", "outer", __file__)

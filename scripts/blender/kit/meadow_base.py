@@ -10,9 +10,9 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv
 
-import _terrain  # noqa: E402
+import _terrain
 
 PIECE = "meadow_base"
 SPACING = (0.9, 1.8, None)

@@ -31,7 +31,7 @@ import numpy as np
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _fauna as fa  # noqa: E402
+import _fauna as fa
 
 PIECE, ATLAS, MASK_SIZE, S = "bird_goldfinch", 512, 128, 5.0
 TRI_CEILING = (184, 74, 22)  # bird_starling's LOD tris (its provenance)

@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _house_slate  # noqa: E402
-from _house import PLASTER_LIN as L  # noqa: E402
+import _house_slate
+from _house import PLASTER_LIN as L
 
 P = "house_cottage_b"
 WALLS, ROOF, STONE, TIMBER, DOOR, GLASS, POTS = (

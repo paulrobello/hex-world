@@ -26,7 +26,7 @@ import numpy as np
 from mathutils import Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, gate  # noqa: E402
+from lib import bake, gate
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
 PIECE = sys.argv[sys.argv.index("--") + 1]

@@ -20,8 +20,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _tunnel_portal  # noqa: E402
-import _tunnel_portal_open  # noqa: E402,F401  (rebinds _tunnel_portal.build_lod and compose_maps)
+import _tunnel_portal
+import _tunnel_portal_open  # noqa: F401  (rebinds _tunnel_portal.build_lod and compose_maps)
 
 SPEC = {
     "piece": "road_tunnel_portal",

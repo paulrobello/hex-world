@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _flowers  # noqa: E402
+import _flowers
 
 _flowers.build("wildflower_clump_b", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__,
                species=("daisy", "buttercup"))

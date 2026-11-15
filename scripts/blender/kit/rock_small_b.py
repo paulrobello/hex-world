@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _rock  # noqa: E402
+import _rock
 
 _rock.build("rock_small_b", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__,
             stones=[_rock.Stone(semi=(0.95, 0.78, 0.68), centre=(0.0, 0.0, 0.10), planes=12, keep=(0.72, 0.86),

@@ -14,7 +14,7 @@ import bpy
 from mathutils import Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import gate, scene  # noqa: E402
+from lib import gate, scene
 
 piece = sys.argv[sys.argv.index("--") + 1]
 stage = pathlib.Path("target/kit-stage") / piece

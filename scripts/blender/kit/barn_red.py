@@ -36,12 +36,12 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
-import bmesh  # noqa: E402
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import bmesh
+import bpy
+import numpy as np
+from mathutils import Vector
 
-from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
+from lib import bake, budgets, collider, export, geom, materials, scene, uv
 
 P = "barn_red"
 DROP = -0.35

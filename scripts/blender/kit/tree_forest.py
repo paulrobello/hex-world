@@ -19,10 +19,10 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, collider, export, geom, lod, materials, scene, uv  # noqa: E402
-import _forest as F  # noqa: E402
-from _shared import island_texels  # noqa: E402
-import _tree  # noqa: E402
+from lib import bake, collider, export, geom, lod, materials, scene, uv
+import _forest as F
+from _shared import island_texels
+import _tree
 
 PIECE, ATLAS, MASK_SIZE = F.PIECE, F.ATLAS, 1024
 BARK_SET_PX, BARK_TILE_M = 1024, 2.0  # the `bark` tileable set (scripts/blender/kit/mat_bark.py)

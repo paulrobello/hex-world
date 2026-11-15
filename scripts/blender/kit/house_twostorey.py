@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _house  # noqa: E402
+import _house
 
 P = "house_twostorey"
 WALLS, ROOF, STONE, FRAME, DOOR, GLASS = (f"{P}_{n}" for n in ("walls", "roof", "stone", "frame", "door", "glass"))

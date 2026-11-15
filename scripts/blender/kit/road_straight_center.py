@@ -5,9 +5,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import export  # noqa: E402
+from lib import export
 
-import _road  # noqa: E402
+import _road
 
 PIECE = "road_straight_center"
 # LODs change only the length segments (C2). S = 28 tris per segment, p = 6 paint tris: 342 / 146 / 34.

@@ -20,7 +20,6 @@ round the dense lower dome, so the walker stops at the leaves (body 0.3 m + core
 reach) and scatter keeps other pieces' footprints out of it."""
 from __future__ import annotations
 
-import hashlib
 import math
 import os
 import pathlib

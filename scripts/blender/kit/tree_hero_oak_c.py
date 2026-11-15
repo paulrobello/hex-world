@@ -14,7 +14,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _oak_ancient  # noqa: E402
+import _oak_ancient
 
 # (x, y, z, radius, feed) at 1x, Blender frame (+y north, -y south: the default camera's side).
 CLUMPS = [

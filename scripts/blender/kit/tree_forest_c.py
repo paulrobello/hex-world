@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _spruce  # noqa: E402
+import _spruce
 
 LODS = (dict(sides=6, step=1.0, core=(8, 5), segs=2, folded=True, fsegs=2, ffolded=True, every=1, width=1.0, leader=2),
         dict(sides=5, step=2.0, core=(6, 2), segs=2, folded=False, fsegs=1, ffolded=True, every=1, width=1.0, leader=2),

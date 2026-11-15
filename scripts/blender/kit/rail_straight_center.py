@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _rail  # noqa: E402
+import _rail
 
 PIECE = "rail_straight_center"
 # Path segments per LOD. 38 tris per segment (ballast 10, rails 28) plus 40 sleepers (10 tris each

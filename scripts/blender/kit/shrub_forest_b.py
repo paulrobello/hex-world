@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _shrub_holly  # noqa: E402
+import _shrub_holly
 
 # sRGB: a deep blue-green holly, cooler than the spruce needles and the box-green verge bushes.
 PALETTE = dict(DARK="#173323", MID="#28573a", LIGHT="#64965e", BACK="#0f2015", TWIG="#4a4336")

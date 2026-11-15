@@ -31,13 +31,13 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import bpy
+import numpy as np
+from mathutils import Vector
 
-import _rail  # noqa: E402
-from _house import Mesh, centroid_samples, fill_unbaked  # noqa: E402
-from lib import bake, budgets, collider, export, geom, hexgeo, materials, scene  # noqa: E402
+import _rail
+from _house import Mesh, centroid_samples, fill_unbaked
+from lib import bake, budgets, collider, export, geom, hexgeo, materials, scene
 
 PIECE = "rail_buffer_stop"
 MASK_SIZE = 512

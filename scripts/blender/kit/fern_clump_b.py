@@ -10,8 +10,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _ferns_var  # noqa: E402
-import _props  # noqa: E402
+import _ferns_var
+import _props
 
 PIECE = "fern_clump_b"
 FRONDS, SINK = 12, 0.08

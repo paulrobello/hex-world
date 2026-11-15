@@ -37,9 +37,9 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import bake, collider, export, geom, hexgeo, materials, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
 
-import _road  # noqa: E402
+import _road
 
 PIECE = "house_pad"
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])

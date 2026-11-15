@@ -31,10 +31,10 @@ from mathutils import Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
-import _ferns  # noqa: E402
-import _props  # noqa: E402
-import _verge_bush  # noqa: E402
+from lib import bake, budgets, collider, export, geom, materials, scene, uv
+import _ferns
+import _props
+import _verge_bush
 
 PIECE, MASK_SIZE = "fern_clump", 64
 ATLAS = _ferns.ATLAS

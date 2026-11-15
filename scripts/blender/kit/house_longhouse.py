@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _house_longhouse  # noqa: E402
+import _house_longhouse
 
 P = "house_longhouse"
 WALLS, ROOF, STONE, BRICK, TIMBER, FRAME, DOOR, GLASS = (

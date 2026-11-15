@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _driftwood  # noqa: E402
+import _driftwood
 
 D = _driftwood.D
 SPEC = _driftwood.Spec(

@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _oak_fork  # noqa: E402
+import _oak_fork
 
 # (x, y, z, radius, feed) at 1x, Blender frame; feed names the branch that runs into the clump.
 CLUMPS = [

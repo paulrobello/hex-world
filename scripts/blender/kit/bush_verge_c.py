@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _verge_bush_c  # noqa: E402
+import _verge_bush_c
 
 # sRGB: a deep fresh hawthorn green, between bush_verge's box-green and bush_verge_b's yellow-green,
 # dark enough that the cream blossom stands out.

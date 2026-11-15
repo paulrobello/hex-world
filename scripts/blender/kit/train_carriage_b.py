@@ -23,7 +23,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _train  # noqa: E402
+import _train
 
 REPO = pathlib.Path(__file__).resolve().parents[3]
 LOD0_CEILING = 832  # train_carriage's LOD0 (brief: its tris are this piece's ceiling)

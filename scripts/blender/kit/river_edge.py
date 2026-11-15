@@ -7,9 +7,9 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import bake, collider, export, geom, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, scene, uv
 
-import _river  # noqa: E402
+import _river
 
 PIECE = "river_edge"
 # Bed rows per LOD. The border section (profile + wall) is fixed, so the ratios are

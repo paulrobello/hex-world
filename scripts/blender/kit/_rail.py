@@ -27,7 +27,6 @@ value that belongs to another surface.
 """
 import json
 import math
-import os
 import pathlib
 import sys
 

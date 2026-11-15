@@ -5,6 +5,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _water_props  # noqa: E402
+import _water_props
 
 _water_props.build_lily("lily_cluster", __file__, (0.46, 0.4, 0.32), 0.9)

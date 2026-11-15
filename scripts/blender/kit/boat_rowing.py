@@ -23,10 +23,10 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-from mathutils import Vector  # noqa: E402
+from mathutils import Vector
 
-import _boat as B  # noqa: E402
-from lib import export, geom, scene  # noqa: E402
+import _boat as B
+from lib import export, geom, scene
 
 P = "boat_rowing"
 # (linear colour = manifest colour, roughness, (snow, porosity, night))

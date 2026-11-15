@@ -20,8 +20,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _boat as B  # noqa: E402
-from lib import export, geom, scene  # noqa: E402
+import _boat as B
+from lib import export, geom, scene
 
 P = "landing_stage"
 SLOTS = {

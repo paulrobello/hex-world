@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _road_bend  # noqa: E402
+import _road_bend
 
 PIECE = "road_bend_120_center"
 # Arc segments per LOD (C2: LODs change only the length segments). S = 28 tris per segment plus

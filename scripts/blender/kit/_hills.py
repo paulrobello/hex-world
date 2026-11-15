@@ -23,9 +23,9 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import hexgeo  # noqa: E402
+from lib import hexgeo
 
-import _massif as M  # noqa: E402
+import _massif as M
 
 fbm, sstep, smax = M.fbm, M.sstep, M.smax
 

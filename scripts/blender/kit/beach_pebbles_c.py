@@ -6,6 +6,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _stones  # noqa: E402
+import _stones
 
 _stones.build("beach_pebbles_c", __file__)

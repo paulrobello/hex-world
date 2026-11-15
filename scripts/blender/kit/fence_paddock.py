@@ -48,13 +48,13 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _terrain  # noqa: E402
-import bmesh  # noqa: E402
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import _terrain
+import bmesh
+import bpy
+import numpy as np
+from mathutils import Vector
 
-from lib import bake, budgets, export, geom, hexgeo, materials, scene, uv  # noqa: E402
+from lib import bake, budgets, export, geom, hexgeo, materials, scene, uv
 
 P = "fence_paddock"
 SLOT = f"{P}_timber"

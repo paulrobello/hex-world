@@ -31,8 +31,8 @@ from mathutils import Vector, noise
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, budgets, collider, export, geom, lod, materials, scene, uv  # noqa: E402
-from _shared import island_texels  # noqa: E402
+from lib import bake, budgets, collider, export, geom, lod, materials, scene, uv
+from _shared import island_texels
 
 PIECE, ATLAS, SMALL, MASK_SIZE = "log_fallen", 1024, 512, 128
 REPO = pathlib.Path(__file__).resolve().parents[3]

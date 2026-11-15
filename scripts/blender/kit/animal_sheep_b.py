@@ -35,9 +35,9 @@ import numpy as np
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _animals as an  # noqa: E402
-import _animals_var as av  # noqa: E402
-import _fauna as fa  # noqa: E402
+import _animals as an
+import _animals_var as av
+import _fauna as fa
 
 PIECE = "animal_sheep_b"
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])

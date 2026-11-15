@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _car  # noqa: E402
+import _car
 
 L = 2.35  # half length
 BED_X = (-L, -0.04)

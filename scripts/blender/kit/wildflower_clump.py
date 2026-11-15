@@ -26,8 +26,8 @@ from mathutils import Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, collider, export, geom, materials, scene, uv  # noqa: E402
-import _props  # noqa: E402
+from lib import bake, collider, export, geom, materials, scene, uv
+import _props
 
 PIECE, TILE_PX, MASK_SIZE = "wildflower_clump", 256, 64
 ATLAS = TILE_PX * _props.GRID

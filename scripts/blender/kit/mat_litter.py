@@ -13,7 +13,7 @@ import sys
 import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from lib import bake, export, scene  # noqa: E402
+from lib import bake, export, scene
 
 SET, SIZE, TILE_M = "litter", 1024, 2.0
 PX_M = SIZE / TILE_M

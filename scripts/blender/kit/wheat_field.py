@@ -45,10 +45,10 @@ from mathutils.geometry import delaunay_2d_cdt
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, budgets, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
-import _props  # noqa: E402
-import _terrain  # noqa: E402
-import _wheat  # noqa: E402
+from lib import bake, budgets, collider, export, geom, hexgeo, lod, materials, scene
+import _props
+import _terrain
+import _wheat
 
 PIECE = "wheat_field"
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])

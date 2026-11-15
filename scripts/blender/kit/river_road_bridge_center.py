@@ -7,6 +7,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _river_bridge  # noqa: E402
+import _river_bridge
 
 _river_bridge.build("river_road_bridge_center", __file__)

@@ -7,6 +7,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _massif  # noqa: E402
+import _massif
 
 _massif.build(pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__)

@@ -18,15 +18,15 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import bmesh  # noqa: E402
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
+import bmesh
+import bpy
+import numpy as np
 
-from lib import bake, collider, export, geom, hexgeo, materials, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
 
-import _river_dress  # noqa: E402
-import _spring  # noqa: E402
-from _river import WATER  # noqa: E402
+import _river_dress
+import _spring
+from _river import WATER
 
 PIECE = "river_spring_center"
 GRANITE, LILY = "river_granite", "river_lily"

@@ -8,6 +8,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _drystone  # noqa: E402
+import _drystone
 
 _drystone.build("wall_junction", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__, kind="corner", arms=(0.0, 120.0, 240.0), texel=258.0)

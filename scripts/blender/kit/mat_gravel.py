@@ -7,8 +7,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, export, materials, scene  # noqa: E402
-from _shared import make_math, make_ramp  # noqa: E402
+from lib import bake, export, materials, scene
+from _shared import make_math, make_ramp
 
 SET, SIZE, TILE_M = "gravel", 1024, 2.0
 GENERATOR = pathlib.Path(__file__).resolve()

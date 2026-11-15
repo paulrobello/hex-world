@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _single_poppy  # noqa: E402
+import _single_poppy
 
 _single_poppy.build("wildflower_single_e", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__,
                     height=0.8)

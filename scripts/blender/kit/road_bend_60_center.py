@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _road_bend_trim  # noqa: E402
+import _road_bend_trim
 
 PIECE = "road_bend_60_center"
 # Arc segments per LOD. S = 25 tris per segment (24 swept, 1 pit fan) plus the paint:

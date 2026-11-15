@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _hedge  # noqa: E402
+import _hedge
 
 # Card rows over the profile, spacing along the arm (m), card size (m), outline raggedness (m at the
 # top), sprigs per arm, inner cards per metre and the card tilt off the surface normal.

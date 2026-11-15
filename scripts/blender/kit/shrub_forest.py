@@ -9,8 +9,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _shrub  # noqa: E402
-import _shrub_matte  # noqa: E402
+import _shrub
+import _shrub_matte
 
 # Crown: an ellipsoid centred at (cx, 0, cz) with semi-axes a (across) and b (up); `outer` cards on
 # its shell, `inner` inside; cards `card` m across with a `cushion` m centre lift.

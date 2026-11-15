@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _road_bend  # noqa: E402
+import _road_bend
 
 PIECE = "road_junction_center"
 # Fillet segments per LOD. Arms (3 x 28), the box (24) and the paint (6) are fixed, 114 tris, so the

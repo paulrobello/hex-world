@@ -34,7 +34,6 @@ import math
 import pathlib
 import sys
 
-import bpy
 
 import numpy as np
 
@@ -173,7 +172,8 @@ def build_piece(piece, generator):
         stone = stone_parts(piece, li, mats)
         clear.append(clearance(stone))
         rails.append(tr)
-        texel = uv.measure_texel_density(tr, MASK_SIZE) if li == 0 else texel
+        if li == 0:
+            texel = uv.measure_texel_density(tr, MASK_SIZE)
         body = geom.join([tr] + stone, f"{piece}_lod{li}")
         print(f"{piece}_lod{li}: wind U max {_river_dress.wind_uv(body):.3f}")
         body.data.set_sharp_from_angle(angle=math.radians(30.0))

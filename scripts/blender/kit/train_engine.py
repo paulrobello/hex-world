@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _train  # noqa: E402
+import _train
 
 L = 4.2  # buffer beam face
 W = 1.35  # running plate half width

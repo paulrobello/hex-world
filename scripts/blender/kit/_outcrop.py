@@ -21,13 +21,13 @@ from typing import Callable, Optional
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import bmesh  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Vector, noise  # noqa: E402
+import bmesh
+import numpy as np
+from mathutils import Vector, noise
 
-import _boulder  # noqa: E402
-from _boulder import Joint  # noqa: E402
-from lib import materials  # noqa: E402
+import _boulder
+from _boulder import Joint
+from lib import materials
 
 Z_FLOOR = (0.30, 0.60)  # carving weight rises from 0 to 1 over this z band (m)
 REFINE = (0.30, 0.10)  # extra subdivision passes, each for edges within this distance (m) of a groove

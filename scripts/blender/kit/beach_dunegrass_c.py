@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _dunegrass  # noqa: E402
+import _dunegrass
 
 CLUMP = _dunegrass.Clump(cards=10, height=(0.7, 0.85), width=0.9, blades=135, dead=0.22, spikes=True,
                          mound_r=0.7, mound_h=0.2, lean=0.2, drift=(0.22, 0.08), straw_from=(0.45, 0.7))

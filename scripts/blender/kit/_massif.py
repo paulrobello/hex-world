@@ -52,11 +52,11 @@ from mathutils import Vector
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from lib import bake, budgets, collider, export, geom, hexgeo, lod, materials, scene  # noqa: E402
+from lib import bake, budgets, collider, export, geom, hexgeo, lod, materials, scene
 
-import _boulder  # noqa: E402
-import _rock  # noqa: E402
-import _terrain  # noqa: E402
+import _boulder
+import _rock
+import _terrain
 
 PIECE = "massif_granite"
 KIND = "hero"

@@ -13,8 +13,8 @@ from mathutils import Matrix
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv  # noqa: E402
-import _coast  # noqa: E402
+from lib import bake, collider, export, geom, hexgeo, lod, materials, scene, uv
+import _coast
 
 PIECE = "ocean_base"
 SPACING = (1.2, 2.4, None)

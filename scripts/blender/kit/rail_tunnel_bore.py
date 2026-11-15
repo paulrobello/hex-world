@@ -13,8 +13,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _rail  # noqa: E402
-import _rail_tunnel_bore  # noqa: E402
+import _rail
+import _rail_tunnel_bore
 
 SPEC = {
     "piece": "rail_tunnel_bore",

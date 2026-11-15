@@ -6,6 +6,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _forest_edge  # noqa: E402
+import _forest_edge
 
 _forest_edge.build("forest_forest_edge_e5", 5, __file__)

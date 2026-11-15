@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _oak_scatter  # noqa: E402
+import _oak_scatter
 
 # Crown tiers (count, ring radius m, centre z m, clump radius m), as `_tree.TIERS`. One top dome on the
 # axis: the trunk runs up into it, so it stays upright and its collider inside 0.59 m.

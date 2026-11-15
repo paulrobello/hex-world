@@ -7,8 +7,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _boulder  # noqa: E402
-from _boulder import Joint, Stone  # noqa: E402,F401
+import _boulder
+from _boulder import Joint, Stone  # noqa: F401
 
 TEXEL_MIN = 104.0  # owner A25: a unique bake at about 128 px/m
 _boulder.build("boulder_granite", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__,

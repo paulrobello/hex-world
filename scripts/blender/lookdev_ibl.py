@@ -4,7 +4,7 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import bake, ibl, ktx2  # noqa: E402
+from lib import bake, ibl, ktx2
 
 hdri = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
 out = pathlib.Path("assets/kit/p1/ibl")

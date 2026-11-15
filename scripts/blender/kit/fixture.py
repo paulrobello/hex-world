@@ -4,8 +4,8 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from lib import bake, export  # noqa: E402
-from tests import fixture_piece  # noqa: E402
+from lib import bake, export
+from tests import fixture_piece
 
 out = pathlib.Path(sys.argv[sys.argv.index("--") + 1])
 root, lods = fixture_piece.build("fixture", spacings=(1.5, 8.0, 50.0))

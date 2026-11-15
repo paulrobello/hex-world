@@ -6,6 +6,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _bank_props  # noqa: E402
+import _bank_props
 
 _bank_props.build("river_reeds_b", __file__, reeds=[(-0.4, 0.15, 1907), (0.4, -0.15, 4426)])

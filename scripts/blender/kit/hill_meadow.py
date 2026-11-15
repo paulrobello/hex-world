@@ -6,6 +6,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _hills  # noqa: E402
+import _hills
 
 _hills.build("hill_meadow", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__)

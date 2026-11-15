@@ -12,8 +12,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _house_well  # noqa: E402
-from _house import PLASTER_LIN as L  # noqa: E402
+import _house_well
+from _house import PLASTER_LIN as L
 
 P = "well_stone_b"
 STONE, BUFF, MORTAR, CAP, TIMBER, WOOD, ROPE, IRON = (

@@ -10,6 +10,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _hay  # noqa: E402
+import _hay
 
 _hay.build_round("hay_bale_round", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__)

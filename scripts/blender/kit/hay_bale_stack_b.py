@@ -11,6 +11,6 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _hay_var  # noqa: E402
+import _hay_var
 
 _hay_var.build_stack_b("hay_bale_stack_b", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__)

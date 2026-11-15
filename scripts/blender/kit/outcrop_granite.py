@@ -14,10 +14,10 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _boulder  # noqa: E402
-import _outcrop  # noqa: E402
-from _boulder import Stone  # noqa: E402
-from _outcrop import Fracture  # noqa: E402
+import _boulder
+import _outcrop
+from _boulder import Stone
+from _outcrop import Fracture
 
 TEXEL_MIN = 104.0  # owner A25: a unique bake at about 128 px/m
 SEED = "outcrop_granite-fractures"

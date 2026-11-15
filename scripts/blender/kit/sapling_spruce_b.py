@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _sapling_b  # noqa: E402
+import _sapling_b
 
 LODS = (dict(sides=6, step=0.5, core=(6, 3), segs=3, folded=True, fsegs=2, ffolded=True, every=1, width=1.0, leader=2),
         dict(sides=5, step=1.0, core=(5, 2), segs=2, folded=False, fsegs=1, ffolded=True, every=1, width=1.0, leader=2),

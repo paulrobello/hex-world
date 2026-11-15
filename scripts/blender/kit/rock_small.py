@@ -25,7 +25,7 @@ import numpy as np
 from mathutils import Vector, noise
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from lib import bake, collider, export, geom, lod, materials, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, lod, materials, scene, uv
 
 PIECE, ATLAS, MASK_SIZE = "rock_small", 512, 128
 SEMI = (0.62, 0.47, 0.40)  # ellipsoid semi-axes, m (about 1.2 x 0.9 m across, 0.35 m proud)

@@ -1,0 +1,19 @@
+# Python lint for the maintained scripts (QA-008). Blender 5.2 bundles Python 3.13.
+target-version = "py313"
+# docs/checkpoints and docs/perf hold evidence copies of how each result was made, and
+# assets-source holds Blender-MCP live snippets that run with names injected into globals:
+# none of it is maintained code.
+extend-exclude = ["docs/checkpoints", "docs/perf", "assets-source"]
+
+[lint]
+select = ["E", "F"]
+ignore = [
+  "E501",  # line length: the repo has no Python formatter, and long Blender call lines are normal
+  "E741",  # `l` for a lane, light or level in geometry code that mirrors the Rust names
+  "E731",  # `name = lambda ...` for one-line geometry helpers
+  "F841",  # an unused local that documents a tuple unpack (`x, f = ...`) in approved generators
+]
+
+[lint.per-file-ignores]
+# A Blender script puts its sys.path edit before the imports it enables.
+"scripts/blender/**" = ["E402"]

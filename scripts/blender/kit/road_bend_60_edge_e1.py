@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _road_bend_trim  # noqa: E402
+import _road_bend_trim
 
 PIECE = "road_bend_60_edge_e1"
 # Length segments per LOD, as road_bend_60_edge_e0.

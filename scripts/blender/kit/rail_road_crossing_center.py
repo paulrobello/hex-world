@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _rail_crossing  # noqa: E402
+import _rail_crossing
 
 PIECE = "rail_road_crossing_center"
 # Rail path segments and road-ramp rows per LOD (LOD0, LOD1, LOD2). LOD1 keeps two gate bars and no

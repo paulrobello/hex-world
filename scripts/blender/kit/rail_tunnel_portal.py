@@ -18,7 +18,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _tunnel_portal_rail  # noqa: E402
+import _tunnel_portal_rail
 
 SPEC = {
     "piece": "rail_tunnel_portal",

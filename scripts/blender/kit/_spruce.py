@@ -25,7 +25,7 @@ from mathutils import Vector
 
 from lib import bake, collider, export, geom, lod, materials, scene, uv
 import _forest as F
-from _shared import island_texels  # noqa: E402
+from _shared import island_texels
 import _tree
 
 ORIGINAL = "tree_forest"  # the frond tiles' seed: every spruce shows the original's needles

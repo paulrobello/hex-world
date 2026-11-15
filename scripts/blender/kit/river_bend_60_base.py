@@ -10,9 +10,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _river  # noqa: E402
-import _river_bend_60 as bend  # noqa: E402
-import _river_flat  # noqa: E402,F401  (the flattened meadow relief, owner D6-Q1)
+import _river
+import _river_bend_60 as bend
+import _river_flat  # noqa: F401  (the flattened meadow relief, owner D6-Q1)
 
 PIECE = "river_bend_60_base"
 # Radial rows between the joints, meadow lattice spacing and skirt rows per LOD (ring and seam rows

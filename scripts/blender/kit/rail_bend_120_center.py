@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _rail_bend_wide  # noqa: E402
+import _rail_bend_wide
 
 PIECE = "rail_bend_120_center"
 # Arc segments per LOD (2.5 degrees at LOD0: 6 mm chord sag on the outer toe, as the 60-degree bend).

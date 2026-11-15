@@ -29,14 +29,14 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import bmesh  # noqa: E402
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import bmesh
+import bpy
+import numpy as np
+from mathutils import Vector
 
-from lib import bake, collider, export, geom, materials, scene, uv  # noqa: E402
+from lib import bake, collider, export, geom, materials, scene, uv
 
-import _lod_copy  # noqa: E402
+import _lod_copy
 
 P = "windmill"
 DROP = -0.35

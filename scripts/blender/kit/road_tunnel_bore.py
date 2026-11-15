@@ -7,6 +7,6 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _road_tunnel_bore  # noqa: E402
+import _road_tunnel_bore
 
 _road_tunnel_bore.build_piece(__file__)

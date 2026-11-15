@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _oak_scatter  # noqa: E402
+import _oak_scatter
 
 # Crown tiers (count, ring radius m, centre z m, clump radius m), as `_tree.TIERS`.
 TIERS = ((4, 1.6, 4.4, 1.15), (4, 1.0, 5.7, 1.15), (2, 0.45, 6.9, 1.1))

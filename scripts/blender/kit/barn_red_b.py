@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _barn_b  # noqa: E402
-from _house import PLASTER_LIN as L  # noqa: E402
+import _barn_b
+from _house import PLASTER_LIN as L
 
 P = "barn_red_b"
 WALLS, DOOR, ROOF, STONE, TRIM, GLASS = (f"{P}_{n}" for n in ("walls", "door", "roof", "stone", "trim", "glass"))

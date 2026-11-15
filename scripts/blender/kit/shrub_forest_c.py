@@ -10,8 +10,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _shrub_bramble  # noqa: E402
-import _shrub_matte  # noqa: E402
+import _shrub_bramble
+import _shrub_matte
 
 # sRGB: a fresh yellow-green, lighter and warmer than the hazel (#48742a) so the mound reads in spruce
 # shade (owner Q60: the holly went near black there); reddish bramble twigs in the leaf tiles.

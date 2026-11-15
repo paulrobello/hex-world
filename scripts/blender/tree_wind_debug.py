@@ -8,7 +8,7 @@ import sys
 import bpy
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lib import gate  # noqa: E402
+from lib import gate
 
 glb, out = sys.argv[sys.argv.index("--") + 1:][:2]
 out = pathlib.Path(out)

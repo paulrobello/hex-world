@@ -32,7 +32,7 @@ import numpy as np
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _fauna as fa  # noqa: E402
+import _fauna as fa
 
 PIECE, ATLAS, MASK_SIZE, S = "fish_mackerel", 512, 128, 2.6
 TRI_CEILING = (246, 94, 30)  # fish_trout's LOD tris (its provenance)

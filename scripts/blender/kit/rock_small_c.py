@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _rock  # noqa: E402
+import _rock
 
 FLAT = dict(top_el=(1.25, 1.45), keep=(0.64, 0.80), tilt=(0.03, 0.02))
 _rock.build("rock_small_c", pathlib.Path(sys.argv[sys.argv.index("--") + 1]), __file__,

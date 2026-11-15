@@ -28,13 +28,13 @@ import numpy as np
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from mathutils import Matrix  # noqa: E402
+from mathutils import Matrix
 
-from lib import bake, collider, export, geom, lod, paths, scene, uv  # noqa: E402
-import _leaves  # noqa: E402
-import _oak  # noqa: E402
-import _tree  # noqa: E402
-import _verge_bush  # noqa: E402
+from lib import bake, collider, export, geom, lod, paths, scene, uv
+import _leaves
+import _oak
+import _tree
+import _verge_bush
 
 PIECE, ATLAS, MASK_SIZE = "tree_hero_oak", 2048, 2048
 BARK_SET_PX, BARK_TILE_M = 1024, 2.0  # the `bark` tileable set (scripts/blender/kit/mat_bark.py)

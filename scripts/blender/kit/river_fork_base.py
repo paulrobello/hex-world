@@ -8,9 +8,9 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _river  # noqa: E402
-import _river_flat  # noqa: E402,F401  (the flattened meadow relief, owner D6-Q1)
-import _river_fork  # noqa: E402,F401  (registers the "fork" layout)
+import _river
+import _river_flat  # noqa: F401  (the flattened meadow relief, owner D6-Q1)
+import _river_fork  # noqa: F401  (registers the "fork" layout)
 
 PIECE = "river_fork_base"
 # Rows per wedge between the crease and the joint, meadow lattice spacing and skirt rows per LOD (the

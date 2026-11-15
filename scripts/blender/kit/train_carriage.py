@@ -14,7 +14,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import _train  # noqa: E402
+import _train
 
 L = 3.3  # body end / headstock face
 W = 1.35  # body half width

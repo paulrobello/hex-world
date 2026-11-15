@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import _verge_bush_b  # noqa: E402
+import _verge_bush_b
 
 # sRGB: a fresh yellow-green, lighter than bush_verge's box-green and yellower than the hazel.
 PALETTE = dict(DARK="#2f4a14", MID="#5c8526", LIGHT="#a6c458", BACK="#1d2f0c", TWIG="#5a4a30")

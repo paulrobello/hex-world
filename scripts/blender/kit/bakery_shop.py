@@ -31,15 +31,15 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
-import bmesh  # noqa: E402
-import bpy  # noqa: E402
-import numpy as np  # noqa: E402
-from mathutils import Matrix, Vector  # noqa: E402
+import bmesh
+import bpy
+import numpy as np
+from mathutils import Matrix, Vector
 
-import _lod_copy  # noqa: E402
-from _house import (DROP, PLASTER_LIN, PLINTH_OUT, PLINTH_TOP, Z, Mesh, Wall, centroid_samples,  # noqa: E402
+import _lod_copy
+from _house import (DROP, PLASTER_LIN, PLINTH_OUT, PLINTH_TOP, Z, Mesh, Wall, centroid_samples,
                     fill_unbaked, frame_matrix, roof_profile)
-from lib import bake, budgets, collider, export, geom, materials, scene, uv  # noqa: E402
+from lib import bake, budgets, collider, export, geom, materials, scene, uv
 
 P = "bakery_shop"
 X, Y = Vector((1.0, 0.0, 0.0)), Vector((0.0, 1.0, 0.0))

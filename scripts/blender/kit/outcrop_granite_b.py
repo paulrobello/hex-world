@@ -22,13 +22,13 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import bmesh  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import bmesh
+from mathutils import Vector
 
-import _boulder  # noqa: E402
-import _outcrop  # noqa: E402
-from _boulder import Stone  # noqa: E402
-from _outcrop import Fracture  # noqa: E402
+import _boulder
+import _outcrop
+from _boulder import Stone
+from _outcrop import Fracture
 
 TEXEL_MIN = 104.0  # owner A25: a unique bake at about 128 px/m
 SEED = "outcrop_granite_b-fractures"
