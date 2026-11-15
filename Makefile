@@ -29,6 +29,13 @@ check-wgpu:
 	test "$$count" = 1 || { echo "FAIL: expected one wgpu version, got $$count"; exit 1; }; \
 	printf 'single wgpu OK: %s\n' "$$tree"
 
+.PHONY: audit
+# Advisory tripwire (needs the network, so never in checkall). RUSTSEC-2026-0192 is ignored until
+# a fix exists: ttf-parser is unmaintained upstream, has no replacement advisory, and is not in
+# the wasm tree.
+audit:
+	cargo audit --deny warnings --ignore RUSTSEC-2026-0192
+
 checkall: fmt-check lint typecheck test ui-check shots-test
 
 # The shot runner's black-frame check and retry (scripts/shots/piece.py; run.sh uses the same check).

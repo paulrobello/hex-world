@@ -159,6 +159,19 @@ jobs:
         with:
           path: dist
 
+  # Advisory tripwire (`make audit`): a new advisory fails this job alone, visibly, instead of
+  # blocking a deploy of unrelated work (it is not in deploy.needs).
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Install cargo-audit (pinned)
+        run: cargo install cargo-audit --version 0.23.0 --locked
+      - run: make audit
+
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [fmt, ui, lint, typecheck, test, web]
