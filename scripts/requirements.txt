@@ -1,0 +1,7 @@
+# Python packages for the gates: the shot runner's frame checks (scripts/shots) read frames
+# with Pillow; CI's ui job installs this file. Blender scripts use Blender's bundled numpy,
+# never a pip install.
+pillow==12.2.0
+numpy==2.4.4
+# scripts/thumbs/build.py carries its own PEP 723 header (it runs via `uv run`) — bump pillow
+# there too when bumping here.

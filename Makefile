@@ -39,7 +39,7 @@ audit:
 checkall: fmt-check lint typecheck test ui-check shots-test
 
 # The shot runner's black-frame check and retry (scripts/shots/piece.py; run.sh uses the same check).
-# Needs Pillow (CI's ui job installs PILLOW_VERSION).
+# Needs Pillow (CI's ui job installs scripts/requirements.txt).
 shots-test:
 	python3 -m unittest discover -s scripts/shots -p 'test_*.py'
 
