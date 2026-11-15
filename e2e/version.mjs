@@ -10,19 +10,16 @@
 // never on a wall-clock window, and the deploy changes only while no check is in flight, so a loaded
 // host (late or bunched interval ticks) cannot let a poll land in the wrong phase.
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdirSync, readFileSync } from "node:fs";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { assertCsp } from "../scripts/web/csp-check.mjs";
 import { hashInlineScripts } from "../scripts/web/version-dist.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.VERSION_OUT ?? "e2e/test-results/version";
 mkdirSync(out, { recursive: true });
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png",
-  ".webp": "image/webp", ".json": "application/json" };
 
 const built = JSON.parse(readFileSync(join(dist, "version.json"), "utf8")).id;
 const page0 = readFileSync(join(dist, "index.html"), "utf8");
@@ -42,30 +39,26 @@ function pageAs(id) {
 /** The deployed build: null serves dist as built; an id serves it as that id; "fail" answers version.json 503. */
 let live = null;
 const polls = [];
-const server = createServer((req, res) => {
-  const url = new URL(req.url, "http://x");
-  let path = decodeURIComponent(url.pathname);
-  if (path.endsWith("/")) path += "index.html";
-  const id = live && live !== "fail" ? live : built;
-  if (path === "/version.json") {
-    polls.push({ t: Number(url.searchParams.get("t")), search: url.search, cache: req.headers["cache-control"] ?? "" });
-    if (live === "fail") { res.writeHead(503); res.end("down"); return; }
-    res.writeHead(200, { "content-type": "application/json", "cache-control": "max-age=600" });
-    res.end(`${JSON.stringify({ id })}\n`);
-    return;
-  }
-  if (path === "/index.html") {
-    res.writeHead(200, { "content-type": "text/html" });
-    res.end(pageAs(id));
-    return;
-  }
-  try {
-    const body = readFileSync(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const origin = `http://127.0.0.1:${server.address().port}/`;
+const { server, base: origin } = await serveDist(dist, {
+  respond: (req, res, file) => {
+    const url = new URL(req.url, "http://x");
+    const path = decodeURIComponent(url.pathname);
+    const id = live && live !== "fail" ? live : built;
+    if (path === "/version.json") {
+      polls.push({ t: Number(url.searchParams.get("t")), search: url.search, cache: req.headers["cache-control"] ?? "" });
+      if (live === "fail") { res.writeHead(503); res.end("down"); return true; }
+      res.writeHead(200, { "content-type": "application/json", "cache-control": "max-age=600" });
+      res.end(`${JSON.stringify({ id })}\n`);
+      return true;
+    }
+    if (path === "/index.html") {
+      res.writeHead(200, { "content-type": "text/html" });
+      res.end(pageAs(id));
+      return true;
+    }
+    return false;
+  },
+});
 const query = "?scenario=play&tilt=off&fps=off";
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"

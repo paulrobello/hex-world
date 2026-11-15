@@ -4,28 +4,17 @@
 // hexWorld.state() and the HUD's text, and saves captures to e2e/test-results/persistence/ (set
 // PERSIST_OUT=docs/checkpoints/persistence to refresh the owner's committed captures).
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.PERSIST_OUT ?? "e2e/test-results/persistence";
 const work = "e2e/test-results/persist";
 mkdirSync(out, { recursive: true });
 mkdirSync(work, { recursive: true });
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".webp": "image/webp" };
-const server = createServer((req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = readFileSync(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/?scenario=play&tilt=off&fps=off`;
+const { server, base: origin } = await serveDist(dist);
+const base = `${origin}?scenario=play&tilt=off&fps=off`;
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]

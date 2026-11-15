@@ -8,11 +8,11 @@
 // web-scatter-state.json (overview) and web-scatter-cluster-state.json.
 // Usage: node e2e/scatter.mjs <dist> <docs/checkpoints/scatter>
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { clampSampledTextures, countSampledTextures } from "./webgpu-probes.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const docs = process.argv[3] ?? "docs/checkpoints/scatter";
@@ -38,19 +38,7 @@ const cluster = [
   { cmd: "screenshot", name: "web-scatter-cluster" },
 ];
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
   : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];

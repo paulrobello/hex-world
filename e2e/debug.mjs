@@ -5,26 +5,14 @@
 // saves a capture to DEBUG_OUT (default e2e/test-results/debug; DEBUG_OUT=docs/checkpoints/debug
 // refreshes the committed checkpoint shots).
 import { chromium } from "playwright";
-import { createServer } from "node:http";
-import { mkdirSync, readFileSync } from "node:fs";
-import { extname, join } from "node:path";
+import { mkdirSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.DEBUG_OUT ?? "e2e/test-results/debug";
 mkdirSync(out, { recursive: true });
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".webp": "image/webp" };
-const server = createServer((req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = readFileSync(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]

@@ -17,13 +17,12 @@
 //   ORBIT_MS (default 8000), ORBIT_RADIUS (default 70 m), ORBIT_HEIGHT (default 30 m),
 //   ORBIT_PERIOD_S (default 12)
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
 import { cpus, hostname } from "node:os";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { buildWorld } from "./build-world.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const [dist, OUT] = process.argv.slice(2);
 if (!dist || !OUT) throw new Error("usage: node e2e/perf-elevation-orbit.mjs <dist> <out.json>");
@@ -52,19 +51,7 @@ const WORLDS = {
 };
 if (WORLDS.raised.tiles !== WORLDS.flat.tiles) throw new Error("the control must hold the raised world's tile count");
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const round2 = (x) => Math.round(x * 100) / 100;
 const pct = (s, p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];

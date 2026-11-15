@@ -18,13 +18,12 @@
 //   PERF_OUT (default docs/perf/p2-grass-drag.json), DRAG_RUNS (default 3), DRAG_RADIUS (default 10),
 //   DRAG_MS (default 5000), DRAG_BASELINE_MS (default 5000)
 import { chromium } from "playwright";
-import { createServer } from "node:http";
-import { readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PERF_OUT ?? "docs/perf/p2-grass-drag.json";
@@ -44,19 +43,7 @@ const STEPS = [...ramp(100, 0), ...ramp(0, 150), ...ramp(150, 50), ...ramp(50, 1
 const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
   "--disable-gpu-vsync", "--disable-frame-rate-limit", "--enable-webgpu-developer-features"];
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const round2 = (x) => Math.round(x * 100) / 100;
 const pct = (s, p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];

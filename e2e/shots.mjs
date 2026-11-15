@@ -1,26 +1,15 @@
 // Local-only web screenshot gallery: drives scripts/shots/gallery.json through window.hexWorld.
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const script = JSON.parse(await readFile(process.argv[3] ?? "scripts/shots/gallery.json", "utf8"));
 // Optional extra query keys, e.g. "kit_src=fixture".
 const extra = process.argv[4] ? "&" + process.argv[4] : "";
 const outDir = "e2e/test-results";
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]

@@ -4,7 +4,7 @@
 // usage: node e2e/mega-parity-scratch.mjs <name>=<dist> ... <outdir>   env GRASS (default unset = game default)
 import { createServer } from "node:http";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { extname, resolve, sep } from "node:path";
 import { loadavg } from "node:os";
 import { chromium } from "playwright";
 import { BAD_TEXT } from "./console-errors.mjs";
@@ -28,12 +28,15 @@ const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "applic
   ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4",
   ".webp": "image/webp", ".svg": "image/svg+xml" };
 const serve = (dist) => new Promise((ok) => {
+  const base = resolve(dist);
   const s = createServer(async (req, res) => {
     let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
     if (path.endsWith("/")) path += "index.html";
-    try { const body = await readFile(join(dist, path)); res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" }); res.end(body); }
+    const file = resolve(base, "." + path);
+    if (file !== base && !file.startsWith(base + sep)) { res.writeHead(403); res.end(); return; }
+    try { const body = await readFile(file); res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" }); res.end(body); }
     catch { res.writeHead(404); res.end(); }
-  }).listen(0, () => ok(s));
+  }).listen(0, "127.0.0.1", () => ok(s));
 });
 const saveBytes = [...(await readFile(SAVE))];
 await mkdir(OUT, { recursive: true });

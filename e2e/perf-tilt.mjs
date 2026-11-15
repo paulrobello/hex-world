@@ -5,13 +5,13 @@
 // Every sample runs under the host-load guard (load <= 15 before and after, else discarded and re-run);
 // each sample records both loads. Writes docs/perf/p2-tilt-shift-<mode>.json (PERF_OUT overrides).
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const [mode = "web", target = mode === "web" ? "dist" : "target/release/hex-world", roundsArg = "5"] = process.argv.slice(2);
 const rounds = Number(roundsArg);
@@ -20,18 +20,7 @@ const W = 2560, H = 1440;
 const pick = (d) => ({ mean: d.mean, p50: d.p50, p95: d.p95, p99: d.p99, samples: d.samples, adapter: d.adapter });
 
 async function webSampler() {
-  const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-    ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain" };
-  const server = createServer(async (req, res) => {
-    let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-    if (path.endsWith("/")) path += "index.html";
-    try {
-      const body = await readFile(join(target, path));
-      res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-      res.end(body);
-    } catch { res.writeHead(404); res.end(); }
-  }).listen(0);
-  const base = `http://127.0.0.1:${server.address().port}/`;
+  const { server, base } = await serveDist(target);
   const browser = await chromium.launch({ channel: "chromium", headless: true,
     args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
            "--disable-gpu-vsync", "--disable-frame-rate-limit"] });

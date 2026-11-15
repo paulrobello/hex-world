@@ -16,14 +16,14 @@
 // that submitted GPU work, over the window's last 600 frames, so a delta splits into CPU and the rest.
 // An arm key `pause_agents=1` opens photo mode with the agents paused (no sim tick). GPU_CALLS=1 and
 // PROFILE_DIR are diagnostics (docs/perf/large-world-cpu/), not timing evidence.
-import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { cpus, hostname, loadavg } from "node:os";
 import { chromium } from "playwright";
 import { buildWorld } from "./build-world.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { guarded, LOAD_LIMIT } from "./perf-load.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const argv = process.argv.slice(2);
 const OUT = argv.at(-1);
@@ -82,25 +82,7 @@ const RUN_WORLDS = (process.env.WORLDS ?? Object.keys(WORLDS).join(",")).split("
 });
 const cam = ([x, y, z, lx, ly, lz]) => ({ cmd: "camera", pos: [x, y, z], look_at: [lx, ly, lz] });
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain", ".wesl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4",
-  ".webp": "image/webp", ".svg": "image/svg+xml" };
-const serve = (dist) => new Promise((ok) => {
-  const s = createServer(async (req, res) => {
-    let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-    if (path.endsWith("/")) path += "index.html";
-    try {
-      const body = await readFile(join(dist, path));
-      res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-      res.end(body);
-    } catch {
-      res.writeHead(404);
-      res.end();
-    }
-  }).listen(0, () => ok(s));
-});
-const servers = Object.fromEntries(await Promise.all(ARMS.map(async ([n, dist]) => [n, await serve(dist)])));
+const servers = Object.fromEntries(await Promise.all(ARMS.map(async ([n, dist]) => [n, (await serveDist(dist)).server])));
 const extraKeys = Object.fromEntries(ARMS.map(([n, , q]) => [n, Object.fromEntries(new URLSearchParams(q))]));
 const baseOf = (b) => `http://127.0.0.1:${servers[b].address().port}/`;
 // Installed before any page script: the start-to-end time of each rAF callback that submitted GPU work

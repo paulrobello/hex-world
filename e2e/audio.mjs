@@ -3,27 +3,15 @@
 // hexWorld.audio.state(), which reports the context, loaded cues, the cues fired, emitter gains and the
 // output level measured after the master gain. Writes e2e/test-results/audio/*.json as evidence.
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/audio";
 mkdirSync(out, { recursive: true });
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".json": "application/json", ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".glb": "model/gltf-binary",
-  ".png": "image/png", ".webp": "image/webp", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer((req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = readFileSync(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]

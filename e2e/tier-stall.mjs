@@ -17,12 +17,11 @@
 //   start tile), TIER_ROUNDS (default 2), TIER_WINDOW_MS (default 6000), TIER_VIA=cmd|ui (default cmd),
 //   TIER_QUERY=<extra query keys, e.g. tier_warm=off>
 import { chromium } from "playwright";
-import { createServer } from "node:http";
-import { open, readFile, writeFile } from "node:fs/promises";
+import { open, writeFile } from "node:fs/promises";
 import { loadavg } from "node:os";
-import { extname, join } from "node:path";
 import { LOAD_LIMIT, guarded, waitForLoad } from "./perf-load.mjs";
 import { waterWorldScript } from "./water-world.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.argv[3] ?? "target/tier-stall.json";
@@ -35,19 +34,7 @@ const VIA = process.env.TIER_VIA ?? "cmd";
 const QUERY = process.env.TIER_QUERY ? `&${process.env.TIER_QUERY}` : "";
 const SLOW_MS = 25;
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".webp": "image/webp",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".webm": "audio/webm", ".m4a": "audio/mp4", ".json": "application/json" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const TRACE_CATS = ["devtools.timeline", "v8", "v8.execute", "v8.wasm", "viz", "gpu", "gpu.dawn", "gpu.service", "webgpu",
   "disabled-by-default-webgpu", "toplevel", "blink"];

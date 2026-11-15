@@ -8,14 +8,13 @@
 // Local only. usage: node e2e/perf-water-world.mjs <dist> <native-bin>
 //   PERF_OUT (default docs/perf/p2-water-world.json), WW_ROUNDS (default 2), WW_ONLY=web|native
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { readFile, writeFile, rm } from "node:fs/promises";
-import { extname, join } from "node:path";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -28,19 +27,7 @@ const SETTLE_FRAMES = 700;
 const world = waterWorldScript(8);
 const KEYS = { scenario: "play", tier: "high", fps: "off", seed: "1" };
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 // A native window whose frames sit on a display interval was paced, so its p95 is pacing, not cost
 // (the rule of perf-matrix.mjs and perf-tilt.mjs; docs/perf/p2-tilt-shift.md). Native only: the

@@ -11,12 +11,11 @@
 // usage: node e2e/perf-passes.mjs <dist> <native-bin>
 //   PASSES_ONLY=web|native, PASSES_ROUNDS (default 3), PASSES_VIEW (strategic|closeup)
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
-import { extname, join } from "node:path";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -34,19 +33,7 @@ const ARMS = [
   { timing: "on", tilt: "off" }, { timing: "on", tilt: "on" },
 ];
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const pick = (d) => ({ p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.max,
   dropped_over_25ms: d.dropped_over_25ms, samples: d.samples, frames: d.frames, tiles: d.tiles, ssao: d.ssao,

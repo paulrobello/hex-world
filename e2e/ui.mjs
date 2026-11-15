@@ -3,27 +3,15 @@
 // the event queue, then saves e2e/test-results/ui/<mockup state>.jpg (the names in
 // design/ui/legend/shots/), so each capture sits beside the approved mockup state it implements.
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { mkdirSync, readFileSync } from "node:fs";
-import { extname, join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { PICKER, fitEntry, needsAt, tileMap } from "../web/ui/src/rules.ts";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/ui";
 mkdirSync(out, { recursive: true });
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".webp": "image/webp" };
-const server = createServer((req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = readFileSync(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const gpuArgs = process.env.PW_GPU === "swiftshader"
   ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]

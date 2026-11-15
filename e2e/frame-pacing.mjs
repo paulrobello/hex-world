@@ -13,13 +13,13 @@
 // The lc_* arms are the low-camera cost isolation of docs/perf/low-camera/: one toggle each, every
 // row carries `cpu` (engine callback ms) and a diag census, and rounds rotate the arm order.
 import { chromium } from "playwright";
-import { createServer } from "node:http";
 import { open, readFile, writeFile, mkdir } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { join } from "node:path";
 import { loadavg } from "node:os";
 import { guarded } from "./perf-load.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PACING_OUT ?? "e2e/test-results/frame-pacing.json";
@@ -85,19 +85,7 @@ const ARMS = {
 };
 const pick = (process.env.PACING_ARMS ?? Object.keys(ARMS).join(",")).split(",");
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".json": "application/json", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 const round2 = (x) => Math.round(x * 100) / 100;
 const pct = (s, p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];

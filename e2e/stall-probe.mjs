@@ -8,10 +8,9 @@
 // Local only. usage: node e2e/stall-probe.mjs <dist> <out.json>
 //   PROBE_ARMS=base,paced,... (default all), PROBE_ROUNDS (default 2), PROBE_TRACE=<trace.json>, PROBE_TRACE_ARM
 import { chromium } from "playwright";
-import { createServer } from "node:http";
-import { open, readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { open, writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
+import { serveDist } from "./lib/harness.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.argv[3] ?? "target/stall-probe.json";
@@ -45,19 +44,7 @@ const ARMS = {
 };
 const pickArms = (process.env.PROBE_ARMS ?? Object.keys(ARMS).join(",")).split(",");
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".wasm": "application/wasm", ".css": "text/css",
-  ".ktx2": "image/ktx2", ".glb": "model/gltf-binary", ".png": "image/png", ".wgsl": "text/plain",
-  ".jpg": "image/jpeg", ".woff2": "font/woff2", ".webm": "audio/webm", ".m4a": "audio/mp4" };
-const server = createServer(async (req, res) => {
-  let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path.endsWith("/")) path += "index.html";
-  try {
-    const body = await readFile(join(dist, path));
-    res.writeHead(200, { "content-type": types[extname(path)] ?? "application/octet-stream" });
-    res.end(body);
-  } catch { res.writeHead(404); res.end(); }
-}).listen(0);
-const base = `http://127.0.0.1:${server.address().port}/`;
+const { server, base } = await serveDist(dist);
 
 // Page hooks, installed before the wasm loads. Recording starts when __probe.on is set.
 const HOOKS = () => {
