@@ -7,28 +7,13 @@ import { h, isMac, reduceMotion, retrigger, s, syncReducedMotion } from "./dom.t
 import { icon } from "./icons.ts";
 import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
-import {
-  type TileMap,
-  cellKey,
-  cutOff,
-  tunnelCover,
-  diffTiles,
-  entryOf,
-  entryReadout,
-  fit,
-  fitEntry,
-  refusedWhy,
-  needsAt,
-  rotationReadout,
-  tileDef,
-  tileRise,
-  tileMap,
-  turnHint,
-} from "./rules.ts";
+import { type TileMap, cellKey, cutOff, tunnelCover, diffTiles, refusedWhy, tileRise, tileMap } from "./rules.ts";
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
-import { SheetController, ghostCovers } from "./sheet-controller.ts";
+import { SheetController } from "./sheet-controller.ts";
+import { type EscapeStep, type KeyFlags, keyAction } from "./key-model.ts";
+import { type PlacedNote, type RefusalNote, type TagPart, tagModel } from "./tag-model.ts";
 import { Walk } from "./walk.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
@@ -104,8 +89,8 @@ export class Hud {
   private hidden = false;
   private pointerOff = true;
   private lastRotate = 0;
-  private placed: { cell: Cell; level: number; text: string; until: number } | null = null;
-  private refusal: { cell: Cell; tile: string; text: string; until: number } | null = null;
+  private placed: PlacedNote | null = null;
+  private refusal: RefusalNote | null = null;
   private toastState: { verb: string; count: number } | null = null;
   private toastTimer = 0;
   private tipTimer = 0;
@@ -501,118 +486,20 @@ export class Hud {
   // ---------- Tag beside the ghost or the bulldoze target ----------
   private renderTag(st: PlayState, now: number): void {
     const tag = this.tag;
-    let cell: Cell | null = null;
-    let level = 0;
-    let sig = "";
-    const parts: (Node | string)[] = [];
-    let bad = false;
-    let stacked = false;
     if (this.placed && now > this.placed.until) this.placed = null;
     if (this.refusal && now > this.refusal.until) this.refusal = null;
-    if (st.tool === "bulldoze" && st.bulldoze) {
-      const b = st.bulldoze;
-      cell = b;
-      const t = this.map.get(cellKey(b));
-      level = t?.level ?? 0;
-      if (b.allowed) {
-        sig = `rm|${cellKey(b)}`;
-        parts.push(
-          icon("bulldoze"),
-          h("span", {}, `Remove ${tileName(t?.tile ?? "")}`),
-          h("span", { class: "ghost-tag__fit is-quiet" }, "Click"),
-        );
-      } else {
-        const r = bulldozeRefusal(b.reason, cutOff(this.map, b));
-        sig = `no|${cellKey(b)}|${r.sub}`;
-        bad = stacked = true;
-        parts.push(icon("alert"), h("span", { class: "tag-stack" }, h("span", {}, r.head), h("small", {}, r.sub)));
-      }
-    } else if (this.placed && st.tool === "place" && (!st.ghost || sameCell(st.ghost, this.placed.cell))) {
-      cell = this.placed.cell;
-      level = this.placed.level;
-      sig = `placed|${cellKey(cell)}|${this.placed.text}`;
-      parts.push(icon("check", "ic ok-ic"), h("span", {}, this.placed.text));
-    } else if (this.refusal && st.tool === "place" && this.map.has(cellKey(this.refusal.cell))) {
-      // A refused replace: the placed tile stays, and the tag says why the selected one can't swap in.
-      const f = this.refusal;
-      cell = f.cell;
-      level = this.map.get(cellKey(cell))?.level ?? 0;
-      bad = true;
-      sig = `swap|${cellKey(cell)}|${f.tile}|${f.text}`;
-      parts.push(icon("alert"), h("span", {}, tileName(f.tile)), h("span", { class: "ghost-tag__fit is-bad" }, f.text));
-    } else if (
-      st.tool === "place" &&
-      st.hovered_kind === "tile" &&
-      st.hovered &&
-      !(st.ghost && sameCell(st.pinned, st.ghost)) &&
-      this.coverCells().has(cellKey(st.hovered))
-    ) {
-      // The pointer is on a tunnel's cover: a replace here is refused, so say so before the click.
-      cell = st.hovered;
-      level = this.map.get(cellKey(cell))?.level ?? 0;
-      bad = true;
-      sig = `cover|${cellKey(cell)}`;
-      parts.push(
-        icon("alert"),
-        h("span", {}, tileName(this.map.get(cellKey(cell))?.tile ?? "")),
-        h("span", { class: "ghost-tag__fit is-bad" }, "Covers a tunnel"),
-      );
-    } else if (st.tool === "place" && st.ghost) {
-      const g = st.ghost;
-      cell = g;
-      level = g.level;
-      const def = tileDef(g.tile);
-      const needs = needsAt(g, this.map);
-      const f = def ? fit(def, needs, g.level) : null;
-      const entry = entryOf(g.tile);
-      // A footprint ghost stands on its centre, which fits where the engine lists it in `mega_slots`.
-      const entryFit =
-        entry && (def?.footprint || f?.ok)
-          ? fitEntry(entry, needs, { slot: g, megaSlots: st.mega_slots, tiles: this.map })
-          : null;
-      const ok = def?.footprint ? !!entryFit?.ok : !!f?.ok;
-      const name = tileName(g.tile);
-      if (ok && g.valid) {
-        // A group (the Beach Curve) counts every member's orientations together, as R walks them.
-        const { index, count } =
-          entry && entryFit && entry.tiles.length > 1
-            ? entryReadout(entryFit, g.tile, g.rotation, g.level)
-            : rotationReadout(def!, g.legal_rotations, g.rotation);
-        // R steps every level too, so the hint shows while any orientation is left to turn to.
-        const canTurn = turnHint(count, entryFit?.seq.length ?? 0);
-        const text = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
-        const pinned = ghostCovers(g, st.pinned);
-        sig = `ok|${cellKey(g)}|${g.tile}|${text}|${g.level}|${canTurn}|${pinned}`;
-        parts.push(h("span", {}, name), h("span", { class: "ghost-tag__fit" }, text));
-        if (g.level > 0) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, `Level ${g.level}`));
-        if (canTurn) parts.push(h("kbd", {}, "R"));
-        if (pinned) parts.push(h("span", { class: "ghost-tag__fit is-quiet" }, "Pinned · click to place"));
-      } else {
-        bad = true;
-        const clashes = (g.outer_edges ?? g.edges).filter((e) => e === "Incompatible").length;
-        const why =
-          this.refusal && sameCell(this.refusal.cell, g)
-            ? this.refusal.text
-            : !ok && f
-              ? def?.footprint && entryFit
-                ? entryFit.why
-                : f.why
-              : `${plural(clashes, "edge")} clash`;
-        sig = `bad|${cellKey(g)}|${g.tile}|${why}|${g.level}`;
-        parts.push(icon("alert"), h("span", {}, name), h("span", { class: "ghost-tag__fit is-bad" }, why));
-        if (ok) parts.push(h("kbd", {}, "R"));
-      }
-    }
-    if (!cell) {
+    const model = tagModel(st, this.map, this.placed, this.refusal, () => this.coverCells(), now);
+    if (!model) {
       tag.classList.add("is-gone");
       tag.dataset.sig = "";
       return;
     }
-    if (tag.dataset.sig !== sig) {
-      tag.dataset.sig = sig;
-      tag.replaceChildren(...parts);
-      tag.classList.toggle("ghost-tag--bad", bad);
-      tag.classList.toggle("is-stacked", stacked);
+    const { cell, level } = model;
+    if (tag.dataset.sig !== model.sig) {
+      tag.dataset.sig = model.sig;
+      tag.replaceChildren(...model.parts.map(tagPartNode));
+      tag.classList.toggle("ghost-tag--bad", model.bad);
+      tag.classList.toggle("is-stacked", model.stacked);
       tag.setAttribute("aria-label", tag.textContent ?? "");
     }
     // A hillside or ramp stands up to one level above its own, so the tag anchors at its high side.
@@ -841,7 +728,6 @@ export class Hud {
     // An open select's list (the colour grade) takes every key: Esc closes it, letters type ahead.
     if (settingsOwnsListKey(this.settings, target)) return;
     const mod = e.ctrlKey || e.metaKey;
-    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     const take = () => {
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -856,65 +742,78 @@ export class Hud {
       if (this.walk.key(e)) take();
       return;
     }
-    if (mod) {
-      if (k === "z") {
-        take();
-        this.history(e.shiftKey);
-      }
-      return;
-    }
-    if (this.inventory.sheet.handleKey(e)) {
+    const onRow = (e.target as Element).closest?.(".row");
+    const flags: KeyFlags = { worldsOpen: !!this.worlds?.open, settingsOpen: this.settings.open, hidden: this.hidden };
+    const action = keyAction(st, flags, e, mod, !!onRow || !!(e.target as Element).closest?.("button"));
+    if (mod && action.kind === "ignore") return;
+    if (!mod && this.inventory.sheet.handleKey(e)) {
       take();
       return;
     }
-    const onRow = (e.target as Element).closest?.(".row");
-    switch (e.code === "Tab" ? "Tab" : k) {
-      case "F6":
+    switch (action.kind) {
+      case "history":
         take();
-        this.cycleFocus(e.shiftKey);
+        this.history(action.redo);
         return;
-      case "r":
+      case "cycle_focus":
         take();
-        if (e.repeat && performance.now() - this.lastRotate < ROTATE_REPEAT_MS) return;
+        this.cycleFocus(action.back);
+        return;
+      case "rotate":
+        take();
+        if (action.repeat && performance.now() - this.lastRotate < ROTATE_REPEAT_MS) return;
         this.lastRotate = performance.now();
         this.rotate(e.shiftKey);
         return;
-      case "b":
+      case "toggle_bulldoze":
         take();
-        if (!e.repeat) this.toggleBulldoze();
+        if (!action.repeat) this.toggleBulldoze();
         return;
-      case "p":
+      case "toggle_photo":
         take();
-        if (!e.repeat) this.togglePhoto();
+        if (!action.repeat) this.togglePhoto();
         return;
-      case "h":
+      case "toggle_hidden":
         take();
-        if (!e.repeat) this.setHidden(!this.hidden);
+        if (!action.repeat) this.setHidden(!this.hidden);
         return;
-      case "f":
+      case "enter_walk":
         take();
-        if (!e.repeat) this.enterWalk();
+        if (!action.repeat) this.enterWalk();
         return;
-      case "Escape":
+      case "escape":
         take();
-        // A pinned slot comes first: this press only unpins.
-        if (st.pinned) this.cmd({ cmd: "unpin" });
-        else if (this.worlds?.open) {
-          if (!this.worlds.escape()) this.toggleWorlds(false);
-        } else if (this.settings.open) {
-          if (!this.settings.escape()) this.toggleSettings();
-        } else if (st.tool === "bulldoze") this.cmd({ cmd: "set_tool", mode: "place" });
-        else if (this.hidden) this.setHidden(false);
-        else this.inventory.slot = null;
+        this.escape(action.step);
         return;
-      case "Enter":
-        if (onRow || (e.target as Element).closest?.("button")) return;
+      case "place_ghost":
         take();
-        // The ghost sits on the pinned slot when there is one, else on the hovered slot.
-        if (st.tool === "place" && st.ghost) this.cmd({ cmd: "place", q: st.ghost.q, r: st.ghost.r });
+        if (action.at) this.cmd({ cmd: "place", q: action.at.q, r: action.at.r });
         return;
       default:
-        break;
+        return;
+    }
+  }
+
+  private escape(step: EscapeStep): void {
+    switch (step) {
+      case "unpin":
+        this.cmd({ cmd: "unpin" });
+        return;
+      case "close_worlds":
+        if (!this.worlds?.escape()) this.toggleWorlds(false);
+        return;
+      case "close_settings":
+        if (!this.settings.escape()) this.toggleSettings();
+        return;
+      case "leave_bulldoze":
+        this.cmd({ cmd: "set_tool", mode: "place" });
+        return;
+      case "show_hud":
+        this.setHidden(false);
+        return;
+      case "clear_slot":
+        this.inventory.slot = null;
+        return;
     }
   }
 
@@ -929,6 +828,22 @@ export class Hud {
     const next = all[(i + (back ? -1 : 1) + all.length) % all.length]!;
     if (next === this.canvas) next.focus();
     else next.querySelector<HTMLElement>("button:not([aria-disabled=true]), [tabindex='0']")?.focus();
+  }
+}
+
+/** The DOM for one part of a tag's line (`tag-model.ts` decides what the parts are). */
+function tagPartNode(p: TagPart): Node {
+  switch (p.kind) {
+    case "icon":
+      return p.cls ? icon(p.name, p.cls) : icon(p.name);
+    case "text":
+      return h("span", {}, p.text);
+    case "fit":
+      return h("span", { class: p.tone === "plain" ? "ghost-tag__fit" : `ghost-tag__fit is-${p.tone}` }, p.text);
+    case "stack":
+      return h("span", { class: "tag-stack" }, h("span", {}, p.head), h("small", {}, p.sub));
+    case "kbd":
+      return h("kbd", {}, p.key);
   }
 }
 
