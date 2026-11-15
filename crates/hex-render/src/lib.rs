@@ -225,17 +225,21 @@ mod tests {
             .collect();
         cells.sort();
         cells.dedup();
-        // The water patch's 11 cells plus the showcase blocks' cells; each block in
-        // `kit_scene::kit_layout` names its own cells. A new block adds its cells here. The
-        // massif names only its anchor; its six ring cells are left free for its footprint.
-        assert_eq!(cells.len(), 44);
+        // The cell count is whatever `kit_scene::kit_layout` lays out, so a new showcase block
+        // needs no edit here. The massif names only its anchor; its six ring cells are left free
+        // for its footprint. The water patch's cells lie inside the layout, so it is the floor.
+        let water_patch = Scenario::Water.tile_count(KitSource::Runtime);
+        assert!(cells.len() >= water_patch, "{} cells", cells.len());
         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 44);
+        assert_eq!(
+            Scenario::WaterKit.tile_count(KitSource::Runtime),
+            cells.len()
+        );
         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
         assert!(!Scenario::Kit.has_water());
     }

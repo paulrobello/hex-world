@@ -157,6 +157,38 @@ pub const OBSTACLES: &[&str] = &[
     "hedge_oak",
 ];
 
+/// Props the walker deliberately passes through: low flora, reeds, lilies, pebbles and the seabed
+/// pieces have no collider worth stopping at. With [`OBSTACLES`] and `scatter::GROUND_PROPS` it
+/// accounts for every prop piece the catalog places (`every_prop_piece_is_classified`), so a new
+/// piece must be listed in one of the three.
+pub const WALK_THROUGH: &[&str] = &[
+    "beach_dunegrass",
+    "beach_dunegrass_b",
+    "beach_dunegrass_c",
+    "beach_pebbles",
+    "beach_pebbles_b",
+    "beach_pebbles_c",
+    "fern_clump",
+    "fern_clump_b",
+    "fern_clump_c",
+    "lily_cluster",
+    "lily_cluster_b",
+    "lily_cluster_c",
+    "reed_bed",
+    "river_reeds",
+    "river_reeds_b",
+    "seabed_pebbles",
+    "seabed_rock",
+    "wildflower_clump",
+    "wildflower_clump_b",
+    "wildflower_clump_c",
+    "wildflower_single",
+    "wildflower_single_b",
+    "wildflower_single_c",
+    "wildflower_single_d",
+    "wildflower_single_e",
+];
+
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
 /// tile frame). A centre's own collider is its whole bed, so a part that stands up from it gets a
 /// footprint here: the junction's point lever (`_rail_junction.py` `lever_parts`: the base timber
@@ -2082,6 +2114,70 @@ pub(crate) mod tests {
 
     type Tris = Option<Vec<(Tri, String)>>;
 
+    /// Every hero and scatter piece the catalog names, with its scatter group and hero variants.
+    pub(crate) fn catalog_props() -> std::collections::BTreeSet<String> {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let mut pieces = std::collections::BTreeSet::new();
+        for def in c.tiles() {
+            let authored = def
+                .props
+                .hero
+                .iter()
+                .map(|h| h.piece.as_str())
+                .chain(def.props.scatter.iter().map(|r| r.piece.as_str()));
+            for piece in authored {
+                for member in scatter::group(piece) {
+                    pieces.insert(member.to_owned());
+                    pieces.extend(
+                        hex_core::hero_variants(member)
+                            .iter()
+                            .map(|v| (*v).to_owned()),
+                    );
+                }
+            }
+        }
+        pieces
+    }
+
+    /// Every prop piece the catalog places is either an obstacle, deliberately walk-through or a
+    /// ground prop, and no piece is in two lists. The catalog set misses the pieces `hex_core::boundary`
+    /// and the rail layout place at run time, which are obstacles.
+    #[test]
+    fn every_prop_piece_is_classified() {
+        let lists: [(&str, &[&str]); 3] = [
+            ("OBSTACLES", OBSTACLES),
+            ("WALK_THROUGH", WALK_THROUGH),
+            ("GROUND_PROPS", scatter::GROUND_PROPS),
+        ];
+        for (i, (name_a, a)) in lists.iter().enumerate() {
+            for (name_b, b) in &lists[i + 1..] {
+                let both: Vec<&&str> = a.iter().filter(|p| b.contains(p)).collect();
+                assert!(both.is_empty(), "{name_a} and {name_b} both list {both:?}");
+            }
+        }
+        let placed_at_run_time: Vec<&str> = hex_core::boundary::PIECES
+            .iter()
+            .copied()
+            .chain(["rail_buffer_stop"])
+            .collect();
+        let classified: std::collections::BTreeSet<String> = lists
+            .iter()
+            .flat_map(|(_, l)| l.iter())
+            .filter(|p| !placed_at_run_time.contains(p))
+            .map(|p| (*p).to_owned())
+            .collect();
+        let placed = catalog_props();
+        let unclassified: Vec<_> = placed.difference(&classified).collect();
+        let stale: Vec<_> = classified.difference(&placed).collect();
+        assert!(
+            unclassified.is_empty() && stale.is_empty(),
+            "placed but in no list: {unclassified:?}; listed but never placed: {stale:?}"
+        );
+        for piece in placed_at_run_time {
+            assert!(OBSTACLES.contains(&piece), "{piece} blocks the walker");
+        }
+    }
+
     /// The windmill's trunk collider blocks the walker as a building, the sails do not reach it.
     #[test]
     fn windmill_blocks_as_a_building() {
@@ -2099,73 +2195,56 @@ pub(crate) mod tests {
 
     /// Owner 2026-10-19 ("fix the labels"): bales are hay, the cow and sheep are animals, the
     /// windmill and the bakery are buildings, and walking into a prop reports what a click on it
-    /// does. Only rocks report `rock`, so a new obstacle piece cannot fall through to it unnoticed.
+    /// does. Every obstacle must match a row of the table below (a trailing `*` matches a prefix),
+    /// so a new obstacle piece cannot fall through to `rock` unnoticed: it fails here until a row
+    /// names its kind.
     #[test]
     fn every_obstacle_reports_its_own_kind() {
-        for (piece, kind) in [
-            ("hay_bale_round", "hay"),
-            ("hay_bale_stack", "hay"),
-            ("hay_bale_round_b", "hay"),
-            ("hay_bale_stack_b", "hay"),
-            ("animal_cow", "animal"),
-            ("animal_sheep", "animal"),
-            ("animal_cow_b", "animal"),
-            ("animal_cow_c", "animal"),
-            ("animal_sheep_b", "animal"),
-            ("animal_sheep_c", "animal"),
-            ("windmill", "building"),
-            ("windmill_b", "building"),
-            ("bakery_shop", "building"),
-            ("bakery_shop_b", "building"),
-            ("barn_red", "building"),
-            ("barn_red_b", "building"),
-            ("house_cottage", "building"),
-            ("house_twostorey", "building"),
-            ("house_longhouse", "building"),
-            ("house_twostorey_b", "building"),
-            ("house_twostorey_c", "building"),
-            ("house_cottage_b", "building"),
-            ("tree_hero_oak", "tree"),
-            ("tree_hero_oak_b", "tree"),
-            ("tree_hero_oak_c", "tree"),
-            ("tree_forest_b", "tree"),
-            ("rock_small", "rock"),
-            ("rock_small_c", "rock"),
-            ("river_stones", "rock"),
-            ("river_stones_c", "rock"),
-            ("log_fallen", "log"),
-            ("log_fallen_b", "log"),
-            ("log_fallen_c", "log"),
-            ("beach_driftwood", "log"),
-            ("beach_driftwood_b", "log"),
-            ("beach_driftwood_c", "log"),
-            ("fence_paddock", "fence"),
-            ("sapling_spruce", "tree"),
-            ("sapling_spruce_b", "tree"),
-            ("sapling_spruce_c", "tree"),
-            ("shrub_forest", "tree"),
-            ("shrub_forest_b", "tree"),
-            ("shrub_forest_c", "tree"),
-            ("bush_verge", "tree"),
-            ("bush_verge_b", "tree"),
-            ("bush_verge_c", "tree"),
+        const KINDS: &[(&str, &str)] = &[
+            ("house_*", "building"),
+            ("barn_*", "building"),
+            ("windmill*", "building"),
+            ("bakery_shop*", "building"),
+            ("rail_station_shelter", "building"),
+            ("tree_*", "tree"),
+            ("sapling_*", "tree"),
+            ("shrub_*", "tree"),
+            ("bush_*", "tree"),
+            ("hedge_*", "tree"),
+            ("hay_*", "hay"),
+            ("animal_*", "animal"),
+            ("log_*", "log"),
+            ("beach_driftwood*", "log"),
+            ("fence_*", "fence"),
+            ("wall_*", "fence"),
             ("rail_buffer_stop", "buffer_stop"),
-            ("well_stone", "well"),
-            ("well_stone_b", "well"),
-        ] {
+            ("well_*", "well"),
+            ("rock_*", "rock"),
+            ("river_stones*", "rock"),
+            ("boulder_granite*", "rock"),
+            ("outcrop_granite*", "rock"),
+        ];
+        let kind_of = |piece: &str| {
+            KINDS.iter().find_map(|&(pattern, kind)| {
+                let hit = match pattern.strip_suffix('*') {
+                    Some(prefix) => piece.starts_with(prefix),
+                    None => piece == pattern,
+                };
+                hit.then_some(kind)
+            })
+        };
+        let unlisted: Vec<_> = OBSTACLES
+            .iter()
+            .filter(|piece| kind_of(piece).is_none())
+            .collect();
+        assert!(
+            unlisted.is_empty(),
+            "obstacles no KINDS row covers: {unlisted:?}"
+        );
+        for &piece in OBSTACLES {
+            let kind = kind_of(piece).unwrap();
             assert_eq!(prop_kind(piece), kind, "{piece}");
             assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
-        }
-        for &piece in OBSTACLES {
-            assert_eq!(
-                prop_kind(piece) == "rock",
-                piece.starts_with("rock_")
-                    || piece.starts_with("river_stones")
-                    || piece.starts_with("boulder_granite")
-                    || piece.starts_with("outcrop_granite"),
-                "{piece} reports {}",
-                prop_kind(piece)
-            );
         }
     }
 
@@ -4211,6 +4290,25 @@ pub(crate) mod tests {
             t
         });
         TileCatalog::new(base.sockets().clone(), tiles.collect()).unwrap()
+    }
+
+    /// A single-tile landform is a tile that is its own base piece (`hill_meadow` stands on the
+    /// `hill_meadow` piece). Every one in the catalog is in `LANDFORMS`, so a new hill or peak
+    /// cannot skip the landform ground, scatter share and rock footprint rows.
+    #[test]
+    fn every_single_tile_landform_is_listed() {
+        let c = catalog();
+        let landforms: Vec<&str> = c
+            .tiles()
+            .iter()
+            .filter(|t| t.footprint.is_none() && t.base.as_str() == t.id)
+            .map(|t| t.id.as_str())
+            .collect();
+        let mut listed = crate::play::scatter::LANDFORMS.to_vec();
+        listed.sort_unstable();
+        let mut found = landforms.clone();
+        found.sort_unstable();
+        assert_eq!(found, listed);
     }
 
     /// Spec 2026-11-13 D13: a landform at level 1 ringed by level-1 meadows is ground across its hex

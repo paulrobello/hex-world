@@ -1008,6 +1008,29 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
             crown: 0.0,
         },
     ),
+    // The bakeries and the station shelter: each a building whose collider reach is its corner
+    // (`footprints_match_the_kit` measures 4.68, 4.91 and 4.77 m).
+    (
+        "bakery_shop",
+        Footprint {
+            ground: 4.7,
+            crown: 0.0,
+        },
+    ),
+    (
+        "bakery_shop_b",
+        Footprint {
+            ground: 4.92,
+            crown: 0.0,
+        },
+    ),
+    (
+        "rail_station_shelter",
+        Footprint {
+            ground: 4.8,
+            crown: 0.0,
+        },
+    ),
     (
         "hay_bale_round",
         Footprint {
@@ -4189,6 +4212,12 @@ mod tests {
         }
     }
 
+    /// Variants whose collider disc reaches past the authored piece's (the twin-gabled bakehouse's
+    /// corner is 4.91 m out, the authored bakery's 4.68 m) while their ground box still nests in
+    /// the authored one's. A slot's masks take the widest of its options
+    /// ([`hero_footprint`]), so scatter clears the wider reach.
+    const WIDER_THAN_AUTHORED: &[&str] = &["bakery_shop_b"];
+
     /// A hero variant stands inside the authored piece's ground box and reach, so the clearances
     /// sized for the authored piece (hex-sim's parking boxes, the scatter masks) hold for it. A
     /// round piece (a tree, no ground box) keeps inside its ground and crown reach.
@@ -4208,10 +4237,33 @@ mod tests {
                         "{v} {vb:?} outside {piece} {b:?}"
                     );
                 }
+                if WIDER_THAN_AUTHORED.contains(v) {
+                    continue;
+                }
                 assert!(footprint(v).ground <= footprint(piece).ground, "{v}");
                 assert!(footprint(v).crown <= footprint(piece).crown, "{v}");
             }
         }
+    }
+
+    /// Every table lookup (`footprint`, `ground_box`, `fence`) falls back silently for a piece
+    /// without a row, and every table test iterates the table, so a missing row is invisible.
+    /// This iterates the catalog instead: each hero and scatter piece, with its scatter group and
+    /// hero variants, is in [`FOOTPRINTS`], [`FENCES`] or [`GROUND_PROPS`].
+    #[test]
+    fn every_prop_piece_has_a_footprint_row() {
+        let missing: Vec<String> = crate::walk::tests::catalog_props()
+            .into_iter()
+            .filter(|p| {
+                !FOOTPRINTS.iter().any(|(id, _)| id == p)
+                    && !FENCES.iter().any(|(id, _)| id == p)
+                    && !GROUND_PROPS.contains(&p.as_str())
+            })
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "pieces the catalog places with no FOOTPRINTS, FENCES or GROUND_PROPS row: {missing:?}"
+        );
     }
 
     /// Owner D3 (2026-10-20): on every coast tile the driftwood and marram clumps stand on the dry

@@ -64,6 +64,52 @@ const fn hero(piece: &'static str, q: i32, r: i32, at: [f32; 2], yaw_deg: f32) -
     }
 }
 
+/// Manifest props, trees and heroes [`kit_layout`] does not place, each with the reason
+/// (`every_showcase_piece_is_placed_or_listed`). "not yet placed" marks a piece the showcase still
+/// lacks a block for.
+pub const NOT_SHOWCASED: &[(&str, &str)] = &[
+    (
+        "road_tunnel_portal",
+        "a ground hero on a straight-road tile that needs its cutting and the tunnel around it: reviewed in the elevation shots (docs/checkpoints/elevation/)",
+    ),
+    ("rail_tunnel_portal", "not yet placed"),
+    ("rail_tunnel_bore", "not yet placed"),
+    ("tree_hero_oak_b", "not yet placed"),
+    ("tree_hero_oak_c", "not yet placed"),
+    ("wheat_field", "not yet placed"),
+    ("river_spring_center", "not yet placed"),
+    ("rock_small_b", "not yet placed"),
+    ("rock_small_c", "not yet placed"),
+    ("wildflower_clump_b", "not yet placed"),
+    ("wildflower_clump_c", "not yet placed"),
+    ("wildflower_single", "not yet placed"),
+    ("wildflower_single_b", "not yet placed"),
+    ("wildflower_single_c", "not yet placed"),
+    ("wildflower_single_d", "not yet placed"),
+    ("animal_cow_c", "not yet placed"),
+    (
+        "car_van",
+        "traffic spawned by hex_play::cars; the layout shows car_sedan for scale",
+    ),
+    (
+        "car_pickup",
+        "traffic spawned by hex_play::cars; the layout shows car_sedan for scale",
+    ),
+    (
+        "bird_starling",
+        "an animated agent spawned by hex_play::boids",
+    ),
+    (
+        "bird_goldfinch",
+        "an animated agent spawned by hex_play::boids",
+    ),
+    ("fish_trout", "an animated agent spawned by hex_play::boids"),
+    (
+        "fish_mackerel",
+        "an animated agent spawned by hex_play::boids",
+    ),
+];
+
 /// Two road-straight tiles meeting at (0,0) edge 0 / (1,0) edge 3, ringed by meadow at every
 /// rotation (Review Focus 1), and the hero tree on (0,1). `road_tunnel_portal` has no cell here: it
 /// is a ground hero on a straight-road tile that needs its cutting and the tunnel around it, so it
@@ -1059,6 +1105,37 @@ pub fn cell_count(src: KitSource) -> usize {
 mod tests {
     use super::*;
     use hex_assets::parse_manifest;
+
+    /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or listed in
+    /// [`NOT_SHOWCASED`] with its reason, and no listed piece is placed or missing from the manifest,
+    /// so a new piece cannot be left out of the look-dev layout unnoticed.
+    #[test]
+    fn every_showcase_piece_is_placed_or_listed() {
+        use hex_assets::PieceKind;
+        let manifest = parse_manifest(MANIFEST).unwrap();
+        let placed: std::collections::BTreeSet<&str> =
+            kit_layout().iter().map(|p| p.piece).collect();
+        let listed = |id: &str| NOT_SHOWCASED.iter().any(|(piece, _)| *piece == id);
+        let unaccounted: Vec<&str> = manifest
+            .pieces
+            .iter()
+            .filter(|e| matches!(e.kind, PieceKind::Prop | PieceKind::Tree | PieceKind::Hero))
+            .map(|e| e.id.as_str())
+            .filter(|id| !placed.contains(id) && !listed(id))
+            .collect();
+        assert!(
+            unaccounted.is_empty(),
+            "placed by no block of kit_layout and not in NOT_SHOWCASED: {unaccounted:?}"
+        );
+        for (piece, reason) in NOT_SHOWCASED {
+            assert!(!reason.is_empty(), "{piece} has no reason");
+            assert!(!placed.contains(piece), "{piece} is placed: drop its row");
+            assert!(
+                manifest.pieces.iter().any(|e| e.id == *piece),
+                "{piece} is not in the manifest: drop its row"
+            );
+        }
+    }
 
     #[test]
     fn hero_yaw_turns_the_way_edges_run() {
