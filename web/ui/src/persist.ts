@@ -495,13 +495,17 @@ export class Persistence {
     for (const [tag, p] of this.pending) if (p.purpose === "autosave") this.pending.delete(tag);
   }
 
-  private async open(meta: SlotMeta, flush: boolean): Promise<boolean> {
-    let bytes: Uint8Array | null = null;
+  /** A stored slot's bytes, or null when there is no store, no such slot or the read fails. */
+  private async readBytes(id: string): Promise<Uint8Array | null> {
     try {
-      bytes = (await this.store?.read(meta.id)) ?? null;
+      return (await this.store?.read(id)) ?? null;
     } catch {
-      bytes = null;
+      return null;
     }
+  }
+
+  private async open(meta: SlotMeta, flush: boolean): Promise<boolean> {
+    const bytes = await this.readBytes(meta.id);
     if (!bytes) {
       this.ux.notify({
         text: `Couldn't read ${meta.name}`,
@@ -526,12 +530,7 @@ export class Persistence {
   /** Downloads a stored slot's bytes as `<name>.hexworld`, without loading it. */
   async exportSlot(id: string): Promise<void> {
     const meta = this.slots.find((s) => s.id === id);
-    let bytes: Uint8Array | null = null;
-    try {
-      bytes = meta ? ((await this.store?.read(id)) ?? null) : null;
-    } catch {
-      bytes = null;
-    }
+    const bytes = meta ? await this.readBytes(id) : null;
     if (!meta || !bytes) {
       this.ux.notify({
         text: "Couldn't export that world",
@@ -555,13 +554,16 @@ export class Persistence {
       this.requestSave(world, "copy");
     } else {
       const meta = this.slots.find((s) => s.id === id);
-      let bytes: Uint8Array | null = null;
-      try {
-        bytes = meta ? await this.store.read(id) : null;
-      } catch {
-        bytes = null;
+      const bytes = meta ? await this.readBytes(id) : null;
+      if (!meta || !bytes) {
+        this.ux.notify({
+          text: "Couldn't duplicate that world",
+          sub: "Its saved bytes are missing from this browser.",
+          icon: "alert",
+          tone: "bad",
+        });
+        return;
       }
-      if (!meta || !bytes) return;
       const copy = { ...meta, id: world.id, name, updatedAt: this.stampBefore(meta.updatedAt) };
       try {
         await this.store.write(copy, bytes);

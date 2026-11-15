@@ -21,22 +21,15 @@ import {
   walkSpeedPct,
 } from "./walk-speed.ts";
 import { plural } from "./words.ts";
+import { readStored, writeStored } from "./storage.ts";
 
 /** The viewer's stored walk speed, or null without one or without storage. */
 export function loadWalkSpeed(): number | null {
-  try {
-    return storedWalkSpeed(localStorage.getItem(WALK_SPEED_KEY));
-  } catch {
-    return null;
-  }
+  return storedWalkSpeed(readStored(WALK_SPEED_KEY));
 }
 
 function saveWalkSpeed(v: number): void {
-  try {
-    localStorage.setItem(WALK_SPEED_KEY, String(v));
-  } catch {
-    /* Storage refused: the speed holds until the page closes. */
-  }
+  writeStored(WALK_SPEED_KEY, String(v));
 }
 
 export class WorldPanel {

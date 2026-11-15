@@ -434,6 +434,44 @@ test("duplicate copies a world to a new slot that sorts under its source", async
   assert.ok((await store.list()).some((m) => m.name === "World 1 copy"));
 });
 
+test("duplicate says so when the stored copy cannot be read, and copies nothing", async () => {
+  for (const [label, read] of [
+    ["a read that rejects", async () => Promise.reject(new Error("IDB read failed"))],
+    ["bytes that are gone", async () => null],
+  ] as const) {
+    const store = new MemoryBackend();
+    await store.write(
+      { id: "w-a", name: "Alpha", tiles: 2, updatedAt: 50, bytes: 1, mix: {}, map: [] },
+      new Uint8Array([7]),
+    );
+    const { host, notes, p } = setup(store);
+    host.result = { ok: false, code: "no_file", reason: "x", version: null };
+    await p.start();
+    store.read = read;
+    notes.length = 0;
+    await p.duplicate("w-a");
+    assert.equal(notes.length, 1, `${label}: one note`);
+    assert.equal(notes[0]?.text, "Couldn't duplicate that world", label);
+    assert.equal(notes[0]?.tone, "bad", label);
+    assert.equal((await store.list()).filter((m) => m.name === "Alpha copy").length, 0, `${label}: no copy written`);
+  }
+});
+
+test("export and open read through the same guard: a rejected read is a note, not a throw", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-a", name: "Alpha", tiles: 2, updatedAt: 50, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([7]),
+  );
+  const { host, notes, p } = setup(store);
+  host.result = { ok: false, code: "no_file", reason: "x", version: null };
+  await p.start();
+  store.read = async () => Promise.reject(new Error("IDB read failed"));
+  notes.length = 0;
+  await p.exportSlot("w-a");
+  assert.equal(notes.at(-1)?.text, "Couldn't export that world");
+});
+
 test("page hide writes a pending autosave at once, from the engine's last frame", async () => {
   const store = new MemoryBackend();
   const { host, p } = setup(store);

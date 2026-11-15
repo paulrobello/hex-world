@@ -17,6 +17,7 @@ import { type PlacedNote, type RefusalNote, type TagPart, tagModel } from "./tag
 import { Walk } from "./walk.ts";
 import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
+import { readStored, writeStored } from "./storage.ts";
 
 const MOD = isMac() ? "⌘" : "Ctrl+";
 const HINTS_KEY = "hexWorld.hints";
@@ -26,21 +27,6 @@ const ROTATE_REPEAT_MS = 250;
 
 const sameCell = (a: Cell | null | undefined, b: Cell | null | undefined): boolean =>
   !!a && !!b && a.q === b.q && a.r === b.r;
-
-function storeGet(k: string): string | null {
-  try {
-    return localStorage.getItem(k);
-  } catch {
-    return null;
-  }
-}
-function storeSet(k: string, v: string): void {
-  try {
-    localStorage.setItem(k, v);
-  } catch {
-    /* Private windows may refuse storage; hints then show again next time. */
-  }
-}
 
 function isTypingTarget(target: HTMLElement | null): boolean {
   return !!target?.closest?.("input:not([type=range]), textarea, [contenteditable=true]");
@@ -145,7 +131,7 @@ export class Hud {
     this.walk = new Walk(hw, this.canvas);
     document.body.append(this.walk.root);
     this.wireInput();
-    const done = Number(storeGet(HINTS_KEY) ?? 0);
+    const done = Number(readStored(HINTS_KEY) ?? 0);
     if (done < HINTS.length) this.hint = done;
   }
 
@@ -560,7 +546,7 @@ export class Hud {
     const h0 = HINTS[this.hint];
     if (!h0?.done.includes(ev)) return;
     this.hint++;
-    storeSet(HINTS_KEY, String(this.hint));
+    writeStored(HINTS_KEY, String(this.hint));
     this.callout.classList.remove("is-shown");
     this.leader.classList.remove("is-shown");
     clearTimeout(this.hintTimer);

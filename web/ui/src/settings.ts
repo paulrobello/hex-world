@@ -66,39 +66,24 @@ import {
   tierCommand,
 } from "./settings-model.ts";
 import { WorldPanel } from "./settings-world.ts";
+import { readStored, removeStored, writeStored } from "./storage.ts";
 
 /** The viewer's stored colour grade, or null without one or without storage. */
 export function loadGrade(): string | null {
-  try {
-    return localStorage.getItem(GRADE_KEY);
-  } catch {
-    return null;
-  }
+  return readStored(GRADE_KEY);
 }
 
 function saveGrade(g: GradeName): void {
-  try {
-    localStorage.setItem(GRADE_KEY, g);
-  } catch {
-    /* Storage refused: the grade holds until the page closes. */
-  }
+  writeStored(GRADE_KEY, g);
 }
 
 /** The viewer's stored frame rate cap, or null without one or without storage. */
 export function loadFrameCap(): string | null {
-  try {
-    return localStorage.getItem(FRAME_CAP_KEY);
-  } catch {
-    return null;
-  }
+  return readStored(FRAME_CAP_KEY);
 }
 
 function saveFrameCap(c: FrameCapChoice): void {
-  try {
-    localStorage.setItem(FRAME_CAP_KEY, c);
-  } catch {
-    /* Storage refused: the cap holds until the page closes. */
-  }
+  writeStored(FRAME_CAP_KEY, c);
 }
 
 /**
@@ -106,42 +91,26 @@ function saveFrameCap(c: FrameCapChoice): void {
  * before the slider (`off`, `sparse`, `normal`, `lush`) is rewritten as its percent (0, 50, 100, 150).
  */
 export function loadGrass(): string | null {
-  try {
-    const stored = localStorage.getItem(GRASS_KEY);
-    const pct = storedGrass(stored);
-    if (pct != null && stored !== String(pct)) {
-      localStorage.setItem(GRASS_KEY, String(pct));
-      return String(pct);
-    }
-    return stored;
-  } catch {
-    return null;
+  const stored = readStored(GRASS_KEY);
+  const pct = storedGrass(stored);
+  if (pct != null && stored !== String(pct)) {
+    // A refused rewrite reads as no stored choice, as it always has.
+    return writeStored(GRASS_KEY, String(pct)) ? String(pct) : null;
   }
+  return stored;
 }
 
 /** The viewer's stored grass distance stop, or null without one or without storage. */
 export function loadGrassDistance(): string | null {
-  try {
-    return localStorage.getItem(GRASS_DISTANCE_KEY);
-  } catch {
-    return null;
-  }
+  return readStored(GRASS_DISTANCE_KEY);
 }
 
 function saveGrassDistance(id: GrassDistanceName): void {
-  try {
-    localStorage.setItem(GRASS_DISTANCE_KEY, id);
-  } catch {
-    /* Storage refused: the distance holds until the page closes. */
-  }
+  writeStored(GRASS_DISTANCE_KEY, id);
 }
 
 function saveGrass(pct: number): void {
-  try {
-    localStorage.setItem(GRASS_KEY, String(pct));
-  } catch {
-    /* Storage refused: the density holds until the page closes. */
-  }
+  writeStored(GRASS_KEY, String(pct));
 }
 
 /** This page's latest Reduce motion pick, so the OS listener keeps it when storage is refused. */
@@ -150,21 +119,13 @@ let motionPick: MotionChoice | null = null;
 /** The viewer's Reduce motion choice; Follow system without one or without storage. */
 export function loadMotion(): MotionChoice {
   if (motionPick) return motionPick;
-  try {
-    return storedMotion(localStorage.getItem(MOTION_KEY));
-  } catch {
-    return "system";
-  }
+  return storedMotion(readStored(MOTION_KEY));
 }
 
 function saveMotion(c: MotionChoice): void {
   motionPick = c;
-  try {
-    if (c === "system") localStorage.removeItem(MOTION_KEY);
-    else localStorage.setItem(MOTION_KEY, c);
-  } catch {
-    /* Storage refused: the choice holds until the page closes. */
-  }
+  if (c === "system") removeStored(MOTION_KEY);
+  else writeStored(MOTION_KEY, c);
 }
 
 /** The OS reduced-motion query, shared by the start-up sender (main.ts) and the Controls tab. */
