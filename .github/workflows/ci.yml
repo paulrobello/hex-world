@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal --component rustfmt
+        run: rustup show active-toolchain || rustup toolchain install
       - run: make fmt-check
 
   # The HUD overlay (web/ui): typecheck, lint, unit tests and the esbuild bundle; npm ci runs via the
@@ -85,7 +85,7 @@ jobs:
       - name: Install system deps
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal --component clippy
+        run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make lint
 
@@ -97,9 +97,7 @@ jobs:
       - name: Install system deps
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Install Rust
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup target add wasm32-unknown-unknown
+        run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make typecheck
       - run: make check-wgpu
@@ -118,7 +116,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
+        run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: make test
 
@@ -128,9 +126,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup target add wasm32-unknown-unknown
+        run: rustup show active-toolchain || rustup toolchain install
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           key: wasm
@@ -167,7 +163,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
-        run: rustup toolchain install stable --profile minimal
+        run: rustup show active-toolchain || rustup toolchain install
       - name: Install cargo-audit (pinned)
         run: cargo install cargo-audit --version 0.23.0 --locked
       - run: make audit
