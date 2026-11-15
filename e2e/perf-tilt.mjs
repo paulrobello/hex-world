@@ -4,7 +4,6 @@
 //   node e2e/perf-tilt.mjs native target/release/hex-world [rounds]
 // Every sample runs under the host-load guard (load <= 15 before and after, else discarded and re-run);
 // each sample records both loads. Writes docs/perf/p2-tilt-shift-<mode>.json (PERF_OUT overrides).
-import { chromium } from "playwright";
 import { spawn } from "node:child_process";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -12,6 +11,7 @@ import { join } from "node:path";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch } from "./lib/browser.mjs";
 
 const [mode = "web", target = mode === "web" ? "dist" : "target/release/hex-world", roundsArg = "5"] = process.argv.slice(2);
 const rounds = Number(roundsArg);
@@ -21,9 +21,7 @@ const pick = (d) => ({ mean: d.mean, p50: d.p50, p95: d.p95, p99: d.p99, samples
 
 async function webSampler() {
   const { server, base } = await serveDist(target);
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-           "--disable-gpu-vsync", "--disable-frame-rate-limit"] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false, extra: UNCAPPED_ARGS }) });
   const errors = [];
   const sample = async (tilt) => {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });

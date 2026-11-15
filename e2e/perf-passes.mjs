@@ -10,12 +10,12 @@
 // Local only. Writes docs/perf/p2-passes.json (PERF_OUT overrides).
 // usage: node e2e/perf-passes.mjs <dist> <native-bin>
 //   PASSES_ONLY=web|native, PASSES_ROUNDS (default 3), PASSES_VIEW (strategic|closeup)
-import { chromium } from "playwright";
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { DEVELOPER_FEATURES_ARG, UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -52,9 +52,7 @@ const save = async () => {
 
 async function webRun(arm) {
   // Developer features lift Chrome's 100 µs timestamp quantization; they change no rendering.
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-      "--disable-gpu-vsync", "--disable-frame-rate-limit", "--enable-webgpu-developer-features"] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false, extra: [...UNCAPPED_ARGS, DEVELOPER_FEATURES_ARG] }) });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -63,11 +61,7 @@ async function webRun(arm) {
     const q = new URLSearchParams({ ...KEYS, tilt: arm.tilt, gpu_timing: arm.timing });
     await page.goto(base + "?" + q);
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
+    const adapter = await requireHardwareAdapter(page);
     await page.waitForFunction(() => {
       const d = window.hexWorld.diag();
       return d.window_start_frame > 0 && d.samples >= 600 && d.frames - d.window_start_frame + 1 >= 600;

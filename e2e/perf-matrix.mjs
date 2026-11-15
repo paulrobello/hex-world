@@ -3,12 +3,12 @@
 // so drift never lands on one config, each web run in a fresh browser. Writes
 // docs/perf/p0-gate-matrix.json after every run: raw runs plus per-config median and min–max.
 // Local only.
-import { chromium } from "playwright";
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -126,13 +126,11 @@ function row(platform, req, d, extra = {}) {
 async function runWeb() {
   const { server, base } = await serveDist(dist);
   // One browser per row, so no row inherits another row's GPU-process state (chunk rows load GBs).
-  const launch = () => chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-           ...(PACED ? [] : ["--disable-gpu-vsync", "--disable-frame-rate-limit"])] });
+  const launchRow = () => launch({ args: gpuArgs({ swiftshader: false, extra: PACED ? [] : UNCAPPED_ARGS }) });
   try {
     const webRun = async (req, run) => {
       let out;
-      const browser = await launch();
+      const browser = await launchRow();
       const page = await browser.newPage({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1 });
       const errors = [];
       page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text())) errors.push(m.text().slice(0, 300)); });

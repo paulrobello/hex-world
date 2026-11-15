@@ -7,10 +7,10 @@
 //   3. a car with opacity 0 (`car_list[].opacity`) is inside it, near the cover.
 // Exits 0 only when all three hold and the page logged no error. Not a timing run, so it takes no
 // load guard. Run after `make build-web`: node e2e/elevation.mjs dist
-import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const HEX_RADIUS = 16;
@@ -19,10 +19,6 @@ const COVER = { q: 3, r: 2 };
 const SETTLE_MS = 120_000;
 const ASSERT_MS = 60_000;
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const script = JSON.parse(readFileSync("docs/checkpoints/elevation/smoke.json", "utf8"));
@@ -30,7 +26,7 @@ const script = JSON.parse(readFileSync("docs/checkpoints/elevation/smoke.json", 
 // The cover's world centre, as hex-core Axial::to_world (pointy-top, radius 16 m).
 const centre = (c) => [HEX_RADIUS * Math.sqrt(3) * (c.q + c.r / 2), HEX_RADIUS * 1.5 * c.r];
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

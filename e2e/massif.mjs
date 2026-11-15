@@ -13,10 +13,10 @@
 // where `megaFit` (web/ui/src/rules.ts) finds a centre and under "Doesn't fit here" elsewhere.
 // Exits 0 only when every check holds and the page logged no error. Not a timing run, so it takes
 // no load guard. Run after `make build-web`: node e2e/massif.mjs dist
-import { chromium } from "playwright";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { megaFit } from "../web/ui/src/rules.ts";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const MASSIF = "massif_granite";
@@ -26,10 +26,6 @@ const SHEET_MS = 5_000;
 const SHEET_SLOTS = 12;
 const DIRS = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const key = (c) => `${c.q},${c.r}`;
@@ -38,7 +34,7 @@ const same = (a, b) => a != null && b != null && a.q === b.q && a.r === b.r;
 const members = (a) => [a, ...DIRS.map(([dq, dr]) => ({ q: a.q + dq, r: a.r + dr }))];
 const slotsKey = (s) => JSON.stringify(s.mega_slots);
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

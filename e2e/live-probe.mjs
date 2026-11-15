@@ -1,15 +1,14 @@
 // Probe the deployed site: time to READY, wire bytes per resource, console errors, screenshot.
 // Usage: node e2e/live-probe.mjs [url] [out.json] [shot.png]
-import { chromium } from "playwright";
 import { writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
+import { gpuArgs, launch } from "./lib/browser.mjs";
 
 const url = process.argv[2] ?? "https://hex-world.pardev.net/";
 const out = process.argv[3] ?? "docs/perf/p0-deploy.json";
 const shot = process.argv[4] ?? "target/shots/live.png";
-const args = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args });
+const browser = await launch({ args: gpuArgs({ swiftshader: false }) });
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 const res = [];

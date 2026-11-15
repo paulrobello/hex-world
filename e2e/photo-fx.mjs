@@ -4,24 +4,21 @@
 // darkens the corners against the centre), leaves photo mode (the pass is off the game camera, the
 // canvas has colour again) and re-enters (the settings and the panel are kept). Captures go to
 // e2e/test-results/photo-fx/.
-import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/photo-fx";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
@@ -29,15 +26,7 @@ page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text()))
 
 const st = () => page.evaluate(() => window.hexWorld.state());
 const cmd = (c) => page.evaluate((c) => window.hexWorld.cmd(c), c);
-async function until(fn, what, ms = 10_000) {
-  const deadline = Date.now() + ms;
-  for (;;) {
-    const v = await fn();
-    if (v) return v;
-    if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-    await page.waitForTimeout(50);
-  }
-}
+const waitFor = waiter(() => page, { fail, ms: 10_000 });
 const panel = ".sheet--photo .photo-fx";
 async function setSlider(label, pct) {
   await page.locator(`${panel} input[aria-label='${label}']`).evaluate((el, v) => {
@@ -77,7 +66,7 @@ const stats = (url) => page.evaluate(async (url) => {
 /** Exports through the engine (the panel ignores names it did not start) and measures the PNG. */
 async function exportStats(name, scale = 1) {
   await cmd({ cmd: "photo_export", scale, name });
-  const url = await until(() => page.evaluate((n) => window.hexWorld.takeShot(n), name), `export ${name} arrives`, 30_000);
+  const url = await waitFor(() => page.evaluate((n) => window.hexWorld.takeShot(n), name), `export ${name} arrives`, 30_000);
   if (!url) return null;
   const s = await stats(url);
   console.log(`export ${name}: ${JSON.stringify(s)}`);
@@ -96,7 +85,7 @@ try {
   await page.waitForTimeout(500);
   await page.focus("canvas#hex-world");
   await page.keyboard.press("p");
-  await until(async () => { const s = await st(); return s.play.photo_mode && s.photo.on; }, "P enters photo mode");
+  await waitFor(async () => { const s = await st(); return s.play.photo_mode && s.photo.on; }, "P enters photo mode");
   await cmd({ cmd: "photo", dof: "off" });
 
   let s = await st();
@@ -107,26 +96,26 @@ try {
 
   // Each control from the panel reaches the engine.
   await page.locator(`${panel} .seg[aria-label='Colour filter'] button[data-value=mono]`).click();
-  await until(async () => { const p = (await st()).photo; return p.filter === "mono" && p.fx_active; }, "B&W reaches the engine and the pass runs");
+  await waitFor(async () => { const p = (await st()).photo; return p.filter === "mono" && p.fx_active; }, "B&W reaches the engine and the pass runs");
   check(!(await page.locator(`${panel} input[aria-label='Filter strength']`).isDisabled()), "strength comes alive with a filter");
   await setSlider("Filter strength", 70);
-  await until(async () => (await st()).photo.filter_strength === 0.7, "filter strength 70% reaches the engine");
+  await waitFor(async () => (await st()).photo.filter_strength === 0.7, "filter strength 70% reaches the engine");
   await page.locator(`${panel} .seg[aria-label='Colour filter'] button[data-value=sepia]`).click();
-  await until(async () => (await st()).photo.filter === "sepia", "sepia reaches the engine");
+  await waitFor(async () => (await st()).photo.filter === "sepia", "sepia reaches the engine");
   await setSlider("Vignette", 80);
-  await until(async () => (await st()).photo.vignette === 0.8, "vignette 80% reaches the engine");
+  await waitFor(async () => (await st()).photo.vignette === 0.8, "vignette 80% reaches the engine");
   await setSlider("Vignette softness", 30);
-  await until(async () => (await st()).photo.vignette_softness === 0.3, "softness 30% reaches the engine");
+  await waitFor(async () => (await st()).photo.vignette_softness === 0.3, "softness 30% reaches the engine");
   await setSlider("Film grain", 40);
-  await until(async () => (await st()).photo.grain === 0.4, "grain 40% reaches the engine");
+  await waitFor(async () => (await st()).photo.grain === 0.4, "grain 40% reaches the engine");
   await setSlider("Chromatic aberration", 50);
-  await until(async () => (await st()).photo.aberration === 0.5, "aberration 50% reaches the engine");
+  await waitFor(async () => (await st()).photo.aberration === 0.5, "aberration 50% reaches the engine");
   await page.locator(panel).scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${out}/photo-fx-panel.jpg`, type: "jpeg", quality: 88 });
 
   await page.locator(`${panel} .fx-reset`).click();
-  await until(async () => {
+  await waitFor(async () => {
     const p = (await st()).photo;
     return p.filter === "normal" && p.filter_strength === 1 && p.vignette === 0 && p.vignette_softness === 0.5 &&
       p.grain === 0 && p.aberration === 0 && p.fx_active === false;
@@ -138,12 +127,12 @@ try {
   await page.waitForTimeout(300);
   const plain = await exportStats("fx-plain");
   await cmd({ cmd: "photo", filter: "mono", filter_strength: 1 });
-  await until(async () => (await st()).photo.fx_active, "mono pass on");
+  await waitFor(async () => (await st()).photo.fx_active, "mono pass on");
   const mono = await exportStats("fx-mono");
   check(plain && mono && plain.sat > 0.08 && mono.sat < 0.01,
     `a black and white export has no colour (saturation ${mono?.sat.toFixed(4)}, ${plain?.sat.toFixed(4)} without)`);
   await cmd({ cmd: "photo", filter: "normal", vignette: 0.9, vignette_softness: 0.5 });
-  await until(async () => (await st()).photo.vignette === 0.9, "vignette on");
+  await waitFor(async () => (await st()).photo.vignette === 0.9, "vignette on");
   const vig = await exportStats("fx-vignette");
   check(plain && vig && vig.cornerOverCentre < 0.6 * plain.cornerOverCentre,
     `a vignette export darkens the corner against the centre (${vig?.cornerOverCentre.toFixed(3)} vs ${plain?.cornerOverCentre.toFixed(3)} without)`);
@@ -153,12 +142,12 @@ try {
 
   // Leaving photo mode takes the pass off the game camera; the settings stay.
   await cmd({ cmd: "photo", filter: "mono" });
-  await until(async () => (await st()).photo.filter === "mono", "mono again before leaving");
+  await waitFor(async () => (await st()).photo.filter === "mono", "mono again before leaving");
   await page.waitForTimeout(300);
   const inPhoto = await canvasStats();
   await page.focus("canvas#hex-world");
   await page.keyboard.press("p");
-  await until(async () => { const p = (await st()).photo; return !p.on && p.fx_active === false; }, "leaving photo mode turns the pass off");
+  await waitFor(async () => { const p = (await st()).photo; return !p.on && p.fx_active === false; }, "leaving photo mode turns the pass off");
   await page.waitForTimeout(500);
   const game = await canvasStats();
   check(inPhoto.sat < 0.02 && game.sat > 0.08,
@@ -168,14 +157,14 @@ try {
 
   // Re-entering keeps them, and the panel shows them.
   await page.keyboard.press("p");
-  await until(async () => { const p = (await st()).photo; return p.on && p.fx_active; }, "re-entering turns the pass back on");
+  await waitFor(async () => { const p = (await st()).photo; return p.on && p.fx_active; }, "re-entering turns the pass back on");
   check((await page.locator(`${panel} .seg[aria-label='Colour filter'] button[data-value=mono]`).getAttribute("aria-checked")) === "true",
     "the panel shows B&W on re-entering");
   check((await page.locator(`${panel} input[aria-label='Vignette']`).inputValue()) === "90", "the panel shows vignette 90% on re-entering");
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${out}/photo-fx-reenter.jpg`, type: "jpeg", quality: 88 });
   await page.keyboard.press("p");
-  await until(async () => !(await st()).photo.on, "P leaves again");
+  await waitFor(async () => !(await st()).photo.on, "P leaves again");
 
   check(errors.length === 0, `no page errors (${errors.slice(0, 3).join(" | ")})`);
 } catch (e) {

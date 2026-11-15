@@ -1,9 +1,9 @@
 // Engine gate (PRD P0): 2,000 tiles + full post stack at 1440p, GPU Chromium. Local only.
-import { chromium } from "playwright";
 import { writeFile, mkdir } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const { server, base } = await serveDist(dist);
@@ -12,9 +12,7 @@ const fpsOverlay = process.env.PERF_FPS === "off" ? "off" : "on";
 const outPath = process.env.PERF_OUT ?? "docs/perf/p0-engine-gate.json";
 
 // Uncapped: a vsync-locked 60 Hz run reports p95 ≈ 16.67 ms and would read as a false failure.
-const browser = await chromium.launch({ channel: "chromium", headless: true,
-  args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-         "--disable-gpu-vsync", "--disable-frame-rate-limit"] });
+const browser = await launch({ args: gpuArgs({ swiftshader: false, extra: UNCAPPED_ARGS }) });
 const errors = [];
 const views = {};
 let ua = "";

@@ -10,24 +10,21 @@
 //    turn) and swap at once under reduced motion.
 // 5. Settings, Controls, Reduce motion (S9.6): On cuts the HUD's and the engine's motion with the OS at
 //    no-preference, keeps it through OS changes and a reload; Follow system follows the OS both ways.
-import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.MOTION_OUT ?? "e2e/test-results/ui-motion";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
@@ -36,19 +33,11 @@ page.on("console", (m) => { if (m.type() === "error" || BAD_TEXT.test(m.text()))
 const play = () => page.evaluate(() => window.hexWorld.state().play);
 const text = (sel) => page.locator(sel).first().innerText().catch(() => "");
 const events = () => page.evaluate(() => window.hexWorld.events());
-async function until(fn, what, ms = 10_000) {
-  const deadline = Date.now() + ms;
-  for (;;) {
-    const v = await fn();
-    if (v) return v;
-    if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-    await page.waitForTimeout(50);
-  }
-}
+const waitFor = waiter(() => page, { fail, ms: 10_000 });
 async function pointAt(q, r) {
   const b = await page.evaluate(([q, r]) => window.hexWorld.cellRect(q, r), [q, r]);
   await page.mouse.move((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, { steps: 4 });
-  await until(async () => { const h = (await play()).hovered; return h && h.q === q && h.r === r; }, `pointer hovers (${q}, ${r})`);
+  await waitFor(async () => { const h = (await play()).hovered; return h && h.q === q && h.r === r; }, `pointer hovers (${q}, ${r})`);
 }
 const frames = (n = 3) => page.evaluate((n) => new Promise((done) => {
   const step = (i) => (i ? requestAnimationFrame(() => step(i - 1)) : done());
@@ -91,25 +80,25 @@ async function inputNeverWaits(label) {
   // Road straight on the grass slot east of the meadow: two distinct orientations, so R alternates.
   await pointAt(1, 0);
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "select_tile", id: "road_straight" }));
-  await until(async () => /Rotation \d of 2/.test(await text(".ghost-tag")), `${label}: road straight shows two rotations`);
+  await waitFor(async () => /Rotation \d of 2/.test(await text(".ghost-tag")), `${label}: road straight shows two rotations`);
   await events();
   const rot0 = (await play()).rotation;
   const r = await burst(Array(5).fill(["r", "KeyR"]));
   check(r.sent.filter((c) => c === "rotate").length === 5, `${label}: five R presses in one task send five rotate commands at once (${r.sent.join(",")}; ${r.ms.toFixed(1)} ms)`);
   let rotated = [];
-  await until(async () => (rotated.push(...(await events()).filter((e) => e.type === "ghostRotated")), rotated.length >= 5), `${label}: five ghostRotated events`, 5_000);
+  await waitFor(async () => (rotated.push(...(await events()).filter((e) => e.type === "ghostRotated")), rotated.length >= 5), `${label}: five ghostRotated events`, 5_000);
   check(rotated.length === 5, `${label}: every press lands, none queued behind an animation (${rotated.length} ghostRotated)`);
   check((await play()).rotation !== rot0, `${label}: an odd number of presses leaves the other orientation`);
 
   // Tab twice inside the 240 ms slide: the sheet closes and reopens on the presses, not after the slide.
   const t = await burst([["Tab", "Tab"], ["Tab", "Tab"]]);
   check(t.sheetClosed.join() === "true,false", `${label}: Tab, Tab mid-slide flips the sheet on each press (${t.sheetClosed.join()})`);
-  await until(async () => (await play()).inventory_open === true, `${label}: the engine ends with the sheet open`);
+  await waitFor(async () => (await play()).inventory_open === true, `${label}: the engine ends with the sheet open`);
 
   // B twice: two toggles sent at once, back on the place tool.
   const b = await burst([["b", "KeyB"], ["b", "KeyB"]]);
   check(b.sent.filter((c) => c === "toggle").length === 2, `${label}: B, B sends two bulldoze toggles at once (${b.sent.join(",")})`);
-  await until(async () => (await play()).tool === "place", `${label}: B, B ends on the place tool`);
+  await waitFor(async () => (await play()).tool === "place", `${label}: B, B ends on the place tool`);
 }
 
 /** Frame times as fractions of each animation's duration; the one curve front-loads the motion. */
@@ -172,8 +161,8 @@ const keydown = (key, code) => `document.body.dispatchEvent(new KeyboardEvent("k
 try {
   await page.goto(base + "?scenario=play&tilt=off&fps=off", { waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
-  await until(async () => !(await page.locator(".load").count()), "loading layer removed after ready", 5_000);
-  await until(async () => (await play())?.inventory_open === true, "Tiles sheet open");
+  await waitFor(async () => !(await page.locator(".load").count()), "loading layer removed after ready", 5_000);
+  await waitFor(async () => (await play())?.inventory_open === true, "Tiles sheet open");
   await page.focus("canvas#hex-world");
 
   // ---------- 1. Input never waits on feedback ----------
@@ -207,29 +196,29 @@ try {
   // A placement, then undo: the margin note rises 8 px and fades in.
   const ghost = (await play()).ghost;
   await page.evaluate((g) => window.hexWorld.cmd({ cmd: "place", q: g.q, r: g.r }), ghost);
-  await until(async () => (await play()).can_undo, "a tile placed for the undo note");
+  await waitFor(async () => (await play()).can_undo, "a tile placed for the undo note");
   await page.waitForTimeout(400);
   check(await strip("undo-note", `${keydown("z", "KeyZ").replace("bubbles", "ctrlKey: true, metaKey: true, bubbles")}`, { x: 0, y: 790, width: 600, height: 110 }, "⌘Z: the undo note rises 8 px and fades in, 180 ms") > 0, "the undo note animates in");
   check(/Undid/.test(await text(".toast.is-shown")), "the undo note reads Undid");
   check(await strip("bulldoze-on", keydown("b", "KeyB"), barClip, "B: bulldoze fills red, the tool nudges and rings") > 0, "bulldoze toggles with feedback");
   await page.evaluate(keydown("b", "KeyB"));
-  await until(async () => (await play()).tool === "place", "back to place");
+  await waitFor(async () => (await play()).tool === "place", "back to place");
   check(await strip("walk-hint", keydown("f", "KeyF"), { x: 370, y: 790, width: 700, height: 110 }, "F: the walk hint rises 8 px and fades in, 180 ms (the toast's fade)") > 0, "the walk hint fades in");
-  await until(async () => (await play()).walk_mode, "walk mode on");
+  await waitFor(async () => (await play()).walk_mode, "walk mode on");
   await page.keyboard.press("Escape");
-  await until(async () => !(await play()).walk_mode, "Esc leaves walk mode");
+  await waitFor(async () => !(await play()).walk_mode, "Esc leaves walk mode");
   await page.waitForTimeout(400);
   await page.click(".tool[data-action=settings]");
   await page.waitForTimeout(400);
   check(await strip("settings-tab", `document.querySelector("#settings-tab-audio").click()`, { x: 1000, y: 0, width: 440, height: 600 }, "Settings tab: the panel rises 4 px and fades in, 120 ms") > 0, "a settings tab switch animates its panel");
   await page.evaluate(keydown("Escape", "Escape"));
-  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Settings closed");
+  await waitFor(async () => page.locator(".sheet--settings.is-closed").count(), "Settings closed");
   await page.mouse.move(200, 450);
   await page.waitForTimeout(300);
 
   // ---------- 2. Reduced motion: the OS media query ----------
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await until(async () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion")), "OS reduce: the root carries is-reduced-motion");
+  await waitFor(async () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion")), "OS reduce: the root carries is-reduced-motion");
   await page.waitForTimeout(300);
   await inputNeverWaits("OS reduce");
   for (const [what, action] of [["Tab", keydown("Tab", "Tab")], ["Tab again", keydown("Tab", "Tab")], ["R", keydown("r", "KeyR")], ["B", keydown("b", "KeyB")], ["B again", keydown("b", "KeyB")]]) {
@@ -262,11 +251,11 @@ try {
 
   // ---------- 2b. Reduced motion: the engine flag alone, OS at no-preference ----------
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await until(async () => (await play()).reduced_motion === false, "OS back to no-preference");
-  await until(async () => !(await page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"))), "the root drops is-reduced-motion");
+  await waitFor(async () => (await play()).reduced_motion === false, "OS back to no-preference");
+  await waitFor(async () => !(await page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"))), "the root drops is-reduced-motion");
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_reduced_motion", on: true }));
-  await until(async () => (await play()).reduced_motion === true, "engine flag on");
-  await until(async () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion")), "engine flag: the root carries is-reduced-motion");
+  await waitFor(async () => (await play()).reduced_motion === true, "engine flag on");
+  await waitFor(async () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion")), "engine flag: the root carries is-reduced-motion");
   check(!(await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches)), "engine flag: the OS query is not set");
   await inputNeverWaits("engine flag");
   for (const [what, action] of [["Tab", keydown("Tab", "Tab")], ["Tab again", keydown("Tab", "Tab")], ["R", keydown("r", "KeyR")]]) {
@@ -282,7 +271,7 @@ try {
 
   // And off again: the positive control, so the zero counts above are not vacuous.
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_reduced_motion", on: false }));
-  await until(async () => !(await page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"))), "engine flag off: the root drops is-reduced-motion");
+  await waitFor(async () => !(await page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"))), "engine flag off: the root drops is-reduced-motion");
   const back = await running(".sheet--tiles", keydown("Tab", "Tab"));
   check(back.length > 0, `full motion again: Tab slides the sheet (${back.length} running)`);
   await page.evaluate(keydown("Tab", "Tab"));
@@ -291,7 +280,7 @@ try {
   const rooted = () => page.evaluate(() => document.documentElement.classList.contains("is-reduced-motion"));
   const openControls = async () => {
     await page.click(".tool[data-action=settings]");
-    await until(async () => !(await page.locator(".sheet--settings.is-closed").count()), "Settings open");
+    await waitFor(async () => !(await page.locator(".sheet--settings.is-closed").count()), "Settings open");
     await page.click("#settings-tab-controls");
   };
   const option = (text) => page.locator("#settings-controls .seg button", { hasText: text });
@@ -303,11 +292,11 @@ try {
   await page.waitForTimeout(400);
   await page.screenshot({ path: `${out}/settings-controls.jpg`, type: "jpeg", quality: 88, clip: { x: 900, y: 0, width: 540, height: 420 } });
   await option("On").click();
-  await until(async () => (await play()).reduced_motion === true, "On: the engine's reduced motion turns on with the OS at no-preference");
-  await until(rooted, "On: the root carries is-reduced-motion");
+  await waitFor(async () => (await play()).reduced_motion === true, "On: the engine's reduced motion turns on with the OS at no-preference");
+  await waitFor(rooted, "On: the root carries is-reduced-motion");
   check(await page.evaluate(() => localStorage.getItem("hexWorld.reduceMotion")) === "on", "On: kept for this viewer in localStorage");
   await page.evaluate(keydown("Escape", "Escape"));
-  await until(async () => page.locator(".sheet--settings.is-closed").count(), "Settings closed");
+  await waitFor(async () => page.locator(".sheet--settings.is-closed").count(), "Settings closed");
   await page.waitForTimeout(300);
   await inputNeverWaits("Settings On");
   for (const [what, action] of [["Tab", keydown("Tab", "Tab")], ["Tab again", keydown("Tab", "Tab")], ["R", keydown("r", "KeyR")]]) {
@@ -323,20 +312,20 @@ try {
   check((await play()).reduced_motion === true && (await rooted()), "On: an OS change to reduce and back leaves it on");
   await page.reload({ waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
-  await until(async () => (await play())?.reduced_motion === true, "On survives a reload: the engine starts reduced");
-  await until(rooted, "On survives a reload: the root carries is-reduced-motion");
-  await until(async () => !(await page.locator(".load").count()), "loading layer removed after the reload", 5_000);
+  await waitFor(async () => (await play())?.reduced_motion === true, "On survives a reload: the engine starts reduced");
+  await waitFor(rooted, "On survives a reload: the root carries is-reduced-motion");
+  await waitFor(async () => !(await page.locator(".load").count()), "loading layer removed after the reload", 5_000);
   await openControls();
   check(await checked("On"), "after the reload the Controls tab shows On");
   await option("Follow system").click();
-  await until(async () => (await play()).reduced_motion === false, "Follow system with the OS at no-preference: motion back on");
-  await until(async () => !(await rooted()), "Follow system: the root drops is-reduced-motion");
+  await waitFor(async () => (await play()).reduced_motion === false, "Follow system with the OS at no-preference: motion back on");
+  await waitFor(async () => !(await rooted()), "Follow system: the root drops is-reduced-motion");
   check(await page.evaluate(() => localStorage.getItem("hexWorld.reduceMotion")) === null, "Follow system clears the stored choice");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await until(async () => (await play()).reduced_motion === true, "Follow system: the OS asking for reduce turns it on");
-  await until(async () => /System: on/.test(await option("Follow system").innerText()), "Follow system reads System: on");
+  await waitFor(async () => (await play()).reduced_motion === true, "Follow system: the OS asking for reduce turns it on");
+  await waitFor(async () => /System: on/.test(await option("Follow system").innerText()), "Follow system reads System: on");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await until(async () => (await play()).reduced_motion === false, "Follow system: and off again with the OS");
+  await waitFor(async () => (await play()).reduced_motion === false, "Follow system: and off again with the OS");
   await page.evaluate(keydown("Escape", "Escape"));
 } catch (e) {
   fail(String(e?.stack ?? e));

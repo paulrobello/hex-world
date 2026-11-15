@@ -1,8 +1,8 @@
 // Local-only web screenshot gallery: drives scripts/shots/gallery.json through window.hexWorld.
-import { chromium } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const script = JSON.parse(await readFile(process.argv[3] ?? "scripts/shots/gallery.json", "utf8"));
@@ -11,13 +11,10 @@ const extra = process.argv[4] ? "&" + process.argv[4] : "";
 const outDir = "e2e/test-results";
 const { server, base } = await serveDist(dist);
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 
 await mkdir(outDir, { recursive: true });
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

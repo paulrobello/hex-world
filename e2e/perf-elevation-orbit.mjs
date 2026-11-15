@@ -16,13 +16,13 @@
 //   ROUNDS (default 5), WARMUP (default 1: one discarded orbit of the raised world first),
 //   ORBIT_MS (default 8000), ORBIT_RADIUS (default 70 m), ORBIT_HEIGHT (default 30 m),
 //   ORBIT_PERIOD_S (default 12)
-import { chromium } from "playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { buildWorld } from "./build-world.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter } from "./lib/browser.mjs";
 
 const [dist, OUT] = process.argv.slice(2);
 if (!dist || !OUT) throw new Error("usage: node e2e/perf-elevation-orbit.mjs <dist> <out.json>");
@@ -35,8 +35,8 @@ const PERIOD_S = Number(process.env.ORBIT_PERIOD_S ?? 12);
 const W = 2560, H = 1440;
 const SETTLE_FRAMES = 300;
 const KEYS = { scenario: "play", tier: "high", tilt: "off", fps: "off", grass: "off", seed: "1" };
-const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  "--disable-gpu-vsync", "--disable-frame-rate-limit", ...(process.env.CHROME_ARGS ?? "").split(" ").filter(Boolean)];
+const ARGS = gpuArgs({ swiftshader: false,
+  extra: [...UNCAPPED_ARGS, ...(process.env.CHROME_ARGS ?? "").split(" ").filter(Boolean)] });
 // The orbit's centre: the middle of the elevation world's footprint (hex-core Axial::to_world, 16 m).
 const CENTRE = [95, 0, -12];
 
@@ -81,7 +81,7 @@ const orbit = (page) => page.evaluate(({ ms, radius, height, period, centre }) =
 const intervals = (t) => t.slice(1).map((x, i) => x - t[i]);
 
 async function main() {
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args: ARGS });
+  const browser = await launch({ args: ARGS });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -89,11 +89,7 @@ async function main() {
     page.on("pageerror", (e) => errors.push(String(e)));
     await page.goto(base + "?" + new URLSearchParams(KEYS));
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
+    const adapter = await requireHardwareAdapter(page);
 
     const sample = async (name, label) => {
       const w = WORLDS[name];

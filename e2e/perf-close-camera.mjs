@@ -19,11 +19,11 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cpus, hostname, loadavg } from "node:os";
-import { chromium } from "playwright";
 import { buildWorld } from "./build-world.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { guarded, LOAD_LIMIT } from "./perf-load.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch } from "./lib/browser.mjs";
 
 const argv = process.argv.slice(2);
 const OUT = argv.at(-1);
@@ -45,8 +45,8 @@ const H = 1440;
 const WINDOW_FRAMES = 700;
 const SETTLE_FRAMES = 300;
 const KEYS = { scenario: "play", tier: "high", tilt: "off", fps: "off", grass: "off", seed: "1" };
-const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  "--disable-gpu-vsync", "--disable-frame-rate-limit", ...(process.env.CHROME_ARGS ?? "").split(" ").filter(Boolean)];
+const ARGS = gpuArgs({ swiftshader: false,
+  extra: [...UNCAPPED_ARGS, ...(process.env.CHROME_ARGS ?? "").split(" ").filter(Boolean)] });
 // HOLD_MS: after each camera's window, log `hold <arm> <world> <camera>` and keep the camera for that long,
 // so scripts/perf/large-world-trace.sh can record a Metal System Trace inside it.
 const HOLD_MS = Number(process.env.HOLD_MS ?? 0);
@@ -159,7 +159,7 @@ const saveBytes = [...(await readFile(SAVE))];
 
 async function run(build, worldName) {
   const world = WORLDS[worldName];
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args: ARGS });
+  const browser = await launch({ args: ARGS });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });

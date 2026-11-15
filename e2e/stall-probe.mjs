@@ -7,10 +7,10 @@
 // (v8, GC, wasm, gpu, dawn, viz, devtools timeline) of a 1 s steady-state window.
 // Local only. usage: node e2e/stall-probe.mjs <dist> <out.json>
 //   PROBE_ARMS=base,paced,... (default all), PROBE_ROUNDS (default 2), PROBE_TRACE=<trace.json>, PROBE_TRACE_ARM
-import { chromium } from "playwright";
 import { open, writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { DEVELOPER_FEATURES_ARG, UNCAPPED_ARGS, gpuArgs, launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.argv[3] ?? "target/stall-probe.json";
@@ -19,7 +19,6 @@ const KEYS = { scenario: "gate2000", view: "strategic", layout: "instanced", chu
   shadow_casters: "all", cascades: "3", shadow_dist: "600", tier: "high", fps: "off", tilt: "off", gpu_timing: "off",
   // The web build limits frame latency by default; the probe's baseline arms measure the unlimited page.
   frame_latency: "off" };
-const UNCAPPED = ["--disable-gpu-vsync", "--disable-frame-rate-limit"];
 // One suspect per arm; everything else is the perf-passes budget run.
 const ARMS = {
   base: {},
@@ -108,9 +107,8 @@ const TRACE_MS = Number(process.env.PROBE_TRACE_MS ?? 1000);
 
 async function run(name, arm, trace = null) {
   const [W, H] = arm.size ?? [2560, 1440];
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-      "--enable-webgpu-developer-features", ...(arm.paced ? [] : UNCAPPED)] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false,
+      extra: [DEVELOPER_FEATURES_ARG, ...(arm.paced ? [] : UNCAPPED_ARGS)] }) });
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
     const errors = [];

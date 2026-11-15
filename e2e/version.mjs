@@ -9,13 +9,13 @@
 // Every phase waits on the page's own check outcomes (the `hexversioncheck` event, version-check.ts),
 // never on a wall-clock window, and the deploy changes only while no check is in flight, so a loaded
 // host (late or bunched interval ticks) cannot let a poll land in the wrong phase.
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { assertCsp } from "../scripts/web/csp-check.mjs";
 import { hashInlineScripts } from "../scripts/web/version-dist.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.VERSION_OUT ?? "e2e/test-results/version";
@@ -61,14 +61,11 @@ const { server, base: origin } = await serveDist(dist, {
 });
 const query = "?scenario=play&tilt=off&fps=off";
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const errors = [];
 /** Chromium's own network log line for a failed version.json request (not page code). */
 const netLog = [];
@@ -90,15 +87,7 @@ async function open(context) {
     if (/Failed to load resource/.test(t) && /version\.json|503/.test(`${t} ${m.location().url}`)) netLog.push(t);
     else if (m.type() === "error" || BAD_TEXT.test(t)) errors.push(t);
   });
-  const until = async (fn, what, ms = WAIT_MS) => {
-    const deadline = Date.now() + ms;
-    for (;;) {
-      const v = await fn();
-      if (v) return v;
-      if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-      await page.waitForTimeout(50);
-    }
-  };
+  const until = waiter(() => page, { fail, ms: WAIT_MS });
   const boot = async (q) => {
     await page.goto(origin + q, { timeout: BOOT_MS });
     await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: BOOT_MS });

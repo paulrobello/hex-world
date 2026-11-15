@@ -9,17 +9,14 @@
 // Counted files the page did not request outside the kit (thumbnails of rows below the fold, the
 // favicon variants) are printed with their bytes: an overcount, which keeps the gate conservative.
 // Usage: node e2e/initial-download.mjs [dist]   (after make build-web)
-import { chromium } from "playwright";
 import { stat } from "node:fs/promises";
 import { join } from "node:path";
 import { account } from "../scripts/size/initial-download.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 const MIB = 1_048_576;
 
@@ -29,7 +26,7 @@ const HIDE = { bc7: [], astc: ["texture-compression-bc"], png: ["texture-compres
 
 for (const [fam, hide] of Object.entries(HIDE)) {
   const tag = `initial-download ${fam}`;
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+  const browser = await launch();
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     await page.addInitScript((hide) => {

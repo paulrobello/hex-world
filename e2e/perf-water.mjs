@@ -2,12 +2,12 @@
 // as perf-gate.mjs) and native (`--present immediate`), per tier and view. Every run sits inside the
 // host-load guard (perf-load.mjs). Local only. Writes docs/perf/p2-water.json (PERF_OUT overrides).
 // usage: node e2e/perf-water.mjs <dist> <native-bin>
-import { chromium } from "playwright";
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const nativeBin = process.argv[3] ?? "target/release/hex-world";
@@ -34,9 +34,7 @@ const save = async () => {
 };
 
 async function webRun(tier, view) {
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-      "--disable-gpu-vsync", "--disable-frame-rate-limit"] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false, extra: UNCAPPED_ARGS }) });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1 });
@@ -44,11 +42,7 @@ async function webRun(tier, view) {
     page.on("pageerror", (e) => errors.push(String(e)));
     await page.goto(base + `?scenario=water&tier=${tier}&fps=off`);
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
+    const adapter = await requireHardwareAdapter(page);
     if (VIEWS[view]) await page.evaluate((j) => window.hexWorld.cmd(j), JSON.stringify(VIEWS[view]));
     const from = (await page.evaluate(() => window.hexWorld.diag())).frames ?? 0;
     // A full 600-frame window entirely after the camera move (diag refreshes every 30 frames).

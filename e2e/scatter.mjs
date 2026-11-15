@@ -7,12 +7,12 @@
 // as a tracked value, not gated (owner A2 Q1, 2026-10-21). Writes e2e/test-results/web-scatter-*.png,
 // web-scatter-state.json (overview) and web-scatter-cluster-state.json.
 // Usage: node e2e/scatter.mjs <dist> <docs/checkpoints/scatter>
-import { chromium } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { clampSampledTextures, countSampledTextures } from "./webgpu-probes.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const docs = process.argv[3] ?? "docs/checkpoints/scatter";
@@ -39,9 +39,6 @@ const cluster = [
 ];
 
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failed = 0;
 const check = (ok, what, got) => { console.log(`${ok ? "ok  " : "FAIL"} ${what}: ${JSON.stringify(got)}`); if (!ok) failed++; };
 const census = (state) => {
@@ -52,7 +49,7 @@ const census = (state) => {
 };
 
 await mkdir(outDir, { recursive: true });
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

@@ -5,19 +5,15 @@
 // runtime-{straight,bend,ghost}.jpg and runtime-web.json (each capture's train_list). The web twin
 // of a native script, for when native windows cannot draw (an idle or occluded display).
 // Run: node e2e/rail-buffer-stop-shots.mjs dist
-import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "docs/checkpoints/rail_buffer_stop";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 // A line of two straights on row r = -1 ending in a bend at (2, -1), beside the start tile. Each
@@ -40,7 +36,7 @@ const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
 const frame = (at) => ({ cmd: "camera", pos: [at[0] + 10, 13, at[1] + 20], look_at: [at[0] - 2, 1.5, at[1]] });
 let ENDS = {};
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

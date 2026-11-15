@@ -12,7 +12,6 @@
 //   PACING_FOCUS, PACING_TIMELINE, PACING_SHIM_A / PACING_SHIM_B (see where each is read).
 // The lc_* arms are the low-camera cost isolation of docs/perf/low-camera/: one toggle each, every
 // row carries `cpu` (engine callback ms) and a diag census, and rounds rotate the arm order.
-import { chromium } from "playwright";
 import { open, readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { loadavg } from "node:os";
@@ -20,6 +19,7 @@ import { guarded } from "./perf-load.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { DEVELOPER_FEATURES_ARG, UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PACING_OUT ?? "e2e/test-results/frame-pacing.json";
@@ -38,11 +38,11 @@ const KEYS = { scenario: "play", tier: "high", fps: "off", seed: "1", tilt: "off
   ...Object.fromEntries(new URLSearchParams(process.env.PACING_KEYS ?? "")) };
 // PACING_PACED=1 keeps Chrome's display pacing (drops the two uncapping flags), as players run.
 const PACED = process.env.PACING_PACED === "1";
-const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  ...(PACED ? [] : ["--disable-gpu-vsync", "--disable-frame-rate-limit"]), "--enable-webgpu-developer-features",
+const ARGS = gpuArgs({ swiftshader: false, extra: [
+  ...(PACED ? [] : UNCAPPED_ARGS), DEVELOPER_FEATURES_ARG,
   // PACING_CHROME_ARGS (space-separated) adds browser flags, e.g. Dawn's
   // `--enable-dawn-features=use_user_defined_labels_in_backend` for a labelled Metal System Trace.
-  ...(process.env.PACING_CHROME_ARGS ?? "").split(" ").filter(Boolean)];
+  ...(process.env.PACING_CHROME_ARGS ?? "").split(" ").filter(Boolean)] });
 const TRACE_CATS = ["devtools.timeline", "disabled-by-default-devtools.timeline", "disabled-by-default-devtools.timeline.frame",
   "v8.execute", "blink", "cc", "viz", "gpu", "gpu.dawn", "webgpu", "toplevel", "benchmark", "rail"];
 
@@ -249,7 +249,7 @@ const censusOf = (page) => page.evaluate(() => {
 
 async function run(name, arm) {
   const hud = arm.hud !== false;
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args: ARGS });
+  const browser = await launch({ args: ARGS });
   try {
     const [vw, vh] = arm.size ?? [W, H];
     const page = await browser.newPage({ viewport: { width: vw, height: vh }, deviceScaleFactor: DPR });
@@ -263,11 +263,7 @@ async function run(name, arm) {
     await page.addInitScript(SUBMIT_PROBE);
     await page.goto(base + "?" + new URLSearchParams({ ...KEYS, ...arm.keys }));
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 180_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
+    const adapter = await requireHardwareAdapter(page);
     if (hud) await page.waitForFunction(() => document.querySelector(".tool[data-action=settings]"), null, { timeout: 60_000 });
     await buildWorld(page, [...world.script, CAMERA], world.tiles.length);
     await waitFrames(page, 300);

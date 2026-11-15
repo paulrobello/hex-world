@@ -12,7 +12,6 @@
 //   GRASS_ARMS (default off,normal,lush), GRASS_DISTANCES (default near; e.g. near,far runs every arm
 //   at each grass_distance stop), GRASS_CAMERA (optional "x,y,z,lx,ly,lz"), GRASS_TRACE (optional Chrome trace + CPU profile path),
 //   GRASS_GPU_TIMING=on (diagnostic only, not budget runs), GRASS_SAVE (optional exact-world save)
-import { chromium } from "playwright";
 import { readFile, writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
@@ -20,6 +19,7 @@ import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
 import { waitForBrowserExclusivity, monitorBrowserExclusivity } from "./perf-exclusivity.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { DEVELOPER_FEATURES_ARG, UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter, webglRenderer } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PERF_OUT ?? "docs/perf/p2-grass.json";
@@ -49,9 +49,7 @@ const pick = (d) => ({ p50: d.p50, p95: d.p95, p99: d.p99, mean: d.mean, max: d.
 
 async function webRun(armKey) {
   const [arm, distance = "near"] = armKey.split("@");
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-      "--disable-gpu-vsync", "--disable-frame-rate-limit", "--enable-webgpu-developer-features"] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false, extra: [...UNCAPPED_ARGS, DEVELOPER_FEATURES_ARG] }) });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -59,16 +57,8 @@ async function webRun(armKey) {
     page.on("pageerror", (e) => errors.push(String(e)));
     await page.goto(base + "?" + new URLSearchParams({ ...KEYS, grass: arm, grass_distance: distance }));
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
-    const renderer = await page.evaluate(() => {
-      const gl = document.createElement("canvas").getContext("webgl");
-      const ext = gl?.getExtension("WEBGL_debug_renderer_info");
-      return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
-    });
+    const adapter = await requireHardwareAdapter(page);
+    const renderer = await webglRenderer(page);
     if (!renderer || /swiftshader/i.test(renderer)) throw new Error("no hardware WebGL renderer: " + renderer);
     if (process.env.GRASS_LOAD) {
       const bytes = Array.from(await readFile(process.env.GRASS_LOAD));

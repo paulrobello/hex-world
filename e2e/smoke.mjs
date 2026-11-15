@@ -1,19 +1,17 @@
 // Local-only browser smoke test: GPU Chromium, WebGPU backend, gate redirect, bad scenario fallback.
-import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { TRUNK_HASHED, contentHash } from "../scripts/web/version-dist.mjs";
 import { clampSampledTextures, countSampledTextures, markedModuleProbe } from "./webgpu-probes.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { gpuArgs, launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const { server, base } = await serveDist(dist);
 
-// --enable-unsafe-webgpu must stay out of the no-GPU run: with it, --disable-gpu still yields a SwiftShader adapter.
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
+// The no-GPU case (`withPage(["--disable-gpu"], ...)`) passes its own arguments: --enable-unsafe-webgpu must stay
+// out of it, because with it --disable-gpu still yields a SwiftShader adapter.
 const fail = (m) => { console.error("FAIL:", m); process.exitCode = 1; };
 // Cases whose expectations are written for High pin it: without a `tier` key the tier is
 // auto-detected, and the web warm-up probe may step it down on a loaded host.
@@ -67,7 +65,7 @@ function checkBoids(tag, sampled, ibl, want, transmission) {
 
 // `allow(message)` exempts console messages a case provokes on purpose (its injected request failures).
 async function withPage(args, fn, allow = () => false) {
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args });
+  const browser = await launch({ args });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const no = ++caseNo;
   const errors = [];
@@ -92,8 +90,14 @@ async function withPage(args, fn, allow = () => false) {
 }
 let caseNo = 0;
 
+/** Lets the engine draw `n` more frames (`state().frames`), so a settle follows the host's load instead of a fixed delay. */
+async function frames(page, n, timeout = 60_000) {
+  const from = await page.evaluate(() => window.hexWorld.state().frames);
+  await page.waitForFunction((target) => window.hexWorld.state().frames >= target, from + n, { timeout, polling: 50 });
+}
+
 // 1. The Single scenario becomes ready on the WebGPU backend.
-await withPage(gpuArgs, async (page, errors) => {
+await withPage(gpuArgs(), async (page, errors) => {
   const kit = new Map();
   page.on("console", (m) => { if (/texture family/i.test(m.text())) console.log("app:", m.text()); });
   page.on("requestfinished", async (r) => {
@@ -107,7 +111,7 @@ await withPage(gpuArgs, async (page, errors) => {
   // The kit disc loads after the renderer is up; screenshot once both files have arrived.
   const deadline = Date.now() + 20_000;
   while (kit.size < 2 && Date.now() < deadline) await page.waitForTimeout(100);
-  await page.waitForTimeout(1_000);
+  await frames(page, 60);
   if (![...kit.keys()].some((k) => k.endsWith(".glb"))) fail("kit GLB never loaded");
   if (![...kit.keys()].some((k) => /\.(ktx2|png)$/.test(k))) fail("kit texture never loaded");
   for (const [name, v] of kit) console.log(`kit load: ${name} ${v.bytes} B in ${v.ms} ms`);
@@ -126,7 +130,7 @@ await withPage(gpuArgs, async (page, errors) => {
 });
 
 // 2. The bare URL opens the game: the play scenario with the Legend HUD over it (web default).
-await withPage(gpuArgs, async (page) => {
+await withPage(gpuArgs(), async (page) => {
   await page.goto(base);
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const state = await page.evaluate(() => window.hexWorld.state());
@@ -144,7 +148,7 @@ await withPage(gpuArgs, async (page) => {
 
 // 2b. Unknown scenario falls back to the web default (play) without errors; the URL sets the
 // frame-latency limit.
-await withPage(gpuArgs, async (page, errors) => {
+await withPage(gpuArgs(), async (page, errors) => {
   await page.goto(base + "?shot=nope&frame_latency=2");
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const state = await page.evaluate(() => window.hexWorld.state());
@@ -155,7 +159,7 @@ await withPage(gpuArgs, async (page, errors) => {
 });
 
 // 2b2. `?frame_latency=off` turns the default limit off: nothing is patched.
-await withPage(gpuArgs, async (page) => {
+await withPage(gpuArgs(), async (page) => {
   await page.goto(base + "?scenario=single&frame_latency=off");
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
   const fl = await page.evaluate(() => window.__frameLatency ?? null);
@@ -166,16 +170,16 @@ await withPage(gpuArgs, async (page) => {
 // the page's animation-frame gate (`window.__frameCap`), a 60 cap holds the engine at or under 60
 // frames a second, a refused value is skipped, and Off hands the frame loop back. Only the upper
 // bound is asserted: the lower one depends on host load (e2e/frame-pacing.mjs measures both).
-await withPage(gpuArgs, async (page) => {
+await withPage(gpuArgs(), async (page) => {
   await page.goto(base + "?scenario=single&frame_cap=30");
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 60_000 });
   const cap = () => page.evaluate(() => ({ state: window.hexWorld.state().frame_cap, gate: window.__frameCap?.fps() }));
-  const until = (fps) => page.waitForFunction((fps) => window.hexWorld.state().frame_cap?.fps === fps
+  const capReaches = (fps) => page.waitForFunction((fps) => window.hexWorld.state().frame_cap?.fps === fps
     && window.__frameCap?.fps() === (fps ?? 0), fps, { timeout: 10_000 }).then(() => true, () => false);
-  if (!(await until(30))) fail("?frame_cap=30 did not reach state and the gate: " + JSON.stringify(await cap()));
+  if (!(await capReaches(30))) fail("?frame_cap=30 did not reach state and the gate: " + JSON.stringify(await cap()));
   const send = (fps) => page.evaluate((fps) => window.hexWorld.cmd(JSON.stringify({ cmd: "set_frame_cap", fps })), fps);
   await send(60);
-  if (!(await until(60))) fail("set_frame_cap 60: " + JSON.stringify(await cap()));
+  if (!(await capReaches(60))) fail("set_frame_cap 60: " + JSON.stringify(await cap()));
   const rate = await page.evaluate(() => new Promise((resolve) => {
     const f0 = window.hexWorld.state().frames, t0 = performance.now();
     setTimeout(() => resolve((window.hexWorld.state().frames - f0) / ((performance.now() - t0) / 1000)), 2000);
@@ -183,17 +187,18 @@ await withPage(gpuArgs, async (page) => {
   if (!(rate <= 66)) fail(`60 fps cap: the engine drew ${rate.toFixed(1)} frames a second`);
   else console.log(`frame cap 60: ${rate.toFixed(1)} engine frames a second (upper bound asserted)`);
   await send(75);
+  // Elapsed time is the check: 75 is not an allowed cap, so the state must still read 60 after a late apply would have landed.
   await page.waitForTimeout(500);
   if ((await cap()).state?.fps !== 60) fail("set_frame_cap 75 was not skipped: " + JSON.stringify(await cap()));
   await send(null);
-  if (!(await until(null))) fail("set_frame_cap null (Off): " + JSON.stringify(await cap()));
+  if (!(await capReaches(null))) fail("set_frame_cap null (Off): " + JSON.stringify(await cap()));
 });
 
 // 2c. Quality tier (PRD §9.2): with no `tier` key it is detected from the adapter's limits and
 // features plus the warm-up probe, and published with its reason; `set_tier` changes it at runtime.
 // The detected value depends on the machine and its load, so only the shape is asserted.
 // `gpu_timing=on` publishes per-pass GPU times when the adapter has timestamp-query.
-await withPage(gpuArgs, async (page, errors) => {
+await withPage(gpuArgs(), async (page, errors) => {
   await page.goto(base + "?scenario=single&gpu_timing=on");
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const t = (await page.evaluate(() => window.hexWorld.state())).tier;
@@ -222,7 +227,7 @@ await withPage(gpuArgs, async (page, errors) => {
 });
 
 // 2d. An explicit `tier` key wins over detection; detection is still reported.
-await withPage(gpuArgs, async (page) => {
+await withPage(gpuArgs(), async (page) => {
   await page.goto(base + "?scenario=single&tier=medium");
   await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
   const t = (await page.evaluate(() => window.hexWorld.state())).tier;
@@ -255,7 +260,7 @@ const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.perModule?
   c.perModule.every((n) => n === perModule) && c.aliases === perModule * c.rewritten;
 for (const [query, aliases] of [["?wgsl_compat=1&scenario=single", 8],
   ["?wgsl_compat=1&scenario=gate2000&view=closeup&layout=instanced", 8]]) {
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     await page.goto(base + query);
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     const compat = await page.evaluate(() => window.__wgslCompat);
@@ -293,7 +298,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
   const tiltOn = !query.includes("tilt=off");
   const nav = tiltOn ? `${query}&tilt=on` : query;
   const want = ibl ? KIT_SAMPLED.ibl : KIT_SAMPLED.noIbl;
-  await withPage(gpuArgs, async (page, errors) => {
+  await withPage(gpuArgs(), async (page, errors) => {
     let spawned = null;
     const iblStatus = new Map();
     page.on("response", (r) => {
@@ -319,7 +324,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
       last = n;
       await page.waitForTimeout(100);
     }
-    await page.waitForTimeout(1_000);
+    await frames(page, 60);
     // IBL cases: wait (bounded) for the forward pipeline composed with the environment map. A forward
     // pipeline specialized before the cubemaps loaded (no ENVIRONMENT_MAP, 14 textures) is transient
     // and is not counted; any pipeline composed with the IBL must still match exactly.
@@ -386,7 +391,7 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
   const tier = /tier=(\w+)/.exec(query)?.[1] ?? "high";
   const refraction = tier !== "low";
   const want = WATER_SAMPLED[tier];
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     if (clamp !== null) await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     if (aliases !== null) await page.addInitScript(markedModuleProbe, "water_noise_texture");
@@ -398,7 +403,7 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
       const w = window.__sampledTextures?.water ?? [];
       return w.some((k) => k.pass === "water" && k.ibl) && w.some((k) => k.pass === "terrain" && k.ibl);
     }))) await page.waitForTimeout(200);
-    await page.waitForTimeout(1_500);
+    await frames(page, 90);
     const { compat, sampled, limit, marked, state } = await page.evaluate(() => ({
       compat: window.__wgslCompat, sampled: window.__sampledTextures, limit: window.__deviceSampledLimit,
       marked: window.__markedModules, state: window.hexWorld.state() }));
@@ -438,7 +443,7 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
 // validation error; its count is pinned exactly and its layout must bind the transmission texture.
 for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?scenario=water_kit&post=full"]) {
   const clamp = WEBGPU_DEFAULT_SAMPLED;
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     let spawned = null;
     page.on("console", (m) => {
       const s = /kit: spawned (\d+) meshes/.exec(m.text());
@@ -465,7 +470,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
         (s.water ?? []).some((k) => k.pass === "water" && k.ibl) && (s.water ?? []).some((k) => k.pass === "terrain" && k.ibl);
     }))) await page.waitForTimeout(200);
     await waitBoids(page, true, deadline + 60_000);
-    await page.waitForTimeout(1_500);
+    await frames(page, 90);
     const { sampled, limit, state } = await page.evaluate(() => ({
       sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
     checkBoids(tag, sampled, true, KIT_SAMPLED_WITH_WATER.forward, true);
@@ -506,7 +511,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 {
   const clamp = WEBGPU_DEFAULT_SAMPLED;
   const query = "?scenario=play&post=full&tier_warm=off";
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     await page.goto(base + pinHigh(query));
@@ -533,14 +538,14 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
         (s.water ?? []).some((k) => k.pass === "water" && k.ibl);
     }))) await page.waitForTimeout(200);
     await waitBoids(page, true, deadline + 30_000);
-    await page.waitForTimeout(1_500);
+    await frames(page, 90);
     // The ghost's see-through meshes (GhostMaterial: one uniform, no texture) beside refracting water,
     // so their pipeline is created under the same clamp.
     await page.evaluate(() => { const h = window.hexWorld; h.selectTile("river_straight"); h.hover(-2, 0); });
     const ghostBy = Date.now() + 30_000;
     while (Date.now() < ghostBy && !(await page.evaluate(() => window.hexWorld.state().ghost_meshes === true)))
       await page.waitForTimeout(200);
-    await page.waitForTimeout(1_000);
+    await frames(page, 60);
     const ghost = await page.evaluate(() => ({ meshes: window.hexWorld.state().ghost_meshes, at: window.hexWorld.state().play?.ghost }));
     console.log(`${tag}: ghost ${JSON.stringify(ghost)}`);
     if (ghost.meshes !== true || ghost.at?.q !== -2 || ghost.at?.r !== 0)
@@ -555,7 +560,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       const s = window.__sampledTextures?.grass ?? [];
       return g?.groups > 0 && s.some((k) => k.pass === "forward" && k.ibl) && s.some((k) => k.pass === "prepass");
     }))) await page.waitForTimeout(200);
-    await page.waitForTimeout(1_000);
+    await frames(page, 60);
     const { sampled, limit, state } = await page.evaluate(() => ({
       sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
     console.log(`${tag}: tiles ${state.tiles}; sampled textures per stage max ${sampled?.max}, kit pipelines ` +
@@ -609,7 +614,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
 {
   const clamp = WEBGPU_DEFAULT_SAMPLED;
   const query = "?scenario=play&post=full&tier=high&tier_warm=on";
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     await page.addInitScript(clampSampledTextures, clamp);
     await page.addInitScript(countSampledTextures);
     await page.goto(base + query);
@@ -682,7 +687,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   for (const s of Object.values(manifest.materials)) addMaps(s.maps, s.pack);
   for (const p of manifest.pieces) { packOf.set(p.glb, p.pack); addMaps(p.maps, p.pack); }
   const packIds = [...new Set(manifest.pieces.map((p) => p.pack))];
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     const tag = "streaming";
     const log = [];
     let phase = "before";
@@ -703,7 +708,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     const state = () => page.evaluate(() => window.hexWorld.state());
     let s = await state();
     if (s.packs?.core !== "ready") fail(`${tag}: core not ready at READY: ${JSON.stringify(s.packs)}`);
-    // No interaction for 2 s: nothing but core may load.
+    // Elapsed time is the check: no interaction for 2 s, and nothing but core may load in that time.
     await page.waitForTimeout(2_000);
     s = await state();
     const idle = packIds.filter((k) => k !== "core" && s.packs?.[k] !== "idle");
@@ -739,7 +744,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     if (rise0) fail(`${tag}: oak tile rises before its packs arrive: ${JSON.stringify(rise0)}`);
     if (!s.play?.tiles?.some((t) => t.q === 1 && t.r === 0 && t.tile === "oak") || !s.play?.can_undo)
       fail(`${tag}: the placement did not register while its packs stream: ${JSON.stringify(s.play?.tiles)} can_undo ${s.play?.can_undo}`);
-    await page.waitForTimeout(150);
+    await frames(page, 9);
     await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-streaming-waiting.png" });
     const forestFiles = [...packOf].filter(([p, k]) => k === "forest" && (p.endsWith(".glb") || p.endsWith(`.${family}`))).map(([p]) => p);
     const requested = new Set(log.filter((e) => e.phase === "after").map((e) => e.path));
@@ -812,14 +817,14 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     if (!ok) fail(`${tag}: never ready`);
     return ok;
   };
-  const until = async (page, done, ms) => {
+  const untilState = async (page, done, ms) => {
     const deadline = Date.now() + ms;
     let s;
     while (Date.now() < deadline && !done((s = await page.evaluate(() => window.hexWorld.state())))) await page.waitForTimeout(100);
     return s;
   };
 
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     const tag = "kit-retry";
     const hits = new Map();
     for (const path of [BIRD, FOREST, SHADER]) {
@@ -832,7 +837,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     }
     if (!(await play(page, tag))) return;
     await page.evaluate(() => { window.hexWorld.events(); window.hexWorld.selectTile("forest"); });
-    const s = await until(page, (s) => s.packs?.forest === "ready" && ["ready", "failed"].includes(s.boids?.pieces) && s.boids?.dispatched > 0, 60_000);
+    const s = await untilState(page, (s) => s.packs?.forest === "ready" && ["ready", "failed"].includes(s.boids?.pieces) && s.boids?.dispatched > 0, 60_000);
     const counts = Object.fromEntries([BIRD, FOREST, SHADER].map((p) => [p, hits.get(p) ?? 0]));
     if (Object.values(counts).some((n) => n !== 2)) fail(`${tag}: each reset file should be requested twice: ${JSON.stringify(counts)}`);
     if (s.boids?.pieces !== "ready") fail(`${tag}: boids.pieces ${s.boids?.pieces} after a reset boid piece request`);
@@ -843,7 +848,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       `packs core ${s.packs?.core} forest ${s.packs?.forest}, assets.failed ${JSON.stringify(s.assets?.failed)}`);
   }, dropped([BIRD, FOREST, SHADER]));
 
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     const tag = "kit-give-up";
     let hits = 0;
     const gaveUp = [];
@@ -851,7 +856,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     await page.route(at(BIRD), async (route) => { hits++; await route.abort("connectionreset"); });
     const t0 = Date.now();
     if (!(await play(page, tag))) return;
-    const s = await until(page, (s) => s.boids?.pieces === "failed" && s.assets?.failed?.length, 30_000);
+    const s = await untilState(page, (s) => s.boids?.pieces === "failed" && s.assets?.failed?.length, 30_000);
     const secs = ((Date.now() - t0) / 1000).toFixed(1);
     if (hits !== ATTEMPTS) fail(`${tag}: ${hits} requests for ${BIRD}, expected ${ATTEMPTS} (the first and three retries)`);
     if (s.boids?.pieces !== "failed") fail(`${tag}: boids.pieces ${s.boids?.pieces}, expected failed`);
@@ -862,14 +867,15 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
       `errors naming the file: ${gaveUp.length} (${gaveUp.map((t) => t.replace(/%c/g, "").slice(0, 120)).join(" | ")})`);
   }, (m) => dropped([BIRD])(m) || m.text().includes(BIRD) || BEVY_LOAD_ERROR.test(m.text()));
 
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     const tag = "shader-give-up";
     let hits = 0;
     const gaveUp = [];
     page.on("console", (m) => { if (m.text().includes("ERROR") && m.text().includes(SHADER)) gaveUp.push(m.text()); });
     await page.route(at(SHADER), async (route) => { hits++; await route.abort("connectionreset"); });
     if (!(await play(page, tag))) return;
-    const s = await until(page, (s) => s.assets?.failed?.length, 30_000);
+    const s = await untilState(page, (s) => s.assets?.failed?.length, 30_000);
+    // Elapsed time is the check: the shader must see no further request after giving up, for as long as a retry would take.
     await page.waitForTimeout(1_000);
     const after = await page.evaluate(() => window.hexWorld.state());
     if (hits !== ATTEMPTS) fail(`${tag}: ${hits} requests for ${SHADER}, expected ${ATTEMPTS} (the first and three retries)`);
@@ -907,7 +913,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     if (p.startsWith("web/brand/") || p === "favicon.ico") return "icon";
     return p;
   };
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     const tag = "versions";
     const seen = [];
     page.on("request", (r) => { const u = new URL(r.url()); if (u.origin === origin) seen.push(u); });
@@ -936,7 +942,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     }
     if (!packIds.every((k) => s.packs?.[k] === "ready")) fail(`${tag}: packs never all ready: ${JSON.stringify(s.packs)}`);
     if (a?.loading !== "done") fail(`${tag}: audio never loaded: ${a?.loading} ${a?.error ?? ""}`);
-    await page.waitForTimeout(1_000);
+    await frames(page, 60);
     const counts = {};
     const bad = [];
     const trunk = [];
@@ -988,7 +994,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   const clamp = WEBGPU_DEFAULT_SAMPLED;
   const script = JSON.parse(await readFile(join(dist, "../docs/checkpoints/cars/cars.json"), "utf8").catch(() => "[]"));
   const build = script.slice(0, script.findIndex((c) => c.cmd === "dump_state"));
-  await withPage(gpuArgs, async (page) => {
+  await withPage(gpuArgs(), async (page) => {
     let carKit = false;
     page.on("console", (m) => { if (/kit car pieces ready/.test(m.text())) carKit = true; });
     await page.addInitScript(clampSampledTextures, clamp);
@@ -1006,16 +1012,18 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     while (Date.now() < deadline && !(carKit && (await cars()) >= 3)) await page.waitForTimeout(200);
     if (!carKit || (await cars()) < 3) { fail(`${tag}: car kit ${carKit}, ${await cars()} cars`); return; }
     await cmd({ cmd: "camera", pos: [-10, 12, 40], look_at: [-2, 0.5, 22.5] });
-    await page.waitForTimeout(1_000);
+    await frames(page, 60);
     const canvas = page.locator("canvas#hex-world");
     const before = (await canvas.screenshot()).toString("base64");
     await cmd({ cmd: "set_car_cap", cap: 1 });
     await cmd({ cmd: "wait", frames: 6 });
     await cmd({ cmd: "photo", pause_agents: true });
+    // Elapsed time is the thing measured: the cars fade out over their fade duration, not a frame count.
     await page.waitForTimeout(1_000);
     const fading = (await canvas.screenshot()).toString("base64");
     const during = await cars();
     await cmd({ cmd: "photo", pause_agents: false });
+    // Elapsed time is the thing measured: the cars fade back in over their fade duration.
     await page.waitForTimeout(1_500);
     const gone = (await canvas.screenshot()).toString("base64");
     const after = await cars();

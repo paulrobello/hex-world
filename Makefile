@@ -75,7 +75,7 @@ ui-lint: $(UI_NPM)
 	cd $(UI) && ./node_modules/.bin/biome check .
 
 ui-test:
-	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs scripts/assets/kit-lib.test.mjs scripts/shots/run.test.mjs e2e/lib/harness.test.mjs
+	node --test "$(UI)/test/*.test.ts" "scripts/web/*.test.mjs" scripts/assets/kit-provenance.test.mjs scripts/assets/kit-lib.test.mjs scripts/shots/run.test.mjs e2e/lib/harness.test.mjs e2e/lib/browser.test.mjs
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 

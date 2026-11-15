@@ -3,10 +3,10 @@
 // refused file by drag-and-drop and by picker (its checks panel), load and delete a slot, and the storage-blocked bar. Asserts through
 // hexWorld.state() and the HUD's text, and saves captures to e2e/test-results/persistence/ (set
 // PERSIST_OUT=docs/checkpoints/persistence to refresh the owner's committed captures).
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { animationsSettled, launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.PERSIST_OUT ?? "e2e/test-results/persistence";
@@ -16,14 +16,11 @@ mkdirSync(work, { recursive: true });
 const { server, base: origin } = await serveDist(dist);
 const base = `${origin}?scenario=play&tilt=off&fps=off`;
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const errors = [];
 
 async function open(context) {
@@ -37,15 +34,7 @@ function helpers(page) {
   const shot = (name) => page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg", quality: 88 });
   const play = () => page.evaluate(() => window.hexWorld.state().play);
   const text = (sel) => page.locator(sel).first().innerText().catch(() => "");
-  async function until(fn, what, ms = 15_000) {
-    const deadline = Date.now() + ms;
-    for (;;) {
-      const v = await fn();
-      if (v) return v;
-      if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-      await page.waitForTimeout(50);
-    }
-  }
+  const until = waiter(() => page, { fail, ms: 15_000 });
   async function boot() {
     await page.goto(base);
     await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
@@ -98,7 +87,7 @@ try {
   const settled = await until(() => saveIs("saved", "4 tiles"), "bar shows Saved after the undo's debounced autosave");
   const title = settled?.title ?? "";
   check(/World 1 4 tiles · Saved/.test(title), `bar title: name, tile count, Saved ("${title}")`);
-  await page.waitForTimeout(300);
+  await animationsSettled(page);
   await shot("autosave-saved");
   const before = await play();
   const beforeCam = (await page.evaluate(() => window.hexWorld.state().camera)).pos;
@@ -113,6 +102,7 @@ try {
   const rising = [];
   for (let i = 0; i < 20; i++) {
     for (const t of (await play()).rising) rising.push(`${t.q},${t.r}:${t.stage}`);
+    // Elapsed time is the check: sample for 1 s that no tile starts a rise after the reload.
     await page.waitForTimeout(50);
   }
   check(!rising.length, `after the reload no tile rises (${rising.slice(0, 4).join(" ")})`);
@@ -126,7 +116,7 @@ try {
   await page.evaluate(() => window.hexWorld.redo());
   await until(async () => (await play()).tiles.length === 5, "redo after the reload restores the undone tile");
   await until(() => saveIs("saved", "5 tiles"), "redo autosaves");
-  await page.waitForTimeout(1200);
+  await animationsSettled(page);
   await shot("resumed-after-reload");
 
   // A reload inside the autosave debounce keeps the edit: page hide writes it at once.
@@ -210,7 +200,7 @@ try {
   await page.locator(".current .rename").fill("Riverside");
   await page.keyboard.press("Enter");
   await until(async () => (await text(".bar__world")).includes("Riverside"), "rename shows in the bar title");
-  await page.waitForTimeout(300);
+  await animationsSettled(page);
   await shot("worlds-sheet");
 
   // Export downloads <world name>.hexworld.
@@ -221,7 +211,7 @@ try {
   const bytes = readFileSync(exported);
   check(bytes.subarray(0, 8).toString("latin1") === "HEXWORLD", "the export starts with the HEXWORLD magic");
   await until(async () => (await text(".toast.is-shown")).includes("Exported Riverside.hexworld"), "export toast");
-  await page.waitForTimeout(250);
+  await animationsSettled(page);
   await shot("export-done");
   const exportedWorld = await play();
 
@@ -240,7 +230,7 @@ try {
   await until(async () => (await text(".bar__world")).includes("Riverside 2"), "the import opens as a new world, Riverside 2");
   await until(async () => (await text(".toast.is-shown")).includes("Imported Riverside 2"), "import toast");
   await until(() => saveIs("saved"), "the imported world is saved at once");
-  await page.waitForTimeout(250);
+  await animationsSettled(page);
   await shot("import-done");
 
   // A refused file by drag-and-drop: the checks panel says why (S10.8), and the world is unchanged.
@@ -261,7 +251,7 @@ try {
   });
   await until(async () => (await text(".import[data-import=refused] h2")).includes("This isn't a Hex World file"), "a corrupt drop is refused with the checks saying why");
   check(tileSet(await play()) === held, "the refused file leaves the world unchanged");
-  await page.waitForTimeout(250);
+  await animationsSettled(page);
   await shot("import-refused");
 
   // A truncated file by the picker.
@@ -282,17 +272,18 @@ try {
   const other = page.locator(".slot-row", { hasText: "Riverside 2" });
   await other.locator("[data-more]").click();
   await until(async () => page.locator(".menu.is-open").count(), "row menu opens");
-  await page.waitForTimeout(150);
+  await animationsSettled(page);
   await shot("row-menu");
   await page.locator(".menu [data-menu-act=delete]").click();
   await until(async () => (await text(".slot-row.is-open .confirm")).includes("Delete Riverside 2?"), "delete asks first");
-  await page.waitForTimeout(250);
+  await animationsSettled(page);
   await shot("delete-confirm");
   await page.locator(".slot-row.is-open [data-act=delete]").click();
   await until(async () => !(await page.locator(".slot-row", { hasText: "Riverside 2" }).count()), "the slot is deleted");
   // Narrow desktop (DESIGN.md, 1400 px rule): the bar and the wider Worlds sheet never meet.
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.waitForTimeout(400);
+  await until(async () => (await page.evaluate(() => innerWidth)) === 1280, "the viewport is 1280 wide");
+  await animationsSettled(page);
   const bar = await page.locator(".bar[data-region=bar]").boundingBox();
   const worlds = await page.locator(".sheet--worlds").boundingBox();
   check(bar.x + bar.width < worlds.x, `bar (right ${Math.round(bar.x + bar.width)}) clears the Worlds sheet (left ${Math.round(worlds.x)}) at 1280 px`);
@@ -352,7 +343,7 @@ try {
     check((await text("#settings-world .field:has([data-act=start-over]) .field__label")) === "Riverside", "the World tab names the current world");
     await page.mouse.move(700, 450);
     await page.evaluate(() => document.activeElement?.blur());
-    await page.waitForTimeout(250);
+    await animationsSettled(page);
     await shot("settings-world");
 
     await page.locator("#settings-world [data-act=start-over]").click();
@@ -361,11 +352,12 @@ try {
     check(ask.includes("Start over?") && ask.includes("This clears every tile in Riverside. You can't undo it."), `the confirm names the world ("${ask}")`);
     check((await focused()) === "start-over-cancel", "focus moves to Cancel");
     await page.mouse.move(700, 450);
-    await page.waitForTimeout(250);
+    await animationsSettled(page);
     await shot("settings-world-confirm");
     await page.locator("#settings-world [data-act=start-over-cancel]").click();
     await until(async () => !(await confirmShown()), "Cancel closes the confirm");
     check((await focused()) === "start-over", "focus returns to Start over");
+    // Elapsed time is the check: Cancel must leave the world and history unchanged after a late handler would have run.
     await page.waitForTimeout(300);
     const kept = await play();
     check(tileSet(kept) === tileSet(held) && kept.can_undo === held.can_undo && kept.can_redo === held.can_redo, "Cancel leaves the world and its history unchanged");
@@ -419,7 +411,7 @@ try {
     check((await focused()) === "start-over", "Tab reaches Start over");
     await page.keyboard.press("Enter");
     await until(confirmShown, "the confirm opens at 1280 × 720");
-    await page.waitForTimeout(300);
+    await animationsSettled(page);
     const sheetBox = await page.locator(".sheet--settings").boundingBox();
     for (const act of ["start-over-confirm", "start-over-cancel"]) {
       const b = await page.locator(`#settings-world [data-act=${act}]`).boundingBox();
@@ -490,6 +482,7 @@ try {
 
     // An orbit move with no edit survives a reload.
     const a = await fly([18, 0, -6], -2.2, 0.62, 95);
+    // Elapsed time is the check: a camera move must write nothing over more than one pose interval (POSE_INTERVAL_MS 2 s).
     await cp.waitForTimeout(3000);
     const after = await c.play();
     check(after.can_undo === hist.can_undo && after.can_redo === hist.can_redo, "a camera move adds no undo or redo entry");
@@ -502,7 +495,7 @@ try {
     const restored = (want) => c.until(async () => (await cp.evaluate(() => window.hexWorld.cameraRestore())).outcome === want, `hexWorld.cameraRestore() reports ${want}`, 20_000);
     await restored("orbit");
     console.log(`  orbit after reload: ${fmt(await orbit())}`);
-    await cp.waitForTimeout(500);
+    await animationsSettled(cp);
     await c.shot("camera-orbit-after-reload");
 
     // Walk mode: the walker's feet, heading and pitch survive a reload, behind the click-to-look hint.
@@ -517,6 +510,7 @@ try {
     await cp.evaluate(() => window.hexWorld.cmd({ cmd: "walk_look", heading: 237.5, pitch: 4.25 }));
     await c.until(async () => Math.abs((await st()).walk.heading - 237.5) < 1e-2, "and looks around");
     const walked = (await st()).walk;
+    // Elapsed time is the thing measured: the pose store writes every POSE_INTERVAL_MS (2 s).
     await cp.waitForTimeout(3000);
     const wpose = Object.values(await poses())[0];
     check(!!wpose?.walk && sameOrbit(wpose.orbit, a), `the stored pose holds the walker over the orbit camera (${JSON.stringify(wpose?.walk)})`);
@@ -530,7 +524,7 @@ try {
     check(!back.pointer_lock, "no pointer lock without a gesture");
     await c.until(async () => (await cp.locator(".walk-ui:not(.is-off)").count()) === 1, "the walk hint shows");
     check((await c.text(".walk-hint")).includes("Click to look around"), "the hint says Click to look around");
-    await cp.waitForTimeout(500);
+    await animationsSettled(cp);
     await c.shot("camera-walk-after-reload");
     await cp.evaluate(() => window.hexWorld.cmd({ cmd: "walk", on: false, pointer_lock: null }));
     await c.until(async () => !(await st()).walk?.on, "walk mode off");
@@ -547,6 +541,7 @@ try {
     await cp.evaluate(() => { const h = window.hexWorld; h.selectTile("forest"); h.placeTile(0, 1); });
     await c.until(() => c.saveIs("saved", "World 2 2 tiles"), "camera: World 2 is autosaved");
     const two = await fly([25, 0, 30], -0.4, 0.35, 60);
+    // Elapsed time is the thing measured: the pose store writes every POSE_INTERVAL_MS (2 s).
     await cp.waitForTimeout(2500);
     check(Object.keys(await poses()).length === 2, "one stored pose per world");
     const loadWorld = async (name, other) => {
@@ -561,7 +556,7 @@ try {
     await c.until(async () => sameOrbit(await orbit(), one), `World 1 comes back with its own camera (${fmt(one)})`, 20_000);
     await loadWorld("World 2", "World 1");
     await c.until(async () => sameOrbit(await orbit(), two), `World 2 comes back with its own camera (${fmt(two)})`, 20_000);
-    await cp.waitForTimeout(400);
+    await animationsSettled(cp);
     await c.shot("camera-second-world");
 
     // A stored walker on a tile that is no longer there (bulldozed, off the map) is not restored:
@@ -577,6 +572,7 @@ try {
     await c.until(async () => (await c.text(".bar__world")).includes("World 2"), "the reload resumes World 2");
     await c.until(async () => sameOrbit(await orbit(), two), "a walker on a missing tile falls back to the saved orbit", 20_000);
     await restored("fallback");
+    // Elapsed time is the check: the stale walker must stay replaced across a pose interval (POSE_INTERVAL_MS 2 s).
     await cp.waitForTimeout(3000);
     check(!(await st()).walk?.on, "walk mode stays off");
     check((await poses())[twoId]?.walk === null, "and the orbit pose replaces the stale walker");
@@ -598,6 +594,7 @@ try {
     await lp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
     await l.until(() => l.saveIs("saved", "2 tiles"), "localStorage blocked: the world autosaves");
     await lp.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [60, 80, 60], look_at: [10, 0, 0] }));
+    // Elapsed time is the thing measured: the pose store writes every POSE_INTERVAL_MS (2 s).
     await lp.waitForTimeout(2500);
     await lp.reload();
     await lp.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
@@ -624,12 +621,13 @@ try {
   await b.until(async () => (await b.text(".toast.is-shown")).includes("Autosave is off in this window"), "storage-off toast offers Export");
   await p2.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); });
   await b.until(async () => (await b.play()).tiles.length === 2, "play goes on with storage blocked");
+  // Elapsed time is the check: the bar must still read Autosave off after an autosave debounce (AUTOSAVE_MS 0.6 s).
   await p2.waitForTimeout(800);
   check((await b.text(".bar__world")).includes("Autosave off"), "still Autosave off after a placement");
   await b.shot("storage-off-play");
   await p2.locator(".bar__world").click();
   await b.until(async () => worldsOpen(p2), "Worlds sheet opens with storage blocked");
-  await p2.waitForTimeout(300);
+  await animationsSettled(p2);
   const sheetText = await b.text(".sheet--worlds");
   check(sheetText.includes("· Autosave off") && !sheetText.includes("Not saved"), "the Worlds sheet reads Autosave off, as the bar does");
   await b.shot("storage-off-worlds");

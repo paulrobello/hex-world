@@ -17,13 +17,13 @@
 // host-load guard. Local only. usage: node e2e/perf-grass-drag.mjs <dist>
 //   PERF_OUT (default docs/perf/p2-grass-drag.json), DRAG_RUNS (default 3), DRAG_RADIUS (default 10),
 //   DRAG_MS (default 5000), DRAG_BASELINE_MS (default 5000)
-import { chromium } from "playwright";
 import { writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { buildWorld } from "./build-world.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { DEVELOPER_FEATURES_ARG, UNCAPPED_ARGS, gpuArgs, launch, requireHardwareAdapter, webglRenderer } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.env.PERF_OUT ?? "docs/perf/p2-grass-drag.json";
@@ -40,8 +40,7 @@ const KEYS = { scenario: "play", tier: "high", fps: "off", seed: "1", tilt: "off
 // The drag's slider percents: 100 -> 0 -> 150 -> 50 -> 100 in the slider's 5% steps.
 const ramp = (a, b) => { const s = a < b ? 5 : -5, v = []; for (let x = a + s; s > 0 ? x <= b : x >= b; x += s) v.push(x); return v; };
 const STEPS = [...ramp(100, 0), ...ramp(0, 150), ...ramp(150, 50), ...ramp(50, 100)];
-const ARGS = ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu",
-  "--disable-gpu-vsync", "--disable-frame-rate-limit", "--enable-webgpu-developer-features"];
+const ARGS = gpuArgs({ swiftshader: false, extra: [...UNCAPPED_ARGS, DEVELOPER_FEATURES_ARG] });
 
 const { server, base } = await serveDist(dist);
 
@@ -171,7 +170,7 @@ function buildStats(p) {
 }
 
 async function run() {
-  const browser = await chromium.launch({ channel: "chromium", headless: true, args: ARGS });
+  const browser = await launch({ args: ARGS });
   const errors = [];
   try {
     const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
@@ -179,16 +178,8 @@ async function run() {
     page.on("pageerror", (e) => errors.push(String(e)));
     await page.goto(base + "?" + new URLSearchParams(KEYS));
     await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 120_000 });
-    const adapter = await page.evaluate(async () => {
-      const i = (await navigator.gpu.requestAdapter())?.info;
-      return i ? [i.vendor, i.architecture, i.description].join(" | ") : null;
-    });
-    if (!adapter || /swiftshader/i.test(adapter)) throw new Error("no hardware WebGPU adapter: " + adapter);
-    const renderer = await page.evaluate(() => {
-      const gl = document.createElement("canvas").getContext("webgl");
-      const ext = gl?.getExtension("WEBGL_debug_renderer_info");
-      return ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
-    });
+    const adapter = await requireHardwareAdapter(page);
+    const renderer = await webglRenderer(page);
     if (!renderer || /swiftshader/i.test(renderer)) throw new Error("no hardware WebGL renderer: " + renderer);
     await buildWorld(page, [...world.script, CAMERA], world.tiles.length);
     // A still window with the Settings sheet closed: the scene's own frame time on this camera.

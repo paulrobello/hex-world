@@ -2,26 +2,23 @@
 // play scenario with the web/ui audio layer (PRD §8). Nothing here listens: every check reads
 // hexWorld.audio.state(), which reports the context, loaded cues, the cues fired, emitter gains and the
 // output level measured after the master gain. Writes e2e/test-results/audio/*.json as evidence.
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { gpuArgs, launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/audio";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
 // --mute-audio keeps unattended runs quiet; the graph still renders, so the analyser still measures.
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: [...gpuArgs, "--mute-audio"] });
+const browser = await launch({ args: gpuArgs({ extra: ["--mute-audio"] }) });
 const errors = [];
 let audioRequests = [];
 /** A page in a new browser context: a fresh profile with no IndexedDB data, so its start-up is a first visit. */
@@ -39,31 +36,23 @@ const audio = () => page.evaluate(() => window.hexWorld.audio.state());
 const play = () => page.evaluate(() => window.hexWorld.state().play);
 const save = (name, v) => writeFileSync(`${out}/${name}.json`, JSON.stringify(v, null, 1));
 const playCue = (name) => page.evaluate((n) => window.hexWorld.audio.play(n), name);
-async function until(fn, what, ms = 10_000) {
-  const deadline = Date.now() + ms;
-  for (;;) {
-    const v = await fn();
-    if (v) { console.log("ok:", what); return v; }
-    if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-    await page.waitForTimeout(50);
-  }
-}
+const waitFor = waiter(() => page, { fail, ms: 10_000, log: true });
 const same = (c, q, r) => c && c.q === q && c.r === r;
 async function pointAt(q, r) {
   const b = await page.evaluate(([q, r]) => window.hexWorld.cellRect(q, r), [q, r]);
   await page.mouse.move((b[0] + b[2]) / 2, (b[1] + b[3]) / 2, { steps: 4 });
-  await until(async () => same((await play()).hovered, q, r), `pointer hovers (${q}, ${r})`);
+  await waitFor(async () => same((await play()).hovered, q, r), `pointer hovers (${q}, ${r})`);
 }
 /** Waits for `id` among the recently fired cues, fired by `event`. */
 const fired = (id, event, ms) =>
-  until(async () => (await audio()).recent.some((f) => f.id === id && f.event === event), `${event} fires ${id}`, ms);
+  waitFor(async () => (await audio()).recent.some((f) => f.id === id && f.event === event), `${event} fires ${id}`, ms);
 const cmd = (c) => page.evaluate((c) => window.hexWorld.cmd(c), c);
 const tiles = async () => (await play()).tiles.length;
 async function open() {
   audioRequests = [];
   await page.goto(base + "?scenario=play&tilt=off&fps=off");
   await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.audio, null, { timeout: 90_000 });
-  await until(async () => (await play())?.inventory_open === true, "play HUD up");
+  await waitFor(async () => (await play())?.inventory_open === true, "play HUD up");
   await page.waitForTimeout(1500);
 }
 /** A press on the bar's world label: a gesture that changes nothing in the game. */
@@ -76,17 +65,17 @@ try {
   let a = await audio();
   check(a.context === "none" && a.loading === "idle", `no AudioContext before a gesture (${a.context}, ${a.loading})`);
   check(audioRequests.length === 0, `no /assets/audio/ requests before the first interaction (${audioRequests.length})`);
-  await until(async () => (await audio()).music.title === "armed", "a first visit arms the title before any gesture");
+  await waitFor(async () => (await audio()).music.title === "armed", "a first visit arms the title before any gesture");
 
   // After a gesture the context runs and the manifest's cues load within the budget.
   await gesture();
-  await until(async () => (await audio()).context === "running", "a gesture starts the AudioContext");
+  await waitFor(async () => (await audio()).context === "running", "a gesture starts the AudioContext");
   // The first visit's first gesture (here one that changes nothing) starts title-theme, not the meadow's mood.
-  await until(async () => {
+  await waitFor(async () => {
     const m = (await audio()).music;
     return m.current === "title-theme" && m.title === "armed";
   }, "the first gesture of a first visit plays title-theme");
-  await until(async () => (await audio()).loading === "done", "cues loaded", 20_000);
+  await waitFor(async () => (await audio()).loading === "done", "cues loaded", 20_000);
   a = await audio();
   save("loaded", a);
   check(a.format === "webm", `Opus/WebM picked in Chromium (${a.format})`);
@@ -107,7 +96,7 @@ try {
   check(a.music.tracks === streamed.length && ["meadow-day", "coast-breeze", "hearth-town", "photo-mode", "title-theme"].every((id) => streamed.includes(id)),
     `${streamed.length} music cues stream (${a.cues.streams.join(", ")})`);
   const track = async (id) => (await audio()).music.gains.find((g) => g.id === id) ?? null;
-  const streaming = (id) => until(async () => {
+  const streaming = (id) => waitFor(async () => {
     const g = await track(id);
     return g && !g.paused && g.time > 0 ? g : null;
   }, `${id} streams: its media element plays`, 10_000);
@@ -118,8 +107,8 @@ try {
   // A raw new_world (a world on screen that is not the player's New world) ends the first-visit title at once,
   // and the start meadow then picks meadow-day, which fades in.
   await cmd({ cmd: "new_world" });
-  await until(async () => (await audio()).music.title === "off", "a raw new_world ends the first-visit title");
-  await until(async () => (await audio()).music.current === "meadow-day", "the start meadow picks meadow-day");
+  await waitFor(async () => (await audio()).music.title === "off", "a raw new_world ends the first-visit title");
+  await waitFor(async () => (await audio()).music.current === "meadow-day", "the start meadow picks meadow-day");
   const m0 = await streaming("meadow-day");
   await page.waitForTimeout(1500);
   const m1 = await track("meadow-day");
@@ -130,8 +119,8 @@ try {
     "no music the mix does not ask for is fetched");
   // Photo mode (D7) switches to its own cue at once and back to the mood's pick when it closes.
   await cmd({ cmd: "toggle", what: "photo" });
-  await until(async () => (await play()).photo_mode === true, "photo mode opens");
-  await until(async () => (await audio()).music.current === "photo-mode", "photo mode plays photo-mode");
+  await waitFor(async () => (await play()).photo_mode === true, "photo mode opens");
+  await waitFor(async () => (await audio()).music.current === "photo-mode", "photo mode plays photo-mode");
   const p0 = await streaming("photo-mode");
   await page.waitForTimeout(1500);
   const p1 = await track("photo-mode");
@@ -139,8 +128,8 @@ try {
     `photo-mode's gain rises (${p0?.gain} -> ${p1?.gain}) while it plays (${p0?.time} -> ${p1?.time} s)`);
   save("music", { meadow: [m0, m1], photo: [p0, p1], state: await audio() });
   await cmd({ cmd: "toggle", what: "photo" });
-  await until(async () => (await play()).photo_mode === false, "photo mode closes");
-  await until(async () => (await audio()).music.current === "meadow-day", "closing photo mode returns to meadow-day");
+  await waitFor(async () => (await play()).photo_mode === false, "photo mode closes");
+  await waitFor(async () => (await audio()).music.current === "meadow-day", "closing photo mode returns to meadow-day");
   check(JSON.stringify(a.missingEmitters) === "[]", `no loop emitter missing; the town murmur is one-shots (${a.missingEmitters})`);
   check(Object.values(a.placeStinger?.cues ?? {}).length === 8 && Object.values(a.placeStinger.cues).every((c) => c.loaded),
     `the eight placement stingers decode ${JSON.stringify(a.placeStinger?.cues)}`);
@@ -153,7 +142,7 @@ try {
   check(birds.includes(played.played) && played.pool === "forest-birds"
     && (played.at === null || (Number.isInteger(played.at.q) && Number.isInteger(played.at.r))),
     `play("forest-birds") plays one of its variants ${JSON.stringify(played)}`);
-  await until(async () => (await audio()).outputRms > 1e-4, "the on-demand birds reach the output", 2000 - (Date.now() - t0));
+  await waitFor(async () => (await audio()).outputRms > 1e-4, "the on-demand birds reach the output", 2000 - (Date.now() - t0));
   a = await audio();
   save("play", { result: played, state: a });
   check(a.oneShots?.["forest-birds"]?.lastCue === played.played && a.oneShots["forest-birds"].plays === 1,
@@ -175,10 +164,10 @@ try {
   await fired("ui-rotate", "ghostRotated");
   await page.mouse.down();
   await page.mouse.up();
-  await until(async () => same((await play()).pinned, 1, 0), "the first click pins (1, 0)");
+  await waitFor(async () => same((await play()).pinned, 1, 0), "the first click pins (1, 0)");
   await page.mouse.down();
   await page.mouse.up();
-  await until(async () => (await tiles()) === 2, "road placed at (1, 0)");
+  await waitFor(async () => (await tiles()) === 2, "road placed at (1, 0)");
   await fired("place-rumble", "tilePlaced");
   await fired("place-thunk", "tilePlaced", 6_000);
   a = await audio();
@@ -199,7 +188,7 @@ try {
   await page.evaluate(() => { window.hexWorld.selectTile("ocean"); window.hexWorld.placeTile(-1, 0); });
   await fired("ui-invalid", "placementRefused");
   await page.evaluate(() => { window.hexWorld.selectTile("meadow"); window.hexWorld.placeTile(2, 0); });
-  await until(async () => (await tiles()) === 3, "meadow placed at (2, 0)");
+  await waitFor(async () => (await tiles()) === 3, "meadow placed at (2, 0)");
   await cmd([{ cmd: "set_tool", mode: "bulldoze" }, { cmd: "bulldoze", q: 1, r: 0 }]);
   await fired("ui-invalid", "bulldozeRefused");
   await cmd([{ cmd: "bulldoze", q: 2, r: 0 }, { cmd: "set_tool", mode: "place" }]);
@@ -235,16 +224,16 @@ try {
     return { cells };
   });
   check(river?.cells?.length === 6, `six river tiles placed ${JSON.stringify(river)}`);
-  await until(async () => (await audio()).placeSlosh?.plays >= 1, "a river tile sloshes as it settles", 6_000);
+  await waitFor(async () => (await audio()).placeSlosh?.plays >= 1, "a river tile sloshes as it settles", 6_000);
   a = await audio();
   check(sloshes.includes(a.placeSlosh.lastCue) && a.placeSlosh.plays <= river.cells.length,
     `the water placements play slosh variants ${JSON.stringify(a.placeSlosh)}`);
-  await until(async () => (await audio()).placeStinger?.lastFamily === "water", "a river tile plays the water stinger", 6_000);
+  await waitFor(async () => (await audio()).placeStinger?.lastFamily === "water", "a river tile plays the water stinger", 6_000);
   // A replace plays the new tile's stinger as it settles: the road at (1, 0) becomes a meadow.
   const stung = (await audio()).placeStinger.plays;
   await page.evaluate(() => { window.hexWorld.selectTile("meadow"); window.hexWorld.replaceTile(1, 0); });
-  await until(async () => (await play()).tiles.find((t) => t.q === 1 && t.r === 0)?.tile === "meadow", "the road is replaced by a meadow");
-  await until(async () => {
+  await waitFor(async () => (await play()).tiles.find((t) => t.q === 1 && t.r === 0)?.tile === "meadow", "the road is replaced by a meadow");
+  await waitFor(async () => {
     const s = (await audio()).placeStinger;
     return s.plays > stung && s.lastFamily === "meadow" && same(s.lastTile, 1, 0);
   }, "the replace plays the meadow stinger at (1, 0)", 6_000);
@@ -255,7 +244,7 @@ try {
   const lookAt = async (c, dist) => {
     const [x, z] = world(c);
     await cmd({ cmd: "camera", pos: [x, dist * 0.8, z + dist * 0.6], look_at: [x, 0, z] });
-    await until(async () => Math.abs(((await play()).zoom ?? 0) - dist) < 1, `camera at ${dist} m over (${c.q}, ${c.r})`);
+    await waitFor(async () => Math.abs(((await play()).zoom ?? 0) - dist) < 1, `camera at ${dist} m over (${c.q}, ${c.r})`);
     await page.waitForTimeout(500);
     return audio();
   };
@@ -269,23 +258,23 @@ try {
   check(gEnd > 0.5 && gEnd > 10 * gNear, `the zoomed river tile ${gEnd} outweighs the far one at (${near.q}, ${near.r}) ${gNear}`);
   check(zoomed.emitters.some((e) => e.voiced && e.q === end.q && e.r === end.r), "the zoomed tile has a playing voice");
   check(zoomed.mix.river > 0.5, `the biome mix in view turns to river (${zoomed.mix.river})`);
-  await until(async () => (await audio()).outputRms > 1e-4, "ambience audible before mute");
+  await waitFor(async () => (await audio()).outputRms > 1e-4, "ambience audible before mute");
 
   // Cars (owner request 2026-10-14): a new world with the cars checkpoint's two connected house clusters. A
   // seeded departure pulls a car out about 10 s after both connect; its pull-out plays car-start at the spot, its
   // pass-by car-drive at the car, and its park car-door, all within three hex steps of the focus.
   await cmd({ cmd: "new_world" });
-  await until(async () => (await tiles()) === 1, "a new world");
+  await waitFor(async () => (await tiles()) === 1, "a new world");
   const script = JSON.parse(readFileSync("docs/checkpoints/cars/cars.json", "utf8"));
   const build = script.slice(0, script.findIndex((c) => c.cmd === "dump_state"))
     .filter((c) => ["select_tile", "place", "hover", "rotate"].includes(c.cmd));
   await cmd(build);
-  await until(async () => (await play()).connected_destinations === 2, "two house clusters connected", 20_000);
+  await waitFor(async () => (await play()).connected_destinations === 2, "two house clusters connected", 20_000);
   await cmd({ cmd: "camera", pos: [14, 80, 100], look_at: [14, 0, 4] });
   // The town murmur: its timer row counts the two house clusters, and an on-demand play sounds a variant at one.
   const murmurs = manifest.cues.filter((c) => c.pool === "town-murmur").map((c) => c.id);
   const houses = (await play()).tiles.filter((t) => ["house_cluster", "bakery", "rail_station"].includes(t.tile));
-  await until(async () => (await audio()).oneShots?.["town-murmur"]?.tiles === houses.length, `town murmur counts ${houses.length} town tiles`);
+  await waitFor(async () => (await audio()).oneShots?.["town-murmur"]?.tiles === houses.length, `town murmur counts ${houses.length} town tiles`);
   a = await audio();
   check(houses.length >= 2 && JSON.stringify(a.oneShots["town-murmur"].variants) === JSON.stringify(murmurs)
     && murmurs.length >= 4 && a.oneShots["town-murmur"].nextAt > a.currentTime,
@@ -298,7 +287,7 @@ try {
   a = await audio();
   check(JSON.stringify(a.cars.pools) === JSON.stringify(pools), `car pools from the manifest ${JSON.stringify(a.cars.pools)}`);
   let maxVoices = 0;
-  const carPlay = (event, pool, ms) => until(async () => {
+  const carPlay = (event, pool, ms) => waitFor(async () => {
     const s = await audio();
     maxVoices = Math.max(maxVoices, s.cars.voices.length);
     return s.cars.recent.find((f) => f.event === event && pools[pool].includes(f.id)) ?? null;
@@ -318,7 +307,7 @@ try {
   // Trains (P3): a new world with the rail checkpoint's loop round the start meadow. Each train's first move is a
   // trainDeparted event, which blows train-whistle at its front; a moving train chuffs train-chuff where it runs.
   await cmd({ cmd: "new_world" });
-  await until(async () => (await tiles()) === 1, "a new world for the trains");
+  await waitFor(async () => (await tiles()) === 1, "a new world for the trains");
   await cmd({ cmd: "camera", pos: [18, 62, 78], look_at: [0, 0, 0] });
   const rail = JSON.parse(readFileSync("docs/checkpoints/rail/rail-play.json", "utf8"));
   // The loop's placements: from the first tile selection that places, to the next hover.
@@ -328,8 +317,8 @@ try {
     .map((p) => [p, manifest.cues.filter((c) => c.pool === p && c.status === "mastered").map((c) => c.id)]));
   a = await audio();
   check(JSON.stringify(a.trains.pools) === JSON.stringify(trainPools), `train pools from the manifest ${JSON.stringify(a.trains.pools)}`);
-  await until(async () => (await play()).trains >= 2, "the loop has its trains", 60_000);
-  const trainPlay = (event, pool, ms) => until(async () => {
+  await waitFor(async () => (await play()).trains >= 2, "the loop has its trains", 60_000);
+  const trainPlay = (event, pool, ms) => waitFor(async () => {
     const s = await audio();
     return s.trains.recent.find((f) => f.event === event && trainPools[pool].includes(f.id)) ?? null;
   }, `${event} plays ${pool}`, ms);
@@ -349,9 +338,9 @@ try {
   check(a.music.title === "off" && a.music.current !== "title-theme", `no title after a raw new_world (${a.music.title}, ${a.music.current})`);
   if (!(await page.locator(".sheet--worlds:not(.is-closed)").count())) await page.locator(".bar__world").click();
   await page.locator(".sheet--worlds [data-act=new]").click();
-  await until(async () => (await tiles()) === 1, "New world from the Worlds sheet");
+  await waitFor(async () => (await tiles()) === 1, "New world from the Worlds sheet");
   await page.keyboard.press("Escape");
-  await until(async () => {
+  await waitFor(async () => {
     const m = (await audio()).music;
     return m.title === "armed" && m.current === "title-theme";
   }, "New world arms the title and plays title-theme");
@@ -362,19 +351,19 @@ try {
   check(t0Title && t1Title && t1Title.gain > t0Title.gain && t1Title.time > t0Title.time,
     `title-theme's gain rises (${t0Title?.gain} -> ${t1Title?.gain}) while it plays (${t0Title?.time} -> ${t1Title?.time} s)`);
   await cmd({ cmd: "toggle", what: "photo" });
-  await until(async () => (await audio()).music.current === "photo-mode", "photo mode takes over from the title");
+  await waitFor(async () => (await audio()).music.current === "photo-mode", "photo mode takes over from the title");
   await cmd({ cmd: "toggle", what: "photo" });
-  await until(async () => (await play()).photo_mode === false, "photo mode closes over the title");
-  await until(async () => {
+  await waitFor(async () => (await play()).photo_mode === false, "photo mode closes over the title");
+  await waitFor(async () => {
     const m = (await audio()).music;
     return m.current === "title-theme" && m.title === "armed";
   }, "closing photo mode returns to the title");
   await page.evaluate(() => { window.hexWorld.selectTile("meadow"); window.hexWorld.placeTile(1, 0); });
-  await until(async () => (await tiles()) === 2, "the first tile goes down in the new world");
-  await until(async () => (await audio()).music.title === "placed", "the first tile releases the title");
+  await waitFor(async () => (await tiles()) === 2, "the first tile goes down in the new world");
+  await waitFor(async () => (await audio()).music.title === "placed", "the first tile releases the title");
   a = await audio();
   check(a.music.current === "title-theme", `the released title keeps its dwell (${a.music.current})`);
-  const handed = await until(async () => {
+  const handed = await waitFor(async () => {
     const s = await audio();
     return s.music.current === "meadow-day" && s.music.previous === "title-theme" ? s : null;
   }, "the title fades into meadow-day", 45_000);
@@ -386,10 +375,10 @@ try {
   const gM = mid.music.gains.find((g) => g.id === "meadow-day")?.gain ?? 0;
   check(mid.music.previous === "title-theme" && gT > 0 && gM > 0 && Math.abs(gT * gT + gM * gM - 1) < 0.15,
     `mid-crossfade at equal power (title ${gT}, meadow-day ${gM})`);
-  await until(async () => (await audio()).music.title === "off" && !(await audio()).music.previous, "the crossfade finishes", 10_000);
+  await waitFor(async () => (await audio()).music.title === "off" && !(await audio()).music.previous, "the crossfade finishes", 10_000);
   save("title", { started: [t0Title, t1Title], handed: handed?.music, mid: mid.music, state: await audio() });
   // The placement autosaves this two-tile world, which the reload below restores.
-  await until(async () => (await page.locator(".bar__world").innerText()).includes("Saved"), "the new world is autosaved", 10_000);
+  await waitFor(async () => (await page.locator(".bar__world").innerText()).includes("Saved"), "the new world is autosaved", 10_000);
 
   // Mute silences the output, and the setting persists for this viewer.
   await page.evaluate(() => window.hexWorld.audio.setMuted(true));
@@ -404,7 +393,7 @@ try {
   check(a.muted === true && a.volumes.master === 0.6, `mute and volume persist across a reload (${a.muted}, ${a.volumes.master})`);
   check(audioRequests.length === 0, "the reload loads no audio before a gesture either");
   await gesture();
-  await until(async () => (await audio()).loading === "done", "cues loaded after the reload", 20_000);
+  await waitFor(async () => (await audio()).loading === "done", "cues loaded after the reload", 20_000);
   await page.waitForTimeout(800);
   a = await audio();
   check(a.outputRms < 1e-5 && a.masterGain < 1e-4, `still silent after the reload (rms ${a.outputRms})`);
@@ -417,7 +406,7 @@ try {
   t0 = Date.now();
   const back = await playCue("forest-birds");
   check(back.played !== null, `play after unmute ${JSON.stringify(back)}`);
-  await until(async () => (await audio()).outputRms > 1e-4, "unmute brings the output back", 2000 - (Date.now() - t0));
+  await waitFor(async () => (await audio()).outputRms > 1e-4, "unmute brings the output back", 2000 - (Date.now() - t0));
 
   // A first visit whose first gesture places a tile (owner A43 O1): a Shift+click quick-place on a fresh profile.
   // The audio manifest is held until the tile is down, so the placement lands before the title can start; the
@@ -428,7 +417,7 @@ try {
   const manifestHeld = new Promise((r) => { releaseManifest = r; });
   await page.route(/\/assets\/audio\/manifest\.json/, async (route) => { await manifestHeld; await route.continue(); });
   await open();
-  await until(async () => (await audio()).music.title === "armed", "the second first visit arms the title");
+  await waitFor(async () => (await audio()).music.title === "armed", "the second first visit arms the title");
   await page.evaluate(() => window.hexWorld.selectTile("meadow"));
   await pointAt(1, 0);
   check((await audio()).context === "none", "no gesture yet before the placing click");
@@ -438,24 +427,24 @@ try {
   await page.mouse.up();
   await page.waitForTimeout(80);
   await page.keyboard.up("Shift");
-  await until(async () => (await tiles()) === 2, "the first gesture places a meadow at (1, 0)");
+  await waitFor(async () => (await tiles()) === 2, "the first gesture places a meadow at (1, 0)");
   a = await audio();
   check(a.context === "running" && a.loading === "manifest" && a.music.title === "early" && a.music.current === null,
     `the tile is down before the title started: early (${a.context}, ${a.loading}, ${a.music.title}, ${a.music.current})`);
   releaseManifest();
-  const began = await until(async () => {
+  const began = await waitFor(async () => {
     const s = await audio();
     return s.music.current === "title-theme" && s.music.title === "placed" ? s : null;
   }, "the title starts after the placing gesture and holds as placed");
   const placedStart = began?.currentTime ?? 0;
   await streaming("title-theme");
-  const placedHand = await until(async () => {
+  const placedHand = await waitFor(async () => {
     const s = await audio();
     return s.music.current === "meadow-day" && s.music.previous === "title-theme" ? s : null;
   }, "the first-visit title fades into meadow-day", 45_000);
   check(placedHand && placedHand.currentTime - placedStart >= 30 - 0.5,
     `the hand-over waits out the dwell from the title's start (${placedHand && (placedHand.currentTime - placedStart).toFixed(1)} s)`);
-  await until(async () => (await audio()).music.title === "off", "the first-visit title is done after its hand-over");
+  await waitFor(async () => (await audio()).music.title === "off", "the first-visit title is done after its hand-over");
   save("first-visit-placement", { began: began?.music, handed: placedHand?.music, state: await audio() });
 } catch (e) {
   fail(String(e?.stack ?? e));

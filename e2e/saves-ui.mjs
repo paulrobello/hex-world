@@ -6,10 +6,10 @@
 // bytes back in its slot. S10.8: a zip, a damaged file
 // and a file from a newer version each show the decoder's checks, and change nothing. Captures go to
 // e2e/test-results/saves-ui/ (SAVES_OUT=docs/checkpoints/saves-ui refreshes the committed ones).
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.SAVES_OUT ?? "e2e/test-results/saves-ui";
@@ -18,14 +18,11 @@ mkdirSync(out, { recursive: true });
 mkdirSync(work, { recursive: true });
 const { server, base: origin } = await serveDist(dist);
 const base = `${origin}?scenario=play&tilt=off&fps=off`;
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const errors = [];
 try {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true });
@@ -36,15 +33,7 @@ try {
   const play = () => page.evaluate(() => window.hexWorld.state().play);
   const text = (sel) => page.locator(sel).first().innerText().catch(() => "");
   const tileSet = (p) => p.tiles.map((t) => `${t.q},${t.r},${t.tile},${t.rotation}`).sort().join(" ");
-  async function until(fn, what, ms = 15_000) {
-    const deadline = Date.now() + ms;
-    for (;;) {
-      const v = await fn();
-      if (v) return v;
-      if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-      await page.waitForTimeout(50);
-    }
-  }
+  const until = waiter(() => page, { fail, ms: 15_000 });
   const settleShot = async (name) => { await page.waitForTimeout(300); await shot(name); };
   const place = (pairs) => page.evaluate((pairs) => {
     const h = window.hexWorld;

@@ -5,19 +5,15 @@
 // routing-web.json (each capture's train_list, read from hexWorld.state()). The web twin of
 // play.sh, for when native windows cannot draw (an idle or occluded display).
 // Run: node e2e/rail-routing-shots.mjs dist
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "docs/checkpoints/rail-routing";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const STATIONS = { east: { q: 1, r: -1 }, north: { q: 0, r: -2 } };
@@ -26,7 +22,7 @@ const script = JSON.parse(readFileSync(`${out}/play.json`, "utf8"));
 const build = script.slice(0, script.findIndex((c) => c.cmd === "camera"));
 const view = script.filter((c) => c.cmd === "camera");
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

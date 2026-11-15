@@ -9,24 +9,20 @@
 // even where every edge is grass (owner, 2026-10-20). GPU Chromium on the built site; writes
 // docs/checkpoints/ghost/*.jpg and ghost.json (what each capture shows, read from hexWorld.state()).
 // Run: node e2e/ghost-shots.mjs dist
-import { chromium } from "playwright";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, untilInPage } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.GHOST_OUT ?? "docs/checkpoints/ghost";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const record = [];
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 
 /**
  * Tiles whose look turns with them (the bridge schema's catalog, from data/tiles/*.ron): an
@@ -48,15 +44,8 @@ async function open(page) {
   return errors;
 }
 
-async function until(page, fn, what, ms = 30_000) {
-  const deadline = Date.now() + ms;
-  for (;;) {
-    const v = await page.evaluate(fn);
-    if (v) return v;
-    if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-    await page.waitForTimeout(100);
-  }
-}
+const waitInPage = (page, fn, what, ms = 30_000) =>
+  untilInPage(page, fn, what, { ms, interval: 100, onTimeout: fail });
 
 async function frame(page, q, r) {
   const [x, z] = world(q, r);
@@ -101,7 +90,7 @@ async function ghostPair(page, tile, q0, r0, key) {
     if (a !== null && b !== null && a !== b) { q = c.q; r = c.r; break; }
   }
   await page.evaluate(([q, r]) => window.hexWorld.hover(q, r), [q, r]);
-  await until(page, () => window.hexWorld.state().ghost_meshes === true, `${tile} ghost draws its meshes`);
+  await waitInPage(page, () => window.hexWorld.state().ghost_meshes === true, `${tile} ghost draws its meshes`);
   await frame(page, q, r);
   const a = await capture(page, `${key}-a`, `${tile} at (${q}, ${r})`);
   await page.evaluate(() => window.hexWorld.rotateGhost("cw"));
@@ -141,7 +130,7 @@ async function rotationPair(page, tile, key) {
   const shots = [];
   for (const [f, s] of [[fits[0], "a"], [second, "b"]]) {
     await page.evaluate(([tile, q, r]) => { const h = window.hexWorld; h.selectTile(tile); h.hover(q, r); }, [tile, f.q, f.r]);
-    await until(page, () => window.hexWorld.state().ghost_meshes === true, `${tile} ghost draws its meshes`);
+    await waitInPage(page, () => window.hexWorld.state().ghost_meshes === true, `${tile} ghost draws its meshes`);
     await frame(page, f.q, f.r);
     const shot = await capture(page, `${key}-${s}`, `${tile} at (${f.q}, ${f.r}), rotation ${f.rot}`);
     if (shot.ghost?.rotation !== f.rot || !shot.ghost?.valid) fail(`${tile}: ${key}-${s} is not at fitting rotation ${f.rot}: ${JSON.stringify(shot.ghost)}`);
@@ -177,7 +166,7 @@ function expectScatter(shot, tile, pieces) {
     h.selectTile("road_straight"); h.placeTile(1, 0);
     h.selectTile("river_straight"); h.placeTile(-1, 1);
   });
-  await until(page, () => window.hexWorld.state().tiles === 4 && (window.hexWorld.state().pack_waiting ?? []).length === 0, "world set up with every pack in");
+  await waitInPage(page, () => window.hexWorld.state().tiles === 4 && (window.hexWorld.state().pack_waiting ?? []).length === 0, "world set up with every pack in");
   await page.waitForTimeout(2500);
   expectScatter(await ghostPair(page, "meadow", 0, -1, "ghost-meadow"), "meadow", ["wildflower_clump"]);
   expectScatter(await ghostPair(page, "forest", -1, -1, "ghost-forest"), "forest", ["tree_forest"]);
@@ -204,14 +193,14 @@ function expectScatter(shot, tile, pieces) {
   // other ghost shots' camera (a steep one stacks the translucent crowns into one flat tint). The
   // placed tile keeps the ghost's rotation and its scatter layout fingerprint equals the ghost's.
   await page.evaluate(() => { const h = window.hexWorld; h.unpin(); h.selectTile("forest"); h.hover(-2, 0); });
-  await until(page, () => { const st = window.hexWorld.state(); return st.ghost_meshes === true && st.ghost?.q === -2 && st.ghost?.r === 0 && st.ghost?.tile === "forest"; }, "pine ghost at (-2, 0)");
+  await waitInPage(page, () => { const st = window.hexWorld.state(); return st.ghost_meshes === true && st.ghost?.q === -2 && st.ghost?.r === 0 && st.ghost?.tile === "forest"; }, "pine ghost at (-2, 0)");
   await page.evaluate(() => window.hexWorld.rotateGhost("cw"));
   await page.waitForTimeout(300);
   await frame(page, -2, 0);
   const g = await capture(page, "match-forest-ghost", "pine forest ghost at (-2, 0)");
   expectScatter(g, "forest", ["tree_forest"]);
   await page.evaluate(() => window.hexWorld.placeTile(-2, 0));
-  await until(page, () => (window.hexWorld.state().scatter?.tiles ?? []).some((t) => t.q === -2 && t.r === 0 && t.drawn.tree_forest > 0), "pine forest placed at (-2, 0) with its scatter drawn");
+  await waitInPage(page, () => (window.hexWorld.state().scatter?.tiles ?? []).some((t) => t.q === -2 && t.r === 0 && t.drawn.tree_forest > 0), "pine forest placed at (-2, 0) with its scatter drawn");
   await page.waitForTimeout(1500);
   const placed = await capture(page, "match-forest-placed", "the same cell after placing it");
   const after = await page.evaluate(() => {
@@ -245,11 +234,11 @@ function expectScatter(shot, tile, pieces) {
   if (!shore) fail("no free slot fits a beach");
   else {
     await page.evaluate(([q, r]) => window.hexWorld.placeTile(q, r), [shore.q, shore.r]);
-    await until(page, () => window.hexWorld.state().tiles === 2 && (window.hexWorld.state().pack_waiting ?? []).length === 0, `beach placed at (${shore.q}, ${shore.r})`);
+    await waitInPage(page, () => window.hexWorld.state().tiles === 2 && (window.hexWorld.state().pack_waiting ?? []).length === 0, `beach placed at (${shore.q}, ${shore.r})`);
     const sea = await firstFit(page, "ocean");
     if (!sea) fail(`no free slot fits the ocean beside the beach at (${shore.q}, ${shore.r})`);
     else {
-      await until(page, () => window.hexWorld.state().ghost_meshes === true, "ocean ghost draws its meshes");
+      await waitInPage(page, () => window.hexWorld.state().ghost_meshes === true, "ocean ghost draws its meshes");
       await frame(page, sea.q, sea.r);
       expectWater(await capture(page, "ghost-ocean", `ocean at (${sea.q}, ${sea.r}) beside the beach at (${shore.q}, ${shore.r})`), "ocean");
     }
@@ -279,7 +268,7 @@ function expectScatter(shot, tile, pieces) {
   if (rail.ghost_meshes !== false) fail(`fallback rail ghost drew meshes: ${JSON.stringify(rail.ghost_meshes)}`);
   await page.evaluate(() => { const h = window.hexWorld; h.selectTile("house_cluster"); h.hover(1, 0); });
   release();
-  await until(page, () => window.hexWorld.state().ghost_meshes === true, "house ghost swaps to its meshes when the pack lands");
+  await waitInPage(page, () => window.hexWorld.state().ghost_meshes === true, "house ghost swaps to its meshes when the pack lands");
   await capture(page, "ghost-fallback-landed", "the same ghost once the village pack arrived");
   if (errors.length) fail(`console errors: ${errors.join(" | ")}`);
   await page.close();

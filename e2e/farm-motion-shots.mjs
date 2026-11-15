@@ -6,19 +6,15 @@
 // start of each sequence and held, and each frame records the animal's `play.farm` row (state,
 // phase, walk, head). Writes docs/checkpoints/farm-motion/<seq>-<n>.jpg and farm-motion.json.
 // Run: node e2e/farm-motion-shots.mjs dist
-import { chromium } from "playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.FARM_MOTION_OUT ?? "docs/checkpoints/farm-motion";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
-
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const build = [
@@ -33,7 +29,7 @@ const build = [
   { cmd: "hover", q: 8, r: -8 },
 ];
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));

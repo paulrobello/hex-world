@@ -4,24 +4,21 @@
 // reload starts with everything off and that `?debug=` turns overlays on from the start. Every step
 // saves a capture to DEBUG_OUT (default e2e/test-results/debug; DEBUG_OUT=docs/checkpoints/debug
 // refreshes the committed checkpoint shots).
-import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = process.env.DEBUG_OUT ?? "e2e/test-results/debug";
 mkdirSync(out, { recursive: true });
 const { server, base } = await serveDist(dist);
 
-const gpuArgs = process.env.PW_GPU === "swiftshader"
-  ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"]
-  : ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"];
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
 const check = (ok, m) => { if (!ok) fail(m); else console.log("ok:", m); };
 
-const browser = await chromium.launch({ channel: "chromium", headless: true, args: gpuArgs });
+const browser = await launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
 // The first-run callouts are done, so they stay out of the captures.
 await page.addInitScript(() => { try { localStorage.setItem("hexWorld.hints", "99"); } catch {} });
@@ -33,15 +30,7 @@ const shot = (name) => page.screenshot({ path: `${out}/${name}.jpg`, type: "jpeg
 const state = () => page.evaluate(() => window.hexWorld.state());
 const dbg = async () => (await state()).debug;
 const cmd = (c) => page.evaluate((c) => window.hexWorld.cmd(c), c);
-async function until(fn, what, ms = 15_000) {
-  const deadline = Date.now() + ms;
-  for (;;) {
-    const v = await fn();
-    if (v) return v;
-    if (Date.now() > deadline) { fail(`timed out: ${what}`); return v; }
-    await page.waitForTimeout(50);
-  }
-}
+const waitFor = waiter(() => page, { fail, ms: 15_000 });
 const OFF = { lod_tint: false, force_lod: "auto", perf: false, grid: false, sockets: false, colliders: false, scatter: false, networks: false };
 const SWITCHES = ["lod_tint", "perf", "grid", "sockets", "colliders", "scatter", "networks"];
 const allOff = (d) => d && Object.entries(OFF).every(([k, v]) => d[k] === v);
@@ -61,12 +50,12 @@ const CAMERA = { cmd: "camera", pos: [70, 95, 125], look_at: [-12, 0, -4] };
 async function boot(query) {
   await page.goto(base + `?scenario=play&tilt=off&fps=off${query}`, { waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
-  await until(async () => !(await page.locator(".load").count()), "loading layer removed after ready", 10_000);
+  await waitFor(async () => !(await page.locator(".load").count()), "loading layer removed after ready", 10_000);
 }
 
 async function buildWorld() {
   await cmd(WORLD);
-  await until(async () => {
+  await waitFor(async () => {
     const s = await state();
     return s.play.tiles.length >= 12 && !(s.pack_waiting ?? []).length && !s.play.rising.length && s.queued === 0;
   }, "the world is placed, its packs loaded and every tile settled", 60_000);
@@ -74,7 +63,7 @@ async function buildWorld() {
   // The Tiles sheet closes so the captures show the whole world.
   await page.focus("canvas#hex-world");
   await page.keyboard.press("Tab");
-  await until(async () => page.locator(".sheet--tiles.is-closed").count(), "the Tiles sheet closes");
+  await waitFor(async () => page.locator(".sheet--tiles.is-closed").count(), "the Tiles sheet closes");
   await page.waitForTimeout(600);
 }
 /** The pointer leaves the tools (no tooltip) for a corner with no slot under it (no ghost). */
@@ -85,14 +74,14 @@ const settingsTool = () => page.locator(".tool[data-action=settings]").dispatchE
 const settingsOpen = () => page.locator(".sheet--settings:not(.is-closed)").count();
 async function openDebugTab() {
   if (!(await settingsOpen())) await settingsTool();
-  await until(settingsOpen, "Settings opens");
+  await waitFor(settingsOpen, "Settings opens");
   await page.locator("#settings-tab-debug").click();
   await page.locator("#settings-tab-debug").focus();
-  await until(async () => page.locator("#settings-debug:not([hidden])").count(), "the Debug tab shows");
+  await waitFor(async () => page.locator("#settings-debug:not([hidden])").count(), "the Debug tab shows");
 }
 async function closeSettings() {
   if (await settingsOpen()) await settingsTool();
-  await until(async () => !(await settingsOpen()), "Settings closes");
+  await waitFor(async () => !(await settingsOpen()), "Settings closes");
   // Focus leaves the Settings tool, so its tooltip and focus ring stay out of the captures.
   await page.focus("canvas#hex-world");
   await park();
@@ -116,33 +105,33 @@ try {
   check(await page.locator(".lod-legend__row").count() === 3, "the LOD key lists three levels");
   for (const id of SWITCHES) {
     await page.locator(`.switch[data-debug=${id}]`).click();
-    await until(async () => (await dbg())[id] === true, `the ${id} switch turns its overlay on`);
+    await waitFor(async () => (await dbg())[id] === true, `the ${id} switch turns its overlay on`);
     await cmd({ cmd: "debug", [id]: false });
-    await until(async () => (await dbg())[id] === false, `the debug command turns ${id} off`);
-    await until(async () => (await page.locator(`.switch[data-debug=${id}]`).getAttribute("aria-checked")) === "false",
+    await waitFor(async () => (await dbg())[id] === false, `the debug command turns ${id} off`);
+    await waitFor(async () => (await page.locator(`.switch[data-debug=${id}]`).getAttribute("aria-checked")) === "false",
       `the ${id} switch follows the bridge`);
   }
 
   // LOD census: tint on through the UI, counts non-zero, Force LOD 2 then 0 through the UI and the bridge.
   await page.locator(".switch[data-debug=lod_tint]").click();
-  const auto = await until(async () => { const d = await dbg(); return d.lod_tint && sum(d.lod.by_lod) > 0 && d; },
+  const auto = await waitFor(async () => { const d = await dbg(); return d.lod_tint && sum(d.lod.by_lod) > 0 && d; },
     "LOD tint on counts drawn parts");
   console.log(`auto by_lod ${JSON.stringify(auto?.lod)}`);
   await page.locator(".field--force .seg button[data-value='2']").click();
-  const two = await until(async () => { const d = await dbg(); const b = d.lod.by_lod;
+  const two = await waitFor(async () => { const d = await dbg(); const b = d.lod.by_lod;
     return d.force_lod === "2" && b[2] > 0 && b[0] === 0 && b[1] === 0 && d; }, "Force LOD 2 draws LOD2 parts only");
   console.log(`forced 2 by_lod ${JSON.stringify(two?.lod)}`);
   check(two && two.lod.tris_by_lod[2] > 0, "LOD2 parts carry triangles");
   await page.waitForTimeout(300);
   await shot("debug-tab-lod-forced-1440x900");
   await cmd({ cmd: "debug", force_lod: "0" });
-  const zero = await until(async () => { const d = await dbg(); const b = d.lod.by_lod;
+  const zero = await waitFor(async () => { const d = await dbg(); const b = d.lod.by_lod;
     return d.force_lod === "0" && b[0] > 0 && b[1] === 0 && b[2] === 0 && d; }, "Force LOD 0 draws LOD0 parts only");
   check(zero && two && zero.lod.tris_by_lod[0] > two.lod.tris_by_lod[2], "LOD0 draws more triangles than LOD2");
-  await until(async () => (await page.locator(".field--force .seg button[data-value='0']").getAttribute("aria-checked")) === "true",
+  await waitFor(async () => (await page.locator(".field--force .seg button[data-value='0']").getAttribute("aria-checked")) === "true",
     "the Force LOD control follows the bridge");
   await page.locator(".field--force .seg button[data-value='auto']").click();
-  await until(async () => (await dbg()).force_lod === "auto", "Auto restores the distance bands");
+  await waitFor(async () => (await dbg()).force_lod === "auto", "Auto restores the distance bands");
 
   // One capture per overlay, the sheet closed.
   await closeSettings();
@@ -155,31 +144,31 @@ try {
   await only("lod-force-2", { lod_tint: true, force_lod: "2" });
   await only("lod-force-0", { lod_tint: true, force_lod: "0" });
   await cmd({ cmd: "debug", ...OFF, perf: true });
-  await until(async () => (await dbg()).frame.fps > 0, "the perf sampler reports a frame rate");
-  await until(async () => page.locator(".debug-perf:not([hidden]) .debug-perf__row").count(), "the perf corner shows with Settings closed");
+  await waitFor(async () => (await dbg()).frame.fps > 0, "the perf sampler reports a frame rate");
+  await waitFor(async () => page.locator(".debug-perf:not([hidden]) .debug-perf__row").count(), "the perf corner shows with Settings closed");
   await page.waitForTimeout(700);
   const perfText = await page.locator(".debug-perf").innerText();
   check(/fps/.test(perfText) && /Grass blades/.test(perfText), `the perf corner reads out: ${perfText.replace(/\n/g, " | ")}`);
   // Closer in, so the meadow's grass is inside its build radius and the readout counts blades.
   await cmd({ cmd: "camera", pos: [18, 34, 52], look_at: [-4, 0, 4] });
-  await until(async () => ((await state()).grass?.blades ?? 0) > 0, "grass draws near the camera", 20_000);
+  await waitFor(async () => ((await state()).grass?.blades ?? 0) > 0, "grass draws near the camera", 20_000);
   await page.waitForTimeout(900);
   const nearText = await page.locator(".debug-perf").innerText();
   check(!/Grass blades\s+0\b/.test(nearText), `the perf corner counts drawn grass blades: ${nearText.replace(/\n/g, " | ")}`);
   await shot("debug-perf");
   // Walk mode hides the HUD but not the perf corner (owner, 2026-10-20).
   await cmd({ cmd: "walk", on: true, pointer_lock: null });
-  await until(async () => (await state()).walk?.on, "walk mode starts");
-  await until(async () => page.locator(".hud.is-hidden.is-walking").count(), "the HUD hides while walking");
+  await waitFor(async () => (await state()).walk?.on, "walk mode starts");
+  await waitFor(async () => page.locator(".hud.is-hidden.is-walking").count(), "the HUD hides while walking");
   await page.waitForTimeout(500);
   const walkOpacity = await page.locator(".debug-perf").evaluate((el) => getComputedStyle(el).opacity);
   check(walkOpacity === "1", `the perf corner stays visible in walk mode (opacity ${walkOpacity})`);
   await shot("debug-perf-walk");
   await cmd({ cmd: "walk", on: false, pointer_lock: null });
-  await until(async () => !(await state()).walk?.on, "walk mode ends");
+  await waitFor(async () => !(await state()).walk?.on, "walk mode ends");
   await cmd(CAMERA);
   await cmd({ cmd: "debug", ...OFF, grid: true });
-  await until(async () => page.locator(".debug-labels:not([hidden]) .debug-label:not([hidden])").count(), "the grid labels show");
+  await waitFor(async () => page.locator(".debug-labels:not([hidden]) .debug-label:not([hidden])").count(), "the grid labels show");
   check((await page.locator(".debug-label").allInnerTexts()).includes("0, 0"), "the origin tile is labelled 0, 0");
   await page.waitForTimeout(400);
   await shot("debug-grid");
@@ -189,7 +178,7 @@ try {
   await only("networks", { networks: true });
   await only("all", { lod_tint: true, perf: true, grid: true, sockets: true, colliders: true, scatter: true, networks: true });
   await cmd({ cmd: "debug", ...OFF });
-  await until(async () => allOff(await dbg()), "the bridge turns everything off");
+  await waitFor(async () => allOff(await dbg()), "the bridge turns everything off");
   check(await page.locator(".debug-perf[hidden]").count() === 1, "the perf corner hides when perf is off");
 
   // The tab at phone size.
@@ -203,14 +192,14 @@ try {
 
   // A reload starts with everything off; `?debug=` turns overlays on from the start.
   await cmd({ cmd: "debug", lod_tint: true, perf: true, grid: true, force_lod: "1" });
-  await until(async () => (await dbg()).grid, "overlays on before the reload");
+  await waitFor(async () => (await dbg()).grid, "overlays on before the reload");
   await boot("");
   check(allOff(await dbg()), "a reload starts with every overlay off");
   await boot("&debug=grid,lod,lod2");
   const flagged = await dbg();
   check(flagged.grid && flagged.lod_tint && flagged.force_lod === "2" && !flagged.perf, `?debug=grid,lod,lod2 starts them on: ${JSON.stringify(flagged)}`);
   await openDebugTab();
-  await until(async () => (await page.locator(".switch[data-debug=grid]").getAttribute("aria-checked")) === "true",
+  await waitFor(async () => (await page.locator(".switch[data-debug=grid]").getAttribute("aria-checked")) === "true",
     "the tab shows a flag-started overlay");
 
   check(errors.length === 0, `no console errors (${errors.length})`);

@@ -16,12 +16,12 @@
 //   TIER_STEPS=high>medium,medium>high,high>medium (default), TIER_WORLD=<radius> (default 8; 0 = the
 //   start tile), TIER_ROUNDS (default 2), TIER_WINDOW_MS (default 6000), TIER_VIA=cmd|ui (default cmd),
 //   TIER_QUERY=<extra query keys, e.g. tier_warm=off>
-import { chromium } from "playwright";
 import { open, writeFile } from "node:fs/promises";
 import { loadavg } from "node:os";
 import { LOAD_LIMIT, guarded, waitForLoad } from "./perf-load.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 import { serveDist } from "./lib/harness.mjs";
+import { gpuArgs, launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const OUT = process.argv[3] ?? "target/tier-stall.json";
@@ -108,8 +108,7 @@ async function waitSettled(page, what, tiles = 0, warm = true) {
 async function round(n, tracePath) {
   // The session's load guard comes before the page: the first warm-up starts right after READY.
   const loadBefore = GUARD ? await waitForLoad("the session") : loadavg()[0];
-  const browser = await chromium.launch({ channel: "chromium", headless: true,
-    args: ["--use-angle=metal", "--enable-gpu", "--ignore-gpu-blocklist", "--enable-unsafe-webgpu"] });
+  const browser = await launch({ args: gpuArgs({ swiftshader: false }) });
   const results = [];
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
