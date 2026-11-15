@@ -30,7 +30,8 @@ pub use workload::{
     parse_grass_distance, parse_ibl, parse_shadow_dist, parse_shadows,
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Scenario {
     #[default]
     Single,

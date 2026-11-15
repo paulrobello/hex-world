@@ -3,13 +3,14 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 
 use bevy::prelude::*;
+use hex_core::save::QualitySetting;
 use hex_core::{Axial, RotateDir};
 use hex_play::play::{
     packs::PlayPacks,
     rise::{PlayRises, ReducedMotion},
 };
 use hex_render::{
-    ActiveScenario, Scenario, SceneEntity, setup_scene,
+    ActiveScenario, Grade, Scenario, SceneEntity, setup_scene,
     tilt_shift::{TiltPinned, TiltShiftSettings},
 };
 use serde::Deserialize;
@@ -39,6 +40,30 @@ pub enum Toggle {
     Photo,
 }
 
+/// The `debug` command's `force_lod` value: `auto` or the forced LOD level.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+pub enum ForceLod {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "0")]
+    L0,
+    #[serde(rename = "1")]
+    L1,
+    #[serde(rename = "2")]
+    L2,
+}
+
+impl From<ForceLod> for Option<u8> {
+    fn from(f: ForceLod) -> Self {
+        match f {
+            ForceLod::Auto => None,
+            ForceLod::L0 => Some(0),
+            ForceLod::L1 => Some(1),
+            ForceLod::L2 => Some(2),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum Command {
@@ -53,7 +78,7 @@ pub enum Command {
         frames: u32,
     },
     Scenario {
-        name: String,
+        name: Scenario,
     },
     /// Runtime tilt-shift toggle and strength (the `T` key and the strength slider's script form).
     Tilt {
@@ -67,13 +92,13 @@ pub enum Command {
     /// new tier with the camera kept (`hex_play::tier`); `auto` returns to the detected tier. The
     /// choice is the save's quality from then on. The Settings sheet sends this.
     SetTier {
-        tier: String,
+        tier: QualitySetting,
     },
     /// Look preset at runtime (`aces`, `tony`, `rich-1`, `rich-2`, `rich-3`; `hex_render::grade`):
     /// the cameras' tone mapper, exposure and grading and the backdrop switch with no rebuild. The
     /// Settings sheet sends this; the overlay keeps the choice per viewer, not in the world save.
     SetGrade {
-        grade: String,
+        grade: Grade,
     },
     /// Grass density at runtime as a share of the Normal density (0 off, 1 Normal, 1.5 the most;
     /// clamped, rounded to whole percent; `hex_play::play::grass`): each tile's blade mesh swaps
@@ -241,7 +266,7 @@ pub enum Command {
     /// or `2`. Never saved; `state().debug` reports them.
     Debug {
         lod_tint: Option<bool>,
-        force_lod: Option<String>,
+        force_lod: Option<ForceLod>,
         perf: Option<bool>,
         grid: Option<bool>,
         sockets: Option<bool>,
@@ -443,17 +468,14 @@ pub fn run_commands(
         }
         Command::Screenshot { name } => capture::request_held(&mut commands, &name),
         Command::Wait { frames } => queue.wait = frames,
-        Command::Scenario { name } => match Scenario::parse(&name) {
-            Some(s) => {
-                // Children also carry `SceneEntity` and go with their parent; skip the repeats.
-                for e in &scene {
-                    commands.entity(e).try_despawn();
-                }
-                commands.insert_resource(ActiveScenario(s));
-                commands.run_system_cached(setup_scene);
+        Command::Scenario { name } => {
+            // Children also carry `SceneEntity` and go with their parent; skip the repeats.
+            for e in &scene {
+                commands.entity(e).try_despawn();
             }
-            None => warn!("scenario command: unknown scenario '{name}', skipped"),
-        },
+            commands.insert_resource(ActiveScenario(name));
+            commands.run_system_cached(setup_scene);
+        }
         Command::Tilt { on, strength } => {
             tilt.enabled = on.unwrap_or(tilt.enabled);
             if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
@@ -464,30 +486,26 @@ pub fn run_commands(
             }
         }
         Command::DumpState { name } => dump_state(&name),
-        Command::SetTier { tier } => match crate::persist::quality_setting(&tier) {
-            Some(q) => {
-                saved.quality = q;
-                hex_play::tier::request(
-                    &mut commands,
-                    crate::persist::quality_tier(q),
-                    "set_tier command".into(),
-                    false,
-                );
-            }
-            None => warn!("set_tier command: unknown tier '{tier}', skipped"),
-        },
-        Command::SetGrade { grade } => match hex_render::Grade::parse(&grade) {
+        Command::SetTier { tier } => {
+            saved.quality = tier;
+            hex_play::tier::request(
+                &mut commands,
+                crate::persist::quality_tier(tier),
+                "set_tier command".into(),
+                false,
+            );
+        }
+        Command::SetGrade { grade } => {
             // Photo mode re-applies its entry exposure every frame, so it shifts with the grade.
-            Some(g) => commands.queue(move |w: &mut World| {
-                let shift = hex_render::grade::apply(w, g);
+            commands.queue(move |w: &mut World| {
+                let shift = hex_render::grade::apply(w, grade);
                 if let Some(mut s) = w.get_resource_mut::<PhotoSession>()
                     && let Some(e) = s.saved.as_mut().and_then(|snap| snap.ev100.as_mut())
                 {
                     *e += shift;
                 }
-            }),
-            None => warn!("set_grade command: unknown grade '{grade}', skipped"),
-        },
+            })
+        }
         Command::SetGrass { density } => {
             match hex_play::play::grass::Density::from_share(density) {
                 Some(d) => commands.queue(move |w: &mut World| {
@@ -605,7 +623,7 @@ pub fn run_commands(
                 ("scatter", scatter),
                 ("networks", networks),
             ],
-            force_lod.as_deref(),
+            force_lod,
         ),
         c @ (Command::SelectTile { .. }
         | Command::Hover { .. }
@@ -653,7 +671,7 @@ fn apply_photo_command(
 fn apply_debug(
     debug: &mut ResMut<hex_play::debug::DebugOverlays>,
     switches: [(&str, Option<bool>); 7],
-    force_lod: Option<&str>,
+    force_lod: Option<ForceLod>,
 ) {
     let mut next = **debug;
     for (name, on) in switches {
@@ -662,10 +680,7 @@ fn apply_debug(
         }
     }
     if let Some(f) = force_lod {
-        match hex_play::debug::DebugOverlays::parse_force(f) {
-            Some(level) => next.force_lod = level,
-            None => warn!("debug command: force_lod '{f}' is not auto, 0, 1 or 2, skipped"),
-        }
+        next.force_lod = f.into();
     }
     if next != **debug {
         **debug = next;
@@ -1055,7 +1070,12 @@ mod tests {
                     {"cmd":"photo","dof":"manual","focus":12.5,"focus_at":[0.25,0.75]},{"cmd":"photo_export","scale":4,"name":"p"}]"#;
         let c = parse_script(s).unwrap();
         assert_eq!(c.len(), 10);
-        assert_eq!(c[7], Command::SetTier { tier: "low".into() });
+        assert_eq!(
+            c[7],
+            Command::SetTier {
+                tier: QualitySetting::Low
+            }
+        );
         assert_eq!(c[7].action(), None);
         assert_eq!(
             c[8],
@@ -1087,6 +1107,22 @@ mod tests {
         );
         assert_eq!(c[1], Command::Wait { frames: 30 });
         assert_eq!(c[5], Command::Exit);
+    }
+
+    #[test]
+    fn rejects_an_unknown_tier_at_parse_time_with_the_command_index() {
+        let e = parse_script(
+            r#"[{"cmd":"camera","pos":[0,90,90],"look_at":[0,0,0]},{"cmd":"set_tier","tier":"max"}]"#,
+        )
+        .unwrap_err();
+        assert!(
+            e.starts_with("command 1:"),
+            "error should name command index 1, got: {e}"
+        );
+        assert!(
+            e.contains("unknown variant"),
+            "error should name the bad value: {e}"
+        );
     }
 
     #[test]
@@ -1260,7 +1296,7 @@ mod tests {
             c[0],
             Command::Debug {
                 lod_tint: Some(true),
-                force_lod: Some("2".into()),
+                force_lod: Some(ForceLod::L2),
                 perf: None,
                 grid: None,
                 sockets: None,

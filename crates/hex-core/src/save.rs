@@ -53,7 +53,8 @@ pub struct CameraState {
 }
 
 /// Quality tier choice (PRD §9.2). `Auto` lets the game detect a tier.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum QualitySetting {
     Auto,
     Low,

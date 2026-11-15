@@ -11,15 +11,19 @@ use bevy::{
 
 use crate::workload::{Ev100, GateConfig, Tonemap};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum Grade {
     /// AcesFitted at EV100 12.5 with Bevy's default clear colour: the look before 2026-10-14.
     Aces,
     /// TonyMcMapface at EV100 12.9 (owner, 2026-10-14, Q4): the default until `rich-3` replaced it.
     Tony,
+    #[serde(rename = "rich-1")]
     Rich1,
+    #[serde(rename = "rich-2")]
     Rich2,
     /// The default (owner, 2026-10-14, after the grade comparison).
+    #[serde(rename = "rich-3")]
     #[default]
     Rich3,
 }

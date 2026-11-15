@@ -19,8 +19,7 @@ use crate::photo::PhotoSession;
 
 mod settings;
 pub use settings::{
-    SavedSettings, SettingsJson, Volumes, camera_state, camera_transform, quality_setting,
-    quality_tier,
+    SavedSettings, SettingsJson, Volumes, camera_state, camera_transform, quality_tier,
 };
 use settings::{default_camera, quality_name};
 
@@ -550,6 +549,7 @@ pub fn save_on_exit(
 mod tests {
     use super::*;
     use crate::camera::{MAX_DISTANCE, MAX_PITCH};
+    use hex_core::save::QualitySetting;
     use hex_core::{AudioVolumes, CameraState};
     use hex_render::post::QualityTier;
 
@@ -1030,14 +1030,14 @@ mod tests {
     #[test]
     fn set_tier_spellings_map_to_the_saved_quality_and_back() {
         for name in ["auto", "low", "medium", "high", "ultra"] {
-            let q = quality_setting(name).expect(name);
+            let q: QualitySetting = serde_json::from_str(&format!("\"{name}\"")).expect(name);
             assert_eq!(quality_name(q), name);
             assert_eq!(
                 quality_tier(q).map(QualityTier::name),
                 (name != "auto").then_some(name)
             );
         }
-        assert_eq!(quality_setting("max"), None);
+        assert!(serde_json::from_str::<QualitySetting>("\"max\"").is_err());
     }
 
     #[test]

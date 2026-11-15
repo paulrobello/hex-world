@@ -3119,6 +3119,7 @@ dependencies = [
  "hex-assets",
  "hex-core",
  "hex-play-state",
+ "serde",
  "serde_json",
  "sha2",
  "wgpu",

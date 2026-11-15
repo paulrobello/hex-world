@@ -55,18 +55,6 @@ pub struct SettingsJson {
     pub volumes: Volumes,
 }
 
-/// The `set_tier` spelling of a quality setting (`auto` or a tier name).
-pub fn quality_setting(name: &str) -> Option<QualitySetting> {
-    Some(match name {
-        "auto" => QualitySetting::Auto,
-        "low" => QualitySetting::Low,
-        "medium" => QualitySetting::Medium,
-        "high" => QualitySetting::High,
-        "ultra" => QualitySetting::Ultra,
-        _ => return None,
-    })
-}
-
 /// The tier a quality setting asks for; `None` is Auto (detection's answer).
 pub fn quality_tier(q: QualitySetting) -> Option<QualityTier> {
     match q {
