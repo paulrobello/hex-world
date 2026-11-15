@@ -36,6 +36,7 @@ pub use plugins::PlayPlugin;
 pub mod rise;
 pub mod scatter;
 pub mod slope_ground;
+pub mod tunnels;
 
 use packs::{PackRequests, PlayPacks};
 use slope_ground::{GroundBuild, SlopeMeshes};
@@ -537,6 +538,15 @@ fn spawn_kit_parts_with(
         if let Some((cell, role)) = rise {
             e.insert(RisePart::new(cell, role, t));
         }
+        if part.slot == slope_ground::SKIRT_SLOT {
+            e.insert(tunnels::WallPart);
+        }
+        if let Some(slot) = tunnels::TunnelSlot::of(&part.slot) {
+            e.insert(slot);
+            if !slot.shown(false) {
+                e.insert(Visibility::Hidden);
+            }
+        }
         if let Some(b) = bodies.get_mut(part.lod) {
             b.get_or_insert(e.id());
         }
@@ -710,8 +720,14 @@ fn spawn_column(
     let mesh = Mesh3d(ground.cache.column(level, ground.meshes));
     let t = Transform::from_translation(at);
     match slope_ground::slot_material(kit, slope_ground::SKIRT_SLOT) {
-        Some(mat) => p.spawn((mesh, MeshMaterial3d(mat), t, SceneEntity)),
-        None => p.spawn((mesh, MeshMaterial3d(fallback.clone()), t, SceneEntity)),
+        Some(mat) => p.spawn((mesh, MeshMaterial3d(mat), t, SceneEntity, tunnels::WallPart)),
+        None => p.spawn((
+            mesh,
+            MeshMaterial3d(fallback.clone()),
+            t,
+            SceneEntity,
+            tunnels::WallPart,
+        )),
     };
 }
 
@@ -772,13 +788,17 @@ fn tile_children(
     ) {
         (true, Some(cap_mat), Some(skirt_mat)) => {
             let (cap, skirt) = ground.cache.ground(def, ground.meshes);
-            for (mesh, mat) in [(cap, cap_mat), (skirt, skirt_mat)] {
-                p.spawn((
+            for (i, (mesh, mat)) in [(cap, cap_mat), (skirt, skirt_mat)].into_iter().enumerate() {
+                let mut e = p.spawn((
                     Mesh3d(mesh),
                     MeshMaterial3d(mat),
                     Transform::IDENTITY,
                     SceneEntity,
                 ));
+                // The skirt (second) is a soil wall a tunnel may open.
+                if i == 1 {
+                    e.insert(tunnels::WallPart);
+                }
             }
             true
         }
@@ -1819,7 +1839,7 @@ pub(crate) mod tests {
     #[test]
     fn every_mvp_tile_resolves_and_biomes_index() {
         let c = PlayCatalog::default();
-        assert_eq!(c.0.tiles().len(), 48);
+        assert_eq!(c.0.tiles().len(), 52);
         let biomes: std::collections::BTreeSet<_> =
             c.0.tiles().iter().map(|t| biome_index(t.biome)).collect();
         assert_eq!(biomes.len(), 4);

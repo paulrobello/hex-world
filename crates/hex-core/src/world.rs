@@ -542,7 +542,10 @@ impl World {
             && level_allowed(def, o.level)
             && self.is_slot_for(cell, def)
             && each_face(cell, def, o, |m, w, mine| {
-                self.face(catalog, m, w, mine, false).status != EdgeStatus::Incompatible
+                let status = self.face(catalog, m, w, mine, false).status;
+                // A viaduct's deck ends span between two tiles, so a deck edge needs its rail.
+                status != EdgeStatus::Incompatible
+                    && (mine.socket.deck() == 0 || status == EdgeStatus::Compatible)
             })
     }
 
@@ -1933,6 +1936,11 @@ pub(crate) mod tests {
                 c.get(id)
                     .is_some_and(|d| d.edges.iter().any(|e| e.profile == EdgeProfile::Flat))
             })
+            // A viaduct needs rail on both deck ends, so it never fits at a lone slot.
+            .filter(|id| {
+                c.get(id)
+                    .is_some_and(|d| d.edges.iter().all(|e| e.deck() == 0))
+            })
             .collect();
         // A tile with no Flat edge (hillside 010101) cannot face the level meadow, so it never fits
         // beside it. A massif centre is never a frontier cell.
@@ -2158,9 +2166,8 @@ pub(crate) mod tests {
     fn cycling_walks_distinct_orientations_and_wraps() {
         let c = catalog();
         let w = World::new(1);
-        // The straight railway: like road_straight, but not raisable, so it stays on level 0.
+        // The straight railway: like road_straight, rotation cycling only.
         let road = def(&c, "rail_straight");
-        assert!(!road.raisable);
         let next = |k, dir| cycle(&w, &c, EAST, road, k, dir);
         assert_eq!(next(1, RotateDir::Forward), Some(2));
         assert_eq!(
@@ -3086,6 +3093,139 @@ pub(crate) mod tests {
         assert_eq!(w.auto_orient(&c, BEYOND_END, meadow), Some(o(0, 0)));
     }
 
+    /// Rail at levels (owner, 2026-11-14): the straight, both bends and the junction are raisable,
+    /// the station, level crossing and river rail bridge stay on the ground.
+    #[test]
+    fn rail_tiles_are_raisable_and_the_special_ones_stay_on_the_ground() {
+        let c = catalog();
+        for id in [
+            "rail_straight",
+            "rail_bend_60",
+            "rail_bend_120",
+            "rail_junction",
+        ] {
+            let d = def(&c, id);
+            assert!(d.raisable, "{id}");
+            assert!(level_allowed(d, 3), "{id}");
+        }
+        for id in ["rail_station", "rail_road_crossing", "river_rail_bridge"] {
+            assert!(!def(&c, id).raisable, "{id}");
+        }
+    }
+
+    /// A raised rail straight carries rail to a rail straight on its own level. A rail edge never
+    /// meets rail on another level, so the ground piece is refused rather than drawn as a cliff.
+    #[test]
+    fn a_raised_rail_straight_meets_raised_rail_and_refuses_ground_rail() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "rail_straight", o(1, 1)).unwrap();
+        let next = EAST.neighbor(1);
+        let straight = def(&c, "rail_straight");
+        assert!(w.fits(&c, next, straight, o(1, 1)));
+        assert!(!w.fits(&c, next, straight, o(1, 0)));
+        w.place(&c, next, "rail_straight", o(1, 1)).unwrap();
+        assert!(
+            w.place(&c, next.neighbor(1), "rail_straight", o(1, 0))
+                .is_err()
+        );
+    }
+
+    /// The bends and the junction continue a raised straight on its own level and never on the
+    /// ground, in at least one rotation.
+    #[test]
+    fn raised_bends_and_junction_continue_raised_rail() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "rail_straight", o(1, 1)).unwrap();
+        let next = EAST.neighbor(1);
+        for id in ["rail_bend_60", "rail_bend_120", "rail_junction"] {
+            let d = def(&c, id);
+            let raised: Vec<u8> = (0..6).filter(|&k| w.fits(&c, next, d, o(k, 1))).collect();
+            assert!(
+                !raised.is_empty(),
+                "{id}: no raised rotation continues the rail"
+            );
+            assert!(
+                (0..6).all(|k| !w.fits(&c, next, d, o(k, 0))),
+                "{id}: rail on the ground must not meet raised rail"
+            );
+        }
+    }
+
+    /// A raised rail's open end: raised grass beyond it has no cliff there, ground grass does, and
+    /// the raised orientation is the one a placement picks.
+    #[test]
+    fn a_raised_rail_end_beside_raised_grass_is_not_a_cliff() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "rail_straight", o(1, 1)).unwrap();
+        let end = EAST.neighbor(1);
+        let meadow = def(&c, "meadow");
+        assert!(w.fits(&c, end, meadow, o(0, 1)));
+        assert!(!cliffs(&w, &c, end, meadow, o(0, 1)));
+        assert!(cliffs(&w, &c, end, meadow, o(0, 0)));
+        assert_eq!(w.auto_orient(&c, end, meadow), Some(o(0, 1)));
+    }
+
+    /// A viaduct-like tile built from `rail_straight`: both rail ends stand `deck` levels up.
+    fn viaduct(c: &TileCatalog, deck: u8) -> TileDef {
+        let mut d = def(c, "rail_straight").clone();
+        d.id = format!("test_viaduct_{deck}");
+        d.raisable = false;
+        for e in [0, 3] {
+            d.edges[e].lane = d.edges[e]
+                .lane
+                .map(|l| crate::socket::LaneSpec { deck, ..l });
+        }
+        d
+    }
+
+    /// Rail at levels: a deck-2 viaduct fits only between rail standing at level 2 on both ends,
+    /// needs both neighbours, and stands at level 0 only.
+    #[test]
+    fn a_viaduct_spans_between_two_raised_rail_tiles() {
+        use std::collections::{BTreeMap, VecDeque};
+        let c = catalog();
+        let (north, mid, south) = (Axial::new(1, 0), Axial::new(1, 1), Axial::new(1, 2));
+        let raised = |cell: Axial, level: u8| PlacedTile {
+            def: "rail_straight".into(),
+            rotation: 1,
+            level,
+            seed: cell_seed(1, cell),
+        };
+        let world = |tiles: &[(Axial, u8)]| {
+            let map: BTreeMap<Axial, PlacedTile> = tiles
+                .iter()
+                .map(|&(cell, l)| (cell, raised(cell, l)))
+                .collect();
+            World::from_parts(1, map, VecDeque::new(), vec![])
+        };
+        let v = viaduct(&c, 2);
+        let both = world(&[(north, 2), (south, 2)]);
+        assert!(
+            both.fits(&c, mid, &v, o(1, 0)),
+            "both ends meet rail at level 2"
+        );
+        assert!(
+            !both.fits(&c, mid, &v, o(1, 1)),
+            "a viaduct stands at level 0 only"
+        );
+        assert!(
+            !both.fits(&c, mid, &viaduct(&c, 1), o(1, 0)),
+            "level 2 rail needs a deck of 2"
+        );
+        assert!(!both.fits(&c, mid, &viaduct(&c, 3), o(1, 0)));
+        assert!(
+            !world(&[(north, 2)]).fits(&c, mid, &v, o(1, 0)),
+            "the far deck end has no rail to span to"
+        );
+        assert!(
+            !world(&[(north, 2), (south, 1)]).fits(&c, mid, &v, o(1, 0)),
+            "rail at level 1 is not at the deck's top"
+        );
+    }
+
     #[test]
     fn cycle_group_orders_cliff_free_first_and_wraps() {
         let c = catalog();
@@ -3152,7 +3292,7 @@ pub(crate) mod tests {
             Err(ReplaceError::Unchanged)
         );
         assert_eq!(
-            w.replace(&c, EAST, "rail_straight", o(0, 1)),
+            w.replace(&c, EAST, "rail_station", o(0, 1)),
             Err(ReplaceError::LevelOutOfRange(1))
         );
         let old = w.replace(&c, EAST, "meadow", o(0, 2)).unwrap();

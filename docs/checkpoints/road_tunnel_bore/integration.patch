@@ -1,0 +1,37 @@
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index b8eeb7f..11ce494 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -508,6 +508,11 @@ pub fn kit_layout() -> Vec<Placement> {
+     // (0, -3) and the peak on (2, -4), each two cells clear of the massif's ring and the houses.
+     v.push(place("hill_meadow", 0, -3, 0));
+     v.push(place("peak_granite", 2, -4, 0));
++    // The open road tunnel's bore (P4 open tunnels, 2026-11-14) alone on a meadow at (4, 1), east of
++    // the ocean corner: the tube at the meadow's level with its ends open, so the lining, the lamps'
++    // always-on glow and the road on its floor show in kit light.
++    v.push(place("meadow_base", 4, 1, 0));
++    v.push(place("road_tunnel_bore", 4, 1, 0));
+     v
+ }
+ 
+diff --git a/crates/hex-render/src/lib.rs b/crates/hex-render/src/lib.rs
+index 9bd9f68..5cfd997 100644
+--- a/crates/hex-render/src/lib.rs
++++ b/crates/hex-render/src/lib.rs
+@@ -208,14 +208,14 @@ mod tests {
+         // The water patch's 11 cells plus the showcase blocks' cells; each block in
+         // `kit_scene::kit_layout` names its own cells. A new block adds its cells here. The
+         // massif names only its anchor; its six ring cells are left free for its footprint.
+-        assert_eq!(cells.len(), 43);
++        assert_eq!(cells.len(), 44);
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Runtime), cells.len());
+         // Review M5: the fixture source lays out 3 cells, not the runtime family's 12.
+         assert_eq!(Scenario::Kit.tile_count(KitSource::Fixture), 3);
+         assert_eq!(Scenario::Water.tile_count(KitSource::Runtime), 12);
+         // The fixture lays out water-patch cells only; the runtime kit adds the showcase blocks.
+         assert_eq!(Scenario::WaterKit.tile_count(KitSource::Fixture), 12);
+-        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 43);
++        assert_eq!(Scenario::WaterKit.tile_count(KitSource::Runtime), 44);
+         assert!(Scenario::WaterKit.has_water() && Scenario::Water.has_water());
+         assert!(!Scenario::Kit.has_water());
+     }

@@ -22,4 +22,5 @@
             (piece: "wildflower_single", density: 3.0, vary: 0.8),
         ],
     ),
+    raisable: true,
 )

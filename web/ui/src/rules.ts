@@ -3,10 +3,23 @@
 // legalOrientations against hex-core's own answers for every slot of the parity worlds (rules-parity.json).
 import type { Cell, MegaSlot, PlayTile, SocketKind } from "./bridge.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
-import { FOOTPRINT_EDGES, FOOTPRINT_INNER, FOOTPRINT_REFUSAL, MASSIF_SWAP, SINGLE_SWAP } from "./words.ts";
+import {
+  DECK_END_REFUSAL,
+  FOOTPRINT_EDGES,
+  FOOTPRINT_INNER,
+  FOOTPRINT_REFUSAL,
+  MASSIF_SWAP,
+  SINGLE_SWAP,
+} from "./words.ts";
 
-/** A network crossing at an edge, in metres (hex-core `LaneSpec`): `[offset, width]`. */
-export type Lane = readonly [offset: number, width: number];
+/**
+ * A network crossing at an edge (hex-core `LaneSpec`): `[offset, width]` in metres, then `deck`,
+ * the levels a rail lane stands above its ground (a viaduct's deck ends; 0 elsewhere).
+ */
+export type Lane = readonly [offset: number, width: number, deck?: number];
+
+/** The levels a lane's rail stands above its edge's ground, 0 without a lane. */
+const deckOf = (lane: Lane | null): number => lane?.[2] ?? 0;
 
 /**
  * Whether two lanes line up across a seam (hex-core `LaneSpec::meets`, as `edges_compatible`
@@ -168,10 +181,11 @@ export function rotatedLanes(def: TileDef, k: number): (Lane | null)[] {
   return [0, 1, 2, 3, 4, 5].map((w) => def.lanes[(w - k + 12) % 6]!);
 }
 
-/** One edge's height: its relative corners `[start, end]` and whether it carries a lane. */
+/** One edge's height: its relative corners `[start, end]`, whether it carries a lane and its deck. */
 export interface EdgeHeight {
   heights: readonly [number, number];
   lane: boolean;
+  deck?: number;
 }
 
 export type HeightMeet = "Seamless" | "Cliff" | "Refused";
@@ -182,7 +196,16 @@ function absoluteMeet(
   aLane: boolean,
   b: readonly [number, number],
   bLane: boolean,
+  aDeck = 0,
+  bDeck = 0,
 ): HeightMeet {
+  if (aDeck > 0 || bDeck > 0) {
+    // A viaduct's deck end (hex-core `deck_meet`): flat lanes whose rail tops agree meet over a
+    // cliff seam, or seamlessly where the ground agrees too.
+    const flat = (h: readonly [number, number]) => h[0] === h[1];
+    if (!(flat(a) && flat(b) && aLane && bLane) || a[0] + aDeck !== b[0] + bDeck) return "Refused";
+    return a[0] === b[0] ? "Seamless" : "Cliff";
+  }
   if (a[0] === b[1] && a[1] === b[0]) return "Seamless";
   const flat = (h: readonly [number, number]) => h[0] === h[1];
   return flat(a) && flat(b) && !aLane && !bLane ? "Cliff" : "Refused";
@@ -195,7 +218,7 @@ function absoluteMeet(
  */
 export function heightsMeet(a: EdgeHeight, aLevel: number, b: EdgeHeight, bLevel: number): HeightMeet {
   const abs = (e: EdgeHeight, l: number): [number, number] => [e.heights[0] + l, e.heights[1] + l];
-  return absoluteMeet(abs(a, aLevel), a.lane, abs(b, bLevel), b.lane);
+  return absoluteMeet(abs(a, aLevel), a.lane, abs(b, bLevel), b.lane, a.deck ?? 0, b.deck ?? 0);
 }
 
 /** Equal for two rotations exactly when their world-edge sockets are equal and they are a whole number of periods apart. */
@@ -244,7 +267,14 @@ const stopCloses = (end: Facing, other: Facing): boolean =>
 export const placementMeets = (theirs: Facing, mine: Facing): boolean =>
   (meets(theirs.kind, theirs.land, mine.kind, mine.land) &&
     laneMeets(theirs.lane, mine.lane) &&
-    absoluteMeet(mine.heights, mine.lane !== null, theirs.heights, theirs.lane !== null) !== "Refused") ||
+    absoluteMeet(
+      mine.heights,
+      mine.lane !== null,
+      theirs.heights,
+      theirs.lane !== null,
+      deckOf(mine.lane),
+      deckOf(theirs.lane),
+    ) !== "Refused") ||
   stopCloses(theirs, mine);
 
 /**
@@ -424,7 +454,9 @@ function seam(
 function clashes(def: TileDef, k: number, needs: Needs, level = 0): number[] {
   return [0, 1, 2, 3, 4, 5].filter((w) => {
     const s = seam(def, k, level, needs, w);
-    return s !== null && !placementMeets(s.theirs, s.mine);
+    // A viaduct's deck end spans between two tiles, so it needs the rail it meets (hex-core `fits`).
+    if (s === null) return deckOf(rotatedLanes(def, k)[w]!) > 0;
+    return !placementMeets(s.theirs, s.mine);
   });
 }
 
@@ -441,7 +473,17 @@ function cliffs(def: TileDef, k: number, needs: Needs, level: number): [number, 
     if (s === null) continue;
     const [m0, m1] = s.mine.heights;
     const [t0, t1] = s.theirs.heights;
-    if (absoluteMeet([m0, m1], s.mine.lane !== null, [t0, t1], s.theirs.lane !== null) === "Seamless") continue;
+    if (
+      absoluteMeet(
+        [m0, m1],
+        s.mine.lane !== null,
+        [t0, t1],
+        s.theirs.lane !== null,
+        deckOf(s.mine.lane),
+        deckOf(s.theirs.lane),
+      ) === "Seamless"
+    )
+      continue;
     n++;
     drop += Math.abs(m0 - t1) + Math.abs(m1 - t0);
   }
@@ -589,7 +631,13 @@ export function fit(def: TileDef, needs: Needs, level?: number): Fit {
   const kinds = [...new Set(needs.kinds.filter((n): n is SocketKind => n != null))];
   const lacking = kinds.find((n) => !def.edges.some((e) => compatible(n, e)));
   const w = clashes(def, bestK, needs)[0] ?? 0;
-  const why = lacking ? missing(lacking) : clashPhrase(rotated(def, bestK)[w]!, needs.kinds[w]!);
+  const theirs = needs.kinds[w];
+  // A deck end facing an empty cell clashes with nothing placed (`clashes`), so it has no phrase.
+  const why = lacking
+    ? missing(lacking)
+    : theirs == null && deckOf(rotatedLanes(def, bestK)[w]!) > 0
+      ? DECK_END_REFUSAL
+      : clashPhrase(rotated(def, bestK)[w]!, theirs!);
   return { ok: false, legal, distinct: [], why, bestK, level: on };
 }
 

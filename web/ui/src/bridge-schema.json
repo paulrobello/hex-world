@@ -262,6 +262,20 @@
         ]
       },
       {
+        "id": "rail_tunnel_portal",
+        "tiles": [
+          "rail_tunnel_portal"
+        ]
+      },
+      {
+        "id": "rail_viaduct",
+        "tiles": [
+          "rail_viaduct_l1",
+          "rail_viaduct_l2",
+          "rail_viaduct_l3"
+        ]
+      },
+      {
         "id": "river_straight",
         "tiles": [
           "river_straight"
@@ -824,7 +838,8 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
@@ -896,13 +911,15 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null
@@ -971,13 +988,15 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null
@@ -1049,12 +1068,14 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
@@ -1127,11 +1148,13 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
@@ -1205,17 +1228,20 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null
         ],
@@ -2506,13 +2532,15 @@
         "lanes": [
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null
@@ -2587,7 +2615,8 @@
           null,
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           null
@@ -2659,13 +2688,15 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null
@@ -2673,7 +2704,7 @@
         "outer": null,
         "period": 1,
         "rail": true,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single"
         ],
@@ -2736,11 +2767,13 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null,
@@ -2750,7 +2783,7 @@
         "outer": null,
         "period": 1,
         "rail": true,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single"
         ],
@@ -2813,12 +2846,14 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null,
@@ -2827,7 +2862,7 @@
         "outer": null,
         "period": 1,
         "rail": true,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single"
         ],
@@ -2890,16 +2925,19 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null
@@ -2907,7 +2945,7 @@
         "outer": null,
         "period": 1,
         "rail": true,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "wildflower_single"
         ],
@@ -2970,20 +3008,24 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null
         ],
@@ -3053,13 +3095,15 @@
         "lanes": [
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           null
@@ -3080,6 +3124,318 @@
           false
         ],
         "top": 0,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "footprint": false,
+        "heights": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "id": "rail_tunnel_portal",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          null,
+          null,
+          null,
+          [
+            0.0,
+            3.5,
+            0.0
+          ],
+          null,
+          null
+        ],
+        "outer": null,
+        "period": 6,
+        "rail": true,
+        "raisable": true,
+        "scatter": [
+          "wildflower_single"
+        ],
+        "stopped": [
+          false,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": 0
+      },
+      {
+        "edges": [
+          "Rail",
+          "Grass",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "footprint": false,
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "id": "rail_viaduct_l1",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          [
+            0.0,
+            3.5,
+            1.0
+          ],
+          null,
+          null,
+          [
+            0.0,
+            3.5,
+            1.0
+          ],
+          null,
+          null
+        ],
+        "outer": null,
+        "period": 1,
+        "rail": true,
+        "raisable": false,
+        "scatter": [
+          "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "top": 1,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Rail",
+          "Grass",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "footprint": false,
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "id": "rail_viaduct_l2",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          [
+            0.0,
+            3.5,
+            2.0
+          ],
+          null,
+          null,
+          [
+            0.0,
+            3.5,
+            2.0
+          ],
+          null,
+          null
+        ],
+        "outer": null,
+        "period": 1,
+        "rail": true,
+        "raisable": false,
+        "scatter": [
+          "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "top": 2,
+        "tunnel": null
+      },
+      {
+        "edges": [
+          "Rail",
+          "Grass",
+          "Grass",
+          "Rail",
+          "Grass",
+          "Grass"
+        ],
+        "footprint": false,
+        "heights": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "id": "rail_viaduct_l3",
+        "land": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "lanes": [
+          [
+            0.0,
+            3.5,
+            3.0
+          ],
+          null,
+          null,
+          [
+            0.0,
+            3.5,
+            3.0
+          ],
+          null,
+          null
+        ],
+        "outer": null,
+        "period": 1,
+        "rail": true,
+        "raisable": false,
+        "scatter": [
+          "wildflower_single"
+        ],
+        "stopped": [
+          true,
+          false,
+          false,
+          true,
+          false,
+          false
+        ],
+        "top": 3,
         "tunnel": null
       },
       {
@@ -3130,13 +3486,15 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null
@@ -3208,12 +3566,14 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null,
@@ -3288,11 +3648,13 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null,
@@ -3366,20 +3728,24 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           [
             0.0,
-            6.0
+            6.0,
+            0.0
           ],
           null
         ],
@@ -3450,20 +3816,24 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           [
             0.0,
-            3.5
+            3.5,
+            0.0
           ],
           null
         ],
@@ -3534,7 +3904,8 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null,
@@ -3611,17 +3982,20 @@
         "lanes": [
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null
         ],
@@ -3916,7 +4290,8 @@
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null,
           null
@@ -3994,7 +4369,8 @@
           null,
           [
             0.0,
-            8.0
+            8.0,
+            0.0
           ],
           null
         ],
@@ -4560,6 +4936,7 @@
       "tool",
       "train_list",
       "trains",
+      "tunnels",
       "walk_mode",
       "zoom"
     ],

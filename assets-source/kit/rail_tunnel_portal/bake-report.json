@@ -1,0 +1,575 @@
+{
+  "aoDistanceM": 0.12,
+  "bakeStats": {
+    "albedoLuma": 0.5380668044090271,
+    "ao": {
+      "mean": 0.8995950222015381,
+      "p05": 0.3294117748737335
+    },
+    "normalMissFraction": 0.0,
+    "seam": {
+      "band_foot.albedo": {
+        "u": 0.008394025266170502
+      },
+      "band_foot.ao": {
+        "u": 0.00845471303910017
+      },
+      "band_foot.normal": {
+        "u": 0.0009243696695193648
+      },
+      "band_top.albedo": {
+        "u": 0.007402739487588406
+      },
+      "band_top.ao": {
+        "u": 0.009668533690273762
+      },
+      "band_top.normal": {
+        "u": 0.0009352629422210157
+      },
+      "panel.albedo": {
+        "u": 0.010101180523633957,
+        "v": 0.000981094897724688
+      },
+      "panel.ao": {
+        "u": 0.006503833923488855,
+        "v": 0.035966381430625916
+      },
+      "panel.normal": {
+        "u": 0.0009648822597227991,
+        "v": 6.586148083442822e-05
+      }
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.05,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "islands": {
+    "back": [
+      923,
+      965,
+      32,
+      32
+    ],
+    "band_foot": [
+      481,
+      0,
+      465,
+      120
+    ],
+    "band_top": [
+      481,
+      136,
+      465,
+      120
+    ],
+    "barrel": [
+      691,
+      542,
+      194,
+      120
+    ],
+    "cop_cfront": [
+      382,
+      806,
+      259,
+      42
+    ],
+    "cop_ctop": [
+      730,
+      272,
+      259,
+      111
+    ],
+    "cop_cunder": [
+      631,
+      903,
+      259,
+      19
+    ],
+    "cop_end": [
+      957,
+      577,
+      34,
+      73
+    ],
+    "cop_lfront": [
+      657,
+      856,
+      259,
+      31
+    ],
+    "cop_lunder": [
+      382,
+      938,
+      259,
+      16
+    ],
+    "fern0": [
+      353,
+      712,
+      233,
+      78
+    ],
+    "fern1": [
+      0,
+      793,
+      233,
+      78
+    ],
+    "jamb_band": [
+      957,
+      399,
+      11,
+      162
+    ],
+    "jamb_front": [
+      691,
+      678,
+      117,
+      162
+    ],
+    "jamb_inner": [
+      210,
+      615,
+      127,
+      162
+    ],
+    "jamb_top": [
+      867,
+      938,
+      117,
+      11
+    ],
+    "key_band": [
+      382,
+      864,
+      233,
+      26
+    ],
+    "key_front": [
+      481,
+      272,
+      233,
+      148
+    ],
+    "key_side0": [
+      0,
+      887,
+      148,
+      26
+    ],
+    "key_side1": [
+      0,
+      929,
+      148,
+      26
+    ],
+    "lining": [
+      971,
+      965,
+      32,
+      32
+    ],
+    "panel": [
+      0,
+      0,
+      465,
+      599
+    ],
+    "park_glass": [
+      430,
+      970,
+      16,
+      16
+    ],
+    "park_iron": [
+      462,
+      970,
+      16,
+      16
+    ],
+    "park_turf": [
+      494,
+      970,
+      16,
+      16
+    ],
+    "tuft0": [
+      824,
+      678,
+      117,
+      117
+    ],
+    "tuft1": [
+      249,
+      806,
+      117,
+      117
+    ],
+    "v0_band": [
+      657,
+      938,
+      194,
+      11
+    ],
+    "v0_front": [
+      481,
+      579,
+      194,
+      117
+    ],
+    "v0_side0": [
+      657,
+      965,
+      117,
+      11
+    ],
+    "v0_side1": [
+      790,
+      965,
+      117,
+      11
+    ],
+    "v0_soffit": [
+      730,
+      399,
+      194,
+      127
+    ],
+    "v1_band": [
+      164,
+      939,
+      194,
+      11
+    ],
+    "v1_front": [
+      0,
+      615,
+      194,
+      117
+    ],
+    "v1_side0": [
+      164,
+      966,
+      117,
+      11
+    ],
+    "v1_side1": [
+      297,
+      970,
+      117,
+      11
+    ],
+    "v1_soffit": [
+      481,
+      436,
+      194,
+      127
+    ]
+  },
+  "lod2Drops": {
+    "rail_tunnel_portal_barrel_back": "LOD2 draws no barrel, as approved: its lining starts at the soffit (the 0.75 m barrel is 2.4 px at 400 m, inside the arch's shadow)"
+  },
+  "lodTris": [
+    1739,
+    815,
+    247
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.12,
+  "portal": {
+    "archNode": [
+      11.1,
+      0.0
+    ],
+    "clearance": {
+      "intradosAtHalfWidth": {
+        "0.0": 5.0,
+        "1.0": 4.8,
+        "1.35": 4.622
+      },
+      "lods": {
+        "lod0": {
+          "moundCells": 78,
+          "portalSweepAt": [
+            8.306,
+            0.282,
+            4.98,
+            "barrel_back"
+          ],
+          "portalSweepMarginM": 0.3199,
+          "splitToBack": {
+            "barrel": 106,
+            "lining": 48
+          },
+          "trisBySlot": {
+            "back": 25,
+            "barrel_back": 106,
+            "fern": 222,
+            "glass": 16,
+            "iron": 328,
+            "lining_back": 48,
+            "stone": 572,
+            "stone_back": 18,
+            "stone_open": 224,
+            "turf": 156,
+            "turf_open": 24
+          }
+        },
+        "lod1": {
+          "moundCells": 28,
+          "portalSweepAt": [
+            8.306,
+            0.252,
+            4.935,
+            "barrel_back"
+          ],
+          "portalSweepMarginM": 0.2748,
+          "splitToBack": {
+            "barrel": 76,
+            "lining": 18
+          },
+          "trisBySlot": {
+            "back": 10,
+            "barrel_back": 76,
+            "fern": 86,
+            "glass": 16,
+            "iron": 120,
+            "lining_back": 18,
+            "stone": 335,
+            "stone_back": 18,
+            "stone_open": 56,
+            "turf": 56,
+            "turf_open": 24
+          }
+        },
+        "lod2": {
+          "moundCells": 14,
+          "portalSweepAt": [
+            8.306,
+            0.0,
+            4.873,
+            "stone_open"
+          ],
+          "portalSweepMarginM": 0.2127,
+          "splitToBack": {
+            "barrel": 0,
+            "lining": 14
+          },
+          "trisBySlot": {
+            "back": 8,
+            "fern": 28,
+            "glass": 16,
+            "iron": 24,
+            "lining_back": 14,
+            "stone": 81,
+            "stone_back": 8,
+            "stone_open": 16,
+            "turf": 28,
+            "turf_open": 24
+          }
+        }
+      },
+      "minM": 0.15,
+      "railTop": 0.46,
+      "vehicles": {
+        "train_carriage": {
+          "at": [
+            1.42,
+            3.66
+          ],
+          "halfWidthM": 1.48,
+          "minRadialClearanceM": 0.7016,
+          "sha256": "da0f71e7b66b02b8b12a236e3701f59d1dee12b8cb4472dd994bf6eb2de9294d",
+          "topClearanceM": 0.82,
+          "topM": 4.18,
+          "vertices": 1378
+        },
+        "train_carriage_b": {
+          "at": [
+            1.06,
+            4.26
+          ],
+          "halfWidthM": 1.48,
+          "minRadialClearanceM": 0.4592,
+          "sha256": "ca8a602178fb68617aa4e5c1b833df34b3af0b05835c2697979eb1ef42dc0cff",
+          "topClearanceM": 0.59,
+          "topM": 4.41,
+          "vertices": 1368
+        },
+        "train_engine": {
+          "at": [
+            0.31,
+            4.66
+          ],
+          "halfWidthM": 1.42,
+          "minRadialClearanceM": 0.3188,
+          "sha256": "6ebe0dfefe96cb406b1709d1257d1ba3cec1566506d39f75c10e1caa61bfc908",
+          "topClearanceM": 0.34,
+          "topM": 4.66,
+          "vertices": 1736
+        }
+      }
+    },
+    "colliderX": [
+      7.726,
+      13.856
+    ],
+    "courseHeight": 0.4642,
+    "crown": 5.0,
+    "endB": 1.8,
+    "endLineFieldMinM": 2.1509,
+    "faceTop": 5.57,
+    "field": "cut",
+    "fieldCheck": {
+      "cuttingSamples": 12,
+      "endLineMinM": 2.1509,
+      "plainSamples": 12
+    },
+    "jambStones": 4,
+    "mound": {
+      "cover": 4.0,
+      "crestAtBackPlane": 5.7014,
+      "dive": 0.25,
+      "flank": 2.5,
+      "heap": 0.3,
+      "liningCover": 0.3
+    },
+    "open": {
+      "aroundPeriods": [
+        1,
+        1,
+        6
+      ],
+      "cells": [
+        4,
+        2,
+        1
+      ],
+      "liningFromX": 8.3064,
+      "liningToX": 13.8564,
+      "ridge": {
+        "crestM": 5.75,
+        "diveM": 0.06,
+        "halfM": 7.0,
+        "outM": 7.4,
+        "section": [
+          [
+            -7.4,
+            3.94
+          ],
+          [
+            -7.0,
+            4.0
+          ],
+          [
+            -6.0,
+            4.0969
+          ],
+          [
+            -4.5,
+            4.5102
+          ],
+          [
+            -3.0,
+            5.0612
+          ],
+          [
+            -1.5,
+            5.5434
+          ],
+          [
+            0.0,
+            5.75
+          ],
+          [
+            1.5,
+            5.5434
+          ],
+          [
+            3.0,
+            5.0612
+          ],
+          [
+            4.5,
+            4.5102
+          ],
+          [
+            6.0,
+            4.0969
+          ],
+          [
+            7.0,
+            4.0
+          ],
+          [
+            7.4,
+            3.94
+          ]
+        ]
+      },
+      "ridgeFromX": 10.4564,
+      "ringPoints": [
+        29,
+        15,
+        9
+      ],
+      "slots": {
+        "hiddenWhenComplete": [
+          "back",
+          "lining_back",
+          "barrel_back",
+          "stone_back"
+        ],
+        "shownWhenComplete": [
+          "stone_open",
+          "turf_open"
+        ]
+      }
+    },
+    "openingHalfSpan": 2.6,
+    "rail": true,
+    "springing": 2.4,
+    "wallHalfWidth": 6.5,
+    "wallTop": 5.8500000000000005,
+    "xBack": 11.4564,
+    "xEdge0": 13.8564,
+    "xFace": 7.8564,
+    "xMoundTop": 10.4564
+  },
+  "receiverSignature": "943a42e4c67a98b5d5d09c6e1f42b7ea79f7d542cff2795486e9ba91f89f5f5a",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "fern": {
+      "faces": 222,
+      "max": 473.07372612183644,
+      "median": 265.5373951155288,
+      "min": 175.66704949893384
+    },
+    "stone": {
+      "faces": 570,
+      "max": 289.1198572071695,
+      "median": 258.0969412781493,
+      "min": 241.31557517095465
+    }
+  }
+}

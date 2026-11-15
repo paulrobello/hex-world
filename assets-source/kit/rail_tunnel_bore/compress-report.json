@@ -1,0 +1,218 @@
+{
+  "name": "rail_tunnel_bore",
+  "date": "2026-11-15T06:32:19.183Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    },
+    "pngFallbackSize": {
+      "albedo": 512
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 864271,
+      "sha256": "0ffe6ca81a9ef989629b8e7b5c3ab13312d7ce82605e207cb30d229c93fcc55f"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 867982,
+      "sha256": "eb58afc8d1c4779f38a82ce2df4cbebc2f5f6ef893c37477e164a20498db4ae4"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 497037,
+      "sha256": "a74cf60d88ff3db181c1e028765346a1f817fb03576a1cad1c6a59ec42c65de0",
+      "size": 512
+    },
+    {
+      "channel": "emissive",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.emissive.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 9,
+      "bytes": 1840,
+      "sha256": "5f2d028e0a5b615c36280f46126eb2b3144634f15d95a7bb88c03fbae8329fe5"
+    },
+    {
+      "channel": "emissive",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.emissive.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 9,
+      "bytes": 1725,
+      "sha256": "3f3f656e5482f72fd78beb545a58d969405649e89a54e0bacec88aa29612438c"
+    },
+    {
+      "channel": "emissive",
+      "family": "png",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.emissive.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 2202,
+      "sha256": "80dc77cef395087047e1edecbfce7a0f26cd642224eb7876381bf2ad53b3bef8"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 6798,
+      "sha256": "b8c8ef4c3d8e443c189708e6bccb2d3591edb03252f244bc5ed30a4c0629fa2b"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 6635,
+      "sha256": "0feb172d3e5ac5b3b41083eb53e327f3f801a022fc96be4061c5a84b89a0b6b1"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 7119,
+      "sha256": "a5f6b20bbe6c8b10453c303ec09d95e72c79a7bcc2387d59f65134ad10867728"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 126467,
+      "sha256": "b17eb753bc52ae226306f954557c8196e0a02d429a20566f5ab98d0eb4bc1f87"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 123692,
+      "sha256": "7c45a5a23f9ab9ffc7587929fd8d5a07c9d25177ad5496c940869d77beec02c3"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 267118,
+      "sha256": "849c951c0b3a0b4f82677225252a82fc2056ac05db0fcdff01d1c8ce936643fa"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 71548,
+      "sha256": "4bb5a9a94b9115003ff51bb6bbc221c898cd1a453fffd331765fb2ea67309fbc"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 69571,
+      "sha256": "655821a6bd35a22003aa6f71ee60f9e50777d1acc0adc6520e3e04c53634c952"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/rail_tunnel_bore/rail_tunnel_bore.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 88212,
+      "sha256": "25973d0ebe746c0c7009ac3e674ca08005eaedf89866749f0a09ccbd82e78bb2"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1070924,
+      "astc": 1069605
+    },
+    "glbBytes": 113236
+  },
+  "glb": {
+    "bytes": 113236,
+    "sha256": "f62fe590f94a7f83dd7a7321f46455ec6fa4f61dd9b7697d495a21202dbcca9b"
+  }
+}

@@ -311,6 +311,17 @@ export interface TrainInfo {
   route: number | null;
 }
 
+/** A complete tunnel in `play.tunnels`: its portal cells, the cover cells between and its kind. */
+export interface TunnelInfo {
+  a: Cell;
+  b: Cell;
+  /** The world edge from `a` toward `b`. */
+  dir: number;
+  cover: Cell[];
+  level: number;
+  kind: "Road" | "Rail";
+}
+
 /** A rail junction in `play.junctions`: its cell, the leg its switch is set to and the legs facing trains took. */
 export interface JunctionInfo {
   q: number;
@@ -360,6 +371,8 @@ export interface PlayState {
   junctions: JunctionInfo[];
   /** Level crossings closed to cars while a train is near. */
   closed_crossings: Cell[];
+  /** The complete tunnels: portal cells, the cover between, the level and the network kind. */
+  tunnels: TunnelInfo[];
   rising: RisingTile[];
   reduced_motion: boolean;
   /** The ground point the camera orbits, in world metres, or null without a camera. */
@@ -800,6 +813,7 @@ export const STATE_FIELDS = {
     train_list: true,
     junctions: true,
     closed_crossings: true,
+    tunnels: true,
     rising: true,
     reduced_motion: true,
     focus: true,

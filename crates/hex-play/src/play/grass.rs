@@ -6,7 +6,8 @@
 //!   [`Surface`], from [`PlayScatter::ground`]) where its slot is a grass slot: a manifest slot whose
 //!   tileable set is `grass` and that is not foliage ([`grass_slots`]: `meadow_base_cap`,
 //!   `forest_base_rim` and `_edge`, `road_verge`, `river_grass`, `beach_grass` and the tunnel
-//!   portal's wall-top `road_tunnel_portal_turf`; the hedge is foliage). Scatter's own slot
+//!   portals' wall-top `road_tunnel_portal_turf` and `rail_tunnel_portal_turf`; the hedge is
+//!   foliage). Scatter's own slot
 //!   filter ([`scatter::excluded_slot`]) is not used: it drops every
 //!   `road_`, `river_` and `beach_` slot and every rim and edge band, which are exactly the verges,
 //!   banks and dune grass that should carry blades. Roads, sand, river beds and pads are not grass
@@ -668,6 +669,20 @@ pub fn exclusions(
             out.push(Clear::Disc {
                 centre: Vec2::from(h.at) + axis * at[0] + axis.perp() * at[1],
                 radius: half * std::f32::consts::SQRT_2 + PROP_GAP,
+            });
+        }
+    }
+    // A viaduct's abutments and piers stand on the meadow (its stone and deck are not ground,
+    // `scatter::NOT_GROUND`): no blade roots in the stone, and blades grow under the arches.
+    for (centre, part, corners) in crate::walk::CENTRE_OBSTACLES {
+        if *part == crate::walk::VIADUCT_PIER
+            && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
+        {
+            let (lo, hi) = (Vec2::from(corners[0]), Vec2::from(corners[2]));
+            out.push(Clear::Box {
+                centre: (lo + hi) / 2.0,
+                half: (hi - lo) / 2.0 + WALL_GAP,
+                axis: Vec2::X,
             });
         }
     }
@@ -1344,6 +1359,7 @@ pub fn sync(
         a.0.total_cmp(&b.0)
             .then((a.2.q, a.2.r).cmp(&(b.2.q, b.2.r)))
     });
+    let ridges = super::tunnels::ridges(&view);
     let mut slowest: Option<f32> = None;
     'tiles: for (_, root, cell, key) in todo {
         if spent(builds, worst_tile) || density.is_off() {
@@ -1378,6 +1394,10 @@ pub fn sync(
             .clone();
         let mut excluded = exclusions(def, cell, &instances, &pieces);
         excluded.extend(boundary_clears(&fences));
+        if let Some(r) = ridges.get(&cell) {
+            let (centre, half, axis) = r.as_box();
+            excluded.push(Clear::Box { centre, half, axis });
+        }
         let units = build_units(&prepared);
         let b = state.built.entry(root).or_insert_with(|| Built {
             key: key.clone(),
@@ -1602,6 +1622,9 @@ mod tests {
                 "massif_granite_cap",
                 "meadow_base_cap",
                 "peak_granite_cap",
+                "rail_tunnel_bore_turf",
+                "rail_tunnel_portal_turf",
+                "rail_tunnel_portal_turf_open",
                 "river_grass",
                 "road_tunnel_portal_turf",
                 "road_verge"
@@ -2342,6 +2365,33 @@ mod tests {
         };
         assert_eq!(platform, "rail_station_platform");
         assert!(walls[0] >= 50, "back wall {walls:?}");
+    }
+
+    /// A viaduct clears a box over each abutment and pier (`walk::CENTRE_OBSTACLES`), so no
+    /// blade roots in the stone, and keeps the meadow under its three arches.
+    #[test]
+    fn grass_clears_the_viaduct_piers_not_the_arches() {
+        let c = TileCatalog::builtin().unwrap();
+        for n in 1..=3 {
+            let def = c.get(&format!("rail_viaduct_l{n}")).unwrap().clone();
+            let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
+            let piers: Vec<_> = crate::walk::CENTRE_OBSTACLES
+                .iter()
+                .filter(|(centre, part, _)| {
+                    *part == crate::walk::VIADUCT_PIER
+                        && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
+                })
+                .collect();
+            assert_eq!(piers.len(), 4, "l{n}: two abutments, two piers");
+            for (_, _, corners) in piers {
+                let mid = (Vec2::from(corners[0]) + Vec2::from(corners[2])) / 2.0;
+                assert!(ex.iter().any(|e| e.contains(mid)), "l{n}: pier at {mid}");
+            }
+            for x in [-7.0, 0.0, 7.0] {
+                let p = Vec2::new(x, 0.0);
+                assert!(!ex.iter().any(|e| e.contains(p)), "l{n}: arch at {p}");
+            }
+        }
     }
 
     /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc

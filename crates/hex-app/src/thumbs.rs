@@ -525,6 +525,10 @@ mod tests {
             ("peak_granite", 6),
             ("road_ramp", 6),
             ("road_tunnel_portal", 6),
+            ("rail_tunnel_portal", 6),
+            ("rail_viaduct_l1", 3),
+            ("rail_viaduct_l2", 3),
+            ("rail_viaduct_l3", 3),
             ("rail_straight", 3),
             ("rail_bend_60", 6),
             ("rail_bend_120", 6),
@@ -548,7 +552,7 @@ mod tests {
         for (id, n) in want {
             assert_eq!(distinct(id), n, "{id}");
         }
-        assert_eq!(ThumbRun::new(&c).stages.len(), 48 + 234);
+        assert_eq!(ThumbRun::new(&c).stages.len(), 52 + 249);
     }
 
     #[test]

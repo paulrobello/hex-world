@@ -117,15 +117,16 @@ fn cars_are_hidden_inside() {
     );
 
     let mid = 0.5 * (s_in + s_out);
-    assert_eq!(car.opacity_at_distance(mid), 0.0);
-    assert_eq!(car.opacity_at_distance(s_in - 5.0), 1.0);
-    assert_eq!(car.opacity_at_distance(s_out + 5.0), 1.0);
-    // Linear over the last 3 m before the arch and the first 3 m after it.
-    assert!((car.opacity_at_distance(s_in - 1.5) - 0.5).abs() < 1e-4);
-    assert!((car.opacity_at_distance(s_out + 1.5) - 0.5).abs() < 1e-4);
-    assert_eq!(car.opacity_at_distance(s_in), 0.0);
+    assert_eq!(car.lamps_at_distance(mid), 1.0);
+    assert_eq!(car.lamps_at_distance(s_in - 20.0), 0.0);
+    assert_eq!(car.lamps_at_distance(s_out + 20.0), 0.0);
+    // Linear over the last LAMP_RAMP metres before the arch and the first after it.
+    let half = hex_sim::LAMP_RAMP / 2.0;
+    assert!((car.lamps_at_distance(s_in - half) - 0.5).abs() < 1e-4);
+    assert!((car.lamps_at_distance(s_out + half) - 0.5).abs() < 1e-4);
+    assert_eq!(car.lamps_at_distance(s_in), 1.0);
 
-    // The live car, driven to the middle of the tunnel, is drawn at opacity 0.
+    // The live car, driven to the middle of the tunnel, has its headlights fully lit.
     let id = car.id();
     let mut seen = false;
     for _ in 0..4000 {
@@ -134,7 +135,7 @@ fn cars_are_hidden_inside() {
             break;
         };
         if (c.distance() - mid).abs() < 4.0 {
-            assert_eq!(c.opacity_at(1.0), 0.0);
+            assert_eq!(c.lamps_at(1.0), 1.0);
             seen = true;
             break;
         }
@@ -212,11 +213,12 @@ fn a_reverse_direction_car_fades_in_travel_order() {
                     continue;
                 }
                 assert!(s_in < s_out);
-                assert_eq!(car.opacity_at_distance(0.5 * (s_in + s_out)), 0.0);
-                assert_eq!(car.opacity_at_distance(s_in - 5.0), 1.0);
-                assert_eq!(car.opacity_at_distance(s_out + 5.0), 1.0);
-                assert!((car.opacity_at_distance(s_in - 1.5) - 0.5).abs() < 1e-4);
-                assert!((car.opacity_at_distance(s_out + 1.5) - 0.5).abs() < 1e-4);
+                let half = hex_sim::LAMP_RAMP / 2.0;
+                assert_eq!(car.lamps_at_distance(0.5 * (s_in + s_out)), 1.0);
+                assert_eq!(car.lamps_at_distance(s_in - 20.0), 0.0);
+                assert_eq!(car.lamps_at_distance(s_out + 20.0), 0.0);
+                assert!((car.lamps_at_distance(s_in - half) - 0.5).abs() < 1e-4);
+                assert!((car.lamps_at_distance(s_out + half) - 0.5).abs() < 1e-4);
                 found = true;
                 break 'seeds;
             }

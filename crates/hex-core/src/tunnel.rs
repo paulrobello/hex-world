@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 
 use crate::axial::Axial;
 use crate::catalog::TileCatalog;
-use crate::tile::{TileDef, opposite_edge, world_edge};
+use crate::tile::{Endpoint, NetworkKind, TileDef, opposite_edge, world_edge};
 use crate::world::{Orientation, World};
 
 /// The only tile that may be tunnel cover.
@@ -23,6 +23,8 @@ pub struct Tunnel {
     pub cover: Vec<Axial>,
     /// The level of both portals. Cover stands one level higher.
     pub level: u8,
+    /// The network the tunnel carries: road or rail. A portal only joins one of its own kind.
+    pub kind: NetworkKind,
 }
 
 /// What a portal ghost's tunnel would do if it were placed.
@@ -54,13 +56,33 @@ fn mouth(def: &TileDef, rotation: u8) -> Option<u8> {
     def.tunnel.as_ref().map(|t| world_edge(t.edge, rotation))
 }
 
-/// Whether the tile at `cell` is a portal at `level` whose mouth is world edge `edge`.
-fn faces(world: &World, c: &TileCatalog, cell: Axial, level: u8, edge: u8) -> bool {
+/// The network a portal carries: the kind of the segment that ends at its tunnel node. `None` for
+/// a tile that is not a portal.
+pub fn portal_kind(def: &TileDef) -> Option<NetworkKind> {
+    let node = &def.tunnel.as_ref()?.node;
+    def.networks
+        .iter()
+        .find(|s| {
+            matches!(&s.to, Endpoint::Node(n) if n == node)
+                || matches!(&s.from, Endpoint::Node(n) if n == node)
+        })
+        .map(|s| s.kind)
+}
+
+/// Whether the tile at `cell` is a portal of `kind` at `level` whose mouth is world edge `edge`.
+fn faces(
+    world: &World,
+    c: &TileCatalog,
+    cell: Axial,
+    level: u8,
+    edge: u8,
+    kind: NetworkKind,
+) -> bool {
     world.tile(cell).is_some_and(|far| {
         far.level == level
-            && c.get(&far.def)
-                .and_then(|d| mouth(d, far.rotation))
-                .is_some_and(|e| e == edge)
+            && c.get(&far.def).is_some_and(|d| {
+                mouth(d, far.rotation).is_some_and(|e| e == edge) && portal_kind(d) == Some(kind)
+            })
     })
 }
 
@@ -68,17 +90,21 @@ fn faces(world: &World, c: &TileCatalog, cell: Axial, level: u8, edge: u8) -> bo
 pub fn tunnels(world: &World, c: &TileCatalog) -> Vec<Tunnel> {
     let mut out = Vec::new();
     for (&a, tile) in world.tiles() {
-        let Some(edge) = c.get(&tile.def).and_then(|d| mouth(d, tile.rotation)) else {
+        let Some((edge, kind)) = c
+            .get(&tile.def)
+            .and_then(|d| Some((mouth(d, tile.rotation)?, portal_kind(d)?)))
+        else {
             continue;
         };
         let (cover, end) = walk(world, a, edge, tile.level + 1);
-        if end > a && faces(world, c, end, tile.level, opposite_edge(edge)) {
+        if end > a && faces(world, c, end, tile.level, opposite_edge(edge), kind) {
             out.push(Tunnel {
                 a,
                 b: end,
                 dir: edge,
                 cover,
                 level: tile.level,
+                kind,
             });
         }
     }
@@ -113,14 +139,14 @@ pub fn preview(
     def: &TileDef,
     o: Orientation,
 ) -> TunnelPreview {
-    let Some(edge) = mouth(def, o.rotation) else {
+    let Some((edge, kind)) = mouth(def, o.rotation).zip(portal_kind(def)) else {
         return TunnelPreview {
             cells: vec![],
             completes: false,
         };
     };
     let (cells, end) = walk(world, cell, edge, o.level + 1);
-    let completes = faces(world, c, end, o.level, opposite_edge(edge));
+    let completes = faces(world, c, end, o.level, opposite_edge(edge), kind);
     TunnelPreview { cells, completes }
 }
 
@@ -258,9 +284,70 @@ pub(crate) mod tests {
                 dir: 0,
                 cover: vec![Axial::new(1, 0), Axial::new(2, 0), Axial::new(3, 0)],
                 level: 0,
+                kind: NetworkKind::Road,
             }]
         );
         assert!(open_portals(&w, &c).is_empty());
+    }
+
+    /// A line of `n` level-1 meadows between portal `a_def` at the origin facing east and portal
+    /// `b_def` facing back west.
+    fn mixed_row(a_def: &str, b_def: &str, n: usize) -> World {
+        let mut tiles = BTreeMap::new();
+        tiles.insert(Axial::ORIGIN, tile(a_def, 0, 0, Axial::ORIGIN));
+        for i in 1..=n {
+            let cell = Axial::new(i as i32, 0);
+            tiles.insert(cell, tile("meadow", 0, 1, cell));
+        }
+        let b = Axial::new(n as i32 + 1, 0);
+        tiles.insert(b, tile(b_def, 3, 0, b));
+        World::from_parts(1, tiles, VecDeque::new(), vec![])
+    }
+
+    /// Rail at levels (owner, 2026-11-14): two rail portals under cover meadow make a rail tunnel,
+    /// and a road portal never pairs with a rail portal.
+    #[test]
+    fn portals_pair_by_network_kind() {
+        let c = catalog();
+        let rail = mixed_row("rail_tunnel_portal", "rail_tunnel_portal", 2);
+        let t = tunnels(&rail, &c);
+        assert_eq!(t.len(), 1);
+        assert_eq!(t[0].kind, NetworkKind::Rail);
+        assert_eq!(t[0].cover, vec![Axial::new(1, 0), Axial::new(2, 0)]);
+        for (a, b) in [
+            ("road_tunnel_portal", "rail_tunnel_portal"),
+            ("rail_tunnel_portal", "road_tunnel_portal"),
+        ] {
+            let w = mixed_row(a, b, 2);
+            assert!(tunnels(&w, &c).is_empty(), "{a} + {b}");
+            assert_eq!(open_portals(&w, &c).len(), 2, "{a} + {b}");
+        }
+        let road = mixed_row("road_tunnel_portal", "road_tunnel_portal", 2);
+        assert_eq!(tunnels(&road, &c)[0].kind, NetworkKind::Road);
+        // A rail ghost sees only rail portals complete it.
+        let def = c.get("rail_tunnel_portal").unwrap();
+        let without_a = {
+            let mut tiles = rail.tiles().clone();
+            tiles.remove(&Axial::ORIGIN);
+            World::from_parts(1, tiles, VecDeque::new(), vec![])
+        };
+        let p = preview(&without_a, &c, Axial::ORIGIN, def, Orientation::new(0, 0));
+        assert!(p.completes && p.cells.len() == 2);
+        let wrong = mixed_row("road_tunnel_portal", "road_tunnel_portal", 2);
+        let mut tiles = wrong.tiles().clone();
+        tiles.remove(&Axial::ORIGIN);
+        let wrong = World::from_parts(1, tiles, VecDeque::new(), vec![]);
+        let p = preview(&wrong, &c, Axial::ORIGIN, def, Orientation::new(0, 0));
+        assert!(!p.completes);
+    }
+
+    /// A rail tunnel's cover is protected like a road tunnel's.
+    #[test]
+    fn rail_tunnel_cover_is_protected() {
+        let c = catalog();
+        let w = mixed_row("rail_tunnel_portal", "rail_tunnel_portal", 2);
+        assert!(is_cover(&w, &c, Axial::new(1, 0)));
+        assert_eq!(portal_kind(c.get("meadow").unwrap()), None);
     }
 
     #[test]

@@ -1,0 +1,50 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/road_tunnel_bore.py",
+    "sha256": "2537225aa55cafdbdd53660003b8cd0ec2b47df3c3108f9ee855819446c136c7"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_road.py",
+      "sha256": "2f8a0c9574ee224b70f79380fab3109ca945697c9a435e505cb41ef4d978fa25"
+    },
+    {
+      "path": "scripts/blender/kit/_road_tunnel_bore.py",
+      "sha256": "2757eaaa765faa36d94397672f9cecc3dcff0c66afedf938200488d22791a1bf"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    }
+  ],
+  "lodTris": {
+    "road_tunnel_bore_lod0": 984,
+    "road_tunnel_bore_lod1": 230,
+    "road_tunnel_bore_lod2": 114
+  },
+  "nodes": [
+    "road_tunnel_bore",
+    "road_tunnel_bore_collider",
+    "road_tunnel_bore_lod0",
+    "road_tunnel_bore_lod1",
+    "road_tunnel_bore_lod2"
+  ],
+  "pieceId": "road_tunnel_bore",
+  "pngFallbackSize": {
+    "albedo": 512
+  },
+  "sockets": []
+}

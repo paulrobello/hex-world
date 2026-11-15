@@ -62,8 +62,8 @@ pub struct SimStats {
     pub parked_cars: usize,
     pub connected_destinations: usize,
     pub spawn_rate_hz: f32,
-    /// Every driving car: id, trip phase, position and opacity, 0 while it is inside a tunnel (for
-    /// scripted checkpoints).
+    /// Every driving car: id, trip phase, position and headlight level, 1 while it is inside a
+    /// tunnel (for scripted checkpoints).
     pub car_list: Vec<(u64, &'static str, [f32; 2], f32)>,
     /// Every train (P3).
     pub train_list: Vec<TrainStat>,
@@ -302,7 +302,7 @@ impl CarSim {
                         c.id().0,
                         c.phase().as_str(),
                         c.pose_at(1.0).pos,
-                        c.opacity_at(1.0),
+                        c.lamps_at(1.0),
                     )
                 })
                 .collect(),
@@ -353,9 +353,9 @@ impl CarSim {
                 self.stats
                     .car_list
                     .iter()
-                    .map(|(id, phase, p, opacity)| json!({
+                    .map(|(id, phase, p, lamps)| json!({
                         "id": id, "phase": phase, "x": round(p[0]), "z": round(p[1]),
-                        "opacity": round(*opacity)
+                        "lamps": round(*lamps)
                     }))
                     .collect::<Vec<_>>()
             ),
@@ -576,6 +576,7 @@ pub fn publish_trains(
                 },
                 pos: v.pose.pos,
                 yaw: v.pose.yaw(),
+                lamps: v.lamps,
             });
         }
     }
@@ -595,8 +596,8 @@ pub fn publish_cars(
         return;
     }
     let alpha = fixed.overstep_fraction();
-    // A car over a lowered cap fades out on the Legend motion curve (PRD §7.2), and a driving car
-    // fades out into a tunnel and back after it (P4).
+    // A car over a lowered cap fades out on the Legend motion curve (PRD §7.2); a driving car's
+    // headlights come up in a tunnel (P4).
     let opacity = |id| 1.0 - affordances::ease(sim.sim.fade(id, alpha));
     view.cars.clear();
     view.cars.extend(cars.iter().map(|c| {
@@ -607,7 +608,8 @@ pub fn publish_cars(
             kind: CarKind::from_seed(c.id().0),
             pos: pose.pos,
             yaw: pose.yaw(),
-            opacity: opacity(c.id()) * c.opacity_at(alpha),
+            opacity: opacity(c.id()),
+            lamps: c.lamps_at(alpha),
         }
     }));
     view.cars.extend(parked.iter().map(|c| {
@@ -618,6 +620,7 @@ pub fn publish_cars(
             pos: pose.pos,
             yaw: pose.yaw(),
             opacity: opacity(c.id()),
+            lamps: 0.0,
         }
     }));
 }
@@ -854,7 +857,7 @@ mod tests {
     }
 
     /// The web smoke world (`docs/checkpoints/elevation/smoke.json`, driven by `e2e/elevation.mjs`)
-    /// is legal, completes the tunnel, and a car in it reports opacity 0 in `play.car_list`.
+    /// is legal, completes the tunnel, and a car in it reports lamps 1 in `play.car_list`.
     #[test]
     fn the_smoke_world_sends_a_car_through_the_tunnel() {
         let json = include_str!("../../../docs/checkpoints/elevation/smoke.json");
@@ -879,12 +882,12 @@ mod tests {
             sim.extend_state(&mut play);
             hidden = play["car_list"]
                 .as_array()
-                .and_then(|l| l.iter().find(|c| c["opacity"] == 0.0).cloned());
+                .and_then(|l| l.iter().find(|c| c["lamps"] == 1.0).cloned());
             if hidden.is_some() {
                 break;
             }
         }
-        let car = hidden.expect("no car went dark in the tunnel");
+        let car = hidden.expect("no car lit its headlights in the tunnel");
         let [x, z] = cover.to_world(hex_core::HEX_RADIUS);
         let (dx, dz) = (
             car["x"].as_f64().unwrap() - f64::from(x),
@@ -926,7 +929,7 @@ mod tests {
                 break;
             }
         }
-        assert!(dark, "no car went dark in the tunnel");
+        assert!(dark, "no car lit its headlights in the tunnel");
     }
 
     /// The flat control of `e2e/perf-elevation-orbit.mjs` (`docs/checkpoints/elevation/flat-control.json`)

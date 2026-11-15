@@ -4,7 +4,7 @@
 //! The app mirrors every world edit with [`Simulation::apply_place`] and
 //! [`Simulation::apply_bulldoze`], then recomputes the tunnels with [`Simulation::sync_tunnels`],
 //! runs [`Simulation::tick`] at [`TICK_HZ`], and draws each car at [`Car::pose_at`] and
-//! [`Car::opacity_at`] (0 inside a tunnel) with the fraction of a tick elapsed since the last one.
+//! [`Car::lamps_at`] (1 inside a tunnel) with the fraction of a tick elapsed since the last one.
 //! Parked cars ([`Simulation::parked`]) stand still at [`ParkedCar::pose`] between trips (PRD
 //! §7.1).
 
@@ -20,6 +20,6 @@ pub use network::{Components, Link, LinkId, Network, Node, NodeId, NodeKey, TUNN
 pub use rail::{Railway, Train, TrainId, VehicleKind, VehiclePose};
 pub use route::Route;
 pub use sim::{
-    CAR_FADE_TICKS, Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, MAX_LANE_OFFSET, ParkedCar,
-    SimConfig, Simulation, SpotRef, TICK_HZ, TICK_SECONDS, TUNNEL_FADE,
+    CAR_FADE_TICKS, Car, CarId, CarPhase, HIGH_TIER_CAR_CAP, Home, LAMP_RAMP, MAX_LANE_OFFSET,
+    ParkedCar, SimConfig, Simulation, SpotRef, TICK_HZ, TICK_SECONDS,
 };

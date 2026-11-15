@@ -40,6 +40,9 @@ pub struct PlayGhost {
 #[derive(Resource, Clone, Debug, Default, PartialEq)]
 pub struct PlayView {
     pub tiles: Vec<PlayTile>,
+    /// The complete tunnels (`hex_core::tunnels`, P4): the play scene draws a bore under each cover
+    /// cell and opens the portals, and the walker may walk them.
+    pub tunnels: Vec<hex_core::Tunnel>,
     /// Position in `tiles` by cell, built once per view by [`PlayView::index_tiles`] so the
     /// affordances look a tile up in O(1); [`PlayView::tile_at`] scans when it is stale or unset.
     pub tile_index: HashMap<Axial, usize>,

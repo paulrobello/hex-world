@@ -138,6 +138,22 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
         include_str!("../../../data/tiles/rail_station.ron"),
     ),
     (
+        "rail_tunnel_portal",
+        include_str!("../../../data/tiles/rail_tunnel_portal.ron"),
+    ),
+    (
+        "rail_viaduct_l1",
+        include_str!("../../../data/tiles/rail_viaduct_l1.ron"),
+    ),
+    (
+        "rail_viaduct_l2",
+        include_str!("../../../data/tiles/rail_viaduct_l2.ron"),
+    ),
+    (
+        "rail_viaduct_l3",
+        include_str!("../../../data/tiles/rail_viaduct_l3.ron"),
+    ),
+    (
         "river_straight",
         include_str!("../../../data/tiles/river_straight.ron"),
     ),
@@ -192,6 +208,10 @@ pub const BUILTIN_TILES: &[(&str, &str)] = &[
 pub const PICKER_GROUPS: &[(&str, &[&str])] = &[
     ("beach_curve", &["beach_outer", "beach_inner"]),
     ("river_mouths", &["river_mouth", "river_mouth_l"]),
+    (
+        "rail_viaduct",
+        &["rail_viaduct_l1", "rail_viaduct_l2", "rail_viaduct_l3"],
+    ),
     (
         "hillside",
         &[

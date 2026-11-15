@@ -508,6 +508,11 @@ pub fn kit_layout() -> Vec<Placement> {
     // (0, -3) and the peak on (2, -4), each two cells clear of the massif's ring and the houses.
     v.push(place("hill_meadow", 0, -3, 0));
     v.push(place("peak_granite", 2, -4, 0));
+    // The open road tunnel's bore (P4 open tunnels, 2026-11-14) alone on a meadow at (4, 1), east of
+    // the ocean corner: the tube at the meadow's level with its ends open, so the lining, the lamps'
+    // always-on glow and the road on its floor show in kit light.
+    v.push(place("meadow_base", 4, 1, 0));
+    v.push(place("road_tunnel_bore", 4, 1, 0));
     v
 }
 

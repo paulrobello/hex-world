@@ -1,0 +1,138 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/open_tunnels/road-tunnel-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        34.53,
+        37.35,
+        30.08
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 60.6,
+      "load_after": [
+        25.55,
+        34.34,
+        29.5
+      ],
+      "frames": {
+        "road-inside-00": {
+          "mean": 0.0719,
+          "problem": null
+        },
+        "road-inside-01": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-02": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-03": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-04": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-05": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-06": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-07": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-08": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-09": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-10": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-11": {
+          "mean": 0.0717,
+          "problem": null
+        },
+        "road-inside-12": {
+          "mean": 0.0732,
+          "problem": null
+        },
+        "road-inside-13": {
+          "mean": 0.1041,
+          "problem": null
+        },
+        "road-inside-back-00": {
+          "mean": 0.0677,
+          "problem": null
+        },
+        "road-inside-back-01": {
+          "mean": 0.0694,
+          "problem": null
+        },
+        "road-inside-back-02": {
+          "mean": 0.0694,
+          "problem": null
+        },
+        "road-inside-back-03": {
+          "mean": 0.0691,
+          "problem": null
+        },
+        "road-overview": {
+          "mean": 0.2257,
+          "problem": null
+        },
+        "road-mouth": {
+          "mean": 0.1984,
+          "problem": null
+        },
+        "road-side": {
+          "mean": 0.257,
+          "problem": null
+        },
+        "road-walk-00": {
+          "mean": 0.0724,
+          "problem": null
+        },
+        "road-walk-01": {
+          "mean": 0.0721,
+          "problem": null
+        },
+        "road-walk-02": {
+          "mean": 0.0721,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

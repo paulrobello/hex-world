@@ -1,6 +1,6 @@
 {
   "name": "road_tunnel_portal",
-  "date": "2026-10-29T04:01:37.212Z",
+  "date": "2026-11-15T05:44:47.974Z",
   "toolVersions": {
     "gltfTransform": "4.3.0",
     "meshoptimizer": "0.25.0",
@@ -11,6 +11,7 @@
     "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
     "uastcQuality": 4,
     "uastcThreads": 1,
+    "uastcAslrOff": true,
     "zstd": 18,
     "rdo": {
       "albedo": {
@@ -84,8 +85,8 @@
       "transfer": "linear",
       "vkFormat": 145,
       "levels": 10,
-      "bytes": 5470,
-      "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7"
+      "bytes": 5518,
+      "sha256": "be129d3bae9a8c1c9126d8f598d1d64a62197c9087c403b969741bdd1043d2f4"
     },
     {
       "channel": "masks",
@@ -95,8 +96,8 @@
       "transfer": "linear",
       "vkFormat": 157,
       "levels": 10,
-      "bytes": 5322,
-      "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615"
+      "bytes": 5409,
+      "sha256": "859631229903f3f35ab2d2c595a266270567f7595b725ae09182731888b52c79"
     },
     {
       "channel": "masks",
@@ -104,8 +105,8 @@
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
       "format": "PNG",
       "transfer": "linear",
-      "bytes": 6772,
-      "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600"
+      "bytes": 6798,
+      "sha256": "758f378fad2b65e242b7d30db9f889be2d5426007f917199aec394c71ac54818"
     },
     {
       "channel": "normal",
@@ -174,13 +175,13 @@
     "class": "piece",
     "ktxMax": 1500000,
     "ktxBytes": {
-      "bc7": 1073315,
-      "astc": 1071453
+      "bc7": 1073363,
+      "astc": 1071540
     },
-    "glbBytes": 129392
+    "glbBytes": 128936
   },
   "glb": {
-    "bytes": 129392,
-    "sha256": "68d0ddcc7011fabd2988cf5916727f9f4768a6cab2a3107ec238b09867e06b6f"
+    "bytes": 128936,
+    "sha256": "87b1c67c4063eec250276490720af3997fef51f4869fd3112faa41e14812b051"
   }
 }

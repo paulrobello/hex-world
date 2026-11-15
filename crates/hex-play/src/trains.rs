@@ -28,6 +28,7 @@ use crate::{
     kit_scene::MANIFEST,
     play::packs::{PackState, PlayPacks},
     scene::{Lod, lod_range},
+    walk::WalkGround,
     workload::GateConfig,
 };
 
@@ -87,6 +88,9 @@ pub struct StockPose {
     pub pos: [f32; 2],
     /// Heading in radians from +x toward +z, toward the engine end of the train.
     pub yaw: f32,
+    /// How lit the vehicle's headlights are: 0 in daylight in the open, 1 inside a tunnel (P4); the
+    /// day and night cycle (P5) raises it at night.
+    pub lamps: f32,
 }
 
 /// The vehicles to draw, written by `hex-app` every frame while any train exists.
@@ -289,6 +293,14 @@ pub fn stock_transform(p: &StockPose) -> Transform {
     Transform::from_xyz(p.pos[0], RAIL_TOP_Y, p.pos[1]).with_rotation(Quat::from_rotation_y(-p.yaw))
 }
 
+/// Where a vehicle stands on the play `ground`: [`stock_transform`] lifted by the level of the tile
+/// under it (P4), so a train on raised rail rides the raised rail top. Level 0 without a ground.
+pub fn placed(ground: Option<&WalkGround>, p: &StockPose) -> Transform {
+    let mut t = stock_transform(p);
+    t.translation.y += ground.map_or(0.0, |g| g.level_y(Vec2::from(p.pos)));
+    t
+}
+
 /// Spawns, moves and despawns vehicle entities to match [`TrainsView`] by id. A vehicle is a parent
 /// with the pose and one child per part (slot x LOD), every child tagged with the train's livery.
 pub fn sync(
@@ -296,6 +308,7 @@ pub fn sync(
     active: Res<ActiveScenario>,
     view: Res<TrainsView>,
     kit: Res<TrainKit>,
+    ground: Option<Res<WalkGround>>,
     mut stock: Query<(Entity, &PlayStock, &mut Transform)>,
 ) {
     let TrainKit::Ready(kit) = &*kit else {
@@ -312,7 +325,7 @@ pub fn sync(
     let mut have = HashSet::with_capacity(want.len());
     for (e, s, mut t) in &mut stock {
         match want.get(&s.0) {
-            Some(p) if have.insert(s.0) => *t = stock_transform(p),
+            Some(p) if have.insert(s.0) => *t = placed(ground.as_deref(), p),
             _ => commands.entity(e).try_despawn(),
         }
     }
@@ -327,7 +340,7 @@ pub fn sync(
         commands
             .spawn((
                 PlayStock(id),
-                stock_transform(p),
+                placed(ground.as_deref(), p),
                 Visibility::default(),
                 SceneEntity,
             ))
@@ -438,6 +451,58 @@ mod tests {
         }
     }
 
+    /// Rail at levels (owner, 2026-11-14): a vehicle on a level-1 rail tile rides one `LEVEL_STEP`
+    /// higher than on the ground, and without a ground it stands where it always did.
+    #[test]
+    fn a_train_on_raised_rail_rides_the_raised_rail_top() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let pose = StockPose {
+            id: 0,
+            train: 0,
+            kind: StockKind::Engine,
+            pos: [0.0, 0.0],
+            yaw: 0.0,
+            lamps: 0.0,
+        };
+        for (level, rotation) in [(0u8, 0u8), (1, 0), (2, 3), (3, 0)] {
+            let g = crate::walk::tests::world_at(&c, &[(0, 0, "rail_straight", rotation, level)]);
+            let t = placed(Some(&g), &pose);
+            let want = f32::from(level) * hex_core::LEVEL_STEP + RAIL_TOP_Y;
+            assert!(
+                (t.translation.y - want).abs() < 1e-3,
+                "level {level}: {t:?}"
+            );
+            assert_eq!(t.translation.x, 0.0);
+        }
+        assert_eq!(placed(None, &pose), stock_transform(&pose));
+    }
+
+    /// A train on a viaduct rides the deck: `deck` levels above the valley floor, not the floor.
+    #[test]
+    fn a_train_on_a_viaduct_rides_the_deck() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let pose = StockPose {
+            id: 0,
+            train: 0,
+            kind: StockKind::Engine,
+            pos: [0.0, 0.0],
+            yaw: 0.0,
+            lamps: 0.0,
+        };
+        let pending = hex_core::PendingPieces::builtin().unwrap();
+        for deck in 1..=3u8 {
+            let id = format!("rail_viaduct_l{deck}");
+            // Built ahead of its piece (data/pending-pieces.ron): the ground needs the piece.
+            if pending.contains(&id) {
+                continue;
+            }
+            let g = crate::walk::tests::world_at(&c, &[(0, 0, id.as_str(), 0, 0)]);
+            let t = placed(Some(&g), &pose);
+            let want = f32::from(deck) * hex_core::LEVEL_STEP + RAIL_TOP_Y;
+            assert!((t.translation.y - want).abs() < 1e-3, "deck {deck}: {t:?}");
+        }
+    }
+
     #[test]
     fn a_train_wears_one_livery_and_trains_differ() {
         assert_eq!(livery_for(0), livery_for(6));
@@ -449,6 +514,7 @@ mod tests {
             kind: StockKind::Engine,
             pos: [1.0, 2.0],
             yaw: std::f32::consts::FRAC_PI_2,
+            lamps: 0.0,
         });
         assert_eq!(t.translation, Vec3::new(1.0, RAIL_TOP_Y, 2.0));
         assert!((t.rotation * Vec3::X - Vec3::Z).length() < 1e-5);

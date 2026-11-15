@@ -41,6 +41,10 @@ export const TILE_NAMES: Record<string, string> = {
   rail_junction: "Rail junction",
   rail_road_crossing: "Level crossing",
   rail_station: "Rail station",
+  rail_tunnel_portal: "Rail tunnel portal",
+  rail_viaduct_l1: "Rail viaduct",
+  rail_viaduct_l2: "Rail viaduct",
+  rail_viaduct_l3: "Rail viaduct",
   river_straight: "River straight",
   river_bend: "River bend",
   river_bend_60: "River bend 60°",
@@ -63,6 +67,9 @@ export const FOOTPRINT_REFUSAL = "Needs seven free cells beside the world.";
 
 /** Why a footprint tile is refused where seven free cells touch the world but an outer edge clashes. */
 export const FOOTPRINT_EDGES = "Its edges don't meet the tiles beside it.";
+
+/** Why a viaduct is refused where a deck end faces an empty cell: its deck spans to the rail it meets. */
+export const DECK_END_REFUSAL = "Needs raised rail at its deck height on both ends.";
 
 /** Why a single tile is refused at a cell the engine offers only to a massif. */
 export const FOOTPRINT_INNER = "Only a massif can stand here.";

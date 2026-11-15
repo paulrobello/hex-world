@@ -1,0 +1,792 @@
+{
+  "pieceId": "rail_viaduct_l2",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/rail_viaduct_l2.py",
+    "sha256": "d7f730a39325ef582cf72400f6a07c4fbee5b5c3e5a854d1ad957e481cd83dc9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_viaduct.py",
+      "sha256": "773d08983af73b4e94161b4df6ba07ab97de788fc6055774321dbe5526cd9b28"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.12,
+    "bakeStats": {
+      "albedoLuma": 0.5382519960403442,
+      "ao": {
+        "mean": 0.8974159955978394,
+        "p05": 0.32549020648002625
+      },
+      "normalMissFraction": 0,
+      "seam": {
+        "band_foot.albedo": {
+          "u": 0.0038017432671040297
+        },
+        "band_foot.ao": {
+          "u": 0.00806722603738308
+        },
+        "band_foot.normal": {
+          "u": 0.00045907250023446977
+        },
+        "band_top.albedo": {
+          "u": 0.0018534079426899552
+        },
+        "band_top.ao": {
+          "u": 0.009257703088223934
+        },
+        "band_top.normal": {
+          "u": 0.0004824151692446321
+        },
+        "panel.albedo": {
+          "u": 0.005820624530315399,
+          "v": 0.010192337445914745
+        },
+        "panel.ao": {
+          "u": 0.026170240715146065,
+          "v": 0.0451301634311676
+        },
+        "panel.normal": {
+          "u": 0.00933914352208376,
+          "v": 0.015041881240904331
+        }
+      },
+      "shared": true
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.05,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "islands": {
+      "back": [
+        972,
+        845,
+        32,
+        32
+      ],
+      "band_foot": [
+        0,
+        376,
+        620,
+        120
+      ],
+      "band_top": [
+        0,
+        512,
+        620,
+        120
+      ],
+      "barrel": [
+        0,
+        648,
+        194,
+        120
+      ],
+      "cop_cfront": [
+        210,
+        781,
+        258,
+        42
+      ],
+      "cop_ctop": [
+        636,
+        324,
+        258,
+        111
+      ],
+      "cop_cunder": [
+        484,
+        828,
+        258,
+        19
+      ],
+      "cop_end": [
+        922,
+        845,
+        34,
+        73
+      ],
+      "cop_lfront": [
+        484,
+        781,
+        258,
+        31
+      ],
+      "cop_lunder": [
+        228,
+        863,
+        258,
+        16
+      ],
+      "fern0": [
+        742,
+        914,
+        16,
+        8
+      ],
+      "fern1": [
+        774,
+        914,
+        16,
+        8
+      ],
+      "jamb_band": [
+        989,
+        0,
+        11,
+        181
+      ],
+      "jamb_front": [
+        846,
+        648,
+        117,
+        181
+      ],
+      "jamb_inner": [
+        846,
+        451,
+        127,
+        181
+      ],
+      "jamb_top": [
+        210,
+        895,
+        117,
+        11
+      ],
+      "key_band": [
+        0,
+        839,
+        212,
+        26
+      ],
+      "key_front": [
+        636,
+        160,
+        212,
+        148
+      ],
+      "key_side0": [
+        758,
+        845,
+        148,
+        26
+      ],
+      "key_side1": [
+        502,
+        863,
+        148,
+        26
+      ],
+      "lining": [
+        972,
+        893,
+        32,
+        32
+      ],
+      "panel": [
+        0,
+        0,
+        620,
+        360
+      ],
+      "park_glass": [
+        876,
+        887,
+        16,
+        16
+      ],
+      "park_iron": [
+        133,
+        908,
+        16,
+        16
+      ],
+      "park_turf": [
+        165,
+        908,
+        16,
+        16
+      ],
+      "track": [
+        636,
+        0,
+        335,
+        144
+      ],
+      "tuft0": [
+        806,
+        914,
+        8,
+        8
+      ],
+      "tuft1": [
+        830,
+        914,
+        8,
+        8
+      ],
+      "v0_band": [
+        0,
+        881,
+        194,
+        11
+      ],
+      "v0_front": [
+        210,
+        648,
+        194,
+        117
+      ],
+      "v0_side0": [
+        343,
+        895,
+        117,
+        11
+      ],
+      "v0_side1": [
+        476,
+        905,
+        117,
+        11
+      ],
+      "v0_soffit": [
+        636,
+        451,
+        194,
+        127
+      ],
+      "v1_band": [
+        666,
+        887,
+        194,
+        11
+      ],
+      "v1_front": [
+        420,
+        648,
+        194,
+        117
+      ],
+      "v1_side0": [
+        0,
+        908,
+        117,
+        11
+      ],
+      "v1_side1": [
+        609,
+        914,
+        117,
+        11
+      ],
+      "v1_soffit": [
+        636,
+        594,
+        194,
+        127
+      ]
+    },
+    "lod2Drops": {
+      "viaduct_sleeper": "sleepers 0.26 m wide: under a pixel at 400 m (0.31 m), as on rail_straight_center, whose LOD2 has none"
+    },
+    "lodTris": [
+      3224,
+      1398,
+      408
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.12,
+    "receiverSignature": "d3443581b5bbf7a5806956c1d5b0e54df661f97917674168bb84a3f23edc8a42",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "stone": {
+        "faces": 2520,
+        "max": 277.5671725717588,
+        "median": 258.00008332810074,
+        "min": 103.19994895047704
+      }
+    },
+    "viaduct": {
+      "archCentresX": [
+        -7,
+        0,
+        7
+      ],
+      "archRadiusM": 2.3,
+      "ballastTopOverTileM": 8.22,
+      "batter": 0.025,
+      "crownM": 6.8,
+      "deckLevel": 2,
+      "deckM": 8,
+      "faceHalfWidthM": 3,
+      "parapetInnerM": 2.65,
+      "parapetTopOverTileM": 9.11,
+      "pierFootprintsRuntimeXZ": [
+        [
+          [
+            -13.854,
+            -3
+          ],
+          [
+            -9.188,
+            -3
+          ],
+          [
+            -9.188,
+            3
+          ],
+          [
+            -13.854,
+            3
+          ]
+        ],
+        [
+          [
+            -4.812,
+            -3
+          ],
+          [
+            -2.188,
+            -3
+          ],
+          [
+            -2.188,
+            3
+          ],
+          [
+            -4.812,
+            3
+          ]
+        ],
+        [
+          [
+            2.188,
+            -3
+          ],
+          [
+            4.812,
+            -3
+          ],
+          [
+            4.812,
+            3
+          ],
+          [
+            2.188,
+            3
+          ]
+        ],
+        [
+          [
+            9.188,
+            -3
+          ],
+          [
+            13.854,
+            -3
+          ],
+          [
+            13.854,
+            3
+          ],
+          [
+            9.188,
+            3
+          ]
+        ]
+      ],
+      "pierWidthM": 2.4,
+      "railTopOverTileM": 8.46,
+      "sharedBake": "one bake for rail_viaduct_l1, _l2 and _l3 (same receiver signature)",
+      "springingM": 4.5,
+      "stoneEndX": 13.854406460551017,
+      "stringCourseM": [
+        7.45,
+        7.67
+      ]
+    }
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3224,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1398,
+      "ratio": 0.4336228287841191
+    },
+    {
+      "lod": 2,
+      "tris": 408,
+      "ratio": 0.12655086848635236
+    }
+  ],
+  "collider": {
+    "node": "rail_viaduct_l2_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "deck": 2,
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "deck": 2,
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "stone": {
+      "faces": 2520,
+      "max": 277.5671725717588,
+      "median": 258.00008332810074,
+      "min": 103.19994895047704
+    }
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 990202,
+        "astc": 989177
+      },
+      "glbBytes": 207492
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 803112,
+        "sha256": "9d795b9b39bd028c6e891c2e99fedc27ab1ae2b98e96bd65bc7177667689372a"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 806933,
+        "sha256": "df440abe25da1d7131bbd23dfb5cb3e9bb4571db97d856ada14218b019c6be3b"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 470547,
+        "sha256": "63a3ae23dfc0683eb3b93c68a854c985ad41e586c17b53dc79388d6154583cae",
+        "size": 512
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 6785,
+        "sha256": "4ce291866cdbb6c6cd2f218d3dbe87000608ac5c9b8dd9a7cdf4efe01415f657"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 6679,
+        "sha256": "b5b49141897a88a20784e474bb8d9126b04bffe17be9c147cb8eca66be5836a3"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 7395,
+        "sha256": "27ed63684f4959fac0592d03be22ddd8cd3a99b6f5ac93c805d66dca111dc522"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 110712,
+        "sha256": "7b6dc03c2a20301dbe865506511c8637778d05adcd970584f91f5f25607e8c07"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 108090,
+        "sha256": "1448fd2013828e9a5b975d699fa14599b81537ff22c46fbc5ae82a3170b0436c"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 240938,
+        "sha256": "4a07166eb7ed9b790d6b7e7efa90b9b153c4fa088d50c23744d58f0d99434023"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 69593,
+        "sha256": "bf94e15dd183c745031aa4c23d4b72d1bbd9e0f3f586e20802ac8aa110e58645"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 67475,
+        "sha256": "fe393339f8637d26c2a4ce8d3e52c70a54183ed79c336d3a13fc64a75b328756"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 89750,
+        "sha256": "5fddc7fbe4883f574f5774f859b2f387b9876b8309afacd023681a16b2cef806"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.glb",
+      "sha256": "95150cdf7da88035032ec73eaa8327e7502c487e617e0dcea688be60bb0c3f2c",
+      "bytes": 207492
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.bc7.ktx2",
+      "sha256": "9d795b9b39bd028c6e891c2e99fedc27ab1ae2b98e96bd65bc7177667689372a",
+      "bytes": 803112
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.astc.ktx2",
+      "sha256": "df440abe25da1d7131bbd23dfb5cb3e9bb4571db97d856ada14218b019c6be3b",
+      "bytes": 806933
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.png",
+      "sha256": "63a3ae23dfc0683eb3b93c68a854c985ad41e586c17b53dc79388d6154583cae",
+      "bytes": 470547
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.bc7.ktx2",
+      "sha256": "4ce291866cdbb6c6cd2f218d3dbe87000608ac5c9b8dd9a7cdf4efe01415f657",
+      "bytes": 6785
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.astc.ktx2",
+      "sha256": "b5b49141897a88a20784e474bb8d9126b04bffe17be9c147cb8eca66be5836a3",
+      "bytes": 6679
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.png",
+      "sha256": "27ed63684f4959fac0592d03be22ddd8cd3a99b6f5ac93c805d66dca111dc522",
+      "bytes": 7395
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.bc7.ktx2",
+      "sha256": "7b6dc03c2a20301dbe865506511c8637778d05adcd970584f91f5f25607e8c07",
+      "bytes": 110712
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.astc.ktx2",
+      "sha256": "1448fd2013828e9a5b975d699fa14599b81537ff22c46fbc5ae82a3170b0436c",
+      "bytes": 108090
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.png",
+      "sha256": "4a07166eb7ed9b790d6b7e7efa90b9b153c4fa088d50c23744d58f0d99434023",
+      "bytes": 240938
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.bc7.ktx2",
+      "sha256": "bf94e15dd183c745031aa4c23d4b72d1bbd9e0f3f586e20802ac8aa110e58645",
+      "bytes": 69593
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.astc.ktx2",
+      "sha256": "fe393339f8637d26c2a4ce8d3e52c70a54183ed79c336d3a13fc64a75b328756",
+      "bytes": 67475
+    },
+    {
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.png",
+      "sha256": "5fddc7fbe4883f574f5774f859b2f387b9876b8309afacd023681a16b2cef806",
+      "bytes": 89750
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/rail_viaduct/ref-1.jpg",
+      "sha256": "da3d3b324a48d9ff50aa78009ab655639a43fda9cef1e1abc4e71074d3feb535",
+      "sourceSha256": "d266928f446f853cdc453b619e264752898a65b861836c567b9f928fcb7e163b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f71c5393-0b5f-49d3-ac8f-b9f3b1ac31e0",
+      "prompt": "Railway viaduct tile: one single solid regular hexagonal diorama tile, never a square or rectangle, with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, the whole tile centred in frame with plain grey margin all round and nothing else in the frame, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The camera faces the middle of one flat side square-on, so that side runs straight and horizontal across the bottom of the tile with one sloping side rising from each of its ends, and the tile's top is one flat even lush meadow of fresh green grass with a few small wildflowers. A low stone railway viaduct about 4 m high, on a row of three low broad semicircular arches over the meadow, built of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the piers, and faint darker rain streaks running down from under the parapet coping, the stone reading as a matte surface, every arch ringed by pale dressed granite voussoirs with a keystone, runs dead straight through the very centre of the tile, from the exact middle of the lower-left flat side to the exact middle of the opposite upper-right flat side, meeting both sides square-on, far from every corner, with open meadow on both sides of it, and its deck ends are cut off clean and square exactly at those two sides of the hexagon, flush with the side walls, as if the viaduct carries on across the neighbouring tiles. Along the top of the deck runs a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders between low granite parapet walls with a pale dressed coping, a few tufts of grass and small ferns in the parapet joints. The meadow under and around the viaduct is open and level, with no road, river or buildings, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail_viaduct/ref-2.jpg",
+      "sha256": "04f14de418b3dea342081425b214258e66b07b1d28d20ed48ffa70b984a36881",
+      "sourceSha256": "73f84e81473defa20a68a1d11fc48abe7047b0b4566994e48e51b16f143c8268",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2c7f4e70-4956-435c-ae20-4aa67f0eaa5c",
+      "prompt": "Railway viaduct tile: one single solid regular hexagonal diorama tile, never a square or rectangle, with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, the whole tile centred in frame with plain grey margin all round and nothing else in the frame, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The camera faces the middle of one flat side square-on, so that side runs straight and horizontal across the bottom of the tile with one sloping side rising from each of its ends, and the tile's top is one flat even lush meadow of fresh green grass with a few small wildflowers. A tall stone railway viaduct about 8 m high, its deck twice the height of a house, on three tall round arches on slender tapering piers over the meadow, built of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the piers, and faint darker rain streaks running down from under the parapet coping, the stone reading as a matte surface, every arch ringed by pale dressed granite voussoirs with a keystone, runs dead straight through the very centre of the tile, from the exact middle of the lower-left flat side to the exact middle of the opposite upper-right flat side, meeting both sides square-on, far from every corner, with open meadow on both sides of it, and its deck ends are cut off clean and square exactly at those two sides of the hexagon, flush with the side walls, as if the viaduct carries on across the neighbouring tiles. Along the top of the deck runs a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders between low granite parapet walls with a pale dressed coping, a few tufts of grass and small ferns in the parapet joints. The meadow under and around the viaduct is open and level, with no road, river or buildings, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail_viaduct/ref-3.jpg",
+      "sha256": "e39e11cf6d99a7f71728962b56623423fb89da27c71b16c77b5ac6da9bbab9ab",
+      "sourceSha256": "7398694aa7a2722b006939493d70ed725942ac9756ac3ca30c9d6bad703d8282",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "84eadeb4-c0ec-4e6e-817d-1dbf3a5a39a6",
+      "prompt": "Railway viaduct tile: one single solid regular hexagonal diorama tile, never a square or rectangle, with exactly six straight flat sides each 16 m long, 32 m across from corner to corner, the whole tile centred in frame with plain grey margin all round and nothing else in the frame, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The camera faces the middle of one flat side square-on, so that side runs straight and horizontal across the bottom of the tile with one sloping side rising from each of its ends, and the tile's top is one flat even lush meadow of fresh green grass with a few small wildflowers. A very tall stone railway viaduct about 12 m high, its deck three times the height of a house, on two tiers of round arches, a row of tall arches on slender tapering piers below and a row of smaller arches above carrying the deck, over the meadow, built of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the piers, and faint darker rain streaks running down from under the parapet coping, the stone reading as a matte surface, every arch ringed by pale dressed granite voussoirs with a keystone, runs dead straight through the very centre of the tile, from the exact middle of the lower-left flat side to the exact middle of the opposite upper-right flat side, meeting both sides square-on, far from every corner, with open meadow on both sides of it, and its deck ends are cut off clean and square exactly at those two sides of the hexagon, flush with the side walls, as if the viaduct carries on across the neighbouring tiles. Along the top of the deck runs a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders between low granite parapet walls with a pale dressed coping, a few tufts of grass and small ferns in the parapet joints. The meadow under and around the viaduct is open and level, with no road, river or buildings, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high camera looking down at about 65 degrees elevation so all six hexagon edges read clearly, the dark earth side walls visible along the front"
+    },
+    {
+      "path": "assets-source/refs/rail_viaduct/ref-4.jpg",
+      "sha256": "20f494fa1340c9863d970b07265d138524d20604b6a119fb2e0b35e8d1926ff3",
+      "sourceSha256": "d28c54af7e1cdc8c076f5e30adb7f91282c8be9e32d882c89ffdc7e7143fb833",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "f0c2f739-f64f-4097-bb68-7235422766f6",
+      "prompt": "Close-up of the deck of a tall stone railway viaduct on a diorama tile, on a plain neutral grey studio backdrop: the viaduct is built of rough-faced blocks of weathered pale grey granite speckled with darker grey flecks, with a few warm buff fieldstones among them, laid in neat level courses in pale lime mortar, every block a little irregular with softly worn rounded edges and its own slight tone, patches of pale green-grey and mustard-yellow lichen, dark green moss in the joints and thickest along the foot of the piers, and faint darker rain streaks running down from under the parapet coping, the stone reading as a matte surface, every arch ringed by pale dressed granite voussoirs with a keystone, its deck carrying a single standard-gauge railway track: two steel rails with bright polished running tops fixed to evenly spaced dark timber sleepers, bedded in a low raised bank of grey crushed-stone ballast with neatly sloped shoulders between low granite parapet walls with a pale dressed coping and a small projecting string course below them, a few tufts of grass and small ferns in the parapet joints, the tops of two round arches and a slender pier visible below the deck, rich specific surface detail. The whole viaduct is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-11-15T04:22:22.695Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-13",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/rail_viaduct/ref-2.jpg",
+        "assets-source/refs/rail_viaduct/ref-4.jpg"
+      ],
+      "notes": "ref-2's form (three tall arches on tapering piers) with ref-4's stone and deck detail, scaled by pier height for the three levels (RL-Q2). One design for every height (RL-Q4). No walking on the deck from a raised neighbour (RL-Q3). Answered in chat 2026-11-13 against docs/review/2026-11-13-owner-queue.md RL: \"Q1 O2 / Q2 approved for O2 look / Q3 no / Q4 one design\"."
+    }
+  ]
+}

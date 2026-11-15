@@ -1,0 +1,24 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-11-14",
+    "notes": "Pending owner review; not an approval. The road portal's rail counterpart from assets-source/refs/rail_tunnel_portal ref-2 (look) and ref-3 (turf-mound layout) under RL-Q1 O2: the road portal's granite head wall, voussoirs, keystone, fern-hung coping and two amber lanterns on a semicircular 5.2 m opening (springing 2.4 m, crown 5.0 m, 0.32 m radial clearance over the steam engine's chimney), wall top 5.85 m under a turf mound that heaps 0.3 m over the coping and eases to the 4 m cover by edge 0. Face 6 m inside edge 0 (x 7.856), interior back plane x 11.456. Review sheet: docs/checkpoints/rail_tunnel_portal/sheet.jpg. The controller records the owner's decision."
+  },
+  {
+    "who": "Paul Robello (owner)",
+    "when": "2026-11-14",
+    "gate": "piece",
+    "status": "approved",
+    "revision": "look-1",
+    "requested": "2026-11-14",
+    "notes": "Approved in chat (\"approved\") on 2026-11-14, reviewed from docs/checkpoints/rail_tunnel_portal/sheet.jpg (Blender renders on a stand-in cutting; in-engine shots still to come). Same message asked for open, walkable tunnels instead of a black back wall: a follow-up adjustment to every portal, not a condition of this approval."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "open-1",
+    "requested": "2026-11-15",
+    "notes": "Pending owner re-check; not an approval. Exterior unchanged, interior extension: owner re-check. Open tunnels (section O1, a turf ridge over the bore, owner 2026-11-14). Closed (lone or incomplete tunnel, `_open` slots hidden): the six kit renders are byte-identical to the approved look-1 renders, the baked maps and KTX2 files are byte-identical, colliderX unchanged. Complete (`_back` slots hidden: the barrel, the dark lining, the back plane and the back face's opening): a stone lining on the panel island from the soffit (x 8.306) to edge 0, under a turf ridge rising out of the mound from x 10.456 to a 5.75 m crest at edge 0, meeting rail_tunnel_bore vertex for vertex. LOD0 1,739 tris needs the requested 1,800 open-portal budget (integration.patch), over the brief's ~100-tri allowance. Review sheet: docs/checkpoints/rail_tunnel_bore/sheet.jpg. The controller records the owner's decision."
+  }
+]

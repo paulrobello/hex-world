@@ -10,7 +10,10 @@ Built to the cut row (controller Q1): the road stays at the tile's level through
 arch on edge 0. Opening 7.8 m wide, springing 0.6 m, crown 3.15 m over the road's ground (at most 3.6 m),
 wall top 4.0 m flush with the cover meadow; face at runtime x 11.656, interior back plane at x 13.656; the
 sim's `arch` node at [13.3, 0.0] (wiring W1: a ground hero at the origin of a straight-road tile). Pack
-`core`, kind `prop`, KTX2 class `piece`: one unique baked set (1024² albedo, 512² normal, ORM and masks)."""
+`core`, kind `prop`, KTX2 class `piece`: one unique baked set (1024² albedo, 512² normal, ORM and masks).
+
+Open tunnels (owner 2026-11-14): the lining runs on to the cell edge x 13.856, where road_tunnel_bore takes
+over, and the back wall stays its own slot at the back plane for the runtime to hide (_tunnel_portal_open.py)."""
 import pathlib
 import sys
 
@@ -18,6 +21,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 import _tunnel_portal  # noqa: E402
+import _tunnel_portal_open  # noqa: E402,F401  (rebinds _tunnel_portal.build_lod and compose_maps)
 
 SPEC = {
     "piece": "road_tunnel_portal",

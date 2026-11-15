@@ -144,6 +144,9 @@ pub struct CarPose {
     pub yaw: f32,
     /// 1 for a car in the world, falling to 0 as a car over a lowered cap fades out (PRD §7.2).
     pub opacity: f32,
+    /// How lit the car's headlights are: 0 in daylight in the open, 1 inside a tunnel (P4), and
+    /// the day and night cycle (P5) raises it at night.
+    pub lamps: f32,
 }
 
 /// The cars to draw, written by `hex-app` every frame while any car exists.
@@ -201,7 +204,7 @@ pub struct CarPartMaterials {
 
 /// Below this opacity a fading car stops casting its shadow: a shadow map cannot fade, and a full
 /// shadow left under a car that is nearly gone reads as a dark smudge on the road.
-const SHADOW_OPACITY: f32 = 0.5;
+pub(crate) const SHADOW_OPACITY: f32 = 0.5;
 
 /// The opacity a kit car's parts were last drawn at.
 #[derive(Component, Clone, Copy, Debug, PartialEq)]
@@ -731,6 +734,7 @@ mod tests {
                 pos: [3.0, -2.0],
                 yaw,
                 opacity: 1.0,
+                lamps: 0.0,
             });
             assert!((t.rotation * Vec3::X - dir).length() < 1e-5, "yaw {yaw}");
             assert_eq!(t.translation, Vec3::new(3.0, ROAD_SURFACE_Y, -2.0));
@@ -782,6 +786,7 @@ mod tests {
             pos: pos.into(),
             yaw: dir.y.atan2(dir.x),
             opacity: 1.0,
+            lamps: 0.0,
         }
     }
 
@@ -1115,6 +1120,7 @@ mod tests {
                     pos: [0.0, 0.0],
                     yaw: 0.0,
                     opacity: 0.0,
+                    lamps: 0.0,
                 }],
             })
             .add_systems(Update, sync);

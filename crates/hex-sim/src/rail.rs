@@ -54,11 +54,11 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeMap, BTreeSet, BinaryHeap};
 
-use hex_core::{Axial, NetworkKind, TileDef};
+use hex_core::{Axial, NetworkKind, TileCatalog, TileDef, Tunnel, World};
 
 use crate::geom::{self, Pose, Vec2};
 use crate::network::{LinkId, Network, NodeId};
-use crate::sim::TICK_SECONDS;
+use crate::sim::{LAMP_RAMP, TICK_SECONDS};
 
 /// Line speed (m/s): a light railway's pace in the diorama, a little under the cars' 8 m/s.
 pub const TRAIN_SPEED: f32 = 6.0;
@@ -109,6 +109,8 @@ pub const MAX_TRAINS: usize = 12;
 /// A crossing closes while a train's front is this close (m): about 5 s at line speed, long
 /// enough for a car already past the stop line to clear the deck.
 pub const CROSSING_WARN: f32 = 30.0;
+/// A vehicle further than this from a tunnel's axis is not in the tunnel.
+const TUNNEL_HALF_WIDTH: f32 = 3.0;
 /// Half the level crossing's road deck measured along the track (m): the 6.5 m deck crossed at
 /// 60 degrees spans 3.75 m each side of the crossing point.
 pub const CROSSING_HALF: f32 = 4.0;
@@ -220,6 +222,9 @@ pub struct Step {
 pub struct VehiclePose {
     pub kind: VehicleKind,
     pub pose: Pose,
+    /// How lit the vehicle's headlights are: 0 in the open, rising to 1 over [`LAMP_RAMP`] metres
+    /// before a tunnel's arch, 1 inside it and falling again after the far arch.
+    pub lamps: f32,
 }
 
 /// What a train is waiting for.
@@ -351,6 +356,7 @@ impl Train {
                         pos,
                         dir: [yaw.cos(), yaw.sin()],
                     },
+                    lamps: p.lamps + (n.lamps - p.lamps) * a,
                 }
             })
             .collect()
@@ -799,6 +805,51 @@ impl Railway {
         self.replan_all();
     }
 
+    /// Replaces the rail tunnels' hidden links ([`Network::set_tunnels`]). Trains whose route used
+    /// a link that went are removed, and the rest replan, so no train is left inside a tunnel that
+    /// no longer exists.
+    pub fn set_tunnels(&mut self, tunnels: &[Tunnel], world: &World, c: &TileCatalog) {
+        let before = self.net.version();
+        self.net.set_tunnels(tunnels, world, c);
+        if self.net.version() == before {
+            return;
+        }
+        self.drop_orphaned_trains();
+        self.dirty = true;
+        self.changed = true;
+        self.replan_all();
+    }
+
+    /// How lit a vehicle's headlights are at `pos`: 0 outside every tunnel, 1 between a tunnel's two
+    /// arches, ramping linearly over [`LAMP_RAMP`] metres before the arch it enters by and after
+    /// the one it leaves by. Only positions within [`TUNNEL_HALF_WIDTH`] of a tunnel's axis count.
+    fn tunnel_lamps(&self, pos: Vec2) -> f32 {
+        let mut lamps = 0.0f32;
+        for (_, link) in self.net.links().filter(|(_, l)| l.hidden()) {
+            let (Some(&a), Some(&b)) = (link.points().first(), link.points().last()) else {
+                continue;
+            };
+            let axis = geom::sub(b, a);
+            let len = geom::len(axis).max(1e-6);
+            let d = geom::scale(axis, 1.0 / len);
+            let rel = geom::sub(pos, a);
+            let along = rel[0] * d[0] + rel[1] * d[1];
+            let across = (rel[0] * d[1] - rel[1] * d[0]).abs();
+            if across > TUNNEL_HALF_WIDTH {
+                continue;
+            }
+            let here = if along < 0.0 {
+                1.0 - (-along / LAMP_RAMP).min(1.0)
+            } else if along <= len {
+                1.0
+            } else {
+                1.0 - ((along - len) / LAMP_RAMP).min(1.0)
+            };
+            lamps = lamps.max(here);
+        }
+        lamps
+    }
+
     /// Mirrors a bulldozed tile.
     pub fn remove_tile(&mut self, cell: Axial) {
         self.drop_trains_on(cell);
@@ -807,6 +858,7 @@ impl Railway {
             self.dirty = true;
             self.changed = true;
         }
+        self.drop_orphaned_trains();
         self.replan_all();
     }
 
@@ -828,9 +880,19 @@ impl Railway {
     }
 
     fn drop_trains_on(&mut self, cell: Axial) {
+        self.drop_trains_where(|_, t| t.steps.iter().any(|s| s.link.cell == cell));
+    }
+
+    /// Removes the trains whose path names a link the graph no longer has, such as a tunnel's
+    /// hidden link, which belongs to its first portal's cell but goes with either portal.
+    fn drop_orphaned_trains(&mut self) {
+        self.drop_trains_where(|net, t| t.steps.iter().any(|s| net.link(s.link).is_none()));
+    }
+
+    fn drop_trains_where(&mut self, gone: impl Fn(&Network, &Train) -> bool) {
         let before = self.trains.len();
-        self.trains
-            .retain(|t| t.steps.iter().all(|s| s.link.cell != cell));
+        let net = &self.net;
+        self.trains.retain(|t| !gone(net, t));
         let alive: BTreeSet<TrainId> = self.trains.iter().map(|t| t.id).collect();
         for j in &mut self.junctions {
             if j.holder.is_some_and(|h| !alive.contains(&h)) {
@@ -1095,12 +1157,14 @@ impl Railway {
                 let back = at(v.centre + v.half_wheelbase);
                 let d = geom::sub(front, back);
                 let l = geom::len(d).max(1e-6);
+                let pos = geom::lerp(front, back, 0.5);
                 VehiclePose {
                     kind,
                     pose: Pose {
-                        pos: geom::lerp(front, back, 0.5),
+                        pos,
                         dir: geom::scale(d, 1.0 / l),
                     },
+                    lamps: self.tunnel_lamps(pos),
                 }
             })
             .collect()

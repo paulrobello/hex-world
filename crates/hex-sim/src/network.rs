@@ -4,7 +4,7 @@
 //! both sides of a seam share that node and are stitched by key, never by float position. A seam
 //! node with only one placed side is a half-seam of degree 1 facing an empty cell.
 //!
-//! A complete tunnel (P4) adds one hidden road link from portal `a`'s arch node to portal `b`'s,
+//! A complete tunnel (P4) adds one hidden link, in the graph of its kind, from portal `a`'s arch node to portal `b`'s,
 //! a straight 2D line under the cover ([`Network::set_tunnels`]). An open portal's arch is a dead
 //! end of degree 1 and never a destination.
 
@@ -308,12 +308,13 @@ impl Network {
     /// Replaces the tunnels' hidden links with one per tunnel in `tunnels`: a straight segment
     /// from portal `a`'s arch node to portal `b`'s, keyed by `a` ([`TUNNEL_SEGMENT`]). A tunnel no
     /// longer listed loses its link. Portals are looked up in `world` and `c`; a tunnel whose
-    /// portal is missing is skipped. Only a road network has tunnels. Leaves the graph untouched
+    /// portal is missing is skipped. A network takes the tunnels of its own kind. Leaves the graph untouched
     /// when the set is unchanged.
     pub fn set_tunnels(&mut self, tunnels: &[Tunnel], world: &World, c: &TileCatalog) {
-        let want: BTreeMap<LinkId, &Tunnel> = if self.kind == NetworkKind::Road {
+        let want: BTreeMap<LinkId, &Tunnel> = {
             tunnels
                 .iter()
+                .filter(|t| t.kind == self.kind)
                 .map(|t| {
                     let id = LinkId {
                         cell: t.a,
@@ -322,8 +323,6 @@ impl Network {
                     (id, t)
                 })
                 .collect()
-        } else {
-            BTreeMap::new()
         };
         let stale: Vec<LinkId> = self
             .tunnels

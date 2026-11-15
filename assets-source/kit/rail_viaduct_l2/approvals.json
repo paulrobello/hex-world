@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-11-14",
+    "notes": "Pending owner review; not an approval. Stone rail viaduct, deck 2 (rail top 8.46 m over the valley floor), against assets-source/refs/rail_viaduct (ref-2's form: three round arches on battered piers; ref-4's stone and deck detail; RL-Q2 and RL-Q4: one design, pier height scales with the deck). Built by scripts/blender/kit/_rail_viaduct.py with the tunnel portal's granite and one bake shared by all three heights. LOD tris 3224/1398/408. Review sheets: docs/checkpoints/rail_viaduct/sheet.jpg (references beside deck 2 in play: three-quarter, side, deck close-up, under the arches, the seam with rail_straight at level 2, top, overview, LOD1 and LOD2) and docs/checkpoints/rail_viaduct/heights.jpg (the three heights side by side). The controller records the owner's decision."
+  }
+]

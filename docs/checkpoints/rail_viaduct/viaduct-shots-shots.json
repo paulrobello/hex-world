@@ -1,0 +1,102 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/rail_viaduct/viaduct-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        66.36,
+        37.29,
+        25.42
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 46.5,
+      "load_after": [
+        55.76,
+        39.11,
+        26.73
+      ],
+      "frames": {
+        "viaduct-overview": {
+          "mean": 0.1282,
+          "problem": null
+        },
+        "viaduct-l1-three-quarter": {
+          "mean": 0.2406,
+          "problem": null
+        },
+        "viaduct-l1-front": {
+          "mean": 0.2261,
+          "problem": null
+        },
+        "viaduct-l1-seam": {
+          "mean": 0.2946,
+          "problem": null
+        },
+        "viaduct-l2-three-quarter": {
+          "mean": 0.2291,
+          "problem": null
+        },
+        "viaduct-l2-front": {
+          "mean": 0.1944,
+          "problem": null
+        },
+        "viaduct-l2-deck": {
+          "mean": 0.2709,
+          "problem": null
+        },
+        "viaduct-l2-under": {
+          "mean": 0.2826,
+          "problem": null
+        },
+        "viaduct-l2-seam": {
+          "mean": 0.2738,
+          "problem": null
+        },
+        "viaduct-l2-top": {
+          "mean": 0.2628,
+          "problem": null
+        },
+        "viaduct-l3-three-quarter": {
+          "mean": 0.2204,
+          "problem": null
+        },
+        "viaduct-l3-front": {
+          "mean": 0.1787,
+          "problem": null
+        },
+        "viaduct-l3-seam": {
+          "mean": 0.2724,
+          "problem": null
+        },
+        "viaduct-l2-lod1": {
+          "mean": 0.2265,
+          "problem": null
+        },
+        "viaduct-l2-lod2": {
+          "mean": 0.2266,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

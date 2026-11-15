@@ -1,0 +1,8 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-11-14",
+    "notes": "Pending owner review; not an approval. One cover cell of an open road tunnel (spec docs/superpowers/specs/2026-11-14-open-tunnels-design.md): the road portal's section (7.8 m wide, springing 0.6 m, crown 3.15 m) edge to edge, lined with the portal's own granite panel (assets-source/refs/road_tunnel_portal ref-2), the road_straight section on the floor, six always-lit amber wall lamps (the emissive map, not the night mask). Review sheet: docs/checkpoints/road_tunnel_bore/sheet.jpg. The controller records the owner's decision."
+  }
+]

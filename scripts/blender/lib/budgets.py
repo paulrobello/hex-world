@@ -14,6 +14,8 @@ LANE_CUT_LOD2_MAX_RATIO = 0.20
 COAST_ARC_LOD2_MAX_RATIO = 0.20
 RIVER_DRESSING_LOD0_MAX = 2500
 RIVER_DRESSING_PROPS = ("river_spring_center", "reed_bed")
+OPEN_PORTAL_LOD0_MAX = 1800
+OPEN_PORTAL_PROPS = ("rail_tunnel_portal",)
 
 
 def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
@@ -21,6 +23,8 @@ def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
     `socket-lane-*` that has a `cut` (river bases); coast_arc: a coast-corner base (beach_outer_base,
     beach_inner_base). The gate fails LOD i when tris_i > ratio_i * tris_0."""
     lod0 = RIVER_DRESSING_LOD0_MAX if kind == "prop" and piece_id in RIVER_DRESSING_PROPS else LOD0_MAX[kind]
+    if kind == "prop" and piece_id in OPEN_PORTAL_PROPS:
+        lod0 = OPEN_PORTAL_LOD0_MAX
     lod2 = LOD2_MAX_RATIO
     if kind == "base" and lane_cut:
         lod2 = LANE_CUT_LOD2_MAX_RATIO

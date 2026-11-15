@@ -1,0 +1,62 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/road_tunnel_bore/bore-kit-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "kit"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        89.6,
+        112.49,
+        142.23
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 19.6,
+      "load_after": [
+        72.4,
+        107.1,
+        139.6
+      ],
+      "frames": {
+        "bore-kit-outside": {
+          "mean": 0.1594,
+          "problem": null
+        },
+        "bore-kit-inside": {
+          "mean": 0.0884,
+          "problem": null
+        },
+        "bore-kit-mid": {
+          "mean": 0.0788,
+          "problem": null
+        },
+        "bore-kit-lamp": {
+          "mean": 0.0949,
+          "problem": null
+        },
+        "bore-kit-lod1": {
+          "mean": 0.1415,
+          "problem": null
+        },
+        "bore-kit-lod2": {
+          "mean": 0.0935,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

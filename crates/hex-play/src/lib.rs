@@ -16,6 +16,7 @@ pub mod farm;
 pub mod fps;
 #[cfg(feature = "gate-tools")]
 pub mod gpu_timing;
+pub mod headlights;
 pub mod play;
 pub mod tier;
 pub mod trains;
@@ -35,6 +36,7 @@ impl Plugin for HexPlayPlugin {
                 play::PlayPlugin,
                 cars::CarsPlugin,
                 trains::TrainsPlugin,
+                headlights::HeadlightsPlugin,
                 farm::FarmPlugin,
                 boats::BoatsPlugin,
                 boids::BoidsPlugin {

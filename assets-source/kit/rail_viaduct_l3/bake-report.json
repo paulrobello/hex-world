@@ -1,0 +1,415 @@
+{
+  "aoDistanceM": 0.12,
+  "bakeStats": {
+    "albedoLuma": 0.5382519960403442,
+    "ao": {
+      "mean": 0.8974159955978394,
+      "p05": 0.32549020648002625
+    },
+    "normalMissFraction": 0.0,
+    "seam": {
+      "band_foot.albedo": {
+        "u": 0.0038017432671040297
+      },
+      "band_foot.ao": {
+        "u": 0.00806722603738308
+      },
+      "band_foot.normal": {
+        "u": 0.00045907250023446977
+      },
+      "band_top.albedo": {
+        "u": 0.0018534079426899552
+      },
+      "band_top.ao": {
+        "u": 0.009257703088223934
+      },
+      "band_top.normal": {
+        "u": 0.0004824151692446321
+      },
+      "panel.albedo": {
+        "u": 0.005820624530315399,
+        "v": 0.010192337445914745
+      },
+      "panel.ao": {
+        "u": 0.026170240715146065,
+        "v": 0.0451301634311676
+      },
+      "panel.normal": {
+        "u": 0.00933914352208376,
+        "v": 0.015041881240904331
+      }
+    },
+    "shared": true
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.05,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "islands": {
+    "back": [
+      972,
+      845,
+      32,
+      32
+    ],
+    "band_foot": [
+      0,
+      376,
+      620,
+      120
+    ],
+    "band_top": [
+      0,
+      512,
+      620,
+      120
+    ],
+    "barrel": [
+      0,
+      648,
+      194,
+      120
+    ],
+    "cop_cfront": [
+      210,
+      781,
+      258,
+      42
+    ],
+    "cop_ctop": [
+      636,
+      324,
+      258,
+      111
+    ],
+    "cop_cunder": [
+      484,
+      828,
+      258,
+      19
+    ],
+    "cop_end": [
+      922,
+      845,
+      34,
+      73
+    ],
+    "cop_lfront": [
+      484,
+      781,
+      258,
+      31
+    ],
+    "cop_lunder": [
+      228,
+      863,
+      258,
+      16
+    ],
+    "fern0": [
+      742,
+      914,
+      16,
+      8
+    ],
+    "fern1": [
+      774,
+      914,
+      16,
+      8
+    ],
+    "jamb_band": [
+      989,
+      0,
+      11,
+      181
+    ],
+    "jamb_front": [
+      846,
+      648,
+      117,
+      181
+    ],
+    "jamb_inner": [
+      846,
+      451,
+      127,
+      181
+    ],
+    "jamb_top": [
+      210,
+      895,
+      117,
+      11
+    ],
+    "key_band": [
+      0,
+      839,
+      212,
+      26
+    ],
+    "key_front": [
+      636,
+      160,
+      212,
+      148
+    ],
+    "key_side0": [
+      758,
+      845,
+      148,
+      26
+    ],
+    "key_side1": [
+      502,
+      863,
+      148,
+      26
+    ],
+    "lining": [
+      972,
+      893,
+      32,
+      32
+    ],
+    "panel": [
+      0,
+      0,
+      620,
+      360
+    ],
+    "park_glass": [
+      876,
+      887,
+      16,
+      16
+    ],
+    "park_iron": [
+      133,
+      908,
+      16,
+      16
+    ],
+    "park_turf": [
+      165,
+      908,
+      16,
+      16
+    ],
+    "track": [
+      636,
+      0,
+      335,
+      144
+    ],
+    "tuft0": [
+      806,
+      914,
+      8,
+      8
+    ],
+    "tuft1": [
+      830,
+      914,
+      8,
+      8
+    ],
+    "v0_band": [
+      0,
+      881,
+      194,
+      11
+    ],
+    "v0_front": [
+      210,
+      648,
+      194,
+      117
+    ],
+    "v0_side0": [
+      343,
+      895,
+      117,
+      11
+    ],
+    "v0_side1": [
+      476,
+      905,
+      117,
+      11
+    ],
+    "v0_soffit": [
+      636,
+      451,
+      194,
+      127
+    ],
+    "v1_band": [
+      666,
+      887,
+      194,
+      11
+    ],
+    "v1_front": [
+      420,
+      648,
+      194,
+      117
+    ],
+    "v1_side0": [
+      0,
+      908,
+      117,
+      11
+    ],
+    "v1_side1": [
+      609,
+      914,
+      117,
+      11
+    ],
+    "v1_soffit": [
+      636,
+      594,
+      194,
+      127
+    ]
+  },
+  "lod2Drops": {
+    "viaduct_sleeper": "sleepers 0.26 m wide: under a pixel at 400 m (0.31 m), as on rail_straight_center, whose LOD2 has none"
+  },
+  "lodTris": [
+    3602,
+    1758,
+    446
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.12,
+  "receiverSignature": "d3443581b5bbf7a5806956c1d5b0e54df661f97917674168bb84a3f23edc8a42",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "stone": {
+      "faces": 2898,
+      "max": 277.56721512500286,
+      "median": 258.00001031744085,
+      "min": 103.1999947292084
+    }
+  },
+  "viaduct": {
+    "archCentresX": [
+      -7.0,
+      0.0,
+      7.0
+    ],
+    "archRadiusM": 2.3,
+    "ballastTopOverTileM": 12.22,
+    "batter": 0.025,
+    "crownM": 10.8,
+    "deckLevel": 3,
+    "deckM": 12.0,
+    "faceHalfWidthM": 3.0,
+    "parapetInnerM": 2.65,
+    "parapetTopOverTileM": 13.11,
+    "pierFootprintsRuntimeXZ": [
+      [
+        [
+          -13.854,
+          -3.0
+        ],
+        [
+          -9.088,
+          -3.0
+        ],
+        [
+          -9.088,
+          3.0
+        ],
+        [
+          -13.854,
+          3.0
+        ]
+      ],
+      [
+        [
+          -4.912,
+          -3.0
+        ],
+        [
+          -2.087,
+          -3.0
+        ],
+        [
+          -2.087,
+          3.0
+        ],
+        [
+          -4.912,
+          3.0
+        ]
+      ],
+      [
+        [
+          2.087,
+          -3.0
+        ],
+        [
+          4.912,
+          -3.0
+        ],
+        [
+          4.912,
+          3.0
+        ],
+        [
+          2.087,
+          3.0
+        ]
+      ],
+      [
+        [
+          9.088,
+          -3.0
+        ],
+        [
+          13.854,
+          -3.0
+        ],
+        [
+          13.854,
+          3.0
+        ],
+        [
+          9.088,
+          3.0
+        ]
+      ]
+    ],
+    "pierWidthM": 2.4,
+    "railTopOverTileM": 12.46,
+    "sharedBake": "one bake for rail_viaduct_l1, _l2 and _l3 (same receiver signature)",
+    "springingM": 8.5,
+    "stoneEndX": 13.854406460551017,
+    "stringCourseM": [
+      11.45,
+      11.67
+    ]
+  }
+}

@@ -13,7 +13,7 @@ import {
   tileDef,
   tileMap,
 } from "../src/rules.ts";
-import { FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
+import { DECK_END_REFUSAL, FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
 import parity from "./rules-parity.json" with { type: "json" };
 
 const world = (...t: [number, number, string, number][]) =>
@@ -34,8 +34,9 @@ test("the picker lists one Beach Curve and neither the headland nor the bay", ()
   assert.ok(!names.includes("Headland") && !names.includes("Bay"));
   // In the straight beach's place, after it; every other tile is its own entry.
   assert.equal(ids[ids.indexOf("beach_curve") - 1], "beach");
-  // The Beach Curve folds two tiles into one entry, the river mouths two, the Hillside twelve.
-  assert.equal(PICKER.length, TILES.length - 1 - 1 - 11);
+  // The Beach Curve folds two tiles into one entry, the river mouths two, the Hillside twelve and
+  // the Rail viaduct three.
+  assert.equal(PICKER.length, TILES.length - 1 - 1 - 11 - 2);
   assert.equal(entryOf("beach_inner")!.id, "beach_curve");
   assert.equal(entryOf("meadow")!.id, "meadow");
 });
@@ -88,6 +89,18 @@ test("a lone tile's entry reads as its tile did", () => {
   assert.equal(entryMeta(meadow, f), "Fits any way round");
   assert.equal(entrySummary(meadow), "Grass all round");
   assert.equal(entrySummary(curve()), "Ocean, beach and grass edges");
+});
+
+test("a viaduct beside the start meadow is refused for its open deck end, not a clash", () => {
+  // Every turn leaves a deck end facing an empty cell, which clashes with nothing placed.
+  const viaduct = entryOf("rail_viaduct_l1")!;
+  assert.deepEqual(
+    viaduct.tiles.map((t) => t.id),
+    ["rail_viaduct_l1", "rail_viaduct_l2", "rail_viaduct_l3"],
+  );
+  const f = fitEntry(viaduct, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0])));
+  assert.equal(f.ok, false);
+  assert.equal(f.why, DECK_END_REFUSAL);
 });
 
 test("the Tiles sheet lists the massif at a slot a footprint covers and says why elsewhere", () => {

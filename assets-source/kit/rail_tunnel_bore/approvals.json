@@ -1,0 +1,9 @@
+[
+  {
+    "gate": "piece",
+    "status": "pending",
+    "revision": "o1-1",
+    "requested": "2026-11-15",
+    "notes": "Pending owner review; not an approval. The stone-lined bore a complete rail tunnel draws under each cover cell (open tunnels, owner 2026-11-14; section O1, a turf ridge over the bore, owner 2026-11-14). The rail portal's opening (5.2 m wide, springing 2.4 m, crown 5.0 m) lined in the portal's own baked granite panel (the same pixels), the rail track at both ends exactly `_rail.section()`, four always-lit amber lamps 6.93 m apart on alternating walls (0.695 m clear of the widest vehicle), and a turf ridge (crest 5.75 m, 0.73 m over the crown, easing to the 4.0 m cover by |s| = 7 m and diving 6 cm under it by 7.4 m) continuous with the portal's ridge. Meets the portal and any other bore vertex for vertex in every LOD. Review sheet: docs/checkpoints/rail_tunnel_bore/sheet.jpg (Blender renders; in-engine shots wait on the runtime wiring and a GPU booking). The controller records the owner's decision."
+  }
+]

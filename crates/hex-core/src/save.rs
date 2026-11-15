@@ -1437,11 +1437,11 @@ mod tests {
             }))
         );
 
-        // A tile that is not raisable (rail) stands on level 0 only.
+        // A tile that is not raisable (a rail station) stands on level 0 only.
         let mut rail = sample(&c);
         rail.world = World::new(42);
         rail.world
-            .place(&c, WEST, "rail_straight", Orientation::new(1, 0))
+            .place(&c, WEST, "rail_station", Orientation::new(1, 0))
             .unwrap();
         let mut w = wire(&rail);
         tile_at(&mut w, -1, 0).level = 1;

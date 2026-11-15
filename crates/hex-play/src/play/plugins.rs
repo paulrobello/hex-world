@@ -68,7 +68,25 @@ impl Plugin for TilesPlugin {
                     .chain()
                     .in_set(PlaySet::Kit),
             )
-            .add_systems(Update, super::sync.in_set(PlaySet::Tiles));
+            .add_systems(Update, super::sync.in_set(PlaySet::Tiles))
+            .add_systems(
+                Update,
+                super::tunnels::bores
+                    .after(super::sync)
+                    .in_set(PlaySet::Tiles),
+            )
+            .add_systems(
+                Update,
+                super::tunnels::cut_walls
+                    .after(super::sync)
+                    .in_set(PlaySet::Tiles),
+            )
+            .add_systems(
+                Update,
+                super::tunnels::portal_slots
+                    .after(rise::animate)
+                    .in_set(PlaySet::Rise),
+            );
     }
 }
 

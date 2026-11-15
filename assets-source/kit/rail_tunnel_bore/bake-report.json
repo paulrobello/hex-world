@@ -1,0 +1,501 @@
+{
+  "aoDistanceM": 0.12,
+  "bakeStats": {
+    "albedoLuma": 0.5380668044090271,
+    "ao": {
+      "mean": 0.8995950222015381,
+      "p05": 0.3294117748737335
+    },
+    "normalMissFraction": 0.0,
+    "seam": {
+      "panel.albedo": {
+        "u": 0.010101180523633957,
+        "v": 0.000981094897724688
+      },
+      "panel.ao": {
+        "u": 0.006503833923488855,
+        "v": 0.035966381430625916
+      },
+      "panel.normal": {
+        "u": 0.0009648822597227991,
+        "v": 6.586148083442822e-05
+      }
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "bore": {
+    "aroundPeriods": [
+      1,
+      1,
+      6
+    ],
+    "ballastTopM": 0.22,
+    "cells": [
+      16,
+      8,
+      1
+    ],
+    "crownM": 5.0,
+    "halfSpanM": 2.6,
+    "lampLateralMarginM": 0.695,
+    "lampLowestM": 2.0,
+    "lamps": [
+      [
+        -10.3923,
+        1
+      ],
+      [
+        -3.4641,
+        -1
+      ],
+      [
+        3.4641,
+        1
+      ],
+      [
+        10.3923,
+        -1
+      ]
+    ],
+    "lengthM": 27.7128,
+    "liningSweepAt": [
+      [
+        -13.856,
+        0.0,
+        5.0
+      ],
+      [
+        -13.856,
+        0.0,
+        4.935
+      ],
+      [
+        -13.856,
+        0.0,
+        4.873
+      ]
+    ],
+    "liningSweepMarginM": [
+      0.34,
+      0.2748,
+      0.2127
+    ],
+    "mapsFrom": "rail_tunnel_portal",
+    "railTopM": 0.45999999999999996,
+    "ridge": {
+      "coverOverLiningM": [
+        0.7255,
+        0.7355,
+        0.7666
+      ],
+      "crestM": 5.75,
+      "diveM": 0.06,
+      "halfM": 7.0,
+      "outM": 7.4,
+      "section": [
+        [
+          -7.4,
+          3.94
+        ],
+        [
+          -7.0,
+          4.0
+        ],
+        [
+          -6.0,
+          4.0969
+        ],
+        [
+          -4.5,
+          4.5102
+        ],
+        [
+          -3.0,
+          5.0612
+        ],
+        [
+          -1.5,
+          5.5434
+        ],
+        [
+          0.0,
+          5.75
+        ],
+        [
+          1.5,
+          5.5434
+        ],
+        [
+          3.0,
+          5.0612
+        ],
+        [
+          4.5,
+          4.5102
+        ],
+        [
+          6.0,
+          4.0969
+        ],
+        [
+          7.0,
+          4.0
+        ],
+        [
+          7.4,
+          3.94
+        ]
+      ]
+    },
+    "ringPoints": [
+      29,
+      15,
+      9
+    ],
+    "springingM": 2.4,
+    "trains": {
+      "train_carriage": {
+        "at": [
+          1.42,
+          3.66
+        ],
+        "halfWidthM": 1.48,
+        "minRadialClearanceM": 0.7016,
+        "sha256": "da0f71e7b66b02b8b12a236e3701f59d1dee12b8cb4472dd994bf6eb2de9294d",
+        "topClearanceM": 0.82,
+        "topM": 4.18,
+        "vertices": 1378
+      },
+      "train_carriage_b": {
+        "at": [
+          1.06,
+          4.26
+        ],
+        "halfWidthM": 1.48,
+        "minRadialClearanceM": 0.4592,
+        "sha256": "ca8a602178fb68617aa4e5c1b833df34b3af0b05835c2697979eb1ef42dc0cff",
+        "topClearanceM": 0.59,
+        "topM": 4.41,
+        "vertices": 1368
+      },
+      "train_engine": {
+        "at": [
+          0.31,
+          4.66
+        ],
+        "halfWidthM": 1.42,
+        "minRadialClearanceM": 0.3188,
+        "sha256": "6ebe0dfefe96cb406b1709d1257d1ba3cec1566506d39f75c10e1caa61bfc908",
+        "topClearanceM": 0.34,
+        "topM": 4.66,
+        "vertices": 1736
+      }
+    },
+    "trisBySlot": {
+      "lod0": {
+        "glass": 32,
+        "iron": 64,
+        "rail_ballast": 10,
+        "rail_head": 4,
+        "rail_sleeper": 400,
+        "rail_steel": 24,
+        "stone": 896,
+        "turf": 24
+      },
+      "lod1": {
+        "glass": 32,
+        "iron": 64,
+        "rail_ballast": 10,
+        "rail_head": 4,
+        "rail_sleeper": 80,
+        "rail_steel": 24,
+        "stone": 224,
+        "turf": 24
+      },
+      "lod2": {
+        "glass": 32,
+        "rail_ballast": 10,
+        "rail_head": 4,
+        "rail_steel": 24,
+        "stone": 16,
+        "turf": 24
+      }
+    }
+  },
+  "cageExtrusionM": 0.05,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "emissive": {
+      "colorspace": "srgb",
+      "size": 256
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "islands": {
+    "back": [
+      923,
+      965,
+      32,
+      32
+    ],
+    "band_foot": [
+      481,
+      0,
+      465,
+      120
+    ],
+    "band_top": [
+      481,
+      136,
+      465,
+      120
+    ],
+    "barrel": [
+      691,
+      542,
+      194,
+      120
+    ],
+    "cop_cfront": [
+      382,
+      806,
+      259,
+      42
+    ],
+    "cop_ctop": [
+      730,
+      272,
+      259,
+      111
+    ],
+    "cop_cunder": [
+      631,
+      903,
+      259,
+      19
+    ],
+    "cop_end": [
+      957,
+      577,
+      34,
+      73
+    ],
+    "cop_lfront": [
+      657,
+      856,
+      259,
+      31
+    ],
+    "cop_lunder": [
+      382,
+      938,
+      259,
+      16
+    ],
+    "fern0": [
+      353,
+      712,
+      233,
+      78
+    ],
+    "fern1": [
+      0,
+      793,
+      233,
+      78
+    ],
+    "jamb_band": [
+      957,
+      399,
+      11,
+      162
+    ],
+    "jamb_front": [
+      691,
+      678,
+      117,
+      162
+    ],
+    "jamb_inner": [
+      210,
+      615,
+      127,
+      162
+    ],
+    "jamb_top": [
+      867,
+      938,
+      117,
+      11
+    ],
+    "key_band": [
+      382,
+      864,
+      233,
+      26
+    ],
+    "key_front": [
+      481,
+      272,
+      233,
+      148
+    ],
+    "key_side0": [
+      0,
+      887,
+      148,
+      26
+    ],
+    "key_side1": [
+      0,
+      929,
+      148,
+      26
+    ],
+    "lining": [
+      971,
+      965,
+      32,
+      32
+    ],
+    "panel": [
+      0,
+      0,
+      465,
+      599
+    ],
+    "park_glass": [
+      430,
+      970,
+      16,
+      16
+    ],
+    "park_iron": [
+      462,
+      970,
+      16,
+      16
+    ],
+    "park_turf": [
+      494,
+      970,
+      16,
+      16
+    ],
+    "tuft0": [
+      824,
+      678,
+      117,
+      117
+    ],
+    "tuft1": [
+      249,
+      806,
+      117,
+      117
+    ],
+    "v0_band": [
+      657,
+      938,
+      194,
+      11
+    ],
+    "v0_front": [
+      481,
+      579,
+      194,
+      117
+    ],
+    "v0_side0": [
+      657,
+      965,
+      117,
+      11
+    ],
+    "v0_side1": [
+      790,
+      965,
+      117,
+      11
+    ],
+    "v0_soffit": [
+      730,
+      399,
+      194,
+      127
+    ],
+    "v1_band": [
+      164,
+      939,
+      194,
+      11
+    ],
+    "v1_front": [
+      0,
+      615,
+      194,
+      117
+    ],
+    "v1_side0": [
+      164,
+      966,
+      117,
+      11
+    ],
+    "v1_side1": [
+      297,
+      970,
+      117,
+      11
+    ],
+    "v1_soffit": [
+      481,
+      436,
+      194,
+      127
+    ]
+  },
+  "lod2Drops": {
+    "rail_sleeper": "under a pixel at 400 m: a sleeper is 0.26 m wide (0.8 px at 0.31 m/px), inside the bore",
+    "rail_tunnel_bore_iron": "under a pixel at 400 m: the lamp iron is 0.03 m bars and a 0.21 m cap (0.1 to 0.7 px at 0.31 m/px), inside the bore"
+  },
+  "lodTris": [
+    1454,
+    462,
+    110
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.12,
+  "receiverSignature": "943a42e4c67a98b5d5d09c6e1f42b7ea79f7d542cff2795486e9ba91f89f5f5a",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "glass": {
+      "faces": 32,
+      "max": 258.09704586657705,
+      "median": 258.0968663514641,
+      "min": 258.0968663514641
+    },
+    "stone": {
+      "faces": 896,
+      "max": 263.11147758745057,
+      "median": 263.1108768787789,
+      "min": 263.11076203667176
+    }
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "blender": "5.2.2 LTS",
+  "bore": {
+    "ballastTopM": 0.22,
+    "crownM": 5.0,
+    "endArcSegments": 16,
+    "halfSpanM": 2.6,
+    "lampLateralMarginM": 0.695,
+    "lampLowestM": 2.0,
+    "lamps": [
+      [
+        -10.3923,
+        1
+      ],
+      [
+        -3.4641,
+        -1
+      ],
+      [
+        3.4641,
+        1
+      ],
+      [
+        10.3923,
+        -1
+      ]
+    ],
+    "lengthM": 27.7128,
+    "railTopM": 0.45999999999999996,
+    "ringPoints": 24,
+    "springingM": 2.4,
+    "trains": {
+      "train_carriage": {
+        "at": [
+          1.42,
+          3.66
+        ],
+        "halfWidthM": 1.48,
+        "minRadialClearanceM": 0.7016,
+        "sha256": "da0f71e7b66b02b8b12a236e3701f59d1dee12b8cb4472dd994bf6eb2de9294d",
+        "topClearanceM": 0.82,
+        "topM": 4.18,
+        "vertices": 1378
+      },
+      "train_carriage_b": {
+        "at": [
+          1.06,
+          4.26
+        ],
+        "halfWidthM": 1.48,
+        "minRadialClearanceM": 0.4592,
+        "sha256": "ca8a602178fb68617aa4e5c1b833df34b3af0b05835c2697979eb1ef42dc0cff",
+        "topClearanceM": 0.59,
+        "topM": 4.41,
+        "vertices": 1368
+      },
+      "train_engine": {
+        "at": [
+          0.31,
+          4.66
+        ],
+        "halfWidthM": 1.42,
+        "minRadialClearanceM": 0.3188,
+        "sha256": "6ebe0dfefe96cb406b1709d1257d1ba3cec1566506d39f75c10e1caa61bfc908",
+        "topClearanceM": 0.34,
+        "topM": 4.66,
+        "vertices": 1736
+      }
+    }
+  },
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "emissive": {
+      "colorspace": "srgb",
+      "size": 256
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "none",
+  "islands": {
+    "glass": [
+      493,
+      0,
+      176,
+      73
+    ],
+    "park": [
+      685,
+      0,
+      16,
+      16
+    ],
+    "wall": [
+      0,
+      0,
+      477,
+      599
+    ]
+  },
+  "lod2Drops": {
+    "rail_sleeper": "under a pixel at 400 m: a sleeper is 0.26 m wide (0.8 px at 0.31 m/px), inside the bore",
+    "rail_tunnel_bore_iron": "under a pixel at 400 m: the lamp iron is 0.03 m bars and a 0.21 m cap (0.1 to 0.7 px at 0.31 m/px), inside the bore"
+  },
+  "lodTris": [
+    1224,
+    582,
+    116
+  ],
+  "marginPx": 8,
+  "receiverSignature": "1e88fd24b0e111decdb4cbc341550ef884756ec8e7a944b5fbccd254c78bf392",
+  "samples": 0,
+  "skipped": true,
+  "texelDensityPxPerM": {
+    "glass": {
+      "faces": 32,
+      "max": 258.09703224265377,
+      "median": 258.09685272755024,
+      "min": 258.09685272755024
+    },
+    "stone": {
+      "faces": 690,
+      "max": 258.09741345110314,
+      "median": 258.0969538684151,
+      "min": 258.0966028731682
+    }
+  }
+}

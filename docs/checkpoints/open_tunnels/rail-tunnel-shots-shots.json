@@ -1,0 +1,226 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/open_tunnels/rail-tunnel-shots.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        64.96,
+        41.15,
+        30.36
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 98.2,
+      "load_after": [
+        34.53,
+        37.35,
+        30.08
+      ],
+      "frames": {
+        "rail-inside-back-00": {
+          "mean": 0.0933,
+          "problem": null
+        },
+        "rail-inside-back-01": {
+          "mean": 0.0937,
+          "problem": null
+        },
+        "rail-inside-back-02": {
+          "mean": 0.094,
+          "problem": null
+        },
+        "rail-inside-back-03": {
+          "mean": 0.0942,
+          "problem": null
+        },
+        "rail-inside-back-04": {
+          "mean": 0.0946,
+          "problem": null
+        },
+        "rail-inside-back-05": {
+          "mean": 0.0948,
+          "problem": null
+        },
+        "rail-inside-back-06": {
+          "mean": 0.0951,
+          "problem": null
+        },
+        "rail-inside-back-07": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-08": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-09": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-10": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-11": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-12": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-13": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-14": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-15": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-16": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-17": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-18": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-19": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-20": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-21": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-22": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-23": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-24": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-25": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-26": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-27": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-28": {
+          "mean": 0.096,
+          "problem": null
+        },
+        "rail-inside-back-29": {
+          "mean": 0.0952,
+          "problem": null
+        },
+        "rail-inside-back-30": {
+          "mean": 0.095,
+          "problem": null
+        },
+        "rail-inside-back-31": {
+          "mean": 0.0948,
+          "problem": null
+        },
+        "rail-inside-back-32": {
+          "mean": 0.0945,
+          "problem": null
+        },
+        "rail-inside-back-33": {
+          "mean": 0.0942,
+          "problem": null
+        },
+        "rail-inside-back-34": {
+          "mean": 0.094,
+          "problem": null
+        },
+        "rail-inside-back-35": {
+          "mean": 0.0939,
+          "problem": null
+        },
+        "rail-inside-00": {
+          "mean": 0.0734,
+          "problem": null
+        },
+        "rail-inside-01": {
+          "mean": 0.0273,
+          "problem": null
+        },
+        "rail-inside-02": {
+          "mean": 0.0504,
+          "problem": null
+        },
+        "rail-inside-03": {
+          "mean": 0.052,
+          "problem": null
+        },
+        "rail-overview": {
+          "mean": 0.1179,
+          "problem": null
+        },
+        "rail-mouth": {
+          "mean": 0.2091,
+          "problem": null
+        },
+        "rail-side": {
+          "mean": 0.1048,
+          "problem": null
+        },
+        "rail-walk-00": {
+          "mean": 0.1048,
+          "problem": null
+        },
+        "rail-walk-01": {
+          "mean": 0.1751,
+          "problem": null
+        },
+        "rail-walk-02": {
+          "mean": 0.1786,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

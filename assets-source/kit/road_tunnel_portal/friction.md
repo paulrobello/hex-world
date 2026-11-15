@@ -100,3 +100,12 @@
     back to the PNG only where no KTX2 ships (`kit_gate::texture_width`, with a test).
     *Proposed skill text (gates.md, texel density):* "Density is measured on the KTX2 the GPU
     samples. A `pngFallbackSize` in the export report shrinks only the fallback PNG."
+12. **Changing an approved piece without editing its helper (open tunnels, 2026-11-14, 0 min lost).**
+    The lining runs to the cell edge through `_tunnel_portal_open.py`, which rebinds
+    `_tunnel_portal.build_lod` and `compose_maps` before `build_piece` runs. `_tunnel_portal.py`
+    stays byte-identical, and the export report lists the new module as a generator dependency.
+    Albedo, normal and ORM came out byte-identical. Only the geometry and 16 masks rows changed.
+    The closed exterior diff and the culling trap are in `assets-source/kit/road_tunnel_bore/friction.md`
+    (entries 1 and 2).
+    *Proposed skill text (pitfalls):* "To change an approved piece, wrap its helper's module-level
+    functions in a new `_<piece>_<change>.py` imported by the thin generator. Never edit the helper."

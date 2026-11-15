@@ -1,0 +1,46 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rail_tunnel_portal.py",
+    "sha256": "f08051114ba68aac5d222453c615c555a98837711c14efbb078aafa34fc53be1"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal_rail.py",
+      "sha256": "eb4ba8803d7cf681d13228b41d4d84f06b6da5b963faaf1dc1dd0f5847d44e35"
+    }
+  ],
+  "lodTris": {
+    "rail_tunnel_portal_lod0": 1739,
+    "rail_tunnel_portal_lod1": 815,
+    "rail_tunnel_portal_lod2": 247
+  },
+  "nodes": [
+    "rail_tunnel_portal",
+    "rail_tunnel_portal_collider",
+    "rail_tunnel_portal_lod0",
+    "rail_tunnel_portal_lod1",
+    "rail_tunnel_portal_lod2"
+  ],
+  "pieceId": "rail_tunnel_portal",
+  "pngFallbackSize": {
+    "albedo": 512
+  },
+  "sockets": []
+}

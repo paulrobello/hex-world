@@ -1,0 +1,187 @@
+{
+  "name": "rail_viaduct_l2",
+  "date": "2026-11-15T04:14:34.405Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    },
+    "pngFallbackSize": {
+      "albedo": 512
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 803112,
+      "sha256": "9d795b9b39bd028c6e891c2e99fedc27ab1ae2b98e96bd65bc7177667689372a"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 806933,
+      "sha256": "df440abe25da1d7131bbd23dfb5cb3e9bb4571db97d856ada14218b019c6be3b"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 470547,
+      "sha256": "63a3ae23dfc0683eb3b93c68a854c985ad41e586c17b53dc79388d6154583cae",
+      "size": 512
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 6785,
+      "sha256": "4ce291866cdbb6c6cd2f218d3dbe87000608ac5c9b8dd9a7cdf4efe01415f657"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 6679,
+      "sha256": "b5b49141897a88a20784e474bb8d9126b04bffe17be9c147cb8eca66be5836a3"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 7395,
+      "sha256": "27ed63684f4959fac0592d03be22ddd8cd3a99b6f5ac93c805d66dca111dc522"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 110712,
+      "sha256": "7b6dc03c2a20301dbe865506511c8637778d05adcd970584f91f5f25607e8c07"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 108090,
+      "sha256": "1448fd2013828e9a5b975d699fa14599b81537ff22c46fbc5ae82a3170b0436c"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 240938,
+      "sha256": "4a07166eb7ed9b790d6b7e7efa90b9b153c4fa088d50c23744d58f0d99434023"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 69593,
+      "sha256": "bf94e15dd183c745031aa4c23d4b72d1bbd9e0f3f586e20802ac8aa110e58645"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 67475,
+      "sha256": "fe393339f8637d26c2a4ce8d3e52c70a54183ed79c336d3a13fc64a75b328756"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/rail_viaduct_l2/rail_viaduct_l2.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 89750,
+      "sha256": "5fddc7fbe4883f574f5774f859b2f387b9876b8309afacd023681a16b2cef806"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 990202,
+      "astc": 989177
+    },
+    "glbBytes": 207492
+  },
+  "glb": {
+    "bytes": 207492,
+    "sha256": "95150cdf7da88035032ec73eaa8327e7502c487e617e0dcea688be60bb0c3f2c"
+  }
+}

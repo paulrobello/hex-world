@@ -42,6 +42,11 @@ impl SocketKind {
 pub struct LaneSpec {
     pub offset: f32,
     pub width: f32,
+    /// Rail only (P4, rail at levels): how many levels the rail stands above the edge's ground, so
+    /// a viaduct's deck ends meet raised rail across a seam where the ground differs. 0 on every
+    /// other lane.
+    #[serde(default)]
+    pub deck: u8,
 }
 
 impl LaneSpec {
@@ -112,6 +117,11 @@ impl EdgeSocket {
         }
     }
 
+    /// The levels the edge's rail stands above its ground ([`LaneSpec::deck`]), 0 without a lane.
+    pub fn deck(&self) -> u8 {
+        self.lane.map_or(0, |l| l.deck)
+    }
+
     /// The relative heights at the edge's clockwise (start, end) corners.
     pub fn corners(&self) -> (u8, u8) {
         match self.profile {
@@ -138,6 +148,9 @@ pub enum HeightMeet {
 /// lanes that differ meet as a `Cliff`. Anything else is `Refused`, so a lane edge (road, river,
 /// rail) always meets at equal absolute height.
 pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet {
+    if a.deck() > 0 || b.deck() > 0 {
+        return deck_meet(a, a_level, b, b_level);
+    }
     let (a_start, a_end) = a.corners();
     let (b_start, b_end) = b.corners();
     let abs = |c: u8, level: u8| u16::from(c) + u16::from(level);
@@ -153,6 +166,25 @@ pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) ->
         HeightMeet::Cliff
     } else {
         HeightMeet::Refused
+    }
+}
+
+/// A viaduct's deck end (P4, rail at levels) meets rail whose top stands at the same absolute
+/// height: both edges are flat lanes and `level + height + deck` agrees. The ground under the two
+/// ends usually differs, so unequal ground is a `Cliff` seam (the raised side's column face shows
+/// under the deck) and equal ground is `Seamless`. Anything else is `Refused`.
+fn deck_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet {
+    let top =
+        |s: &EdgeSocket, level: u8| u16::from(level) + u16::from(s.height) + u16::from(s.deck());
+    let flat_lanes = |s: &EdgeSocket| s.profile == EdgeProfile::Flat && s.lane.is_some();
+    if !(flat_lanes(a) && flat_lanes(b)) || top(a, a_level) != top(b, b_level) {
+        return HeightMeet::Refused;
+    }
+    let ground = |s: &EdgeSocket, level: u8| u16::from(level) + u16::from(s.height);
+    if ground(a, a_level) == ground(b, b_level) {
+        HeightMeet::Seamless
+    } else {
+        HeightMeet::Cliff
     }
 }
 
@@ -450,7 +482,11 @@ mod tests {
 
     fn lane(kind: SocketKind, offset: f32, width: f32) -> EdgeSocket {
         EdgeSocket {
-            lane: Some(LaneSpec { offset, width }),
+            lane: Some(LaneSpec {
+                offset,
+                width,
+                deck: 0,
+            }),
             ..EdgeSocket::new(kind)
         }
     }
@@ -483,14 +519,16 @@ mod tests {
             t.lane(Road),
             Some(LaneSpec {
                 offset: 0.0,
-                width: 6.0
+                width: 6.0,
+                deck: 0,
             })
         );
         assert_eq!(
             t.lane(River),
             Some(LaneSpec {
                 offset: 0.0,
-                width: 8.0
+                width: 8.0,
+                deck: 0,
             })
         );
         // The rail pieces' `socket-lane-*` extras: the 3.5 m ballast lane, centred.
@@ -498,7 +536,8 @@ mod tests {
             t.lane(Rail),
             Some(LaneSpec {
                 offset: 0.0,
-                width: 3.5
+                width: 3.5,
+                deck: 0,
             })
         );
         assert_eq!(
@@ -580,6 +619,7 @@ mod tests {
             LaneSpec {
                 offset: 0.0,
                 width: 0.0,
+                deck: 0,
             },
         );
         assert_eq!(SocketTable::new(file), Err(SocketTableError::BadLane(Road)));
@@ -664,6 +704,53 @@ mod tests {
         assert_eq!(heights_meet(&road, 1, &road, 0), HeightMeet::Refused);
         assert!(!t.edges_compatible(&road, 1, &road, 0));
         assert!(t.edges_compatible(&road, 1, &road, 1));
+    }
+
+    fn deck_lane(kind: SocketKind, deck: u8) -> EdgeSocket {
+        EdgeSocket {
+            lane: Some(LaneSpec {
+                offset: 0.0,
+                width: 3.5,
+                deck,
+            }),
+            ..EdgeSocket::new(kind)
+        }
+    }
+
+    /// A viaduct's deck end meets rail standing at the same absolute top over different ground
+    /// (a cliff seam), refuses every other height, and two deck ends at equal ground are seamless.
+    #[test]
+    fn a_deck_end_meets_rail_at_the_same_top_across_a_cliff() {
+        let (deck2, ground_rail) = (deck_lane(Rail, 2), deck_lane(Rail, 0));
+        // Viaduct tile at level 0, deck 2 levels up, against rail on a tile at level 2.
+        assert_eq!(heights_meet(&deck2, 0, &ground_rail, 2), HeightMeet::Cliff);
+        assert_eq!(heights_meet(&ground_rail, 2, &deck2, 0), HeightMeet::Cliff);
+        for wrong in [0, 1, 3] {
+            assert_eq!(
+                heights_meet(&deck2, 0, &ground_rail, wrong),
+                HeightMeet::Refused,
+                "rail at level {wrong}"
+            );
+        }
+        assert_eq!(heights_meet(&deck2, 0, &deck2, 0), HeightMeet::Seamless);
+        // Ordinary rail is unchanged: equal levels meet, unequal are refused.
+        assert_eq!(
+            heights_meet(&ground_rail, 1, &ground_rail, 1),
+            HeightMeet::Seamless
+        );
+        assert_eq!(
+            heights_meet(&ground_rail, 1, &ground_rail, 0),
+            HeightMeet::Refused
+        );
+        // A deck end meets no grass, no slope and no other lane kind.
+        assert_eq!(
+            heights_meet(&deck2, 0, &EdgeSocket::new(Grass), 2),
+            HeightMeet::Refused
+        );
+        assert_eq!(
+            heights_meet(&deck2, 0, &sloped(Rail, 2, EdgeProfile::Rise), 0),
+            HeightMeet::Refused
+        );
     }
 
     #[test]

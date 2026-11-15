@@ -1,0 +1,65 @@
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index e614fe0..de190d1 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -6,7 +6,8 @@
+ //!   [`Surface`], from [`PlayScatter::ground`]) where its slot is a grass slot: a manifest slot whose
+ //!   tileable set is `grass` and that is not foliage ([`grass_slots`]: `meadow_base_cap`,
+ //!   `forest_base_rim` and `_edge`, `road_verge`, `river_grass`, `beach_grass` and the tunnel
+-//!   portal's wall-top `road_tunnel_portal_turf`; the hedge is foliage). Scatter's own slot
++//!   portals' wall-top `road_tunnel_portal_turf` and `rail_tunnel_portal_turf`; the hedge is
++//!   foliage). Scatter's own slot
+ //!   filter ([`scatter::excluded_slot`]) is not used: it drops every
+ //!   `road_`, `river_` and `beach_` slot and every rim and edge band, which are exactly the verges,
+ //!   banks and dune grass that should carry blades. Roads, sand, river beds and pads are not grass
+@@ -1602,6 +1603,7 @@ mod tests {
+                 "massif_granite_cap",
+                 "meadow_base_cap",
+                 "peak_granite_cap",
++                "rail_tunnel_portal_turf",
+                 "river_grass",
+                 "road_tunnel_portal_turf",
+                 "road_verge"
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index eae64ea..a881100 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -1427,9 +1427,13 @@ fn bucket(v: f32) -> usize {
+ }
+ 
+ /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
+-/// on a centre piece, the tunnel portal's fern cards over its coping. Nothing stands on them and the
+-/// walker walks through them.
+-pub const NOT_GROUND: &[&str] = &["wheat_field_wheat", "road_tunnel_portal_fern"];
++/// on a centre piece, the tunnel portals' fern cards over their coping. Nothing stands on them and
++/// the walker walks through them.
++pub const NOT_GROUND: &[&str] = &[
++    "wheat_field_wheat",
++    "road_tunnel_portal_fern",
++    "rail_tunnel_portal_fern",
++];
+ 
+ impl Surface {
+     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
+@@ -1524,12 +1528,17 @@ impl Surface {
+ }
+ 
+ /// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
+-/// walker stands on and scatter keeps off, and the tunnel portal, whose 4 m wall top (coping and
+-/// turf, where grass blades grow) the walker crosses from the cover meadow and whose face is a step
+-/// it cannot climb into the arch. Each stands at the tile origin at a whole hex turn
++/// walker stands on and scatter keeps off, and the tunnel portals, whose wall tops (coping and
++/// turf, where grass blades grow; the road's 4 m, the rail's 5.85 m under its turf mound) the walker
++/// crosses from the cover meadow and whose faces are steps it cannot climb into the arch. Each
++/// stands at the tile origin at a whole hex turn
+ /// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
+ /// as a centre piece does.
+-pub const GROUND_PROPS: &[&str] = &["rail_station_platform", "road_tunnel_portal"];
++pub const GROUND_PROPS: &[&str] = &[
++    "rail_station_platform",
++    "road_tunnel_portal",
++    "rail_tunnel_portal",
++];
+ 
+ /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
+ /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its

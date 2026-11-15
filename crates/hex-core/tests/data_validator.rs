@@ -47,7 +47,7 @@ fn manifest_piece_ids() -> BTreeSet<String> {
 /// farm, the wheat field, the bakery and the rail tiles ahead of P3 (PRD §5.4), the massif (A52) and the
 /// single-tile hill and peak (spec 2026-11-13):
 /// edges 0..5 for each inventory tile (the centre's, for a footprint tile).
-const F1: [(&str, [SocketKind; 6]); 48] = [
+const F1: [(&str, [SocketKind; 6]); 52] = [
     ("meadow", [Grass, Grass, Grass, Grass, Grass, Grass]),
     ("forest", [Forest, Forest, Forest, Forest, Forest, Forest]),
     ("oak", [Forest, Forest, Forest, Forest, Forest, Forest]),
@@ -116,6 +116,13 @@ const F1: [(&str, [SocketKind; 6]); 48] = [
         "road_tunnel_portal",
         [Grass, Grass, Grass, Road, Grass, Grass],
     ),
+    (
+        "rail_tunnel_portal",
+        [Grass, Grass, Grass, Rail, Grass, Grass],
+    ),
+    ("rail_viaduct_l1", [Rail, Grass, Grass, Rail, Grass, Grass]),
+    ("rail_viaduct_l2", [Rail, Grass, Grass, Rail, Grass, Grass]),
+    ("rail_viaduct_l3", [Rail, Grass, Grass, Rail, Grass, Grass]),
     ("rail_straight", [Rail, Grass, Grass, Rail, Grass, Grass]),
     ("rail_bend_60", [Rail, Rail, Grass, Grass, Grass, Grass]),
     ("rail_bend_120", [Rail, Grass, Rail, Grass, Grass, Grass]),
@@ -238,8 +245,10 @@ fn every_beach_edge_names_the_side_its_land_is_on() {
 #[test]
 fn only_hillside_family_edges_leave_flat_zero() {
     for t in catalog().tiles() {
-        let family =
-            t.id.starts_with("hillside_") || t.id == "road_ramp" || t.id == "road_tunnel_portal";
+        let family = t.id.starts_with("hillside_")
+            || t.id == "road_ramp"
+            || t.id == "road_tunnel_portal"
+            || t.id == "rail_tunnel_portal";
         for (e, edge) in t.edges.iter().enumerate() {
             if !family {
                 assert_eq!(edge.height, 0, "{} edge {e}", t.id);

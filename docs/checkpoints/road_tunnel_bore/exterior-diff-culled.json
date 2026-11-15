@@ -1,0 +1,50 @@
+{
+  "three_quarter": {
+    "beforeVsAfter": {
+      "meanAbs": 0.0,
+      "max": 1,
+      "pixelsOver8": 0,
+      "pixelsOver24": 0,
+      "pixels": 1400000
+    },
+    "approvedVsAfter": {
+      "meanAbs": 0.0092,
+      "max": 77,
+      "pixelsOver8": 356,
+      "pixelsOver24": 55,
+      "pixels": 1400000
+    }
+  },
+  "front": {
+    "beforeVsAfter": {
+      "meanAbs": 0.0,
+      "max": 0,
+      "pixelsOver8": 0,
+      "pixelsOver24": 0,
+      "pixels": 1400000
+    },
+    "approvedVsAfter": {
+      "meanAbs": 0.01,
+      "max": 65,
+      "pixelsOver8": 227,
+      "pixelsOver24": 61,
+      "pixels": 1400000
+    }
+  },
+  "eye": {
+    "beforeVsAfter": {
+      "meanAbs": 0.0001,
+      "max": 2,
+      "pixelsOver8": 0,
+      "pixelsOver24": 0,
+      "pixels": 1400000
+    },
+    "approvedVsAfter": {
+      "meanAbs": 0.0486,
+      "max": 69,
+      "pixelsOver8": 1774,
+      "pixelsOver24": 810,
+      "pixels": 1400000
+    }
+  }
+}

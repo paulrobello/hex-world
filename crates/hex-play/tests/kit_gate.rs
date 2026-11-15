@@ -1223,10 +1223,19 @@ const LANE_CUT_LOD2_MAX_RATIO: f32 = 0.20;
 const RIVER_DRESSING_LOD0_MAX: usize = 2_500;
 const RIVER_DRESSING_PROPS: &[&str] = &["river_spring_center", "reed_bed"];
 
-/// A piece's LOD0 triangle ceiling: its kind's, or `RIVER_DRESSING_LOD0_MAX` for a river dressing prop.
+/// The rail portal with its open-tunnel slots (the stone lining to edge 0 and the turf ridge, drawn
+/// only while the tunnel is complete; LOD0 1,739): requested 2026-11-15 for the open tunnels, owner
+/// approval pending (docs/checkpoints/rail_tunnel_bore/integration.md).
+const OPEN_PORTAL_LOD0_MAX: usize = 1_800;
+const OPEN_PORTAL_PROPS: &[&str] = &["rail_tunnel_portal"];
+
+/// A piece's LOD0 triangle ceiling: its kind's, `RIVER_DRESSING_LOD0_MAX` for a river dressing prop,
+/// or `OPEN_PORTAL_LOD0_MAX` for an open-tunnel portal.
 fn lod0_budget(p: &PieceEntry) -> usize {
     if p.kind == PieceKind::Prop && RIVER_DRESSING_PROPS.contains(&p.id.as_str()) {
         RIVER_DRESSING_LOD0_MAX
+    } else if p.kind == PieceKind::Prop && OPEN_PORTAL_PROPS.contains(&p.id.as_str()) {
+        OPEN_PORTAL_LOD0_MAX
     } else {
         p.kind.lod0_budget()
     }
@@ -2955,6 +2964,12 @@ fn budgets_match_blender_lib() {
         value("RIVER_DRESSING_LOD0_MAX").parse::<usize>().unwrap(),
         RIVER_DRESSING_LOD0_MAX
     );
+    assert_eq!(
+        value("OPEN_PORTAL_LOD0_MAX").parse::<usize>().unwrap(),
+        OPEN_PORTAL_LOD0_MAX
+    );
+    assert_eq!(value("OPEN_PORTAL_PROPS"), "(\"rail_tunnel_portal\",)");
+    assert_eq!(OPEN_PORTAL_PROPS, ["rail_tunnel_portal"]);
     let lod0 = value("LOD0_MAX");
     for (name, kind) in [
         ("base", PieceKind::Base),
@@ -3737,10 +3752,15 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
         assert_eq!(lod0_budget(piece(id)), RIVER_DRESSING_LOD0_MAX, "{id}");
     }
     for p in &k.manifest.pieces {
-        if !RIVER_DRESSING_PROPS.contains(&p.id.as_str()) {
+        let id = p.id.as_str();
+        if !RIVER_DRESSING_PROPS.contains(&id) && !OPEN_PORTAL_PROPS.contains(&id) {
             assert_eq!(lod0_budget(p), p.kind.lod0_budget(), "{}", p.id);
         }
     }
+    assert_eq!(
+        lod0_budget(piece("rail_tunnel_portal")),
+        OPEN_PORTAL_LOD0_MAX
+    );
     assert_eq!(lod0_budget(piece("seabed_rock")), 1_500);
     assert_eq!(lod0_budget(piece("river_road_bridge_center")), 4_000);
 }

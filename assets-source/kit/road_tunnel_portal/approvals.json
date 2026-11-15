@@ -7,5 +7,11 @@
     "revision": "look-pass-2",
     "requested": "2026-10-29",
     "notes": "Approved in chat (\"approved\") on 2026-10-29: look pass 2, reviewed from docs/checkpoints/road_tunnel_portal/sheet.jpg."
+  },
+  {
+    "gate": "piece",
+    "status": "pending",
+    "requested": "2026-11-14",
+    "notes": "Pending owner review; not an approval. Open tunnels (owner 2026-11-14): exterior unchanged, interior extension: owner re-check. The lining runs on from the back plane x 13.656 to the cell edge x 13.856 (its UVs unchanged in front of the back wall), the back wall stays the road_tunnel_portal_back slot at x 13.656 for the runtime to hide while the tunnel is complete, and the stone back face at x 13.856 is cut round the opening with a back-slot patch behind it (_tunnel_portal_open.py; _tunnel_portal.py unchanged). The albedo, normal and ORM maps are byte-identical; the masks differ only in 16 unused rows above the lining island. Review sheet: docs/checkpoints/road_tunnel_bore/sheet.jpg. The controller records the owner's decision."
   }
 ]

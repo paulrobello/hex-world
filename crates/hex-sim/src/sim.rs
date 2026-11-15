@@ -28,8 +28,9 @@ pub const CAR_FADE_TICKS: u64 = 5;
 /// 6 m road lane (plan F3).
 pub const MAX_LANE_OFFSET: f32 = 1.5;
 
-/// Meters over which a car fades out before a tunnel arch and back in after the far one (P4).
-pub const TUNNEL_FADE: f32 = 3.0;
+/// Meters over which a vehicle's headlights come up before a tunnel arch and go down again after
+/// the far one (P4): lit for the whole run inside.
+pub const LAMP_RAMP: f32 = 12.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SimConfig {
@@ -224,29 +225,29 @@ impl Car {
         &self.hidden
     }
 
-    /// How visible the car is `d` meters along its trip: 0 inside a tunnel, ramping linearly
-    /// from 1 to 0 over the [`TUNNEL_FADE`] meters before an arch and back over those after the
-    /// far one, else 1.
-    pub fn opacity_at_distance(&self, d: f32) -> f32 {
+    /// How lit the car's headlights are `d` meters along its trip: 1 inside a tunnel, ramping
+    /// linearly from 0 over the [`LAMP_RAMP`] meters before an arch and back to 0 over those after
+    /// the far one, else 0. The day and night cycle (P5) raises the same level at night.
+    pub fn lamps_at_distance(&self, d: f32) -> f32 {
         self.hidden
             .iter()
             .map(|&(a, b)| {
                 if d < a {
-                    ((a - d) / TUNNEL_FADE).min(1.0)
+                    1.0 - ((a - d) / LAMP_RAMP).min(1.0)
                 } else if d > b {
-                    ((d - b) / TUNNEL_FADE).min(1.0)
+                    1.0 - ((d - b) / LAMP_RAMP).min(1.0)
                 } else {
-                    0.0
+                    1.0
                 }
             })
-            .fold(1.0, f32::min)
+            .fold(0.0, f32::max)
     }
 
-    /// [`Car::opacity_at_distance`] between the previous tick (`alpha = 0`) and the latest one
+    /// [`Car::lamps_at_distance`] between the previous tick (`alpha = 0`) and the latest one
     /// (`alpha = 1`), as [`Car::pose_at`].
-    pub fn opacity_at(&self, alpha: f32) -> f32 {
+    pub fn lamps_at(&self, alpha: f32) -> f32 {
         let a = alpha.clamp(0.0, 1.0);
-        self.opacity_at_distance(self.prev + (self.s - self.prev) * a)
+        self.lamps_at_distance(self.prev + (self.s - self.prev) * a)
     }
 
     /// The level crossings on the trip: each crossing cell and the distance along the path where
@@ -813,10 +814,11 @@ impl Simulation {
         self.set_tunnels(&tunnels(world, catalog), world, catalog);
     }
 
-    /// Sets the road graph's tunnels ([`Network::set_tunnels`]). Cars routed through a tunnel that
+    /// Sets the road and rail graphs' tunnels ([`Network::set_tunnels`]). Cars routed through a tunnel that
     /// went are removed, freeing their spots, and their clusters get their cars back, parked.
     pub fn set_tunnels(&mut self, tunnels: &[Tunnel], world: &World, catalog: &TileCatalog) {
         let before = self.roads.version();
+        self.rails.set_tunnels(tunnels, world, catalog);
         self.roads.set_tunnels(tunnels, world, catalog);
         if self.roads.version() == before {
             return;

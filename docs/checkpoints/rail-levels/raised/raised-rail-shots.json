@@ -1,0 +1,110 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/rail-levels/raised/raised-rail.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        17.87,
+        14.6,
+        16.49
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 53.7,
+      "load_after": [
+        19.38,
+        15.55,
+        16.72
+      ],
+      "frames": {
+        "raised-rail-overview": {
+          "mean": 0.1747,
+          "problem": null
+        },
+        "raised-rail-close-00": {
+          "mean": 0.2253,
+          "problem": null
+        },
+        "raised-rail-close-01": {
+          "mean": 0.2296,
+          "problem": null
+        },
+        "raised-rail-close-02": {
+          "mean": 0.2418,
+          "problem": null
+        },
+        "raised-rail-close-03": {
+          "mean": 0.2493,
+          "problem": null
+        },
+        "raised-rail-close-04": {
+          "mean": 0.2555,
+          "problem": null
+        },
+        "raised-rail-close-05": {
+          "mean": 0.2613,
+          "problem": null
+        },
+        "raised-rail-close-06": {
+          "mean": 0.2613,
+          "problem": null
+        },
+        "raised-rail-close-07": {
+          "mean": 0.2593,
+          "problem": null
+        },
+        "raised-rail-low-00": {
+          "mean": 0.2298,
+          "problem": null
+        },
+        "raised-rail-low-01": {
+          "mean": 0.2325,
+          "problem": null
+        },
+        "raised-rail-low-02": {
+          "mean": 0.2265,
+          "problem": null
+        },
+        "raised-rail-low-03": {
+          "mean": 0.2169,
+          "problem": null
+        },
+        "raised-rail-low-04": {
+          "mean": 0.2184,
+          "problem": null
+        },
+        "raised-rail-low-05": {
+          "mean": 0.2235,
+          "problem": null
+        },
+        "raised-rail-low-06": {
+          "mean": 0.2264,
+          "problem": null
+        },
+        "raised-rail-low-07": {
+          "mean": 0.2252,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

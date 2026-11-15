@@ -1,0 +1,40 @@
+// Rail tunnel portal (P4, rail at levels): the road portal's shape for a train. The ramp's bank
+// (corners 110001) with a head wall on edge 0, the tunnel mouth. The rail enters on edge 3 at h0
+// and runs on level through a cutting (Ground::Cutting) toward the arch; edge 0 is grass at h1,
+// where the cover meadow sits. RL-Q1 O2: the head wall stands about 2 m above a one-level hill
+// under a turf mound, its face 6 m inside edge 0 (the road portal's is 2.2 m), so the arch node
+// sits 2.76 m inside edge 0, just in front of the interior back plane (x 11.456) of the piece
+// (scripts/blender/kit/_tunnel_portal_rail.py). The portal is a ground hero at the origin, as the
+// road portal and the station platform are, authored in absolute tile-local heights and never
+// draped. Rail meets the hex border itself, so there are no edge pieces.
+(
+    id: "rail_tunnel_portal",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Grass, height: 1),
+        (kind: Grass, height: 1),
+        (kind: Grass, profile: Fall),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5))),
+        (kind: Grass),
+        (kind: Grass, profile: Rise),
+    ),
+    center: Some("rail_straight_center"),
+    nodes: [
+        (id: "arch", at: (11.1, 0.0)),
+    ],
+    networks: [
+        (kind: Rail, from: Edge(3), to: Node("arch")),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+        hero: [
+            (piece: "rail_tunnel_portal", at: (0.0, 0.0), yaw_deg: 0.0),
+        ],
+    ),
+    raisable: true,
+    ground: Cutting,
+    tunnel: Some((node: "arch", edge: 0)),
+)

@@ -300,6 +300,38 @@
       "rail_station-r4.webp",
       "rail_station-r5.webp"
     ],
+    "rail_tunnel_portal": [
+      "rail_tunnel_portal-r0.webp",
+      "rail_tunnel_portal-r1.webp",
+      "rail_tunnel_portal-r2.webp",
+      "rail_tunnel_portal-r3.webp",
+      "rail_tunnel_portal-r4.webp",
+      "rail_tunnel_portal-r5.webp"
+    ],
+    "rail_viaduct_l1": [
+      "rail_viaduct_l1-r0.webp",
+      "rail_viaduct_l1-r1.webp",
+      "rail_viaduct_l1-r2.webp",
+      "rail_viaduct_l1-r0.webp",
+      "rail_viaduct_l1-r1.webp",
+      "rail_viaduct_l1-r2.webp"
+    ],
+    "rail_viaduct_l2": [
+      "rail_viaduct_l2-r0.webp",
+      "rail_viaduct_l2-r1.webp",
+      "rail_viaduct_l2-r2.webp",
+      "rail_viaduct_l2-r0.webp",
+      "rail_viaduct_l2-r1.webp",
+      "rail_viaduct_l2-r2.webp"
+    ],
+    "rail_viaduct_l3": [
+      "rail_viaduct_l3-r0.webp",
+      "rail_viaduct_l3-r1.webp",
+      "rail_viaduct_l3-r2.webp",
+      "rail_viaduct_l3-r0.webp",
+      "rail_viaduct_l3-r1.webp",
+      "rail_viaduct_l3-r2.webp"
+    ],
     "river_straight": [
       "river_straight-r0.webp",
       "river_straight-r1.webp",

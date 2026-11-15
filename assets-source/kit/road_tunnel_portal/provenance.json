@@ -4,7 +4,7 @@
   "route": "scripted",
   "generator": {
     "path": "scripts/blender/kit/road_tunnel_portal.py",
-    "sha256": "c66ab8d575a491cef57b0eb9bd499bda9b97c8f3673646a0c5d5d9c24469155f"
+    "sha256": "41e289e7e484822f7886f2642c581453417122e3e39ef8043e97bb9c42048740"
   },
   "generatorDeps": [
     {
@@ -22,6 +22,10 @@
     {
       "path": "scripts/blender/kit/_tunnel_portal.py",
       "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal_open.py",
+      "sha256": "e17b236dcb0c39b2705fc64bc8d9b4e52abd4f615da1d310a0bb69eea86196ab"
     }
   ],
   "authoringAgent": {
@@ -324,9 +328,9 @@
     },
     "lod2Drops": {},
     "lodTris": [
-      1491,
-      706,
-      187
+      1474,
+      668,
+      185
     ],
     "marginPx": 8,
     "maxRayDistanceM": 0.12,
@@ -359,28 +363,28 @@
         "min": 175.60116631984044
       },
       "stone": {
-        "faces": 760,
+        "faces": 741,
         "max": 288.13015248984277,
         "median": 258.00002235172883,
-        "min": 242.2334149662837
+        "min": 79.38447056318715
       }
     }
   },
   "lods": [
     {
       "lod": 0,
-      "tris": 1491,
+      "tris": 1474,
       "ratio": 1
     },
     {
       "lod": 1,
-      "tris": 706,
-      "ratio": 0.47350771294433264
+      "tris": 668,
+      "ratio": 0.4531886024423338
     },
     {
       "lod": 2,
-      "tris": 187,
-      "ratio": 0.12541918175720992
+      "tris": 185,
+      "ratio": 0.1255088195386703
     }
   ],
   "collider": {
@@ -396,10 +400,10 @@
       "min": 175.60116631984044
     },
     "stone": {
-      "faces": 760,
+      "faces": 741,
       "max": 288.13015248984277,
       "median": 258.00002235172883,
-      "min": 242.2334149662837
+      "min": 79.38447056318715
     }
   },
   "compression": {
@@ -408,10 +412,10 @@
       "class": "piece",
       "ktxMax": 1500000,
       "ktxBytes": {
-        "bc7": 1073315,
-        "astc": 1071453
+        "bc7": 1073363,
+        "astc": 1071540
       },
-      "glbBytes": 129392
+      "glbBytes": 128936
     },
     "textureEncodes": [
       {
@@ -454,8 +458,8 @@
         "transfer": "linear",
         "vkFormat": 145,
         "levels": 10,
-        "bytes": 5470,
-        "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7"
+        "bytes": 5518,
+        "sha256": "be129d3bae9a8c1c9126d8f598d1d64a62197c9087c403b969741bdd1043d2f4"
       },
       {
         "channel": "masks",
@@ -465,8 +469,8 @@
         "transfer": "linear",
         "vkFormat": 157,
         "levels": 10,
-        "bytes": 5322,
-        "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615"
+        "bytes": 5409,
+        "sha256": "859631229903f3f35ab2d2c595a266270567f7595b725ae09182731888b52c79"
       },
       {
         "channel": "masks",
@@ -474,8 +478,8 @@
         "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
         "format": "PNG",
         "transfer": "linear",
-        "bytes": 6772,
-        "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600"
+        "bytes": 6798,
+        "sha256": "758f378fad2b65e242b7d30db9f889be2d5426007f917199aec394c71ac54818"
       },
       {
         "channel": "normal",
@@ -544,8 +548,8 @@
   "derivedFiles": [
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.glb",
-      "sha256": "68d0ddcc7011fabd2988cf5916727f9f4768a6cab2a3107ec238b09867e06b6f",
-      "bytes": 129392
+      "sha256": "87b1c67c4063eec250276490720af3997fef51f4869fd3112faa41e14812b051",
+      "bytes": 128936
     },
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.albedo.bc7.ktx2",
@@ -564,18 +568,18 @@
     },
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.bc7.ktx2",
-      "sha256": "7ff5654a61a647daf14ad51c7fbbb82b0e2b0111c2cf20481630ca85f7b926b7",
-      "bytes": 5470
+      "sha256": "be129d3bae9a8c1c9126d8f598d1d64a62197c9087c403b969741bdd1043d2f4",
+      "bytes": 5518
     },
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.astc.ktx2",
-      "sha256": "975354c49008133ef531f3fc7336c33fb6399500fb725f2abe08882ce7fb6615",
-      "bytes": 5322
+      "sha256": "859631229903f3f35ab2d2c595a266270567f7595b725ae09182731888b52c79",
+      "bytes": 5409
     },
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.masks.png",
-      "sha256": "ed5f7a3ee08ee163839b2c738a34a8b7727f319a3b007101ff81778a361f0600",
-      "bytes": 6772
+      "sha256": "758f378fad2b65e242b7d30db9f889be2d5426007f917199aec394c71ac54818",
+      "bytes": 6798
     },
     {
       "path": "assets/kit/p1/road_tunnel_portal/road_tunnel_portal.normal.bc7.ktx2",
@@ -640,7 +644,7 @@
   "license": "MIT (original work, Hex World repo)",
   "validation": {
     "pass": true,
-    "date": "2026-10-29T04:51:05.150Z",
+    "date": "2026-11-15T05:56:51.630Z",
     "checks": [
       "kit_gate geometry",
       "kit_gate textures",
@@ -667,6 +671,12 @@
       "revision": "look-pass-2",
       "requested": "2026-10-29",
       "notes": "Approved in chat (\"approved\") on 2026-10-29: look pass 2, reviewed from docs/checkpoints/road_tunnel_portal/sheet.jpg."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-11-14",
+      "notes": "Pending owner review; not an approval. Open tunnels (owner 2026-11-14): exterior unchanged, interior extension: owner re-check. The lining runs on from the back plane x 13.656 to the cell edge x 13.856 (its UVs unchanged in front of the back wall), the back wall stays the road_tunnel_portal_back slot at x 13.656 for the runtime to hide while the tunnel is complete, and the stone back face at x 13.856 is cut round the opening with a back-slot patch behind it (_tunnel_portal_open.py; _tunnel_portal.py unchanged). The albedo, normal and ORM maps are byte-identical; the masks differ only in 16 unused rows above the lining island. Review sheet: docs/checkpoints/road_tunnel_bore/sheet.jpg. The controller records the owner's decision."
     }
   ]
 }

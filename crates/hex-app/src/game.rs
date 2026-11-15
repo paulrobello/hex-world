@@ -1128,6 +1128,13 @@ impl GameState {
             "mega_slots": mega_slots,
             "can_undo": self.world.can_undo(),
             "can_redo": self.world.can_redo(),
+            "tunnels": hex_core::tunnels(&self.world, &self.catalog)
+                .iter()
+                .map(|t| json!({
+                    "a": t.a, "b": t.b, "dir": t.dir, "cover": t.cover,
+                    "level": t.level, "kind": format!("{:?}", t.kind),
+                }))
+                .collect::<Vec<_>>(),
         })
     }
 
@@ -1229,6 +1236,7 @@ impl GameState {
         let mut slot_levels = self.slot_levels(&frontier);
         slot_levels.extend(centres.iter().copied().filter(|&(_, l)| l > 0));
         let mut view = PlayView {
+            tunnels: hex_core::tunnels(&self.world, &self.catalog),
             slot_levels,
             members: self.world.members().iter().map(|(m, a)| (*m, *a)).collect(),
             footprint_selected: self.footprint_selected(),

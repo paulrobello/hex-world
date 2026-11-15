@@ -1,0 +1,218 @@
+{
+  "name": "road_tunnel_bore",
+  "date": "2026-11-15T06:16:56.963Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    },
+    "pngFallbackSize": {
+      "albedo": 512
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 294953,
+      "sha256": "5ca99aafa2ad93311adb8ed3f97c9e70ffd5248d1368927dc58b28b62fb4eb19"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 296738,
+      "sha256": "151f05a5b0fab62e0bd729267e826f99869aa7cd8d4ecb23572158bb1fd0054a"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 284653,
+      "sha256": "ac88960a2f99364fc4a0927096148c8d0801b76a5cf721a2aac047b882a0aa8e",
+      "size": 512
+    },
+    {
+      "channel": "emissive",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.emissive.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 9,
+      "bytes": 16391,
+      "sha256": "de95a243b1f0bbba10f6895adcf08a2338a25628281719f014dfbc16fcebf528"
+    },
+    {
+      "channel": "emissive",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.emissive.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 9,
+      "bytes": 16604,
+      "sha256": "35fd8129090de54fd75c989449328f0ff0a730b3baa470d3b2a477f92f6caeee"
+    },
+    {
+      "channel": "emissive",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.emissive.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 26335,
+      "sha256": "c0b0b6ca4838aad7c49da4f6ff46e7c8026c2396968963cd44b8aed1c2346279"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 2072,
+      "sha256": "45d7899a7097975c0eecee42429d8d633760ed6414a7f7abcc8025213879a3a8"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 1986,
+      "sha256": "80e39bfdfbf02542e3e3a66ff674b22a2dbb502d4992f31a5a8a07c556ef0502"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 6099,
+      "sha256": "f9b65b9412a6eaaee4325a20f29ffec759eda805c525ac0829b672f20cd41408"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 46792,
+      "sha256": "b2e44460559624825cae06694e99ea2b498d8923af73cd328ee19a6ec9fd7e9b"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 45682,
+      "sha256": "46db2c1c4ec7a577d65d9cb780438da56193644db6efef1c3cc2196d7058dfdd"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 149311,
+      "sha256": "292fc3bc611e55c2c68e23a7d3c0feb4a5014950acc7313b72f2d3b5841d1264"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 30168,
+      "sha256": "07f1d3529221d82b529769bb47004df463a0e2dca1df48b6271bd4963bdfc080"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 28983,
+      "sha256": "79993db1a3c86592c792d9cae3bd6f933884143737361213fd0158b8026215d0"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/road_tunnel_bore/road_tunnel_bore.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 64895,
+      "sha256": "da7faf0a72e8d9fdeed60787443f55542e4659fb71f1ef7a72e978d358048224"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 390376,
+      "astc": 389993
+    },
+    "glbBytes": 74556
+  },
+  "glb": {
+    "bytes": 74556,
+    "sha256": "d2ade888f6b9387def8c7ee48107d5582e4b1b7796eb4787277bc3af76430a28"
+  }
+}

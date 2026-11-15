@@ -1427,9 +1427,22 @@ fn bucket(v: f32) -> usize {
 }
 
 /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
-/// on a centre piece, the tunnel portal's fern cards over its coping. Nothing stands on them and the
-/// walker walks through them.
-pub const NOT_GROUND: &[&str] = &["wheat_field_wheat", "road_tunnel_portal_fern"];
+/// on a centre piece, the tunnel portals' fern cards over their coping, and a rail viaduct's stone
+/// and deck track (owner RL-Q3: no walking on the deck; the meadow under its arches is the ground
+/// and its piers are walker obstacles, `walk::CENTRE_OBSTACLES`). Nothing stands on them and the
+/// walker walks through, or under, them.
+pub const NOT_GROUND: &[&str] = &[
+    "wheat_field_wheat",
+    "road_tunnel_portal_fern",
+    "rail_tunnel_portal_fern",
+    "rail_viaduct_l1_stone",
+    "rail_viaduct_l2_stone",
+    "rail_viaduct_l3_stone",
+    "viaduct_ballast",
+    "viaduct_sleeper",
+    "viaduct_steel",
+    "viaduct_head",
+];
 
 impl Surface {
     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
@@ -1524,12 +1537,17 @@ impl Surface {
 }
 
 /// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
-/// walker stands on and scatter keeps off, and the tunnel portal, whose 4 m wall top (coping and
-/// turf, where grass blades grow) the walker crosses from the cover meadow and whose face is a step
-/// it cannot climb into the arch. Each stands at the tile origin at a whole hex turn
+/// walker stands on and scatter keeps off, and the tunnel portals, whose wall tops (coping and
+/// turf, where grass blades grow; the road's 4 m, the rail's 5.85 m under its turf mound) the walker
+/// crosses from the cover meadow and whose faces are steps it cannot climb into the arch. Each
+/// stands at the tile origin at a whole hex turn
 /// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
 /// as a centre piece does.
-pub const GROUND_PROPS: &[&str] = &["rail_station_platform", "road_tunnel_portal"];
+pub const GROUND_PROPS: &[&str] = &[
+    "rail_station_platform",
+    "road_tunnel_portal",
+    "rail_tunnel_portal",
+];
 
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`] steps, as
 /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its
@@ -2852,6 +2870,7 @@ pub fn sync(
         state.fence_builds += 1;
     }
     let fence_map = state.fences.1.clone();
+    let ridges = super::tunnels::ridges(&view);
     for (&cell, (t, root)) in cells {
         let Some(def) = catalog
             .0
@@ -2870,11 +2889,21 @@ pub fn sync(
         // The field boundaries on its edges (B2): instances over them are left out, after the darts,
         // so the rest of the layout stays where it was.
         let fences = fence_map.get(&cell).cloned().unwrap_or_default();
-        let cut = super::boundaries::fingerprint(&fences);
+        let ridge = ridges.get(&cell).copied();
+        let cut = super::boundaries::fingerprint(&fences) ^ ridge.map_or(0, |r| r.sig());
         let layout = match state.layouts.get(&cell) {
             Some((id, s, k, l)) if *id == def.id && *s == seed && *k == cut => l.clone(),
             _ => {
                 let mut l = layout(def, seed, &prepared);
+                // Nothing stands on a rail tunnel's turf ridge (owner Q4).
+                if let Some(r) = ridge {
+                    let pieces: Vec<&str> =
+                        def.props.scatter.iter().map(|r| r.piece.as_str()).collect();
+                    l.instances.retain(|i| {
+                        let piece = i.piece(pieces[i.rule as usize]);
+                        !r.holds(i.pos.xz(), footprint(piece).ground * i.scale)
+                    });
+                }
                 if !fences.is_empty() {
                     let pieces: Vec<&str> =
                         def.props.scatter.iter().map(|r| r.piece.as_str()).collect();
@@ -3598,7 +3627,18 @@ mod tests {
     fn no_instance_on_an_excluded_slot_for_every_mvp_tile_and_rotation() {
         let c = catalog();
         let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        let pending = hex_core::PendingPieces::builtin().unwrap();
+        let mut awaiting = 0;
         for base in c.tiles() {
+            // A tile built ahead of its centre piece (data/pending-pieces.ron) has no ground yet.
+            if base
+                .center
+                .as_ref()
+                .is_some_and(|k| pending.contains(k.as_str()))
+            {
+                awaiting += 1;
+                continue;
+            }
             let mut def = base.clone();
             if def.props.scatter.is_empty() {
                 def.props.scatter = vec![
@@ -3725,7 +3765,11 @@ mod tests {
                 }
             }
         }
-        assert_eq!(counts.len(), 48, "every inventory tile ran");
+        assert_eq!(
+            counts.len() + awaiting,
+            c.tiles().len(),
+            "every inventory tile ran or awaits its piece"
+        );
         for id in [
             "forest",
             "oak",
@@ -3995,6 +4039,10 @@ mod tests {
             "road_junction",
             "road_ramp",
             "road_tunnel_portal",
+            "rail_tunnel_portal",
+            "rail_viaduct_l1",
+            "rail_viaduct_l2",
+            "rail_viaduct_l3",
             "rail_straight",
             "rail_bend_60",
             "rail_bend_120",
@@ -4004,7 +4052,7 @@ mod tests {
         ] {
             assert!(verges.contains(&id), "{id} is a verge tile: {verges:?}");
         }
-        assert_eq!(verges.len(), 12, "{verges:?}");
+        assert_eq!(verges.len(), 16, "{verges:?}");
         for d in c.tiles() {
             let want = if verge_tile(d) {
                 [3, 3, 3, 3, 4]

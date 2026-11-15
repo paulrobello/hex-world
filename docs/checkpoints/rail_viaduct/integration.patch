@@ -1,0 +1,291 @@
+diff --git a/crates/hex-play/src/play/grass.rs b/crates/hex-play/src/play/grass.rs
+index e614fe0..5caa213 100644
+--- a/crates/hex-play/src/play/grass.rs
++++ b/crates/hex-play/src/play/grass.rs
+@@ -671,6 +671,20 @@ pub fn exclusions(
+             });
+         }
+     }
++    // A viaduct's abutments and piers stand on the meadow (its stone and deck are not ground,
++    // `scatter::NOT_GROUND`): no blade roots in the stone, and blades grow under the arches.
++    for (centre, part, corners) in crate::walk::CENTRE_OBSTACLES {
++        if *part == crate::walk::VIADUCT_PIER
++            && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
++        {
++            let (lo, hi) = (Vec2::from(corners[0]), Vec2::from(corners[2]));
++            out.push(Clear::Box {
++                centre: (lo + hi) / 2.0,
++                half: (hi - lo) / 2.0 + WALL_GAP,
++                axis: Vec2::X,
++            });
++        }
++    }
+     out.extend(instances.iter().filter_map(|i| {
+         let piece = i.piece(pieces.get(i.rule as usize)?);
+         if let Some((_, outline)) = ROCK_BASES.iter().find(|(id, _)| *id == piece) {
+@@ -2344,6 +2358,33 @@ mod tests {
+         assert!(walls[0] >= 50, "back wall {walls:?}");
+     }
+ 
++    /// A viaduct clears a box over each abutment and pier (`walk::CENTRE_OBSTACLES`), so no
++    /// blade roots in the stone, and keeps the meadow under its three arches.
++    #[test]
++    fn grass_clears_the_viaduct_piers_not_the_arches() {
++        let c = TileCatalog::builtin().unwrap();
++        for n in 1..=3 {
++            let def = c.get(&format!("rail_viaduct_l{n}")).unwrap().clone();
++            let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
++            let piers: Vec<_> = crate::walk::CENTRE_OBSTACLES
++                .iter()
++                .filter(|(centre, part, _)| {
++                    *part == crate::walk::VIADUCT_PIER
++                        && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
++                })
++                .collect();
++            assert_eq!(piers.len(), 4, "l{n}: two abutments, two piers");
++            for (_, _, corners) in piers {
++                let mid = (Vec2::from(corners[0]) + Vec2::from(corners[2])) / 2.0;
++                assert!(ex.iter().any(|e| e.contains(mid)), "l{n}: pier at {mid}");
++            }
++            for x in [-7.0, 0.0, 7.0] {
++                let p = Vec2::new(x, 0.0);
++                assert!(!ex.iter().any(|e| e.contains(p)), "l{n}: arch at {p}");
++            }
++        }
++    }
++
+     /// The paddock fence clears a disc over each post (0.142 m, gate posts 0.163 m), not a disc
+     /// of its whole reach at the tile centre: grass grows in the yard at (0, 0), under the rails
+     /// mid-span, and never on a post.
+diff --git a/crates/hex-play/src/play/scatter.rs b/crates/hex-play/src/play/scatter.rs
+index 10e4d00..a009a99 100644
+--- a/crates/hex-play/src/play/scatter.rs
++++ b/crates/hex-play/src/play/scatter.rs
+@@ -1427,9 +1427,21 @@ fn bucket(v: f32) -> usize {
+ }
+ 
+ /// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
+-/// on a centre piece, the tunnel portal's fern cards over its coping. Nothing stands on them and the
+-/// walker walks through them.
+-pub const NOT_GROUND: &[&str] = &["wheat_field_wheat", "road_tunnel_portal_fern"];
++/// on a centre piece, the tunnel portal's fern cards over its coping, and a rail viaduct's stone and
++/// deck track (owner RL-Q3: no walking on the deck; the meadow under its arches is the ground and
++/// its piers are walker obstacles, `walk::CENTRE_OBSTACLES`). Nothing stands on them and the walker
++/// walks through, or under, them.
++pub const NOT_GROUND: &[&str] = &[
++    "wheat_field_wheat",
++    "road_tunnel_portal_fern",
++    "rail_viaduct_l1_stone",
++    "rail_viaduct_l2_stone",
++    "rail_viaduct_l3_stone",
++    "viaduct_ballast",
++    "viaduct_sleeper",
++    "viaduct_steel",
++    "viaduct_head",
++];
+ 
+ impl Surface {
+     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
+diff --git a/crates/hex-play/src/walk.rs b/crates/hex-play/src/walk.rs
+index c201b47..013efd5 100644
+--- a/crates/hex-play/src/walk.rs
++++ b/crates/hex-play/src/walk.rs
+@@ -162,17 +162,52 @@ pub const OBSTACLES: &[&str] = &[
+ /// tile frame). A centre's own collider is its whole bed, so a part that stands up from it gets a
+ /// footprint here: the junction's point lever (`_rail_junction.py` `lever_parts`: the base timber
+ /// 0.7 m in from edge 0, 2.6 m off the main line away from corner 0, and the lever leaning 0.45 m
+-/// toward edge 3). The rails and sleepers are walkable ground.
+-pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
+-    "rail_junction_center",
+-    "rail_lever",
+-    [
+-        [12.69, -2.85],
+-        [13.46, -2.85],
+-        [13.46, -2.35],
+-        [12.69, -2.35],
+-    ],
+-)];
++/// toward edge 3). The rails and sleepers are walkable ground. A rail viaduct's two abutments and
++/// two piers ([`VIADUCT_PIER`]) are the stone's widest extent below head height (1.8 m), its faces
++/// at z ±3.0: the battered foot on decks 2 and 3 (the bake report's `pierFootprintsRuntimeXZ`),
++/// the arch ring at 1.8 m on deck 1, whose arches spring at 0.5 m. Its deck is not ground
++/// (`scatter::NOT_GROUND`), so the walker walks the meadow under the arches.
++pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[
++    (
++        "rail_junction_center",
++        "rail_lever",
++        [
++            [12.69, -2.85],
++            [13.46, -2.85],
++            [13.46, -2.35],
++            [12.69, -2.35],
++        ],
++    ),
++    viaduct_pier("rail_viaduct_l1", -13.854, -8.897),
++    viaduct_pier("rail_viaduct_l1", -5.103, -1.897),
++    viaduct_pier("rail_viaduct_l1", 1.897, 5.103),
++    viaduct_pier("rail_viaduct_l1", 8.897, 13.854),
++    viaduct_pier("rail_viaduct_l2", -13.854, -9.1875),
++    viaduct_pier("rail_viaduct_l2", -4.8125, -2.1875),
++    viaduct_pier("rail_viaduct_l2", 2.1875, 4.8125),
++    viaduct_pier("rail_viaduct_l2", 9.1875, 13.854),
++    viaduct_pier("rail_viaduct_l3", -13.854, -9.0875),
++    viaduct_pier("rail_viaduct_l3", -4.9125, -2.0875),
++    viaduct_pier("rail_viaduct_l3", 2.0875, 4.9125),
++    viaduct_pier("rail_viaduct_l3", 9.0875, 13.854),
++];
++
++/// The [`CENTRE_OBSTACLES`] part of a rail viaduct's abutments and piers: grass keeps off them too
++/// (`grass::exclusions`).
++pub const VIADUCT_PIER: &str = "rail_viaduct_pier";
++
++/// A viaduct's abutment or pier from x `x0` to `x1` across its whole width (z ±3.0).
++const fn viaduct_pier(
++    centre: &'static str,
++    x0: f32,
++    x1: f32,
++) -> (&'static str, &'static str, [[f32; 2]; 4]) {
++    (
++        centre,
++        VIADUCT_PIER,
++        [[x0, -3.0], [x1, -3.0], [x1, 3.0], [x0, 3.0]],
++    )
++}
+ 
+ /// Landform tiles' standing rock that blocks the walker, as (tile, part, convex parts of its
+ /// footprint in the tile frame, x and z). The massif's is its rock foot as measured top-down on its
+@@ -3528,6 +3563,56 @@ pub(crate) mod tests {
+         }
+     }
+ 
++    /// A rail viaduct's deck is not ground and its piers block (owner RL-Q3): on each height the
++    /// walker stands on the meadow under all three arches, not on the deck; each abutment and pier
++    /// row blocks it; and every LOD0 stone vertex below head height (1.8 m) lies in a row.
++    #[test]
++    fn the_viaduct_piers_block_and_the_arches_pass() {
++        let c = catalog();
++        for n in 1..=3 {
++            let id = format!("rail_viaduct_l{n}");
++            let g = world_in(&c, &[(0, 0, id.as_str(), 0)]);
++            for x in [-7.0, 0.0, 7.0] {
++                let h = g
++                    .stand(Vec2::new(x, 0.0))
++                    .unwrap_or_else(|b| panic!("{id}: blocked under the arch at x {x}: {b:?}"));
++                assert!(h.abs() < 0.3, "{id}: stands at {h} under the arch at x {x}");
++            }
++            let rows: Vec<[[f32; 2]; 4]> = CENTRE_OBSTACLES
++                .iter()
++                .filter(|(centre, part, _)| *centre == id && *part == VIADUCT_PIER)
++                .map(|(_, _, corners)| *corners)
++                .collect();
++            assert_eq!(rows.len(), 4, "{id}: two abutments and two piers");
++            for r in &rows {
++                // Off the centreline: an open rail end's buffer stop stands on it.
++                let p = Vec2::new((r[0][0] + r[2][0]) / 2.0, 2.4);
++                assert_eq!(
++                    g.stand(p),
++                    Err(Blocked::Obstacle(VIADUCT_PIER.into())),
++                    "{id}: {p}"
++                );
++            }
++            let tris = mesh_tris(&id, "lod0").expect("viaduct lod0");
++            let low: Vec<[f32; 3]> = tris
++                .iter()
++                .filter(|(_, s)| s.ends_with("_stone"))
++                .flat_map(|(t, _)| t.iter().copied())
++                .filter(|p| p[1] < 1.8)
++                .collect();
++            assert!(!low.is_empty(), "{id}: stone below head height");
++            for p in &low {
++                assert!(
++                    rows.iter().any(|r| p[0] >= r[0][0] - 0.05
++                        && p[0] <= r[2][0] + 0.05
++                        && p[2] >= r[0][1] - 0.05
++                        && p[2] <= r[2][1] + 0.05),
++                    "{id}: stone vertex {p:?} outside every pier row"
++                );
++            }
++        }
++    }
++
+     /// The wide rail bend's track path is its GLB's track: every LOD0 rail-head vertex of
+     /// `rail_bend_120_center` stands a rail centre (0.84 m) off the `rail_bend_120` tile's network
+     /// polyline, within the head's half width, on both sides of it; and the polyline is the bake
+diff --git a/web/ui/src/rules.ts b/web/ui/src/rules.ts
+--- a/web/ui/src/rules.ts
++++ b/web/ui/src/rules.ts
+@@ -3,7 +3,14 @@
+ // legalOrientations against hex-core's own answers for every slot of the parity worlds (rules-parity.json).
+ import type { Cell, MegaSlot, PlayTile, SocketKind } from "./bridge.ts";
+ import schema from "./bridge-schema.json" with { type: "json" };
+-import { FOOTPRINT_EDGES, FOOTPRINT_INNER, FOOTPRINT_REFUSAL, MASSIF_SWAP, SINGLE_SWAP } from "./words.ts";
++import {
++  DECK_END_REFUSAL,
++  FOOTPRINT_EDGES,
++  FOOTPRINT_INNER,
++  FOOTPRINT_REFUSAL,
++  MASSIF_SWAP,
++  SINGLE_SWAP,
++} from "./words.ts";
+ 
+ /**
+  * A network crossing at an edge (hex-core `LaneSpec`): `[offset, width]` in metres, then `deck`,
+@@ -624,7 +631,13 @@
+   const kinds = [...new Set(needs.kinds.filter((n): n is SocketKind => n != null))];
+   const lacking = kinds.find((n) => !def.edges.some((e) => compatible(n, e)));
+   const w = clashes(def, bestK, needs)[0] ?? 0;
+-  const why = lacking ? missing(lacking) : clashPhrase(rotated(def, bestK)[w]!, needs.kinds[w]!);
++  const theirs = needs.kinds[w];
++  // A deck end facing an empty cell clashes with nothing placed (`clashes`), so it has no phrase.
++  const why = lacking
++    ? missing(lacking)
++    : theirs == null && deckOf(rotatedLanes(def, bestK)[w]!) > 0
++      ? DECK_END_REFUSAL
++      : clashPhrase(rotated(def, bestK)[w]!, theirs!);
+   return { ok: false, legal, distinct: [], why, bestK, level: on };
+ }
+ 
+diff --git a/web/ui/src/words.ts b/web/ui/src/words.ts
+--- a/web/ui/src/words.ts
++++ b/web/ui/src/words.ts
+@@ -68,6 +68,9 @@
+ /** Why a footprint tile is refused where seven free cells touch the world but an outer edge clashes. */
+ export const FOOTPRINT_EDGES = "Its edges don't meet the tiles beside it.";
+ 
++/** Why a viaduct is refused where a deck end faces an empty cell: its deck spans to the rail it meets. */
++export const DECK_END_REFUSAL = "Needs raised rail at its deck height on both ends.";
++
+ /** Why a single tile is refused at a cell the engine offers only to a massif. */
+ export const FOOTPRINT_INNER = "Only a massif can stand here.";
+ 
+diff --git a/web/ui/test/picker.test.ts b/web/ui/test/picker.test.ts
+--- a/web/ui/test/picker.test.ts
++++ b/web/ui/test/picker.test.ts
+@@ -13,7 +13,7 @@
+   tileDef,
+   tileMap,
+ } from "../src/rules.ts";
+-import { FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
++import { DECK_END_REFUSAL, FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
+ import parity from "./rules-parity.json" with { type: "json" };
+ 
+ const world = (...t: [number, number, string, number][]) =>
+@@ -91,6 +91,18 @@
+   assert.equal(entrySummary(curve()), "Ocean, beach and grass edges");
+ });
+ 
++test("a viaduct beside the start meadow is refused for its open deck end, not a clash", () => {
++  // Every turn leaves a deck end facing an empty cell, which clashes with nothing placed.
++  const viaduct = entryOf("rail_viaduct_l1")!;
++  assert.deepEqual(
++    viaduct.tiles.map((t) => t.id),
++    ["rail_viaduct_l1", "rail_viaduct_l2", "rail_viaduct_l3"],
++  );
++  const f = fitEntry(viaduct, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0])));
++  assert.equal(f.ok, false);
++  assert.equal(f.why, DECK_END_REFUSAL);
++});
++
+ test("the Tiles sheet lists the massif at a slot a footprint covers and says why elsewhere", () => {
+   const massif = PICKER.find((e) => e.id === "massif_granite")!;
+   assert.deepEqual(

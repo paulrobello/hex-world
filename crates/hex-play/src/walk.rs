@@ -162,17 +162,52 @@ pub const OBSTACLES: &[&str] = &[
 /// tile frame). A centre's own collider is its whole bed, so a part that stands up from it gets a
 /// footprint here: the junction's point lever (`_rail_junction.py` `lever_parts`: the base timber
 /// 0.7 m in from edge 0, 2.6 m off the main line away from corner 0, and the lever leaning 0.45 m
-/// toward edge 3). The rails and sleepers are walkable ground.
-pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[(
-    "rail_junction_center",
-    "rail_lever",
-    [
-        [12.69, -2.85],
-        [13.46, -2.85],
-        [13.46, -2.35],
-        [12.69, -2.35],
-    ],
-)];
+/// toward edge 3). The rails and sleepers are walkable ground. A rail viaduct's two abutments and
+/// two piers ([`VIADUCT_PIER`]) are the stone's widest extent below head height (1.8 m), its faces
+/// at z ±3.0: the battered foot on decks 2 and 3 (the bake report's `pierFootprintsRuntimeXZ`),
+/// the arch ring at 1.8 m on deck 1, whose arches spring at 0.5 m. Its deck is not ground
+/// (`scatter::NOT_GROUND`), so the walker walks the meadow under the arches.
+pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[
+    (
+        "rail_junction_center",
+        "rail_lever",
+        [
+            [12.69, -2.85],
+            [13.46, -2.85],
+            [13.46, -2.35],
+            [12.69, -2.35],
+        ],
+    ),
+    viaduct_pier("rail_viaduct_l1", -13.854, -8.897),
+    viaduct_pier("rail_viaduct_l1", -5.103, -1.897),
+    viaduct_pier("rail_viaduct_l1", 1.897, 5.103),
+    viaduct_pier("rail_viaduct_l1", 8.897, 13.854),
+    viaduct_pier("rail_viaduct_l2", -13.854, -9.1875),
+    viaduct_pier("rail_viaduct_l2", -4.8125, -2.1875),
+    viaduct_pier("rail_viaduct_l2", 2.1875, 4.8125),
+    viaduct_pier("rail_viaduct_l2", 9.1875, 13.854),
+    viaduct_pier("rail_viaduct_l3", -13.854, -9.0875),
+    viaduct_pier("rail_viaduct_l3", -4.9125, -2.0875),
+    viaduct_pier("rail_viaduct_l3", 2.0875, 4.9125),
+    viaduct_pier("rail_viaduct_l3", 9.0875, 13.854),
+];
+
+/// The [`CENTRE_OBSTACLES`] part of a rail viaduct's abutments and piers: grass keeps off them too
+/// (`grass::exclusions`).
+pub const VIADUCT_PIER: &str = "rail_viaduct_pier";
+
+/// A viaduct's abutment or pier from x `x0` to `x1` across its whole width (z ±3.0).
+const fn viaduct_pier(
+    centre: &'static str,
+    x0: f32,
+    x1: f32,
+) -> (&'static str, &'static str, [[f32; 2]; 4]) {
+    (
+        centre,
+        VIADUCT_PIER,
+        [[x0, -3.0], [x1, -3.0], [x1, 3.0], [x0, 3.0]],
+    )
+}
 
 /// Landform tiles' standing rock that blocks the walker, as (tile, part, convex parts of its
 /// footprint in the tile frame, x and z). The massif's is its rock foot as measured top-down on its
@@ -653,6 +688,9 @@ struct CellGround {
     /// The tile's level height (P4), `level * LEVEL_STEP`: every query adds it to the
     /// tile-frame surface, so a cliff between two levels is a step [`MAX_STEP`] refuses.
     y0: f32,
+    /// How far above `y0` the tile's rail stands (P4): a viaduct's deck, `deck * LEVEL_STEP`; 0 on
+    /// every other tile. Trains ride `y0 + rail_lift` ([`WalkGround::level_y`]).
+    rail_lift: f32,
     /// `None`: a placeholder tile, flat at `y0`.
     surface: Option<Arc<Surface>>,
     /// The tile carries a road or a parking spot: a car's wheel over any other tile (a tunnel's
@@ -1208,10 +1246,57 @@ pub struct Step {
     pub blocked: Option<Blocked>,
 }
 
+/// Where a portal's face stands inside its tile edge, by tunnel kind: the road portal's 2.2 m and
+/// the rail portal's 6 m (RL-Q1 O2). A bore corridor starts at the face.
+const fn face_inset(kind: NetworkKind) -> f32 {
+    match kind {
+        NetworkKind::Rail => 6.0,
+        _ => 2.2,
+    }
+}
+
+/// How far (m) in front of a portal's face the bore's floor override starts: the coping, drip edge
+/// and ring stand out from the face over the opening, and a heightfield reads their top as ground.
+const BORE_LEAD: f32 = 1.0;
+
+/// Half the width (m) of the floor a walker may use in a bore, by tunnel kind: the arch's half
+/// width at the floor less the wall lining, the lamp stations and the walker's own radius.
+const fn corridor_half(kind: NetworkKind) -> f32 {
+    match kind {
+        NetworkKind::Rail => 2.1,
+        _ => 3.4,
+    }
+}
+
+/// The floor of a complete tunnel (P4 open tunnels): from one portal's face to the other's, the
+/// walker, the cars and the trains stand on the portal level's floor, not on the cover's top.
+/// Outside `half` of its axis the ground is the cover's top as before, so the walls still block.
+#[derive(Clone, Debug)]
+struct Bore {
+    a: Vec2,
+    b: Vec2,
+    half: f32,
+    floor: f32,
+}
+
+impl Bore {
+    /// Whether `p` is on the floor: between the two faces and within `half` of the axis.
+    fn holds(&self, p: Vec2) -> bool {
+        let axis = self.b - self.a;
+        let len = axis.length().max(1e-4);
+        let d = axis / len;
+        let rel = p - self.a;
+        let along = rel.dot(d);
+        (0.0..=len).contains(&along) && (rel.x * d.y - rel.y * d.x).abs() <= self.half
+    }
+}
+
 /// The walkable world, rebuilt by [`sync`] whenever the drawn tiles, their scatter or the kit change.
 #[derive(Resource, Default)]
 pub struct WalkGround {
     cells: HashMap<Axial, CellGround>,
+    /// The complete tunnels' floors ([`WalkGround::set_tunnels`]).
+    bores: Vec<Bore>,
     obstacles: HashMap<Axial, Vec<Obstacle>>,
     /// The same obstacles as volumes for photo mode's click to focus.
     props: Vec<PickProp>,
@@ -1354,6 +1439,8 @@ impl WalkGround {
                 centre: Vec2::new(x, z),
                 rotation: t.rotation,
                 y0: f32::from(t.level) * LEVEL_STEP,
+                rail_lift: f32::from(def.edges.iter().map(|e| e.deck()).max().unwrap_or(0))
+                    * LEVEL_STEP,
                 surface: surface.as_ref().map(|s| s.centre.clone()),
                 car_paths: !def.parking.is_empty()
                     || def.networks.iter().any(|n| n.kind == NetworkKind::Road),
@@ -1514,6 +1601,9 @@ impl WalkGround {
         if self.on_deck(p) {
             return Ok((STAGE_DECK.2, 0.0, false));
         }
+        if let Some(floor) = self.bore_floor(p) {
+            return Ok((floor, 0.0, false));
+        }
         let d = p - g.centre;
         let l = turn((6 - g.rotation % 6) % 6, [d.x, 0.0, d.y]);
         let h = g.y0
@@ -1557,6 +1647,43 @@ impl WalkGround {
         g.y0 + Self::ride_on(g, p, floor)
     }
 
+    /// Sets the complete tunnels' floors from the world's tunnels (`hex_core::tunnels`): each runs
+    /// from one portal's face to the other's along the line between their cells.
+    pub fn set_tunnels(&mut self, tunnels: &[hex_core::Tunnel]) {
+        self.bores = tunnels
+            .iter()
+            .map(|t| {
+                let (ca, cb) = (t.a.to_world(HEX_RADIUS), t.b.to_world(HEX_RADIUS));
+                let (ca, cb) = (Vec2::new(ca[0], ca[1]), Vec2::new(cb[0], cb[1]));
+                let d = (cb - ca).normalize_or_zero();
+                let reach = HEX_RADIUS * 0.866_025_4 - face_inset(t.kind) - BORE_LEAD;
+                Bore {
+                    a: ca + d * reach,
+                    b: cb - d * reach,
+                    half: corridor_half(t.kind),
+                    floor: f32::from(t.level) * LEVEL_STEP,
+                }
+            })
+            .collect();
+    }
+
+    /// The floor height of the tunnel `p` is inside, if any.
+    fn bore_floor(&self, p: Vec2) -> Option<f32> {
+        self.bores.iter().find(|b| b.holds(p)).map(|b| b.floor)
+    }
+
+    /// The height the rail under `p` stands at (P4): the level of the tile under `p`, plus a
+    /// viaduct's deck; the floor of a tunnel when `p` is inside one; `0.0` on the ground and off
+    /// the drawn tiles. Trains ride the rail top over it.
+    pub fn level_y(&self, p: Vec2) -> f32 {
+        if let Some(floor) = self.bore_floor(p) {
+            return floor;
+        }
+        self.cells
+            .get(&cell_at(p))
+            .map_or(0.0, |g| g.y0 + g.rail_lift)
+    }
+
     /// [`WalkGround::ride`] in the tile's own frame, over its level.
     fn ride_on(g: &CellGround, p: Vec2, floor: f32) -> f32 {
         let Some(s) = g
@@ -1582,7 +1709,13 @@ impl WalkGround {
     pub fn ride_car(&self, p: Vec2, floor: f32, centre: Vec2) -> f32 {
         match self.cells.get(&cell_at(p)) {
             Some(g) if g.car_paths => g.y0 + Self::ride_on(g, p, floor),
-            _ => self.cells.get(&cell_at(centre)).map_or(0.0, |c| c.y0) + floor,
+            _ => {
+                let level = self
+                    .bore_floor(centre)
+                    .or_else(|| self.cells.get(&cell_at(centre)).map(|c| c.y0))
+                    .unwrap_or(0.0);
+                level + floor
+            }
         }
     }
 
@@ -1709,7 +1842,10 @@ impl WalkGround {
             let a = k as f32 * std::f32::consts::FRAC_PI_4;
             self.ground(p + BODY_RADIUS * Vec2::new(a.cos(), a.sin()))?;
         }
-        if let Some(o) = self.obstacle(p) {
+        // The scatter on a cover cell stands on its top, over the bore's floor.
+        if self.bore_floor(p).is_none()
+            && let Some(o) = self.obstacle(p)
+        {
             return Err(Blocked::Obstacle(o.piece.clone()));
         }
         Ok(h)
@@ -1834,6 +1970,7 @@ pub struct WalkCache {
 #[derive(Clone, PartialEq)]
 struct BuiltFrom {
     tiles: Vec<PlayTile>,
+    tunnels: Vec<hex_core::Tunnel>,
     world_seed: u64,
     hidden: Vec<Axial>,
     scatter: u64,
@@ -1866,6 +2003,7 @@ pub fn sync(
     let hidden: Vec<Axial> = waiting.map(|w| w.0.clone()).unwrap_or_default();
     let from = BuiltFrom {
         tiles: view.tiles.clone(),
+        tunnels: view.tunnels.clone(),
         world_seed: view.world_seed,
         hidden,
         scatter: layouts.revision,
@@ -1928,6 +2066,7 @@ pub fn sync(
         &mut shape_of,
         &layouts.tiles,
     );
+    ground.set_tunnels(&from.tunnels);
     ground.revision = revision;
     cache.built = Some(from);
 }
@@ -3196,6 +3335,82 @@ pub(crate) mod tests {
         assert!((on_top - LEVEL_STEP).abs() < 0.3, "cover top {on_top}");
     }
 
+    /// Open tunnels (P4): in a complete road tunnel the walker passes the portal's face and walks
+    /// the bore's floor to the far portal's face on the portal level, never the cover's top; a
+    /// car's wheels and a train in the cover cells stand on that floor too. Beside the corridor the
+    /// cover's top still blocks.
+    #[test]
+    fn the_walker_walks_a_complete_tunnel_on_its_floor() {
+        use hex_core::{NetworkKind, Tunnel};
+        let c = catalog();
+        let mut g = world_at(
+            &c,
+            &[
+                (0, 0, "road_tunnel_portal", 0, 0),
+                (1, 0, "meadow", 0, 1),
+                (2, 0, "meadow", 0, 1),
+                (3, 0, "road_tunnel_portal", 3, 0),
+            ],
+        );
+        let at = |q| centre(q, 0);
+        let start = Vec2::new(at(0).x - 3.0, 0.0);
+        assert_eq!(
+            walk(&g, start, Vec2::X, 40.0).blocked,
+            Some(Blocked::Steep),
+            "a lone portal still stops the walker at its face"
+        );
+        g.set_tunnels(&[Tunnel {
+            a: Axial::new(0, 0),
+            b: Axial::new(3, 0),
+            dir: 0,
+            cover: vec![Axial::new(1, 0), Axial::new(2, 0)],
+            level: 0,
+            kind: NetworkKind::Road,
+        }]);
+        let s = walk(&g, start, Vec2::X, 60.0);
+        let far_face = at(3).x - (APOTHEM - 2.2) + 1.0;
+        assert!(s.pos.x > at(2).x, "walked past the first cover cell: {s:?}");
+        assert!(s.pos.x <= far_face + 0.5, "stops at the far face: {s:?}");
+        for q in 0..=3 {
+            let y = g.ground(Vec2::new(at(q).x, 0.0)).unwrap();
+            assert!(
+                y.abs() < 0.3,
+                "cell {q}: the floor is on the portal level, not {y}"
+            );
+        }
+        // Off the axis the cover's top is the ground again, a wall for the walker.
+        let beside = g.ground(Vec2::new(at(1).x, 5.0)).unwrap();
+        assert!(
+            (beside - LEVEL_STEP).abs() < 0.3,
+            "beside the bore {beside}"
+        );
+        // Cars and trains in the cover cells ride the floor.
+        let car = g.ride_car(Vec2::new(at(1).x, 0.0), 0.11, Vec2::new(at(1).x, 0.0));
+        assert!((car - 0.11).abs() < 1e-3, "{car}");
+        assert_eq!(g.level_y(Vec2::new(at(2).x, 0.0)), 0.0);
+        assert!((g.level_y(Vec2::new(at(2).x, 6.0)) - LEVEL_STEP).abs() < 1e-3);
+    }
+
+    /// A rail tunnel (P4): the rail portal's face stands 6 m inside edge 0 as a wall the walker
+    /// cannot climb, and the walker on the cover meadow beyond stands on its top.
+    #[test]
+    fn walker_cannot_enter_the_rail_tunnel() {
+        let g = world_at(
+            &catalog(),
+            &[(0, 0, "rail_tunnel_portal", 0, 0), (1, 0, "meadow", 0, 1)],
+        );
+        let edge = centre(0, 0).x + APOTHEM;
+        let face = edge - 6.0;
+        let floor = g.ground(Vec2::new(face - 0.5, 0.0)).unwrap();
+        let wall = g.ground(Vec2::new(face + 0.5, 0.0)).unwrap();
+        assert!(wall - floor > MAX_STEP, "face step {floor} -> {wall}");
+        let s = walk(&g, centre(0, 0), Vec2::X, 30.0);
+        assert_eq!(s.blocked, Some(Blocked::Steep), "{s:?}");
+        assert!(s.pos.x < face, "stopped short of the face: {s:?}");
+        let on_top = g.ground(centre(1, 0)).unwrap();
+        assert!((on_top - LEVEL_STEP).abs() < 0.3, "cover top {on_top}");
+    }
+
     fn ray(o: Vec3, d: Vec3) -> Ray3d {
         Ray3d::new(o, Dir3::new(d).unwrap())
     }
@@ -3511,6 +3726,56 @@ pub(crate) mod tests {
                     && p.y <= hi.y + 0.05,
                 "lever vertex {p} outside the footprint {lo}..{hi}"
             );
+        }
+    }
+
+    /// A rail viaduct's deck is not ground and its piers block (owner RL-Q3): on each height the
+    /// walker stands on the meadow under all three arches, not on the deck; each abutment and pier
+    /// row blocks it; and every LOD0 stone vertex below head height (1.8 m) lies in a row.
+    #[test]
+    fn the_viaduct_piers_block_and_the_arches_pass() {
+        let c = catalog();
+        for n in 1..=3 {
+            let id = format!("rail_viaduct_l{n}");
+            let g = world_in(&c, &[(0, 0, id.as_str(), 0)]);
+            for x in [-7.0, 0.0, 7.0] {
+                let h = g
+                    .stand(Vec2::new(x, 0.0))
+                    .unwrap_or_else(|b| panic!("{id}: blocked under the arch at x {x}: {b:?}"));
+                assert!(h.abs() < 0.3, "{id}: stands at {h} under the arch at x {x}");
+            }
+            let rows: Vec<[[f32; 2]; 4]> = CENTRE_OBSTACLES
+                .iter()
+                .filter(|(centre, part, _)| *centre == id && *part == VIADUCT_PIER)
+                .map(|(_, _, corners)| *corners)
+                .collect();
+            assert_eq!(rows.len(), 4, "{id}: two abutments and two piers");
+            for r in &rows {
+                // Off the centreline: an open rail end's buffer stop stands on it.
+                let p = Vec2::new((r[0][0] + r[2][0]) / 2.0, 2.4);
+                assert_eq!(
+                    g.stand(p),
+                    Err(Blocked::Obstacle(VIADUCT_PIER.into())),
+                    "{id}: {p}"
+                );
+            }
+            let tris = mesh_tris(&id, "lod0").expect("viaduct lod0");
+            let low: Vec<[f32; 3]> = tris
+                .iter()
+                .filter(|(_, s)| s.ends_with("_stone"))
+                .flat_map(|(t, _)| t.iter().copied())
+                .filter(|p| p[1] < 1.8)
+                .collect();
+            assert!(!low.is_empty(), "{id}: stone below head height");
+            for p in &low {
+                assert!(
+                    rows.iter().any(|r| p[0] >= r[0][0] - 0.05
+                        && p[0] <= r[2][0] + 0.05
+                        && p[2] >= r[0][1] - 0.05
+                        && p[2] <= r[2][1] + 0.05),
+                    "{id}: stone vertex {p:?} outside every pier row"
+                );
+            }
         }
     }
 

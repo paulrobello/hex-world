@@ -1,0 +1,29 @@
+// Rail viaduct, deck 3 (P4, rail at levels): rail on edges 0 and 3 stands 3 level(s) above the
+// valley floor on three tall arches (owner RL-Q2, RL-Q4: one design, pier height scales with the
+// deck). Its ground is flat at level 0 on every edge, and the rail lane's `deck` lifts the rail
+// top to the neighbours' level: it meets rail standing at level 3, over a cliff seam
+// (`heights_meet` deck ends). A viaduct needs rail on both ends to be placed. No walking on the
+// deck (RL-Q3): the piers are obstacles and the deck is not ground. The centre piece is built by
+// scripts/blender/kit/_rail_viaduct.py.
+(
+    id: "rail_viaduct_l3",
+    biome: Grass,
+    base: "meadow_base",
+    edges: (
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5, deck: 3))),
+        (kind: Grass),
+        (kind: Grass),
+        (kind: Rail, lane: Some((offset: 0.0, width: 3.5, deck: 3))),
+        (kind: Grass),
+        (kind: Grass),
+    ),
+    center: Some("rail_viaduct_l3"),
+    networks: [
+        (kind: Rail, from: Edge(0), to: Edge(3)),
+    ],
+    props: (
+        scatter: [
+            (piece: "wildflower_single", density: 3.0, vary: 0.8),
+        ],
+    ),
+)

@@ -452,7 +452,13 @@ impl TileDef {
 
     /// The highest relative corner.
     pub fn top(&self) -> u8 {
-        self.corners(0).into_iter().max().unwrap_or(0)
+        let deck = self
+            .edges
+            .iter()
+            .map(|e| e.height.saturating_add(e.deck()))
+            .max()
+            .unwrap_or(0);
+        self.corners(0).into_iter().max().unwrap_or(0).max(deck)
     }
 
     /// Whether any corner differs from the others: the tile is not level.
@@ -549,10 +555,12 @@ impl TileDef {
 
         for (e, edge) in self.edges.iter().enumerate() {
             match (sockets.lane(edge.kind), edge.lane) {
-                (Some(want), Some(got)) if want != got => issue(format!(
-                    "edge {e} {:?} lane {got:?} differs from sockets.ron {want:?}",
-                    edge.kind
-                )),
+                (Some(want), Some(got)) if (want.offset, want.width) != (got.offset, got.width) => {
+                    issue(format!(
+                        "edge {e} {:?} lane {got:?} differs from sockets.ron {want:?}",
+                        edge.kind
+                    ))
+                }
                 (Some(_), None) => issue(format!("edge {e} {:?} needs a lane", edge.kind)),
                 (None, Some(_)) => issue(format!("edge {e} {:?} cannot carry a lane", edge.kind)),
                 _ => {}
@@ -576,6 +584,22 @@ impl TileDef {
                     next.corners().0
                 ));
             }
+            if edge.deck() > 0 {
+                if edge.kind != SocketKind::Rail || edge.profile != EdgeProfile::Flat {
+                    issue(format!(
+                        "edge {e} has a deck but is not a flat rail lane ({:?}, {:?})",
+                        edge.kind, edge.profile
+                    ));
+                }
+                if edge.height.saturating_add(edge.deck()) > crate::world::MAX_LEVEL {
+                    issue(format!(
+                        "edge {e} deck {} over height {} is above level {}",
+                        edge.deck(),
+                        edge.height,
+                        crate::world::MAX_LEVEL
+                    ));
+                }
+            }
             let (start, end) = edge.corners();
             if start > 1 || end > 1 {
                 issue(format!(
@@ -585,7 +609,8 @@ impl TileDef {
         }
         let hillside_family = self.id.starts_with("hillside_")
             || self.id == "road_ramp"
-            || self.id == "road_tunnel_portal";
+            || self.id == "road_tunnel_portal"
+            || self.id == "rail_tunnel_portal";
         if self.raisable
             && !hillside_family
             && self.edges.iter().any(|e| e.profile != EdgeProfile::Flat)
@@ -819,8 +844,11 @@ impl TileDef {
                 .filter(|s| s.kind == NetworkKind::Rail && (s.from == end || s.to == end))
                 .count();
             let switch = switch_nodes.contains(node.id.as_str());
+            let mouth = self.tunnel.as_ref().is_some_and(|t| t.node == node.id);
             match (count, switch) {
                 (0, false) | (2, false) | (3, true) => {}
+                // A tunnel mouth ends the tile's track at the arch; the tunnel's hidden link joins it.
+                (1, false) if mouth => {}
                 (3, false) => issue(format!(
                     "rail node {:?} joins 3 segments but is not a declared switch",
                     node.id
@@ -992,6 +1020,7 @@ mod tests {
         Some(LaneSpec {
             offset: 0.0,
             width: 6.0,
+            deck: 0,
         })
     }
 
@@ -1057,6 +1086,40 @@ mod tests {
                 .iter()
                 .any(|i| i.contains("raisable"))
         );
+    }
+
+    fn deck_edge(kind: SocketKind, deck: u8) -> EdgeSocket {
+        EdgeSocket {
+            lane: Some(LaneSpec {
+                offset: 0.0,
+                width: 3.5,
+                deck,
+            }),
+            ..EdgeSocket::new(kind)
+        }
+    }
+
+    /// Rail at levels: a deck belongs on a flat rail lane, stays within the level cap, and counts
+    /// toward the tile's top.
+    #[test]
+    fn a_deck_is_valid_only_on_a_flat_rail_lane_within_the_level_cap() {
+        let mut t = bend60();
+        t.edges[0] = deck_edge(SocketKind::Road, 1);
+        let issues = t.validate(&sockets());
+        assert!(issues.iter().any(|i| i.contains("deck")), "{issues:?}");
+        t.edges[0] = deck_edge(SocketKind::Rail, 4);
+        let issues = t.validate(&sockets());
+        assert!(
+            issues.iter().any(|i| i.contains("above level")),
+            "{issues:?}"
+        );
+        t.edges[0] = deck_edge(SocketKind::Rail, 2);
+        let issues = t.validate(&sockets());
+        assert!(!issues.iter().any(|i| i.contains("deck")), "{issues:?}");
+        assert_eq!(t.top(), 2);
+        let mut plain = bend60();
+        plain.edges[0] = deck_edge(SocketKind::Rail, 0);
+        assert_eq!(plain.top(), 0);
     }
 
     #[test]
@@ -1493,6 +1556,7 @@ mod tests {
         t.edges[0].lane = Some(LaneSpec {
             offset: 0.0,
             width: 5.0,
+            deck: 0,
         });
         t.edges[2].lane = road_lane();
         assert_eq!(t.validate(&sockets()).len(), 2);
@@ -1545,6 +1609,7 @@ mod tests {
         Some(LaneSpec {
             offset: 0.0,
             width: 3.5,
+            deck: 0,
         })
     }
 

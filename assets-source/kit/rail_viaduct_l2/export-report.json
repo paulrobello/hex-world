@@ -1,0 +1,85 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/rail_viaduct_l2.py",
+    "sha256": "d7f730a39325ef582cf72400f6a07c4fbee5b5c3e5a854d1ad957e481cd83dc9"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_ferns.py",
+      "sha256": "1faaea4dd0eb1b3301444b4ad55100872d4516d6c1a27958989a5d6404a1a30c"
+    },
+    {
+      "path": "scripts/blender/kit/_props.py",
+      "sha256": "7ebdd3e64994f47c75e0c95040d3d167d623242582d58153b793642ded122d17"
+    },
+    {
+      "path": "scripts/blender/kit/_rail.py",
+      "sha256": "58dd9b13349d931609b92a82f76220d959600b0f9d18339144aab6114dec93e7"
+    },
+    {
+      "path": "scripts/blender/kit/_rail_viaduct.py",
+      "sha256": "773d08983af73b4e94161b4df6ba07ab97de788fc6055774321dbe5526cd9b28"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_tunnel_portal.py",
+      "sha256": "bf17880cffebb3a8dce893323580a9d06245b51ce94c22417dc671cd3a5ce18e"
+    }
+  ],
+  "lodTris": {
+    "rail_viaduct_l2_lod0": 3224,
+    "rail_viaduct_l2_lod1": 1398,
+    "rail_viaduct_l2_lod2": 408
+  },
+  "nodes": [
+    "rail_viaduct_l2",
+    "rail_viaduct_l2_collider",
+    "rail_viaduct_l2_lod0",
+    "rail_viaduct_l2_lod1",
+    "rail_viaduct_l2_lod2",
+    "socket-lane-0",
+    "socket-lane-1"
+  ],
+  "pieceId": "rail_viaduct_l2",
+  "pngFallbackSize": {
+    "albedo": 512
+  },
+  "sockets": [
+    {
+      "extras": {
+        "deck": 2,
+        "edge": 0,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-0",
+      "position": [
+        13.856406211853027,
+        0.0,
+        -0.0
+      ],
+      "yaw": 0.0
+    },
+    {
+      "extras": {
+        "deck": 2,
+        "edge": 3,
+        "kind": "rail",
+        "offset": 0.0,
+        "width": 3.5
+      },
+      "name": "socket-lane-1",
+      "position": [
+        -13.856406211853027,
+        0.0,
+        1.6969203955408477e-15
+      ],
+      "yaw": 0.0
+    }
+  ]
+}
