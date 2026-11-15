@@ -2,7 +2,7 @@
 // below PERF_LOAD_LIMIT (default 15) immediately before AND after a run. Before a run we wait
 // (polling every 10 s, up to 10 min); a run whose post-run load is over the limit is discarded
 // and re-run (up to 3 retries). Never records a contaminated sample silently: it throws instead.
-import { loadavg } from "node:os";
+import { homedir, loadavg } from "node:os";
 
 export const LOAD_LIMIT = Number(process.env.PERF_LOAD_LIMIT ?? 15);
 const POLL_MS = 10_000;
@@ -38,4 +38,15 @@ export async function guarded(measure, label = "run") {
     if (discarded + 1 > MAX_RETRIES)
       throw new Error(`host load guard: ${label} discarded ${discarded + 1} samples, post-run load ${load_after.toFixed(2)} > ${LOAD_LIMIT}`);
   }
+}
+
+/**
+ * `text` with each root directory (and the working directory) stripped to a repo-relative path and the home
+ * directory shortened to `~`, so tracked results carry no machine paths. Longest roots first.
+ */
+export function scrubPaths(text, roots = []) {
+  const bare = [...new Set([...roots, process.cwd()].map((r) => r.replace(/\/+$/, "")))].sort((a, b) => b.length - a.length);
+  let out = text;
+  for (const r of bare) out = out.split(`"${r}"`).join('"."').split(`${r}/`).join("");
+  return out.split(`${homedir()}/`).join("~/");
 }

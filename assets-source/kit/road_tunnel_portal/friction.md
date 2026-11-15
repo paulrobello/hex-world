@@ -28,9 +28,8 @@
    every call and never goes through make, and the check lives in the Make recipe so that the
    fixture's direct CLI call keeps working.
 3. **par-mesh cannot reach the orchestrator from a sub-agent (5 min).** `mesh_whoami` and
-   `mesh_list` show this sub-agent registered under the parent session's address
-   (`claude-f3ae@macdaddy:hex-world`), so a message to the orchestrator is a message to itself.
-   The contract question goes in the report instead.
+   `mesh_list` show this sub-agent registered under the parent session's address, so a message to the
+   orchestrator is a message to itself. The contract question goes in the report instead.
    *Proposed skill text (dispatch.md part 9):* "A sub-agent shares its parent's par-mesh address, so
    it raises a blocking contract question in its report, not over the mesh."
 4. **A tile has one centre (10 min).** The plan makes the portal the tile's `center` and has the

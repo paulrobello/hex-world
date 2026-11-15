@@ -4350,8 +4350,8 @@
       "host": "MiniMac.attlocal.net",
       "cpu": "Apple M4",
       "repos": {
-        "before": "/Users/probello/perf/hex-world-ccd/before",
-        "after": "/Users/probello/perf/hex-world-ccd/after"
+        "before": "before",
+        "after": "after"
       },
       "args": [
         "--scenario",
@@ -4372,7 +4372,7 @@
         "2560x1440",
         "--diag"
       ],
-      "save": "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "save": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
       "window_frames": 700,
       "load_limit": 15,
       "rounds": 4,
@@ -4401,7 +4401,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world20-script.json"
+            "before/target/shots/ccd-before-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -4533,7 +4533,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world20-script.json"
+            "after/target/shots/ccd-after-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -4677,9 +4677,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world2066-script.json"
+            "before/target/shots/ccd-before-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -4761,9 +4761,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world2066-script.json"
+            "after/target/shots/ccd-after-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -4851,7 +4851,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world20-script.json"
+            "after/target/shots/ccd-after-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -4995,7 +4995,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world20-script.json"
+            "before/target/shots/ccd-before-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -5127,9 +5127,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world2066-script.json"
+            "after/target/shots/ccd-after-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -5217,9 +5217,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world2066-script.json"
+            "before/target/shots/ccd-before-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -5301,7 +5301,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world20-script.json"
+            "before/target/shots/ccd-before-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -5433,7 +5433,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world20-script.json"
+            "after/target/shots/ccd-after-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -5577,9 +5577,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world2066-script.json"
+            "before/target/shots/ccd-before-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -5661,9 +5661,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world2066-script.json"
+            "after/target/shots/ccd-after-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -5751,7 +5751,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world20-script.json"
+            "after/target/shots/ccd-after-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -5895,7 +5895,7 @@
             "2560x1440",
             "--diag",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world20-script.json"
+            "before/target/shots/ccd-before-world20-script.json"
           ],
           "cameras": {
             "overview": {
@@ -6027,9 +6027,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/after/target/shots/ccd-after-world2066-script.json"
+            "after/target/shots/ccd-after-world2066-script.json"
           ],
           "cameras": {
             "close": {
@@ -6117,9 +6117,9 @@
             "2560x1440",
             "--diag",
             "--load",
-            "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+            "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
             "--script",
-            "/Users/probello/perf/hex-world-ccd/before/target/shots/ccd-before-world2066-script.json"
+            "before/target/shots/ccd-before-world2066-script.json"
           ],
           "cameras": {
             "close": {

@@ -1,6 +1,6 @@
 load before: { 2.08 2.80 2.90 }
 load after: { 5.04 3.49 3.15 }
-Finished export to the file: /Users/probello/perf/hex-world-lowcam/traces/web-base-intervals.xml
+Finished export to the file: traces/web-base-intervals.xml
 {"frames": 320.2, "frame_interval_ms": 31.219, "gpu_busy_ms_per_frame": 30.318, "sum_of_encoders_ms_per_frame": 46.662}
   14.116  Command Buffer 0:Dawn_RenderPassEncoder_early prepass
   10.551  Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d

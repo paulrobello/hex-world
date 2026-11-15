@@ -20,11 +20,11 @@
       "2560x1440",
       "--diag",
       "--load",
-      "/Users/probello/Repos/hex-world/.claude/worktrees/agent-ac6650e1f39c94cd5/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+      "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
       "--script",
-      "/Users/probello/Repos/hex-world/.claude/worktrees/agent-ac6650e1f39c94cd5/docs/perf/post-arc001-2026-10-16/local-native/native-script.json",
+      "docs/perf/post-arc001-2026-10-16/local-native/native-script.json",
       "--dump-state",
-      "/Users/probello/Repos/hex-world/.claude/worktrees/agent-ac6650e1f39c94cd5/docs/perf/post-arc001-2026-10-16/local-native/native-state.json"
+      "docs/perf/post-arc001-2026-10-16/local-native/native-state.json"
     ],
     "exclusivity": {
       "guard_version": "v1-strict",

@@ -1,6 +1,6 @@
 load before: { 3.33 3.05 2.79 }
 load after trace: { 3.19 3.01 2.80 }
-Finished export to the file: /Users/probello/perf/hex-world-o4o5/traces/main-base-overview-intervals.xml
+Finished export to the file: traces/main-base-overview-intervals.xml
 {"frames": 77.1, "frame_interval_ms": 38.754, "gpu_busy_ms_per_frame": 38.359, "sum_of_encoders_ms_per_frame": 50.832}
   15.610  Command Buffer 0:Dawn_RenderPassEncoder_main_transmissive_pass_3d
   10.798  Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d

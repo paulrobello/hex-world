@@ -2,7 +2,7 @@
 # usage: build.sh <sha>...  builds hex-app release at each sha (+ a09e359's capture.rs when older),
 # copies binary to /tmp/ovb/bin/<sha>, exports assets to /tmp/ovb/run-<sha>/assets.
 set -u
-W=/Users/probello/Repos/hex-world/.claude/worktrees/agent-a1afa85caad816d27
+W=.
 mkdir -p /tmp/ovb/bin
 cd "$W" || exit 1
 for sha in "$@"; do

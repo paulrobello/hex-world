@@ -2,7 +2,7 @@
 # Builds the web dist of one historical commit from its archive tar, recompiling every workspace crate.
 set -u
 sha=$1
-repo=/Users/probello/Repos/hex-world/.claude/worktrees/agent-a021ff452a3ba3e3b
+repo=.
 dir=/tmp/a021/named-$sha
 rm -rf "$dir"; mkdir -p "$dir"
 tar -x -f /tmp/a021/$sha.tar -C "$dir"

@@ -1,7 +1,7 @@
 round 1 web 09:00:21  2:00  up 27 days, 15:35, 5 users, load averages: 4.21 2.60 2.26
-(node:45815) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:45815) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 lc_base closed: frames 175 mean 28.6 p50 28.5 p95 45.8 alternation 0.74 (20.39/36.62) | submit n 175 mean 28.51 p95 29.7 alt 0.78 (28.1/28.92) | cpu mean 10.6 p95 11 | done alt 0.67 (28.2/28.8) | latency p50 74.8 | deferrals 528 engine 176 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 lc_base closed: frames 174 mean 28.76 p50 28.5 p95 46.2 alternation 0.71 (21.03/36.49) | submit n 174 mean 28.66 p95 29.9 alt 0.72 (28.07/29.24) | cpu mean 10.54 p95 10.9 | done alt 0.68 (28.25/29.08) | latency p50 74.9 | deferrals 525 engine 175 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
@@ -23,9 +23,9 @@ lc_1080 closed: frames 215 mean 23.3 p50 23.2 p95 24.6 alternation 0.61 (22.75/2
 lc_1080 closed: frames 208 mean 24.14 p50 24.1 p95 25.5 alternation 0.61 (23.62/24.66) | submit n 208 mean 24.15 p95 25.7 alt 0.64 (23.61/24.68) | cpu mean 9.64 p95 10 | done alt 0.61 (23.64/24.65) | latency p50 62.5 | deferrals 627 engine 209 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 wrote results/web-1.json
 round 1 native 09:17:31  2:17  up 27 days, 15:52, 5 users, load averages: 3.15 3.35 3.05
-(node:46246) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:46246) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 native base_off round 0: p50 16.59 p95 19.87 mean 16.66 draws 932 gpu total - [] (load 3.15 -> 2.70)
 native base round 0: p50 16.46 p95 19.75 mean 16.67 draws 932 gpu total 11.75 [shadow 4.44, ssao 3.64, prepass 2.76, preprocess 0.82] (load 2.70 -> 2.83)
@@ -38,9 +38,9 @@ native low round 0: p50 16.27 p95 19.67 mean 16.66 draws 914 gpu total 8.99 [sha
 native s1080 round 0: p50 16.66 p95 17.38 mean 16.67 draws 932 gpu total 13.86 [shadow 7.27, prepass 4.13, ssao 2.04, preprocess 0.33] (load 2.84 -> 2.87)
 wrote results/native-1.json
 round 2 web 09:22:48  2:22  up 27 days, 15:57, 5 users, load averages: 2.87 2.97 2.94
-(node:46440) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:46440) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 lc_timing closed: frames 153 mean 32.75 p50 32.8 p95 33.2 alternation 0.64 (32.57/32.93) | submit n 153 mean 32.75 p95 33.4 alt 0.53 (32.53/32.97) | cpu mean 8.84 p95 9.2 | done alt 0.79 (32.51/32.99) | latency p50 89.3 | deferrals 462 engine 154 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 lc_timing closed: frames 151 mean 33.12 p50 32.8 p95 33.5 alternation 0.61 (32.53/33.72) | submit n 151 mean 33.12 p95 33.6 alt 0.49 (32.43/33.81) | cpu mean 8.93 p95 9.8 | done alt 0.59 (32.49/33.76) | latency p50 89.4 | deferrals 456 engine 152 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
@@ -62,9 +62,9 @@ lc_base closed: frames 166 mean 30.15 p50 30.4 p95 49.9 alternation 0.76 (20.03/
 lc_base closed: frames 165 mean 30.31 p50 30.4 p95 49.9 alternation 0.67 (20.23/40.38) | submit n 165 mean 30.31 p95 31.1 alt 0.65 (29.58/31.02) | cpu mean 10.5 p95 11 | done alt 0.67 (29.62/30.99) | latency p50 79.7 | deferrals 498 engine 166 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 wrote results/web-2.json
 round 2 native 09:30:27  2:30  up 27 days, 16:05, 5 users, load averages: 2.34 2.85 2.92
-(node:46737) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:46737) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 native base round 0: p50 16.66 p95 17.36 mean 16.67 draws 932 gpu total 11.73 [shadow 4.58, ssao 3.61, prepass 2.63, preprocess 0.81] (load 2.34 -> 2.43)
 native shadows_off round 0: p50 16.66 p95 16.87 mean 16.67 draws 416 gpu total 13.84 [prepass 9.73, ssao 3.6, preprocess 0.4, transmission 0.07] (load 2.43 -> 2.26)
@@ -77,9 +77,9 @@ native s1080 round 0: p50 15.26 p95 21.08 mean 16.67 draws 932 gpu total 14.11 [
 native base_off round 0: p50 16.67 p95 16.99 mean 16.67 draws 932 gpu total - [] (load 2.76 -> 2.59)
 wrote results/native-2.json
 round 3 web 09:34:53  2:34  up 27 days, 16:09, 5 users, load averages: 2.59 2.78 2.87
-(node:46806) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:46806) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 lc_shadows_off closed: frames 193 mean 25.99 p50 26 p95 42.7 alternation 0.63 (19.34/32.63) | submit n 193 mean 25.98 p95 27.1 alt 0.78 (25.32/26.65) | cpu mean 8.88 p95 9.3 | done alt 0.71 (25.46/26.49) | latency p50 68.9 | deferrals 582 engine 194 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 lc_shadows_off closed: frames 192 mean 26.19 p50 25.6 p95 43.2 alternation 0.65 (19.76/32.63) | submit n 192 mean 26.12 p95 27.2 alt 0.73 (25.38/26.86) | cpu mean 8.85 p95 9.3 | done alt 0.66 (25.45/26.77) | latency p50 68.8 | deferrals 579 engine 193 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
@@ -101,9 +101,9 @@ lc_timing closed: frames 153 mean 32.74 p50 32.8 p95 33.2 alternation 0.58 (31.9
 lc_timing closed: frames 153 mean 32.68 p50 32.7 p95 33.5 alternation 0.68 (30.99/34.38) | submit n 153 mean 32.69 p95 33.4 alt 0.51 (32.47/32.9) | cpu mean 8.72 p95 9.1 | done alt 0.72 (32.44/32.93) | latency p50 89.3 | deferrals 462 engine 154 state {"settings":false,"tiles":true,"hidden":false,"focus":"canvas"}
 wrote results/web-3.json
 round 3 native 09:42:35  2:42  up 27 days, 16:17, 5 users, load averages: 2.91 2.97 2.91
-(node:47108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/probello/perf/hex-world-lowcam/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
+(node:47108) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file://<repo>/web/ui/src/rules.ts is not specified and it doesn't parse as CommonJS.
 Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
-To eliminate this warning, add "type": "module" to /Users/probello/package.json.
+To eliminate this warning, add "type": "module" to ~/package.json.
 (Use `node --trace-warnings ...` to show where the warning was created)
 native shadows_off round 0: p50 16.66 p95 18.51 mean 16.67 draws 416 gpu total 13.6 [prepass 9.46, ssao 3.62, preprocess 0.4, transmission 0.06] (load 2.91 -> 2.95)
 native cascades_2 round 0: p50 16.66 p95 17.51 mean 16.67 draws 762 gpu total 15.95 [prepass 8.27, shadow 3.72, ssao 3.64, preprocess 0.22] (load 2.95 -> 2.92)

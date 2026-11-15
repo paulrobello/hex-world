@@ -11,7 +11,7 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
 import { join, resolve } from "node:path";
-import { guarded, LOAD_LIMIT } from "../../../e2e/perf-load.mjs";
+import { guarded, LOAD_LIMIT, scrubPaths } from "../../../e2e/perf-load.mjs";
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error("usage: node docs/perf/grass-cost-2026-10-28/grass-native.mjs <out.json>");
@@ -74,6 +74,6 @@ for (let r = 0; r < ROUNDS; r++)
     const x = result.rows.at(-1);
     console.log(`${label}: ${x.error ?? `p50 ${x.p50} p95 ${x.p95} mean ${x.mean} max ${x.max} draws ${x.draws} ` +
       `blades ${x.grass?.blades} packs_not_ready ${x.packs_not_ready.length}`} (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);
-    await writeFile(OUT, `${JSON.stringify(result, null, 2)}\n`);
+    await writeFile(OUT, scrubPaths(`${JSON.stringify(result, null, 2)}\n`, [ROOT]));
   }
 console.log(`wrote ${OUT}`);

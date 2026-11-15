@@ -12,5 +12,5 @@
 [2m2026-10-27T11:28:09.928161Z[0m [32m INFO[0m [2mhex_play::diag[0m[2m:[0m render modes: ssao=true gpu_preprocessing_supported=Culling adapter=Apple M4 | Metal | IntegratedGpu | 
 [2m2026-10-27T11:28:11.745356Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Wait { frames: 700 }
 [2m2026-10-27T11:28:23.428353Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Exit
-[2m2026-10-27T11:28:23.430681Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m wrote /Users/probello/perf/hex-world-t1t2/results/light-old-window.json
+[2m2026-10-27T11:28:23.430681Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m wrote results/light-old-window.json
 [2m2026-10-27T11:28:23.430714Z[0m [32m INFO[0m [2mhex_world::exit_guard[0m[2m:[0m exit: outputs written, ending the process with code 0

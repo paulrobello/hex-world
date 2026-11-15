@@ -131,8 +131,8 @@
     "host": "MiniMac.attlocal.net",
     "cpu": "Apple M4",
     "repos": {
-     "before": "/Users/probello/perf/hex-world-ccd/before",
-     "after": "/Users/probello/perf/hex-world-ccd/after"
+     "before": "before",
+     "after": "after"
     },
     "args": [
      "--scenario",
@@ -153,7 +153,7 @@
      "2560x1440",
      "--diag"
     ],
-    "save": "/Users/probello/perf/hex-world-ccd/docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+    "save": "docs/perf/post-arc001-2026-10-16/local-world.hexworld",
     "window_frames": 700,
     "load_limit": 15,
     "rounds": 5,

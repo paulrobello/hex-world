@@ -9,7 +9,7 @@
 [2m2026-10-16T19:23:46.281222Z[0m [32m INFO[0m [2mhex_render::play::packs[0m[2m:[0m play: pack core ready
 [2m2026-10-16T19:23:46.281334Z[0m [32m INFO[0m [2mhex_render::play[0m[2m:[0m play: kit pieces ready: ["bird_starling", "fish_trout", "meadow_base", "road_bend_120_center", "road_bend_60_center", "road_junction_center", "road_straight_center", "road_straight_edge"]
 [2m2026-10-16T19:23:46.526064Z[0m [32m INFO[0m [2mhex_render::diag[0m[2m:[0m render modes: ssao=true gpu_preprocessing_supported=Culling adapter=Apple M4 Max | Metal | IntegratedGpu | 
-[2m2026-10-16T19:23:47.434670Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Load { path: Some("/Users/probello/Repos/hex-world/.claude/worktrees/agent-ac6650e1f39c94cd5/docs/perf/post-arc001-2026-10-16/local-world.hexworld") }
+[2m2026-10-16T19:23:47.434670Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Load { path: Some("docs/perf/post-arc001-2026-10-16/local-world.hexworld") }
 [2m2026-10-16T19:23:47.583250Z[0m [32m INFO[0m [2mhex_world::game[0m[2m:[0m event: {"type":"loaded","tiles":2066,"version":3,"settings":{"quality":"auto","tilt_shift":false,"tilt_shift_strength":1.0,"volumes":{"master":0.8,"music":0.55,"sfx":0.75,"ambience":0.1,"ui":0.5}}}
 [2m2026-10-16T19:23:47.584144Z[0m [32m INFO[0m [2mhex_render::play::packs[0m[2m:[0m play: pack forest requested
 [2m2026-10-16T19:23:47.584263Z[0m [32m INFO[0m [2mhex_render::play::packs[0m[2m:[0m play: pack village requested
@@ -1562,5 +1562,5 @@
 [2m2026-10-16T19:24:05.226941Z[0m [32m INFO[0m [2mhex_world::game[0m[2m:[0m event: {"type":"carParked","id":149,"q":-7,"r":6,"x":-113.6,"z":144.43}
 [2m2026-10-16T19:24:05.276755Z[0m [32m INFO[0m [2mhex_world::game[0m[2m:[0m event: {"type":"carPulledOut","id":0,"q":-26,"r":9,"x":-594.07,"z":213.83}
 [2m2026-10-16T19:24:05.376883Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m command: Exit
-[2m2026-10-16T19:24:05.391831Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m wrote /Users/probello/Repos/hex-world/.claude/worktrees/agent-ac6650e1f39c94cd5/docs/perf/post-arc001-2026-10-16/local-native/native-state.json
+[2m2026-10-16T19:24:05.391831Z[0m [32m INFO[0m [2mhex_world::control[0m[2m:[0m wrote docs/perf/post-arc001-2026-10-16/local-native/native-state.json
 [2m2026-10-16T19:24:05.393793Z[0m [33m WARN[0m [2mbevy_winit::state[0m[2m:[0m Skipped event Destroyed for unknown winit Window Id WindowId(530462033152)

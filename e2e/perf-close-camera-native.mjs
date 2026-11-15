@@ -15,7 +15,7 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
 import { join, resolve } from "node:path";
-import { guarded, LOAD_LIMIT } from "./perf-load.mjs";
+import { guarded, LOAD_LIMIT, scrubPaths } from "./perf-load.mjs";
 
 const [repoBefore, repoAfter, OUT] = process.argv.slice(2);
 if (!OUT) throw new Error("usage: node e2e/perf-close-camera-native.mjs <repo-before> <repo-after> <out.json>");
@@ -116,6 +116,6 @@ for (let r = 0; r < ROUNDS; r++)
       const x = result.rows.at(-1);
       console.log(`${label}: ${x.error ?? Object.entries(x.cameras).map(([n, c]) => `${n} p50 ${c.p50} p95 ${c.p95} mean ${c.mean} draws ${c.draws}`).join(" | ")}` +
         ` (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);
-      await writeFile(OUT, `${JSON.stringify(result, null, 2)}\n`);
+      await writeFile(OUT, scrubPaths(`${JSON.stringify(result, null, 2)}\n`, Object.values(REPOS)));
     }
 console.log(`wrote ${OUT}`);

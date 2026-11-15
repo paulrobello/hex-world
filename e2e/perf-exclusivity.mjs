@@ -1,5 +1,6 @@
 // Foreign automated GPU work is forbidden. Owner permits human desktop Chrome only while idle.
 import { execFileSync } from "node:child_process";
+import { scrubPaths } from "./perf-load.mjs";
 const browsers = () => execFileSync("ps", ["-Ao", "pid=,ppid=,pcpu=,comm="], { encoding: "utf8" }).split("\n")
   .map((line) => /^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(.+)$/.exec(line)).filter(Boolean)
   .map((m) => ({ pid: Number(m[1]), parent: Number(m[2]), cpu: Number(m[3]), command: m[4] }))
@@ -13,7 +14,7 @@ export function assertBrowserExclusivity(allowHumanSpike = false) {
   if (automated.length) throw new Error(`GPU contention: foreign automated Chrome ${JSON.stringify(automated)}`);
   const human_cpu_percent = foreign.reduce((sum, p) => sum + p.cpu, 0);
   if (!allowHumanSpike && human_cpu_percent >= 20) throw new Error(`human desktop Chrome active: summed CPU ${human_cpu_percent}% >=20%`);
-  return { after: active, human_cpu_percent, human_desktop_chrome_present: foreign.length > 0,
+  return { after: active.map((p) => ({ ...p, command: scrubPaths(p.command) })), human_cpu_percent, human_desktop_chrome_present: foreign.length > 0,
     condition: "human desktop Chrome present but idle; no automated GPU contention", checked_at: new Date().toISOString() };
 }
 export async function waitForBrowserExclusivity() {

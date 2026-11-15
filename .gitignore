@@ -21,3 +21,4 @@ __pycache__/
 # Higgsfield job responses (local retry cache; jobId is kept in refs.json)
 assets-source/refs/*/job-*.json
 assets-source/refs/contact-sheet.png
+.claude/launch.json

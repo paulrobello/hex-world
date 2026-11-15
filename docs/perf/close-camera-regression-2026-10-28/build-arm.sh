@@ -7,7 +7,7 @@
 set -u
 name=$1
 tar=$2
-repo=${HEXW_REPO:-/Users/probello/Repos/hex-world/.claude/worktrees/agent-a6dbf1f948f80d6bd}
+repo=${HEXW_REPO:-.}
 dir=/tmp/cc-arms/$name
 rm -rf "$dir"; mkdir -p "$dir"
 tar -x -f "$tar" -C "$dir"

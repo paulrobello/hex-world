@@ -43,7 +43,7 @@ The two clean p95 values improve7.64% and11.27% from the canonical pre-fix55.0ms
 
 ## Trace attribution
 
-`contended-trace.json` captures the live 2,066-tile world, grass off, with `contended-trace.json.cpuprofile`, `contended-trace-summary.json`, `trace-costs.json` and a one-second `contended-processes.jsonl`. It is deliberately labeled **captured under par-factory GPU contention**, including the trace window: the final one-second process samples show a foreign GPU helper at 15–17% CPU and its renderer at 38–49%. Absolute trace-arm timings are not budget evidence. MiniMac load was 4.276 before and 5.625 after. Diagnostic frame times were p50 50.3, p95 52.6, mean 50.45 and max 59.0 ms on the same Chromium153/M4 renderer, viewport and device scale stated above.
+`contended-trace.json` captures the live 2,066-tile world, grass off, with `contended-trace.json.cpuprofile`, `contended-trace-summary.json`, `trace-costs.json` and a summary of its one-second process samples, `contended-processes-summary.md`. It is deliberately labeled **captured under par-factory GPU contention**, including the trace window: the final one-second process samples show a foreign GPU helper at 15–17% CPU and its renderer at 38–49%. Absolute trace-arm timings are not budget evidence. MiniMac load was 4.276 before and 5.625 after. Diagnostic frame times were p50 50.3, p95 52.6, mean 50.45 and max 59.0 ms on the same Chromium153/M4 renderer, viewport and device scale stated above.
 
 CPU ancestry over the 2,392.906 ms sampled profile names these dominant costs (each category counted at most once per sample):
 
@@ -80,7 +80,7 @@ The retry-only guard version2 permits isolated human Chrome CPU spikes, rejects 
 
 Canonical M4 Max measurements continued separately after host recovery. Expensive Cargo/clippy/WASM verification is intentionally deferred until all canonical web/native/ceiling measurements finish, to avoid creating measurement load. Syntax and diff checks passed before deployment, and full gates were green before the timing series. After canonical timing stopped at12:40, `make checkall` and `make checkall-ci` both passed (exit0). The retry-v2guard and native `play_tiles` reporting fix were verified only after the measurement series, preserving the no-build-during-timing rule.
 
-Cleanup: the local measurement Chromium exited. Foreign processes were never terminated. Earlier SSH tasks can leave bounded remote waiters alive, so remote queue cleanup is not claimed. Their missing accepted-summary dependencies and browser/load guards prevent unguarded timing. The remote run directory remains `/Users/probello/perf/hex-world/post-arc001-2026-10-16`.
+Cleanup: the local measurement Chromium exited. Foreign processes were never terminated. Earlier SSH tasks can leave bounded remote waiters alive, so remote queue cleanup is not claimed. Their missing accepted-summary dependencies and browser/load guards prevent unguarded timing. The remote run directory remains `post-arc001-2026-10-16`.
 
 ## Criterion assessment
 

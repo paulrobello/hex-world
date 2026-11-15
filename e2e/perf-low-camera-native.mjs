@@ -17,7 +17,7 @@ import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";
 import { join, resolve } from "node:path";
-import { guarded, LOAD_LIMIT } from "./perf-load.mjs";
+import { guarded, LOAD_LIMIT, scrubPaths } from "./perf-load.mjs";
 import { waterWorldScript } from "./water-world.mjs";
 
 const [repoArg, OUT] = process.argv.slice(2);
@@ -107,6 +107,6 @@ for (let r = 0; r < ROUNDS; r++)
       .map(([k, v]) => `${k} ${v.mean}`).join(", ") : "";
     console.log(`${label}: ${x.error ?? `p50 ${x.p50} p95 ${x.p95} mean ${x.mean} draws ${x.draws_total} gpu total ${x.gpu?.total?.mean ?? "-"} [${top}]`}` +
       ` (load ${g.load_before.toFixed(2)} -> ${g.load_after.toFixed(2)})`);
-    await writeFile(OUT, `${JSON.stringify(result, null, 2)}\n`);
+    await writeFile(OUT, scrubPaths(`${JSON.stringify(result, null, 2)}\n`, [REPO]));
   }
 console.log(`wrote ${OUT}`);

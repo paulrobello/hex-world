@@ -4,7 +4,7 @@
 set -u
 name=$1
 tar=$2
-repo=/Users/probello/Repos/hex-world/.claude/worktrees/agent-ae6a74790ce21ac0c
+repo=.
 dir=/tmp/bounds-arms/$name
 rm -rf "$dir"; mkdir -p "$dir"
 tar -x -f "$tar" -C "$dir"

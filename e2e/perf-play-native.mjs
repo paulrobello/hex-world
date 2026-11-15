@@ -3,7 +3,7 @@
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { guarded } from "./perf-load.mjs";
+import { guarded, scrubPaths } from "./perf-load.mjs";
 import { waitForBrowserExclusivity, monitorBrowserExclusivity } from "./perf-exclusivity.mjs";
 
 const [bin, save, output] = process.argv.slice(2).map((p) => resolve(p));
@@ -42,5 +42,5 @@ const result = await guarded(async () => {
     pacing_note: "Play may impose 60 Hz despite immediate presentation. Pacing is not CPU/GPU render cost.",
     ...state.diag, play_tiles: state.play.tiles.length };
 }, "native exact 2066-tile play world");
-await writeFile(join(output, "native.json"), JSON.stringify(result, null, 2) + "\n");
+await writeFile(join(output, "native.json"), scrubPaths(JSON.stringify(result, null, 2) + "\n"));
 console.log(JSON.stringify(result, null, 2));

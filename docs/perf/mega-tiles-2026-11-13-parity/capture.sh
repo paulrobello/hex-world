@@ -3,7 +3,7 @@
 # No run starts after 10:22Z (each run is under a minute), so the chain ends by 10:25Z.
 # Log: /tmp/hw-parity/capture.log; runs in /tmp/hw-parity/runs/<label>
 set -u
-FIX=/Users/probello/Repos/hex-world/.claude/worktrees/agent-ae7322c2c6b46f949
+FIX=.
 BR=/tmp/hw-parity/branch
 MAIN=/tmp/hw-parity/main
 B=/tmp/hw-parity/bin

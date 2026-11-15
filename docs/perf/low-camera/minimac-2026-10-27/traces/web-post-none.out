@@ -1,6 +1,6 @@
 load before: { 8.39 4.91 3.82 }
 load after: { 8.52 5.40 4.11 }
-Finished export to the file: /Users/probello/perf/hex-world-lowcam/traces/web-post-none-intervals.xml
+Finished export to the file: traces/web-post-none-intervals.xml
 {"frames": 513.1, "frame_interval_ms": 19.488, "gpu_busy_ms_per_frame": 18.972, "sum_of_encoders_ms_per_frame": 30.465}
   10.277  Command Buffer 0:Dawn_RenderPassEncoder_main_opaque_pass_3d
    6.447  Command Buffer 0:Dawn_RenderPassEncoder_early prepass
