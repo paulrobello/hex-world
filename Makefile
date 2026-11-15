@@ -16,6 +16,10 @@ lint:
 
 typecheck:
 	cargo check --workspace --all-targets
+	# The gate-tools-off configuration from ADR 0003: the workspace check above unifies the
+	# feature on, so these two prove the off configuration still compiles.
+	cargo check -p hex-render
+	cargo check -p hex-play
 	cargo check -p hex-app --target wasm32-unknown-unknown
 
 test:

@@ -30,6 +30,8 @@ Both new presentation build surfaces default to no tooling. `hex-render/gate-too
 
 The old `lookdev` module is production lighting, not capture tooling: play uses its environment, exposure, backdrop and sunlight. It is named `lighting` now, with a compatibility `lookdev` re-export. It remains in default builds to preserve play appearance. Native capture orchestration already belongs to `hex-app` and stays there.
 
+As built (2026-11-15, ARC-006): `hex-app` always enables `gate-tools`, so the shipped web build carries diagnostics, GPU timing, overlays and the benchmark pipelines by decision — PRD §12.3 requires `?diag=1`. The feature exists for compile-time separation of that tooling from the renderer and play crates, and the feature-off configuration is compiled by `make typecheck` (`cargo check -p hex-render`, `cargo check -p hex-play`), so a branch that rots it fails the gate instead of compiling only under the workspace-wide feature unification.
+
 ## Consequences
 
 The compiler enforces an acyclic crate graph. Renderer-only clients no longer compile play, boids, walking, diagnostics or benchmark pipelines. Default play clients omit diagnostic tooling. The app retains its complete development interface. Shared spawn state exposes fields to its presentation owner across the crate boundary. This is data ownership, not a new gameplay API.
