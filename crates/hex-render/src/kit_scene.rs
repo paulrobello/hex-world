@@ -116,6 +116,36 @@ pub const NOT_SHOWCASED: &[(&str, &str)] = &[
 /// is reviewed in the elevation shots (`docs/checkpoints/elevation/`) instead.
 pub fn kit_layout() -> Vec<Placement> {
     let mut v = vec![];
+    block_roads_and_meadow_ring(&mut v);
+    block_hay_bales(&mut v);
+    block_barn(&mut v);
+    block_bakery(&mut v);
+    block_bakery_variant(&mut v);
+    block_verge_bushes(&mut v);
+    block_farm_animals(&mut v);
+    block_house_cluster(&mut v);
+    block_longhouse_cluster(&mut v);
+    block_twostorey_cluster(&mut v);
+    block_road_centres(&mut v);
+    block_ocean_and_seabed(&mut v);
+    block_meadow_props(&mut v);
+    block_boulders(&mut v);
+    block_windmills(&mut v);
+    block_beach_dressing(&mut v);
+    block_rail_station_train(&mut v);
+    block_level_crossing_and_junction(&mut v);
+    block_forest_floor(&mut v);
+    block_river_rail_bridge(&mut v);
+    block_buffer_stops(&mut v);
+    block_farms(&mut v);
+    block_field_boundaries(&mut v);
+    block_boats(&mut v);
+    block_landforms(&mut v);
+    block_tunnel_bore(&mut v);
+    v
+}
+
+fn block_roads_and_meadow_ring(v: &mut Vec<Placement>) {
     for (q, r) in [(0, 0), (1, 0)] {
         v.push(place("meadow_base", q, r, 0));
         v.push(place("road_straight_center", q, r, 0));
@@ -132,6 +162,9 @@ pub fn kit_layout() -> Vec<Placement> {
         offset: [3.0, -2.0],
         ..place("tree_hero_oak", 0, 1, 0)
     });
+}
+
+fn block_hay_bales(v: &mut Vec<Placement>) {
     // Farm hay bales (P3) on the oak's meadow, lifted onto the meadow relief at their spots.
     for &(piece, offset, yaw_deg, y) in HAY_BALES {
         v.push(Placement {
@@ -141,6 +174,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 0, 1, 0)
         });
     }
+}
+
+fn block_barn(v: &mut Vec<Placement>) {
     // The farm barn (P3, refs A17) on the oak's meadow: its long side along edge 2, its back 0.5 m
     // inside the border and its nearest corner 9.6 m from the oak (crown 8.55 m), on the meadow
     // relief at its centre (`relief()` in scripts/blender/kit/meadow_base.py).
@@ -150,6 +186,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: -0.013,
         ..place("barn_red", 0, 1, 0)
     });
+}
+
+fn block_bakery(v: &mut Vec<Placement>) {
     // The bakery (P3, refs A17) on road tile (1, 0), north of the road and facing it (yaw 90 turns
     // its +x shop front to +z), its LOD0 front (the bread basket, 3.73 m) 0.27 m clear of the road
     // profile (|z| <= 4.6 m), on the meadow relief at its centre (`relief()` in
@@ -160,6 +199,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: 0.0,
         ..place("bakery_shop", 1, 0, 0)
     });
+}
+
+fn block_bakery_variant(v: &mut Vec<Placement>) {
     // Its hero variant, the twin-gabled bakehouse bakery_shop_b, across the road on the same tile,
     // its shop front turned to +x toward the kit sun (yaw 0), its +y eave (runtime z 5.17) 0.57 m
     // beyond the road profile (|z| <= 4.6 m) and its eave corners 0.58 m inside the border, on the
@@ -170,6 +212,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: 0.0,
         ..place("bakery_shop_b", 1, 0, 0)
     });
+}
+
+fn block_verge_bushes(v: &mut Vec<Placement>) {
     // Verge bushes (road refs approved 2026-10-13, ref-1's "grass verges with tufts and small
     // bushes") on road tile (0, 0): two on the sunny south verge and one on the north, each beyond
     // the kerb and the verge sink (|z| 4.6) on the meadow relief at its spot (`relief()` in
@@ -183,6 +228,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 0, 0, 0)
         });
     }
+}
+
+fn block_farm_animals(v: &mut Vec<Placement>) {
     // Farm animals (P3) on the oak's meadow, in open sun on the oak's +x/+z side.
     for &(piece, offset, yaw_deg, y) in FARM_ANIMALS {
         v.push(Placement {
@@ -192,6 +240,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 0, 1, 0)
         });
     }
+}
+
+fn block_house_cluster(v: &mut Vec<Placement>) {
     // house_cluster (data/tiles/house_cluster.ron) on the meadow at (-1, 0): its edge-0 road stub
     // meets road tile (0, 0)'s edge-3 stub, so the road runs on into the cluster's driveway.
     v.push(place("house_pad", -1, 0, 0));
@@ -203,6 +254,9 @@ pub fn kit_layout() -> Vec<Placement> {
     // below shows the open well_stone_b in the same slot. Its apron and every foot run to -0.35 m,
     // under the meadow relief at any base rotation, so it stands at y 0.
     v.push(hero("well_stone", -1, 0, [5.3, -7.7], 60.0));
+}
+
+fn block_longhouse_cluster(v: &mut Vec<Placement>) {
     // The cottage slots' variants in a second house_cluster on (-1, -1): its edge-0 road stub meets
     // the wide bend's world-edge-3 stub on (0, -1). house_longhouse stands in house 0's slot (yawed
     // 90, front toward the yard) and house_cottage_b in house 1's across the yard (yawed 270), the
@@ -221,6 +275,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero("car_sedan", -1, -1, [-1.0, z], 180.0)
         });
     }
+}
+
+fn block_twostorey_cluster(v: &mut Vec<Placement>) {
     // The two-storey variant (house_twostorey_b) in a third house_cluster on (1, -2) at rot 1: its
     // road stub (local edge 0, world edge 1) meets the Y junction's world-edge-4 stub on (1, -1). It
     // stands in house 2's slot, its front turned to world yaw 60 toward the kit sun, between the two
@@ -245,6 +302,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: PARK_Y,
         ..place("car_sedan", 1, -2, 1)
     });
+}
+
+fn block_road_centres(v: &mut Vec<Placement>) {
     // Road-family centre pieces on ring cells, each with its edge stubs. The wide bend on (0, -1)
     // turns from world edge 3 (the longhouse cluster's road) to world edge 5 (the twostorey_b
     // cluster's grass on (1, -2)).
@@ -261,6 +321,9 @@ pub fn kit_layout() -> Vec<Placement> {
     for k in [0, 2, 4] {
         v.push(place("road_straight_edge", 1, -1, k));
     }
+}
+
+fn block_ocean_and_seabed(v: &mut Vec<Placement>) {
     // Three ocean tiles meeting at one corner, each at another rotation (seams under rotation), with
     // open edges to the east. Cells stay inside the water look-dev patch, so `water_kit` keeps 12.
     // The seabed rocks and pebbles are play scatter (seabed_rock, seabed_pebbles), not a centre;
@@ -274,6 +337,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, 1, 1, at, yaw_deg)
         });
     }
+}
+
+fn block_meadow_props(v: &mut Vec<Placement>) {
     // Meadow props on the meadow at (-1, 1) (base rotation 4), each lifted onto the meadow relief at
     // its spot (`relief()` in scripts/blender/kit/meadow_base.py, evaluated in the base's frame).
     for &(piece, offset, rot, y) in MEADOW_PROPS {
@@ -283,6 +349,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, -1, 1, rot)
         });
     }
+}
+
+fn block_boulders(v: &mut Vec<Placement>) {
     // The granite boulders and the whaleback outcrop (B1, owner A25) on their own meadow at (-2, 0).
     v.push(place("meadow_base", -2, 0, 0));
     for &(piece, at, yaw_deg, y) in BOULDERS {
@@ -299,6 +368,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: 0.0,
         ..hero("outcrop_granite_b", -3, 0, [3.0, 4.5], 25.0)
     });
+}
+
+fn block_windmills(v: &mut Vec<Placement>) {
     // The windmill (P3, refs approved under A17) alone on a meadow at (3, -1), the one water-patch
     // cell the layout left free (so `water_kit` keeps its 12 cells), its sails turned toward the
     // overview camera. Its rotor turns (`spin_rotors`).
@@ -317,6 +389,9 @@ pub fn kit_layout() -> Vec<Placement> {
         y: WINDMILL_Y,
         ..place("windmill_b", 4, -1, 0)
     });
+}
+
+fn block_beach_dressing(v: &mut Vec<Placement>) {
     // Beach dressing (owner D3, refs approved 2026-10-20) on a straight beach at (5, -1), east of
     // windmill_b and outside the water patch: the three driftwood pieces along the coast on the dry
     // sand, the three marram clumps landward of them and the three pebble clusters at the grass
@@ -328,6 +403,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, 5, -1, at, yaw_deg)
         });
     }
+}
+
+fn block_rail_station_train(v: &mut Vec<Placement>) {
     // Rail (P3, refs A17) on two meadows south of the oak: the straight on (0, 2) and the sharp
     // bend on (1, 2) at rot 2 (lanes on world edges 2 and 3), so the bend's edge-3 lane meets the
     // straight's edge-0 lane and its other end runs out to the open rim rather than the ocean.
@@ -356,6 +434,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, 1, 2, 2)
         });
     }
+}
+
+fn block_level_crossing_and_junction(v: &mut Vec<Placement>) {
     // The level crossing (P3, refs A17) west of the straight on (-1, 2): its rail lane on edge 0
     // meets the straight's edge 3, and its road lanes on edges 1 and 4 carry road stubs.
     v.push(place("meadow_base", -1, 2, 0));
@@ -371,6 +452,9 @@ pub fn kit_layout() -> Vec<Placement> {
     v.push(place("rail_straight_center", -1, 4, 2));
     v.push(place("meadow_base", 1, 3, 0));
     v.push(place("rail_bend_60_center", 1, 3, 2));
+}
+
+fn block_forest_floor(v: &mut Vec<Placement>) {
     // The forest floor (P3, refs approved 2026-10-13: "ferns, fallen log") on a forest at (-2, 1),
     // west of the meadow props: spruces at the back, the fallen log in open sun in front, ferns
     // around it and one tucked against a trunk, each on the litter at its spot (`relief()` in
@@ -414,6 +498,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..hero(piece, -3, 2, at, yaw_deg)
         });
     }
+}
+
+fn block_river_rail_bridge(v: &mut Vec<Placement>) {
     // The river rail bridge (P3) on (-2, 5) at rot 1 (rail on its local edges 1 and 4 = world 2 and
     // 5, river on local 0 and 3 = world 1 and 4): the junction's straight on (-1, 4) runs into it
     // across world edge 5 and a rail straight on (-3, 6) carries it on across world edge 2. It sits
@@ -475,6 +562,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place(piece, -2, 5, 1)
         });
     }
+}
+
+fn block_buffer_stops(v: &mut Vec<Placement>) {
     // A buffer stop (owner D2) at the layout's open rail end at local edge 0 of the bend on (1, 3)
     // (rot 2, world edge 2, facing an empty cell), with the engine standing buffered up to it as
     // hex-sim poses it. The straight on (-3, 6) carries on into the wide bend, so it has none.
@@ -491,6 +581,9 @@ pub fn kit_layout() -> Vec<Placement> {
             ..place("train_engine", q, r, 2)
         });
     }
+}
+
+fn block_farms(v: &mut Vec<Placement>) {
     // The farm (data/tiles/farm.ron) with its paddock fence (P3) on a meadow at (-1, 5), south-east
     // of the river rail bridge; no lane of a neighbour runs onto it. The heroes stand at y = 0, as
     // play places them; the fence mesh carries the meadow relief itself.
@@ -514,13 +607,9 @@ pub fn kit_layout() -> Vec<Placement> {
     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
         v.push(hero(piece, 1, 5, at, yaw_deg));
     }
-    // Boats (P3, refs D4), each origin on its water at rest: the landing stage on the downstream
-    // river straight (-2, 6) (rot 1: the flow runs along (0.5, 0.866)) at the play water
-    // (`hex_play::water::tiles::WATER_Y`), its origin on the bank's waterline 4 m from the centre
-    // line and its +x toward it, with a rowing boat on the far half of the channel heading
-    // downstream (no water is drawn there: the posts show against the bed); on the ocean tiles of
-    // the water patch the sailing boat on (2, 0) and a second rowing boat on (1, 1), on the
-    // look-dev water at y = 0 that `water_kit` draws there.
+}
+
+fn block_field_boundaries(v: &mut Vec<Placement>) {
     // The field boundaries (B2, `hex_core::boundary`) on two meadows east of the hay variants: the
     // six wall pieces on (2, 5) and the six hedge pieces on (3, 5), 4 m apart, each turned so its
     // runs lie along z, at y = 0 as play places them (their feet sink below the relief), with
@@ -541,12 +630,25 @@ pub fn kit_layout() -> Vec<Placement> {
         [10.0, 0.0],
         0.0,
     ));
+}
+
+fn block_boats(v: &mut Vec<Placement>) {
+    // Boats (P3, refs D4), each origin on its water at rest: the landing stage on the downstream
+    // river straight (-2, 6) (rot 1: the flow runs along (0.5, 0.866)) at the play water
+    // (`hex_play::water::tiles::WATER_Y`), its origin on the bank's waterline 4 m from the centre
+    // line and its +x toward it, with a rowing boat on the far half of the channel heading
+    // downstream (no water is drawn there: the posts show against the bed); on the ocean tiles of
+    // the water patch the sailing boat on (2, 0) and a second rowing boat on (1, 1), on the
+    // look-dev water at y = 0 that `water_kit` draws there.
     for &(piece, q, r, at, yaw_deg, y) in BOATS {
         v.push(Placement {
             y,
             ..hero(piece, q, r, at, yaw_deg)
         });
     }
+}
+
+fn block_landforms(v: &mut Vec<Placement>) {
     // The granite massif (mega tiles, A52) at rotation 0, anchored on (-3, -2): its six ring cells
     // stay empty for the piece's footprint, and nothing stands within a cell of them, so its 18
     // outer edges and the open sun side to -x/-z read clear of the rest of the layout.
@@ -555,12 +657,14 @@ pub fn kit_layout() -> Vec<Placement> {
     // (0, -3) and the peak on (2, -4), each two cells clear of the massif's ring and the houses.
     v.push(place("hill_meadow", 0, -3, 0));
     v.push(place("peak_granite", 2, -4, 0));
+}
+
+fn block_tunnel_bore(v: &mut Vec<Placement>) {
     // The open road tunnel's bore (P4 open tunnels, 2026-11-14) alone on a meadow at (4, 1), east of
     // the ocean corner: the tube at the meadow's level with its ends open, so the lining, the lamps'
     // always-on glow and the road on its floor show in kit light.
     v.push(place("meadow_base", 4, 1, 0));
     v.push(place("road_tunnel_bore", 4, 1, 0));
-    v
 }
 
 /// The play water at rest (`hex_play::water::tiles::WATER_Y`).
@@ -1106,6 +1210,9 @@ mod tests {
     use super::*;
     use hex_assets::parse_manifest;
 
+    const PINNED_LEN: usize = 253;
+    const PINNED_HASH: u64 = 0xd945_d65d_f3cf_30ab;
+
     /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or listed in
     /// [`NOT_SHOWCASED`] with its reason, and no listed piece is placed or missing from the manifest,
     /// so a new piece cannot be left out of the look-dev layout unnoticed.
@@ -1135,6 +1242,18 @@ mod tests {
                 "{piece} is not in the manifest: drop its row"
             );
         }
+    }
+
+    /// `kit_layout` is split into blocks (`block_*`) called in a fixed order, and the thumbnail and
+    /// shot layouts follow that order, so the vector's length and a hash of its debug text are
+    /// pinned. A deliberate layout change updates both here (FNV-1a, stable across Rust versions).
+    #[test]
+    fn kit_layout_is_the_pinned_vector() {
+        let text = format!("{:?}", kit_layout());
+        let hash = text.bytes().fold(0xcbf2_9ce4_8422_2325_u64, |h, b| {
+            (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
+        });
+        assert_eq!((kit_layout().len(), hash), (PINNED_LEN, PINNED_HASH));
     }
 
     #[test]

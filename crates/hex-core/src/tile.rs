@@ -553,6 +553,22 @@ impl TileDef {
         let mut issues = vec![];
         let mut issue = |msg: String| issues.push(format!("{}: {msg}", self.id));
 
+        // The order below is the order issues are reported in: the first one for a tile is stable.
+        self.validate_edges(sockets, &mut issue);
+        self.validate_networks(sockets, &mut issue);
+        self.validate_destinations(&mut issue);
+        self.validate_parking(&mut issue);
+        self.validate_rail(&mut issue);
+        self.validate_footprint(sockets, &mut issue);
+
+        self.validate_look_and_rise(&mut issue);
+
+        issues
+    }
+
+    /// Per-edge rules: the lane and land-side contract against the socket table, the corner chain
+    /// round the hex, decks, corner heights, and which tiles may be raisable with sloped edges.
+    fn validate_edges(&self, sockets: &SocketTable, issue: &mut impl FnMut(String)) {
         for (e, edge) in self.edges.iter().enumerate() {
             match (sockets.lane(edge.kind), edge.lane) {
                 (Some(want), Some(got)) if (want.offset, want.width) != (got.offset, got.width) => {
@@ -617,7 +633,12 @@ impl TileDef {
         {
             issue("raisable tile has non-Flat edges but is not hillside family".into());
         }
+    }
 
+    /// Nodes, the tunnel mouth and the network segments: unique node ids, a tunnel naming a declared
+    /// node and a real edge, segment endpoints on lane edges of the matching kind, and exactly one
+    /// endpoint on every lane edge.
+    fn validate_networks(&self, sockets: &SocketTable, issue: &mut impl FnMut(String)) {
         let mut node_ids: BTreeSet<&str> = BTreeSet::new();
         for node in &self.nodes {
             if !node_ids.insert(node.id.as_str()) {
@@ -674,12 +695,10 @@ impl TileDef {
                 ));
             }
         }
+    }
 
-        self.validate_destinations(&mut issue);
-        self.validate_parking(&mut issue);
-        self.validate_rail(&mut issue);
-        self.validate_footprint(sockets, &mut issue);
-
+    /// The look period divides 6, and the rise timeline's length, steps and stage order.
+    fn validate_look_and_rise(&self, issue: &mut impl FnMut(String)) {
         if let Some(p) = self.look_period
             && !matches!(p, 1 | 2 | 3 | 6)
         {
@@ -701,8 +720,6 @@ impl TileDef {
         if !self.rise.steps.is_sorted_by_key(|s| s.stage) {
             issue("rise steps must follow the PRD §4.4 stage order".into());
         }
-
-        issues
     }
 
     /// Footprint rules (mega tiles): 18 outer sockets, none with a lane or a land side, all flat at

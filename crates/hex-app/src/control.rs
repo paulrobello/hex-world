@@ -457,84 +457,19 @@ pub fn run_commands(
     };
     info!("command: {cmd:?}");
     match cmd {
-        Command::Camera { pos, look_at } => {
-            let t = Transform::from_translation(pos.into()).looking_at(look_at.into(), Vec3::Y);
-            if cameras.is_empty() {
-                warn!("camera command: no camera");
-            }
-            for mut c in &mut cameras {
-                *c = t;
-            }
-        }
+        Command::Camera { pos, look_at } => cmd_camera(&mut cameras, pos, look_at),
         Command::Screenshot { name } => capture::request_held(&mut commands, &name),
         Command::Wait { frames } => queue.wait = frames,
-        Command::Scenario { name } => {
-            // Children also carry `SceneEntity` and go with their parent; skip the repeats.
-            for e in &scene {
-                commands.entity(e).try_despawn();
-            }
-            commands.insert_resource(ActiveScenario(name));
-            commands.run_system_cached(setup_scene);
-        }
-        Command::Tilt { on, strength } => {
-            tilt.enabled = on.unwrap_or(tilt.enabled);
-            if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
-                tilt.strength = v;
-            }
-            if on.is_some() {
-                pinned.0 = true;
-            }
-        }
+        Command::Scenario { name } => cmd_scenario(&mut commands, &scene, name),
+        Command::Tilt { on, strength } => cmd_tilt(&mut tilt, &mut pinned, on, strength),
         Command::DumpState { name } => dump_state(&name),
-        Command::SetTier { tier } => {
-            saved.quality = tier;
-            hex_play::tier::request(
-                &mut commands,
-                crate::persist::quality_tier(tier),
-                "set_tier command".into(),
-                false,
-            );
-        }
-        Command::SetGrade { grade } => {
-            // Photo mode re-applies its entry exposure every frame, so it shifts with the grade.
-            commands.queue(move |w: &mut World| {
-                let shift = hex_render::grade::apply(w, grade);
-                if let Some(mut s) = w.get_resource_mut::<PhotoSession>()
-                    && let Some(e) = s.saved.as_mut().and_then(|snap| snap.ev100.as_mut())
-                {
-                    *e += shift;
-                }
-            })
-        }
-        Command::SetGrass { density } => {
-            match hex_play::play::grass::Density::from_share(density) {
-                Some(d) => commands.queue(move |w: &mut World| {
-                    w.resource_mut::<hex_render::RenderConfig>().grass = d;
-                }),
-                None => warn!("set_grass command: density {density} is not a number, skipped"),
-            }
-        }
-        Command::SetGrassDistance { scale } => {
-            match hex_play::play::grass::GrassDistance::from_scale(scale) {
-                Some(d) => commands.queue(move |w: &mut World| {
-                    w.resource_mut::<hex_render::RenderConfig>().grass_distance = d;
-                }),
-                None => {
-                    warn!("set_grass_distance command: scale {scale} is not a number, skipped")
-                }
-            }
-        }
+        Command::SetTier { tier } => cmd_set_tier(&mut commands, &mut saved, tier),
+        Command::SetGrade { grade } => cmd_set_grade(&mut commands, grade),
+        Command::SetGrass { density } => cmd_set_grass(&mut commands, density),
+        Command::SetGrassDistance { scale } => cmd_set_grass_distance(&mut commands, scale),
         Command::SetReducedMotion { on } => reduced.0 = on,
-        Command::SetCarCap { cap } => match car_cap.as_mut() {
-            Some(o) => o.0 = cap,
-            None => warn!("set_car_cap command: no car simulation, skipped"),
-        },
-        Command::SetFrameCap { fps } => match crate::frame_cap::FrameCap::from_fps(fps) {
-            Some(c) => {
-                frame_cap.set_if_neq(c);
-            }
-            None => warn!("set_frame_cap command: {fps:?} fps is not off, 30, 60 or 120, skipped"),
-        },
+        Command::SetCarCap { cap } => cmd_set_car_cap(car_cap.as_deref_mut(), cap),
+        Command::SetFrameCap { fps } => cmd_set_frame_cap(&mut frame_cap, fps),
         Command::Photo {
             dof,
             focus,
@@ -566,14 +501,7 @@ pub fn run_commands(
         c @ (Command::Save { .. } | Command::Load { .. } | Command::NewWorld) => {
             persist.0.push_back(c)
         }
-        Command::Walk { on, pointer_lock } => {
-            if let Some(lock) = pointer_lock {
-                walk.pointer_lock = lock;
-            }
-            if let Some(on) = on {
-                actions.0.push_back(Action::SetWalk(on));
-            }
-        }
+        Command::Walk { on, pointer_lock } => cmd_walk(&mut walk, &mut actions, on, pointer_lock),
         Command::WalkTo {
             x,
             z,
@@ -596,10 +524,7 @@ pub fn run_commands(
             seconds,
             sprint: sprint.unwrap_or(false),
         }),
-        Command::SetWalkSpeed { speed } => match WalkSpeed::new(speed) {
-            Some(s) => walk.speed = s,
-            None => warn!("set_walk_speed command: speed {speed} is not a number, skipped"),
-        },
+        Command::SetWalkSpeed { speed } => cmd_set_walk_speed(&mut walk, speed),
         Command::WalkLook { heading, pitch } => walk
             .requests
             .push_back(WalkRequest::Look { heading, pitch }),
@@ -641,6 +566,127 @@ pub fn run_commands(
                 .0
                 .push_back(c.action().expect("play command has an action"));
         }
+    }
+}
+
+fn cmd_camera(
+    cameras: &mut Query<'_, '_, &'static mut Transform, hex_render::post::GameCamera>,
+    pos: [f32; 3],
+    look_at: [f32; 3],
+) {
+    let t = Transform::from_translation(pos.into()).looking_at(look_at.into(), Vec3::Y);
+    if cameras.is_empty() {
+        warn!("camera command: no camera");
+    }
+    for mut c in cameras {
+        *c = t;
+    }
+}
+
+fn cmd_scenario(
+    commands: &mut Commands,
+    scene: &Query<'_, '_, Entity, With<SceneEntity>>,
+    name: Scenario,
+) {
+    // Children also carry `SceneEntity` and go with their parent; skip the repeats.
+    for e in scene {
+        commands.entity(e).try_despawn();
+    }
+    commands.insert_resource(ActiveScenario(name));
+    commands.run_system_cached(setup_scene);
+}
+
+fn cmd_tilt(
+    tilt: &mut TiltShiftSettings,
+    pinned: &mut TiltPinned,
+    on: Option<bool>,
+    strength: Option<f32>,
+) {
+    tilt.enabled = on.unwrap_or(tilt.enabled);
+    if let Some(v) = strength.filter(|v| (0.0..=1.0).contains(v)) {
+        tilt.strength = v;
+    }
+    if on.is_some() {
+        pinned.0 = true;
+    }
+}
+
+fn cmd_set_tier(commands: &mut Commands, saved: &mut SavedSettings, tier: QualitySetting) {
+    saved.quality = tier;
+    hex_play::tier::request(
+        commands,
+        crate::persist::quality_tier(tier),
+        "set_tier command".into(),
+        false,
+    );
+}
+
+fn cmd_set_grade(commands: &mut Commands, grade: Grade) {
+    // Photo mode re-applies its entry exposure every frame, so it shifts with the grade.
+    commands.queue(move |w: &mut World| {
+        let shift = hex_render::grade::apply(w, grade);
+        if let Some(mut s) = w.get_resource_mut::<PhotoSession>()
+            && let Some(e) = s.saved.as_mut().and_then(|snap| snap.ev100.as_mut())
+        {
+            *e += shift;
+        }
+    })
+}
+
+fn cmd_set_grass(commands: &mut Commands, density: f32) {
+    match hex_play::play::grass::Density::from_share(density) {
+        Some(d) => commands.queue(move |w: &mut World| {
+            w.resource_mut::<hex_render::RenderConfig>().grass = d;
+        }),
+        None => warn!("set_grass command: density {density} is not a number, skipped"),
+    }
+}
+
+fn cmd_set_grass_distance(commands: &mut Commands, scale: f32) {
+    match hex_play::play::grass::GrassDistance::from_scale(scale) {
+        Some(d) => commands.queue(move |w: &mut World| {
+            w.resource_mut::<hex_render::RenderConfig>().grass_distance = d;
+        }),
+        None => {
+            warn!("set_grass_distance command: scale {scale} is not a number, skipped")
+        }
+    }
+}
+
+fn cmd_set_car_cap(car_cap: Option<&mut crate::sim::CarCapOverride>, cap: Option<usize>) {
+    match car_cap {
+        Some(o) => o.0 = cap,
+        None => warn!("set_car_cap command: no car simulation, skipped"),
+    }
+}
+
+fn cmd_set_frame_cap(frame_cap: &mut ResMut<crate::frame_cap::FrameCap>, fps: Option<u32>) {
+    match crate::frame_cap::FrameCap::from_fps(fps) {
+        Some(c) => {
+            frame_cap.set_if_neq(c);
+        }
+        None => warn!("set_frame_cap command: {fps:?} fps is not off, 30, 60 or 120, skipped"),
+    }
+}
+
+fn cmd_walk(
+    walk: &mut WalkSession,
+    actions: &mut ActionQueue,
+    on: Option<bool>,
+    pointer_lock: Option<bool>,
+) {
+    if let Some(lock) = pointer_lock {
+        walk.pointer_lock = lock;
+    }
+    if let Some(on) = on {
+        actions.0.push_back(Action::SetWalk(on));
+    }
+}
+
+fn cmd_set_walk_speed(walk: &mut WalkSession, speed: f32) {
+    match WalkSpeed::new(speed) {
+        Some(s) => walk.speed = s,
+        None => warn!("set_walk_speed command: speed {speed} is not a number, skipped"),
     }
 }
 
