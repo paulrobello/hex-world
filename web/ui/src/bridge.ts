@@ -64,6 +64,7 @@ export interface SavedSettings {
 /** Why `.hexworld` bytes were refused: the check that failed, in words, and the file's version for version refusals. */
 export type LoadRefusalCode =
   | "too_large"
+  | "too_many_tiles"
   | "bad_magic"
   | "newer_version"
   | "unsupported_version"

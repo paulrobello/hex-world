@@ -5,8 +5,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use hex_core::{
-    AudioVolumes, Axial, CameraState, GameSettings, Orientation, QualitySetting,
-    SAVE_FORMAT_VERSION, SaveData, TileCatalog, World, cell_seed,
+    AudioVolumes, Axial, CameraState, GameSettings, MAX_SAVE_TILES, Orientation, QualitySetting,
+    SAVE_FORMAT_VERSION, SaveData, SaveError, TileCatalog, World, WorldIssue, cell_seed,
 };
 
 fn fixture_dir() -> PathBuf {
@@ -333,6 +333,69 @@ fn v3_massif_expands_on_load() {
     if SAVE_FORMAT_VERSION == 3 {
         assert_eq!(save, massif_v3(&c));
     }
+}
+
+/// The tile cap (owner decision, 2026-11-15): a file holding more than [`MAX_SAVE_TILES`] tiles
+/// refuses outright, before any rule runs over them. The cap is about ten times the largest
+/// measured world and bounds the history replay's worst case (PRD §12.2, docs/save-format.md).
+#[test]
+fn a_world_over_the_tile_cap_is_refused() {
+    let c = catalog();
+    let settings = GameSettings {
+        quality: QualitySetting::High,
+        tilt_shift: true,
+        tilt_shift_chosen: false,
+        tilt_shift_strength: 0.6,
+        volumes: AudioVolumes {
+            master: 0.8,
+            music: 0.5,
+            sfx: 1.0,
+            ambience: 0.7,
+            ui: 0.9,
+        },
+    };
+    let camera = CameraState {
+        focus: [12.5, 0.0, -3.25],
+        yaw: 0.75,
+        pitch: 0.9,
+        distance: 180.0,
+    };
+    let row_world = |tiles: usize| -> World {
+        let mut w = World::new(3);
+        for i in 1..=tiles as i32 {
+            w.place(&c, Axial::new(i, 0), "meadow", Orientation::new(0, 0))
+                .expect("a straight row of meadows always fits");
+        }
+        w
+    };
+    // One tile over the cap refuses with the count. The start meadow is a tile too.
+    let w = row_world(MAX_SAVE_TILES);
+    assert_eq!(w.tiles().len(), MAX_SAVE_TILES + 1);
+    let bytes = SaveData {
+        world: w,
+        unlocks: BTreeSet::new(),
+        camera,
+        settings,
+    }
+    .encode();
+    assert_eq!(
+        SaveData::decode(&bytes, &c),
+        Err(SaveError::InvalidWorld(WorldIssue::TooManyTiles(
+            MAX_SAVE_TILES + 1
+        ))),
+    );
+    // At the cap the file is a large but ordinary world: it loads.
+    let mut w = row_world(MAX_SAVE_TILES - 1);
+    w.bulldoze(&c, Axial::new(MAX_SAVE_TILES as i32 - 1, 0))
+        .expect("the last meadow bulldozes");
+    let bytes = SaveData {
+        world: w,
+        unlocks: BTreeSet::new(),
+        camera,
+        settings,
+    }
+    .encode();
+    SaveData::decode(&bytes, &c).expect("a world at the cap loads");
 }
 
 #[test]

@@ -39,6 +39,19 @@ test("a zip: the header fails with what it is, later checks are not reached, and
   assert.equal(r.todo, "Unzip it first, then import the .hexworld file inside.");
 });
 
+test("a world over the tile cap: the tiles stage names the count and the cap", () => {
+  const r = refusedOf(
+    "harbour-town.hexworld",
+    header(3),
+    31_744,
+    refusal("too_many_tiles", "20001 tiles exceed the 20000 cap"),
+  );
+  assert.equal(r.title, "This world is too large to open");
+  assert.equal(states(r), "ok ok ok ok bad");
+  assert.equal(r.checks[4]?.text, "Tiles and sockets: 20001 tiles exceed the 20000 cap");
+  assert.equal(r.todo, "20001 tiles exceed the 20000 cap");
+});
+
 test("a newer file: header passes, the version fails with both versions, and the advice is to reload", () => {
   const r = refusedOf(
     "harbour-town.hexworld",

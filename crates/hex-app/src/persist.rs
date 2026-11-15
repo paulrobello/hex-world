@@ -6,7 +6,9 @@ use std::collections::VecDeque;
 use std::sync::Mutex;
 
 use bevy::prelude::*;
-use hex_core::{GameSettings, SAVE_FORMAT_VERSION, SaveData, SaveError, TileCatalog, World};
+use hex_core::{
+    GameSettings, SAVE_FORMAT_VERSION, SaveData, SaveError, TileCatalog, World, WorldIssue,
+};
 use hex_render::tilt_shift::{TiltPinned, TiltShiftSettings, TiltTierDefault};
 
 use crate::RunFlags;
@@ -85,6 +87,8 @@ impl From<&SaveError> for Refusal {
             SaveError::ChecksumMismatch { .. } => "checksum",
             SaveError::Decode(_) => "decode",
             SaveError::InvalidValue(_) => "invalid_value",
+            // Above the general arm: the tile cap names its own code, not the generic world one.
+            SaveError::InvalidWorld(WorldIssue::TooManyTiles(_)) => "too_many_tiles",
             SaveError::InvalidWorld(_) => "invalid_world",
             SaveError::InvalidHistory(_) => "invalid_history",
         };

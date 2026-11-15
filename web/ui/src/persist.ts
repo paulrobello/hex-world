@@ -131,6 +131,8 @@ export function refusalText(code: LoadRefusalCode, reason: string): { text: stri
       return { text: "This file is damaged", sub: "Its checksum doesn't match its contents. Export it again." };
     case "too_large":
       return { text: "This file is too large to be a world", sub: "Hex World files are under 16 MB." };
+    case "too_many_tiles":
+      return { text: "This world is too large to open", sub: reason };
     case "io":
     case "no_file":
       return { text: "Couldn't read the file", sub: reason };

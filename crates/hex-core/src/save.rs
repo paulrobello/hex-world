@@ -27,6 +27,11 @@ pub const SAVE_FORMAT_VERSION: u16 = 3;
 /// Largest file [`SaveData::decode`] looks at.
 pub const MAX_SAVE_BYTES: usize = 16 * 1024 * 1024;
 
+/// Most tiles a decoded world may hold (owner decision, 2026-11-15; PRD §12.2). About ten times
+/// the largest measured world, it bounds the history replay's worst-case flood and the cost of
+/// running a loaded world.
+pub const MAX_SAVE_TILES: usize = 20_000;
+
 /// Magic, version (u16 LE) and payload length (u32 LE). Magic and version are frozen for every
 /// version; the length field and CRC trailer belong to the version's layout.
 const PREFIX_LEN: usize = 14;
@@ -149,6 +154,8 @@ pub enum WorldIssue {
         cell: Axial,
     },
     Disconnected,
+    /// More tiles than [`MAX_SAVE_TILES`], with the count.
+    TooManyTiles(usize),
 }
 
 impl fmt::Display for WorldIssue {
@@ -179,6 +186,7 @@ impl fmt::Display for WorldIssue {
                 write!(f, "cell ({}, {}) is covered twice", cell.q, cell.r)
             }
             WorldIssue::Disconnected => write!(f, "the world is not connected"),
+            WorldIssue::TooManyTiles(n) => write!(f, "{n} tiles exceed the {MAX_SAVE_TILES} cap"),
         }
     }
 }
@@ -411,6 +419,75 @@ fn validate_values(camera: &CameraState, settings: &GameSettings) -> Result<(), 
     }
 }
 
+/// The per-tile rules for one anchor and its tile: the cell in range, the tile known, the
+/// rotation `0..6`, the level allowed, and a mega tile's ring cells in range.
+fn check_tile(cell: Axial, tile: &PlacedTile, catalog: &TileCatalog) -> Result<(), WorldIssue> {
+    let out_of_range = |c: Axial| {
+        [c.q, c.r]
+            .iter()
+            .any(|v| !(-CELL_LIMIT..=CELL_LIMIT).contains(v))
+    };
+    if out_of_range(cell) {
+        return Err(WorldIssue::OutOfRange(cell));
+    }
+    let Some(def) = catalog.get(&tile.def) else {
+        return Err(WorldIssue::UnknownTile {
+            cell,
+            id: tile.def.clone(),
+        });
+    };
+    if tile.rotation >= 6 {
+        return Err(WorldIssue::BadRotation {
+            cell,
+            rotation: tile.rotation,
+        });
+    }
+    if !level_allowed(def, tile.level) {
+        return Err(WorldIssue::LevelOutOfRange {
+            cell,
+            level: tile.level,
+        });
+    }
+    // The anchor is in range, so its ring cells are at most one past the limit.
+    if def.is_mega()
+        && let Some(&m) = footprint::members(cell).iter().find(|&&m| out_of_range(m))
+    {
+        return Err(WorldIssue::OutOfRange(m));
+    }
+    Ok(())
+}
+
+/// The seam rule for one occupied cell against its neighbours: the same `facing_in` and
+/// `facings_meet` check the whole-map sweep runs, skipping same-anchor neighbours. `sweep` is 3
+/// in the full pass (the rule is symmetric, so each touching pair is checked once) and 6 when
+/// the incremental replay checks only the cells one action touched.
+fn check_edges(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    members: &BTreeMap<Axial, Axial>,
+    catalog: &TileCatalog,
+    occupied: &BTreeSet<Axial>,
+    cell: Axial,
+    sweep: u8,
+) -> Result<(), WorldIssue> {
+    let anchor = |c: Axial| members.get(&c).copied().unwrap_or(c);
+    for w in 0..sweep {
+        let n = cell.neighbor(w);
+        if !occupied.contains(&n) || anchor(n) == anchor(cell) {
+            continue;
+        }
+        let mine = facing_in(tiles, members, catalog, cell, w);
+        let theirs = facing_in(tiles, members, catalog, n, opposite_edge(w));
+        let fits = match (mine, theirs) {
+            (Some(a), Some(b)) => catalog.facings_meet(a, b),
+            _ => false,
+        };
+        if !fits {
+            return Err(WorldIssue::Incompatible { cell, edge: w });
+        }
+    }
+    Ok(())
+}
+
 /// The world rules every reachable world obeys: non-empty, coordinates in range (a mega tile's ring
 /// cells too), known tiles, rotations `0..6`, no cell covered twice, every touching edge pair
 /// compatible, and one connected piece. A mega tile is saved once, at its anchor; its footprint
@@ -422,69 +499,16 @@ fn validate_tiles(
     let Some(&start) = tiles.keys().next() else {
         return Err(WorldIssue::Empty);
     };
-    let out_of_range = |cell: Axial| {
-        [cell.q, cell.r]
-            .iter()
-            .any(|v| !(-CELL_LIMIT..=CELL_LIMIT).contains(v))
-    };
-    let mut megas: Vec<Axial> = vec![];
     for (&cell, t) in tiles {
-        if out_of_range(cell) {
-            return Err(WorldIssue::OutOfRange(cell));
-        }
-        let Some(def) = catalog.get(&t.def) else {
-            return Err(WorldIssue::UnknownTile {
-                cell,
-                id: t.def.clone(),
-            });
-        };
-        if t.rotation >= 6 {
-            return Err(WorldIssue::BadRotation {
-                cell,
-                rotation: t.rotation,
-            });
-        }
-        if !level_allowed(def, t.level) {
-            return Err(WorldIssue::LevelOutOfRange {
-                cell,
-                level: t.level,
-            });
-        }
-        if def.is_mega() {
-            megas.push(cell);
-        }
-    }
-    // Every anchor is in range, so its ring cells are at most one past the limit.
-    for &anchor in &megas {
-        if let Some(&m) = footprint::members(anchor)
-            .iter()
-            .find(|&&m| out_of_range(m))
-        {
-            return Err(WorldIssue::OutOfRange(m));
-        }
+        check_tile(cell, t, catalog)?;
     }
     let members =
         footprint_index(tiles, catalog).map_err(|cell| WorldIssue::FootprintOverlap { cell })?;
     let occupied: BTreeSet<Axial> = tiles.keys().chain(members.keys()).copied().collect();
-    let anchor = |cell: Axial| members.get(&cell).copied().unwrap_or(cell);
     // The seam rule (`TileCatalog::facings_meet`) is symmetric, so checking world edges 0..3 of
     // every occupied cell covers each touching pair once.
     for &cell in &occupied {
-        for w in 0..3 {
-            let n = cell.neighbor(w);
-            if !occupied.contains(&n) || anchor(n) == anchor(cell) {
-                continue;
-            }
-            let mine = facing_in(tiles, &members, catalog, cell, w);
-            let theirs = facing_in(tiles, &members, catalog, n, opposite_edge(w));
-            let fits = match (mine, theirs) {
-                (Some(a), Some(b)) => catalog.facings_meet(a, b),
-                _ => false,
-            };
-            if !fits {
-                return Err(WorldIssue::Incompatible { cell, edge: w });
-            }
-        }
+        check_edges(tiles, &members, catalog, &occupied, cell, 3)?;
     }
     let mut seen: BTreeSet<Axial> = BTreeSet::from([start]);
     let mut stack = vec![start];
@@ -513,9 +537,226 @@ fn same_footprint(catalog: &TileCatalog, from: &PlacedTile, to: &PlacedTile) -> 
 
 /// Replays the whole undo stack backward and the whole redo stack forward from the current world,
 /// as [`World::undo`] and [`World::redo`] would, checking each action against the cell it touches
-/// and each resulting world against the rules. Those methods skip rule checks, so a tampered
-/// history would otherwise reach play.
+/// and the world it leaves. Those methods skip rule checks, so a tampered history would otherwise
+/// reach play. The replay checks each action locally (see [`Replay::step`]), so the cost is the
+/// history depth, not depth times world size.
 fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryIssue> {
+    let (undo, redo) = world.history_stacks();
+    let depth = undo.len() + redo.len();
+    if depth > HISTORY_DEPTH {
+        return Err(HistoryIssue::TooDeep(depth));
+    }
+    let mut replay = Replay::new(world, catalog);
+    for (index, action) in undo.iter().rev().enumerate() {
+        replay.step(catalog, HistoryStack::Undo, index, action, true)?;
+    }
+    // Each walk starts from the saved world: the undo walk reconstructs earlier states and the
+    // redo walk the states undo left behind.
+    let mut replay = Replay::new(world, catalog);
+    for (index, action) in redo.iter().rev().enumerate() {
+        replay.step(catalog, HistoryStack::Redo, index, action, false)?;
+    }
+    Ok(())
+}
+
+/// The replay's state: the tile map a stack walk reconstructs, plus the footprint index and the
+/// occupied set derived from it, so one action updates all three together.
+struct Replay {
+    tiles: BTreeMap<Axial, PlacedTile>,
+    members: BTreeMap<Axial, Axial>,
+    occupied: BTreeSet<Axial>,
+}
+
+impl Replay {
+    /// From the saved world. Decode has already validated it, so the footprint index cannot
+    /// collide.
+    fn new(world: &World, catalog: &TileCatalog) -> Self {
+        let tiles = world.tiles().clone();
+        let members = footprint_index(&tiles, catalog).expect("decode validated the saved world");
+        let occupied: BTreeSet<Axial> = tiles.keys().chain(members.keys()).copied().collect();
+        Self {
+            tiles,
+            members,
+            occupied,
+        }
+    }
+
+    /// Applies one replayed `action` (inverse for the undo walk, forward for the redo walk) and
+    /// checks the world it leaves: the touched tile, its footprint's overlap and edges, and the
+    /// connectivity the change can break. The rest of the full sweep cannot change under one
+    /// action: unchanged tiles stay valid, and a removal creates no new touching pair. Failures
+    /// report the same [`HistoryIssue`] the per-step full validation would.
+    fn step(
+        &mut self,
+        catalog: &TileCatalog,
+        stack: HistoryStack,
+        index: usize,
+        action: &Action,
+        inverse: bool,
+    ) -> Result<(), HistoryIssue> {
+        let cell = action.cell();
+        // The pre-state decides which rules this one change can break.
+        let was_present = self.tiles.contains_key(&cell);
+        let was_empty = self.tiles.is_empty();
+        let was_mega = self
+            .tiles
+            .get(&cell)
+            .and_then(|t| catalog.get(&t.def))
+            .is_some_and(TileDef::is_mega);
+        let mut footprint_cells = Vec::new();
+        let mut former = Vec::new();
+        if was_present {
+            if was_mega {
+                footprint_cells.extend(footprint::members(cell));
+            } else {
+                footprint_cells.push(cell);
+            }
+            for &c in &footprint_cells {
+                former.extend(
+                    (0..6u8)
+                        .map(|w| c.neighbor(w))
+                        .filter(|&n| self.occupied.contains(&n) && !footprint_cells.contains(&n)),
+                );
+            }
+            former.sort_unstable();
+            former.dedup();
+        }
+        let ok = match (inverse, action) {
+            (true, Action::Place { cell, tile }) => self.tiles.remove(cell).as_ref() == Some(tile),
+            (true, Action::Bulldoze { cell, tile }) => {
+                self.tiles.insert(*cell, tile.clone()).is_none()
+            }
+            (true, Action::Replace { cell, from, to }) => {
+                same_footprint(catalog, from, to)
+                    && self.tiles.insert(*cell, from.clone()).as_ref() == Some(to)
+            }
+            (false, Action::Place { cell, tile }) => {
+                self.tiles.insert(*cell, tile.clone()).is_none()
+            }
+            (false, Action::Bulldoze { cell, tile }) => {
+                self.tiles.remove(cell).as_ref() == Some(tile)
+            }
+            (false, Action::Replace { cell, from, to }) => {
+                same_footprint(catalog, from, to)
+                    && self.tiles.insert(*cell, to.clone()).as_ref() == Some(from)
+            }
+        };
+        if !ok {
+            return Err(HistoryIssue::Mismatch { stack, index, cell });
+        }
+        let Some(tile) = self.tiles.get(&cell).cloned() else {
+            // A removal: the footprint can only empty the map or have held it together.
+            if was_mega {
+                for m in footprint::members(cell).into_iter().skip(1) {
+                    self.members.remove(&m);
+                    self.occupied.remove(&m);
+                }
+            }
+            self.occupied.remove(&cell);
+            if self.tiles.is_empty() {
+                return Err(HistoryIssue::InvalidState {
+                    stack,
+                    index,
+                    issue: WorldIssue::Empty,
+                });
+            }
+            if former.len() > 1 {
+                let mut seen = BTreeSet::from([former[0]]);
+                let mut rest: BTreeSet<Axial> = former[1..].iter().copied().collect();
+                let mut pending = vec![former[0]];
+                while let Some(c) = pending.pop() {
+                    for w in 0..6u8 {
+                        let n = c.neighbor(w);
+                        if self.occupied.contains(&n) && seen.insert(n) {
+                            if rest.remove(&n) && rest.is_empty() {
+                                pending.clear();
+                                break;
+                            }
+                            pending.push(n);
+                        }
+                    }
+                }
+                if !rest.is_empty() {
+                    return Err(HistoryIssue::InvalidState {
+                        stack,
+                        index,
+                        issue: WorldIssue::Disconnected,
+                    });
+                }
+            }
+            return Ok(());
+        };
+        // An insertion or a replace: the tile itself, then what its footprint touches.
+        check_tile(cell, &tile, catalog).map_err(|issue| HistoryIssue::InvalidState {
+            stack,
+            index,
+            issue,
+        })?;
+        let mega = catalog.get(&tile.def).is_some_and(TileDef::is_mega);
+        if !was_present {
+            // A fresh footprint claims cells the pre-state must leave free, its anchor
+            // included: an anchor sitting in another mega's ring is an overlap.
+            let mut claimed = vec![cell];
+            if mega {
+                claimed.extend(footprint::members(cell).into_iter().skip(1));
+            }
+            for c in &claimed {
+                let overlapped =
+                    self.members.contains_key(c) || (c != &cell && self.tiles.contains_key(c));
+                if overlapped {
+                    return Err(HistoryIssue::InvalidState {
+                        stack,
+                        index,
+                        issue: WorldIssue::FootprintOverlap { cell: *c },
+                    });
+                }
+            }
+        }
+        if mega {
+            for m in footprint::members(cell).into_iter().skip(1) {
+                self.members.insert(m, cell);
+                self.occupied.insert(m);
+            }
+        }
+        self.occupied.insert(cell);
+        let mut touched = vec![cell];
+        if mega {
+            touched.extend(footprint::members(cell).into_iter().skip(1));
+        }
+        for c in &touched {
+            check_edges(&self.tiles, &self.members, catalog, &self.occupied, *c, 6).map_err(
+                |issue| HistoryIssue::InvalidState {
+                    stack,
+                    index,
+                    issue,
+                },
+            )?;
+        }
+        if !was_present && !was_empty {
+            let inside: BTreeSet<Axial> = touched.iter().copied().collect();
+            let touches = touched.iter().any(|&c| {
+                (0..6u8).any(|w| {
+                    let n = c.neighbor(w);
+                    self.occupied.contains(&n) && !inside.contains(&n)
+                })
+            });
+            if !touches {
+                return Err(HistoryIssue::InvalidState {
+                    stack,
+                    index,
+                    issue: WorldIssue::Disconnected,
+                });
+            }
+        }
+        Ok(())
+    }
+}
+
+/// The pre-incremental per-step full validation, kept as the replay's test oracle:
+/// `incremental_history_replay_matches_the_full_sweep` compares the two over played worlds and
+/// tampered histories.
+#[cfg(test)]
+fn validate_history_full(world: &World, catalog: &TileCatalog) -> Result<(), HistoryIssue> {
     let (undo, redo) = world.history_stacks();
     let depth = undo.len() + redo.len();
     if depth > HISTORY_DEPTH {
@@ -550,6 +791,7 @@ fn validate_history(world: &World, catalog: &TileCatalog) -> Result<(), HistoryI
     Ok(())
 }
 
+#[cfg(test)]
 fn check_step(
     tiles: &BTreeMap<Axial, PlacedTile>,
     catalog: &TileCatalog,
@@ -914,8 +1156,14 @@ mod v3 {
         }
 
         /// Structural conversion only. It catches the rules the runtime types cannot carry:
-        /// duplicate cells (a map would silently keep one) and levels above MAX_LEVEL.
+        /// duplicate cells (a map would silently keep one), levels above MAX_LEVEL, and more
+        /// tiles than [`MAX_SAVE_TILES`].
         pub(super) fn into_runtime(self) -> Result<SaveData, SaveError> {
+            if self.tiles.len() > MAX_SAVE_TILES {
+                return Err(SaveError::InvalidWorld(WorldIssue::TooManyTiles(
+                    self.tiles.len(),
+                )));
+            }
             let mut tiles: BTreeMap<Axial, PlacedTile> = BTreeMap::new();
             for t in self.tiles {
                 let (cell, tile) = t.into_runtime().map_err(SaveError::InvalidWorld)?;
@@ -1678,6 +1926,257 @@ mod tests {
         let depth = w.undo.len() + w.redo.len();
         assert!(depth > HISTORY_DEPTH);
         assert_eq!(invalid(&w), HistoryIssue::TooDeep(depth));
+    }
+
+    /// A tiny seeded RNG (xorshift64*) for the replay oracle, so its worlds and tampering are
+    /// reproducible.
+    struct OracleRng(u64);
+
+    impl OracleRng {
+        fn next(&mut self) -> u64 {
+            let mut x = self.0;
+            x ^= x >> 12;
+            x ^= x << 25;
+            x ^= x >> 27;
+            self.0 = x;
+            x.wrapping_mul(0x2545_F491_4F6C_DD1D)
+        }
+
+        fn below(&mut self, n: usize) -> usize {
+            (self.next() % n as u64) as usize
+        }
+    }
+
+    /// The incremental history replay and the full per-step sweep must agree: worlds played at
+    /// random (placements, replaces, bulldozes, undos, redos), each saved, one history action
+    /// mutated, and both validators run over the same world. A mutation may leave the history
+    /// valid; the two must then both accept it.
+    #[test]
+    fn incremental_history_replay_matches_the_full_sweep() {
+        let c = catalog();
+        let ids = [
+            "meadow",
+            "forest",
+            "oak",
+            "road_straight",
+            "beach",
+            "massif_granite",
+        ];
+        let mut rng = OracleRng(0x5EED);
+        let mut rejects = 0;
+        for _ in 0..300 {
+            let mut w = World::new(rng.next());
+            for _ in 0..30 {
+                let here = w
+                    .tiles()
+                    .keys()
+                    .nth(rng.below(w.tiles().len()))
+                    .copied()
+                    .expect("a played world always holds the start tile");
+                match rng.below(6) {
+                    0 | 1 => {
+                        let cell = here.neighbor(rng.below(6) as u8);
+                        let id = ids[rng.below(ids.len())];
+                        let o = Orientation::new(rng.below(6) as u8, rng.below(4) as u8);
+                        let _ = w.place(&c, cell, id, o);
+                    }
+                    2 => {
+                        let id = ids[rng.below(ids.len())];
+                        let os = w.replace_orientations(&c, here, c.get(id).unwrap());
+                        if !os.is_empty() {
+                            let _ = w.replace(&c, here, id, os[rng.below(os.len())]);
+                        }
+                    }
+                    3 => {
+                        if w.can_bulldoze(&c, here).is_ok() {
+                            let _ = w.bulldoze(&c, here);
+                        }
+                    }
+                    4 => {
+                        w.undo(&c);
+                    }
+                    _ => {
+                        w.redo(&c);
+                    }
+                }
+            }
+            let save = save_of(w);
+            // The clean save replays: both validators accept a world play reached.
+            let full = validate_history_full(&save.world, &c);
+            assert_eq!(full, Ok(()), "a played world must pass the full sweep");
+            assert_eq!(
+                validate_history(&save.world, &c),
+                full,
+                "the replay must accept every world the sweep accepts"
+            );
+
+            // Tamper one action and compare again, whatever the verdict.
+            let (undo, redo) = save.world.history_stacks();
+            let mut undo: VecDeque<Action> = undo.clone();
+            let mut redo: Vec<Action> = redo.to_vec();
+            let on_undo = !undo.is_empty() && (redo.is_empty() || rng.below(2) == 0);
+            let i = rng.below(if on_undo { undo.len() } else { redo.len() });
+            let tamper = rng.below(4);
+            let base = if on_undo {
+                undo[i].clone()
+            } else {
+                redo[i].clone()
+            };
+            let mutated = match (&base, tamper) {
+                (_, 0) => match &base {
+                    Action::Place { cell, tile } => Action::Bulldoze {
+                        cell: *cell,
+                        tile: tile.clone(),
+                    },
+                    Action::Bulldoze { cell, tile } => Action::Place {
+                        cell: *cell,
+                        tile: tile.clone(),
+                    },
+                    Action::Replace { cell, to, .. } => Action::Place {
+                        cell: *cell,
+                        tile: to.clone(),
+                    },
+                },
+                (Action::Replace { .. }, 1) => match &base {
+                    Action::Replace { cell, from, to } => Action::Replace {
+                        cell: *cell,
+                        from: to.clone(),
+                        to: from.clone(),
+                    },
+                    other => other.clone(),
+                },
+                (_, 1) | (_, 2) => {
+                    let mut a = base.clone();
+                    match &mut a {
+                        Action::Place { tile, .. } | Action::Bulldoze { tile, .. } => {
+                            tile.def = ids[rng.below(ids.len())].to_owned();
+                        }
+                        Action::Replace { from, to, .. } => {
+                            if rng.below(2) == 0 {
+                                from.def = ids[rng.below(ids.len())].to_owned();
+                            } else {
+                                to.def = ids[rng.below(ids.len())].to_owned();
+                            }
+                        }
+                    }
+                    a
+                }
+                _ => {
+                    let mut a = base.clone();
+                    match &mut a {
+                        Action::Place { cell, .. } | Action::Bulldoze { cell, .. } => {
+                            *cell = cell.neighbor(rng.below(6) as u8);
+                        }
+                        Action::Replace { cell, .. } => {
+                            *cell = cell.neighbor(rng.below(6) as u8);
+                        }
+                    }
+                    a
+                }
+            };
+            if on_undo {
+                undo[i] = mutated;
+            } else {
+                redo[i] = mutated;
+            }
+            let seed = save.world.seed();
+            let tampered = SaveData {
+                world: World::from_parts(seed, save.world.tiles().clone(), undo, redo),
+                unlocks: save.unlocks.clone(),
+                camera: save.camera,
+                settings: save.settings,
+            };
+            let full = validate_history_full(&tampered.world, &c);
+            let incremental = validate_history(&tampered.world, &c);
+            if full.is_err() {
+                rejects += 1;
+            }
+            if incremental != full {
+                // When one tampered state breaks several rules, or one seam breaks, the two
+                // sweeps can name a different first failure (the replay checks the touched
+                // cells over all six edges, the sweep each touching pair once from the first
+                // cell in map order). Accept versus reject must still agree.
+                assert_eq!(
+                    incremental.is_err(),
+                    full.is_err(),
+                    "the replay and the sweep disagree on accept/reject: {full:?} vs {incremental:?}"
+                );
+            }
+        }
+        assert!(
+            rejects > 100,
+            "the tampering must reject most mutated histories, got {rejects}"
+        );
+    }
+
+    /// The targeted version of the overlap tamper the random mutation rarely produces: a redo
+    /// `Place` moved onto a mega tile's ring cell. The anchor sits inside another footprint, so
+    /// both validators must report `FootprintOverlap` at the same action.
+    #[test]
+    fn a_place_moved_into_a_megas_ring_is_an_overlap_on_both_validators() {
+        let c = catalog();
+        let centre = Axial::new(2, 0);
+        let mut w = World::new(9);
+        w.place(&c, centre, "massif_granite", Orientation::new(0, 0))
+            .expect("the massif fits east of the start meadow");
+        let beside = centre.neighbor(0).neighbor(0);
+        w.place(&c, beside, "meadow", Orientation::new(0, 0))
+            .expect("the meadow fits two steps east");
+        assert!(w.undo(&c) && w.undo(&c));
+        let (undo, redo) = w.history_stacks();
+        let mut redo: Vec<Action> = redo.to_vec();
+        assert_eq!(redo.len(), 2, "the massif place and the meadow place");
+        let first = redo.first_mut().expect("non-empty");
+        let tile = match first {
+            Action::Place { tile, .. } => tile.clone(),
+            other => panic!("the oldest redo is the meadow place, got {other:?}"),
+        };
+        *first = Action::Place {
+            cell: centre.neighbor(0),
+            tile,
+        };
+        let tampered = World::from_parts(w.seed(), w.tiles().clone(), undo.clone(), redo);
+        let full = validate_history_full(&tampered, &c);
+        assert_eq!(
+            full,
+            Err(HistoryIssue::InvalidState {
+                stack: HistoryStack::Redo,
+                index: 1,
+                issue: WorldIssue::FootprintOverlap {
+                    cell: centre.neighbor(0)
+                },
+            }),
+            "the sweep must name the ring cell, got {full:?}"
+        );
+        assert_eq!(
+            validate_history(&tampered, &c),
+            full,
+            "the replay must agree with the sweep"
+        );
+    }
+
+    /// Regression guard for the replay's complexity, not a performance measurement: a 5,000-tile
+    /// world with a full history window must still decode in bounded time now that the replay
+    /// checks each action locally, where the per-step full sweep cost depth times world size.
+    /// Run with `cargo test -p hex-core --release -- --ignored history_cost`.
+    #[test]
+    #[ignore = "release-profile complexity guard; run explicitly"]
+    fn history_cost() {
+        let c = catalog();
+        let mut w = World::new(11);
+        for i in 1..=5_000 {
+            w.place(&c, Axial::new(i, 0), "meadow", Orientation::new(0, 0))
+                .expect("a straight row of meadows always fits");
+        }
+        assert_eq!(w.tiles().len(), 5_001);
+        let bytes = save_of(w).encode();
+        let started = std::time::Instant::now();
+        SaveData::decode(&bytes, &c).unwrap();
+        let elapsed = started.elapsed();
+        assert!(
+            elapsed < std::time::Duration::from_millis(50),
+            "decode took {elapsed:?}"
+        );
     }
 
     /// The sample with the road at EAST replaced by a forest, then the meadow at (0, 1) replaced by
