@@ -732,7 +732,7 @@ fn load_pieces(
     );
     let mut loads = vec![];
     let mut state = PieceState::Loading;
-    match hex_assets::parse_manifest(hex_render::kit_scene::MANIFEST) {
+    match hex_assets::parse_manifest(hex_render::kit_runtime::MANIFEST) {
         Ok(m) => {
             for (id, form) in boid_pieces() {
                 let entry = m.pieces.iter().find(|e| e.id == id);
@@ -748,7 +748,7 @@ fn load_pieces(
                             &server,
                             slot,
                             &r,
-                            hex_render::workload::KitHooks::None,
+                            hex_render::config::KitHooks::None,
                         );
                         let mut base = km.base;
                         // Wings and fins are single sheets (the GLB material is double-sided).
@@ -1952,7 +1952,7 @@ mod tests {
         }];
         let roosts = plan::roosts(&tiles, &c, &|_| true);
         assert_eq!(roosts.len(), 12);
-        let trunk = hex_render::kit_scene::piece_rotation(2) * tree.at;
+        let trunk = hex_render::kit_runtime::piece_rotation(2) * tree.at;
         for r in &roosts {
             assert!(
                 (r.face.length() - 1.0).abs() < 1e-4 && r.face.y.abs() < 1e-6,

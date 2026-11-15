@@ -17,7 +17,7 @@ use hex_render::{
         GpuKitInstance, KitChunk, KitGpuMeta, KitInstanceSet, KitInstanceSetData, KitSlot,
         KitSlotDraw,
     },
-    kit_scene::KitRotor,
+    kit_runtime::KitRotor,
     scene::{Lod, LodCover, lod_cover_range, lod_range},
 };
 
@@ -259,7 +259,7 @@ pub(super) fn settle(
     meshes: Res<Assets<Mesh>>,
     materials: Res<Assets<KitMaterial>>,
     families: Option<Res<KitFamilies>>,
-    config: Res<hex_render::GateConfig>,
+    config: Res<hex_render::RenderConfig>,
     mut report: ResMut<super::scatter::ScatterReport>,
     parts: Query<
         (
@@ -679,7 +679,7 @@ mod tests {
             .init_resource::<PlayRises>()
             .init_resource::<Assets<Mesh>>()
             .init_resource::<Assets<KitMaterial>>()
-            .init_resource::<hex_render::GateConfig>()
+            .init_resource::<hex_render::RenderConfig>()
             .init_resource::<super::super::scatter::ScatterReport>();
         // One family per part, as in production: a family is one piece primitive across LODs,
         // and one placement of it instances once. Distinct meshes, one family each.
@@ -890,7 +890,7 @@ mod tests {
             .init_resource::<PlayRises>()
             .init_resource::<Assets<Mesh>>()
             .init_resource::<Assets<KitMaterial>>()
-            .init_resource::<hex_render::GateConfig>()
+            .init_resource::<hex_render::RenderConfig>()
             .init_resource::<super::super::scatter::ScatterReport>();
         let lods: [Handle<Mesh>; 3] = {
             let mut meshes = app.world_mut().resource_mut::<Assets<Mesh>>();
@@ -1051,7 +1051,7 @@ mod tests {
             .init_resource::<Assets<KitMaterial>>()
             .init_resource::<Assets<crate::water::WaterMaterial>>()
             .init_resource::<Assets<crate::water::TerrainMaterial>>()
-            .init_resource::<hex_render::GateConfig>()
+            .init_resource::<hex_render::RenderConfig>()
             .init_resource::<super::super::scatter::ScatterReport>()
             .init_resource::<super::super::SlopeMeshes>()
             .init_resource::<super::super::NoBufferStops>()

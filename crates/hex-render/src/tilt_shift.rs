@@ -39,8 +39,8 @@ use bevy::{
 };
 
 use crate::{
+    config::{PostMode, RenderConfig, TiltMode},
     post::QualityTier,
-    workload::{GateConfig, PostMode, TiltMode},
 };
 
 const SHADER: &str = "shaders/tilt_shift.wesl";
@@ -207,7 +207,7 @@ pub fn build_override_uniform(o: &TiltOverride, taps: u32, near: f32) -> Option<
 
 /// Initial settings for a scene (re)build. `Auto` is on from Medium up and only in the kit
 /// scenario with the post stack; `On` forces it at any tier (Low uses the Medium tap count).
-pub fn settings_for(config: &GateConfig, kit: bool, tier: QualityTier) -> TiltShiftSettings {
+pub fn settings_for(config: &RenderConfig, kit: bool, tier: QualityTier) -> TiltShiftSettings {
     let enabled = match config.tilt {
         TiltMode::On => true,
         TiltMode::Off => false,
@@ -468,7 +468,7 @@ mod tests {
 
     #[test]
     fn config_resolves_per_tier_scenario_and_force() {
-        let c = |tilt, post| GateConfig {
+        let c = |tilt, post| RenderConfig {
             tilt,
             post,
             ..default()

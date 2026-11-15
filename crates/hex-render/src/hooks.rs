@@ -26,9 +26,9 @@ use hex_assets::{PieceEntry, PieceKind, Slot};
 
 use crate::{
     ActiveScenario, Scenario,
+    config::{KitHooks, RenderConfig},
     lighting::{IBL_INTENSITY, KIT_SUN_DIR},
     water::WaterMaterial,
-    workload::{GateConfig, KitHooks},
 };
 
 /// The MVP's fixed hour.
@@ -168,7 +168,7 @@ fn lookdev(s: Scenario) -> bool {
 fn apply_time_of_day(
     tod: Res<TimeOfDay>,
     scenario: Res<ActiveScenario>,
-    config: Res<GateConfig>,
+    config: Res<RenderConfig>,
     mut commands: Commands,
     mut suns: Query<(&mut DirectionalLight, &mut Transform)>,
     mut cams: Query<(Entity, &mut Exposure, Option<&mut EnvironmentMapLight>), With<Camera3d>>,
@@ -210,7 +210,7 @@ pub fn set_freeze(m: &mut WaterMaterial, f: f32) {
 }
 
 /// `kit_hooks=freeze`: freezes every water material. Runs only for that verification variant.
-fn apply_freeze(config: Res<GateConfig>, mut water: ResMut<Assets<WaterMaterial>>) {
+fn apply_freeze(config: Res<RenderConfig>, mut water: ResMut<Assets<WaterMaterial>>) {
     let f = water_freeze(config.kit_hooks);
     let ids: Vec<_> = water
         .iter()
@@ -239,7 +239,7 @@ fn apply_autumn(
             continue;
         };
         if mat.extension.params.flags & crate::kit_material::FLAG_FOLIAGE != 0 {
-            let i = (crate::workload::unit_hash(e.to_bits()) * 2.0) as usize;
+            let i = (crate::config::unit_hash(e.to_bits()) * 2.0) as usize;
             commands
                 .entity(e)
                 .insert(bevy::mesh::MeshTag::new(SEASON_AUTUMN[i.min(1)]));
@@ -291,7 +291,7 @@ mod tests {
     /// The MVP default drives every hook to its neutral value.
     #[test]
     fn mvp_defaults_are_neutral() {
-        assert_eq!(GateConfig::default().kit_hooks, KitHooks::None);
+        assert_eq!(RenderConfig::default().kit_hooks, KitHooks::None);
         assert_eq!(surface_hooks(KitHooks::None), [0.0; 3]);
         assert_eq!(water_freeze(KitHooks::None), 0.0);
         assert_eq!(crate::water::WaterParams::default().freeze, 0.0);

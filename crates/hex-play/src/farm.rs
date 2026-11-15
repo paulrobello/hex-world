@@ -981,7 +981,7 @@ mod tests {
         play::scatter::{layout, prepare},
         walk::{Blocked, Obstacle, hull, tests as walk_tests},
     };
-    use hex_render::kit_scene::piece_rotation;
+    use hex_render::kit_runtime::piece_rotation;
 
     fn farm() -> TileDef {
         TileCatalog::builtin().unwrap().get("farm").unwrap().clone()

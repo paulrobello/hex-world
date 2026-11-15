@@ -142,7 +142,8 @@ fn main() {
         .add_plugins(HexRenderPlugin {
             scenario: flags.scenario,
             view: flags.view,
-            config: flags.gate,
+            config: flags.render,
+            workload: flags.workload,
         })
         .add_plugins(hex_play::HexPlayPlugin {
             fps: flags.fps_on,

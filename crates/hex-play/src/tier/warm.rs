@@ -8,7 +8,7 @@
 //! frames, beside a copy of a water surface on that tier's variant that only it sees. Bevy then holds
 //! those tiers' pipelines, and a later change to them creates none. Runs again whenever the scene
 //! has created pipelines since (a pack, a new piece, a tier change). On by default on the web only
-//! (`tier_warm`, `GateConfig::tier_warm`).
+//! (`tier_warm`, `RenderConfig::tier_warm`).
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use bevy::{
@@ -33,8 +33,8 @@ use crate::{
 };
 use hex_render::{
     AgentsPaused, SceneEntity,
+    config::{PostMode, RenderConfig},
     post::{QualityTier, TierWarmCamera, set_camera_ssao},
-    workload::{GateConfig, PostMode},
 };
 
 /// No warm-up before READY (`diag::READY_FRAME`), so it never delays it.
@@ -128,7 +128,7 @@ fn spawn_camera(
     game: Entity,
     camera: &Camera,
     tier: QualityTier,
-    config: &GateConfig,
+    config: &RenderConfig,
     target: Handle<Image>,
 ) -> Entity {
     let mut game = commands.entity(game);
@@ -181,7 +181,7 @@ pub(super) fn warm(
     mut state: Local<WarmState>,
     mut choice: ResMut<TierChoice>,
     (config, active, frame, kit, paused): (
-        Res<GateConfig>,
+        Res<RenderConfig>,
         Res<hex_render::ActiveScenario>,
         Res<FrameCount>,
         Option<Res<PlayKit>>,

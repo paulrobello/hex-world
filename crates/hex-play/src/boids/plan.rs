@@ -19,7 +19,7 @@ use crate::{
         tiles::{self, CellWater, WATER_Y, WaterKind},
     },
 };
-use hex_render::{kit_scene::piece_rotation, post::QualityTier};
+use hex_render::{kit_runtime::piece_rotation, post::QualityTier};
 
 /// Boid caps for one quality tier: one budget shared by birds and fish (PRD §7.2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

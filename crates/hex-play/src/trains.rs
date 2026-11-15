@@ -28,10 +28,10 @@ use crate::{
 use hex_render::{
     ActiveScenario, Scenario, SceneEntity,
     car_material::{CarMaterial, build_material},
+    config::RenderConfig,
     kit_material::slot_requests,
-    kit_scene::MANIFEST,
+    kit_runtime::MANIFEST,
     scene::{Lod, lod_range},
-    workload::GateConfig,
 };
 
 /// Rail top over the ground plane on every rail piece, the level crossing's deck and the river
@@ -200,7 +200,7 @@ pub fn finish_kit(
     gltfs: Res<Assets<Gltf>>,
     gltf_meshes: Res<Assets<GltfMesh>>,
     mut materials: ResMut<Assets<CarMaterial>>,
-    config: Res<GateConfig>,
+    config: Res<RenderConfig>,
 ) {
     let TrainKit::Loading {
         manifest,

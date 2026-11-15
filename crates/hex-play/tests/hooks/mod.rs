@@ -729,7 +729,7 @@ fn mvp_values_are_neutral_for_every_slot() {
             }
         }
     }
-    assert!(hex_render::GateConfig::default().kit_hooks == KitHooks::None);
+    assert!(hex_render::RenderConfig::default().kit_hooks == KitHooks::None);
     assert!(hooks::TimeOfDay::default().is_noon());
     assert_eq!(hooks::atmosphere(hooks::NOON).night, 0.0);
     assert_eq!(hooks::atmosphere(hooks::NOON).fog, None);

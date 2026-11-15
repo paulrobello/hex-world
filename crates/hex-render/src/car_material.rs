@@ -19,8 +19,8 @@ use bevy::{
 use hex_assets::Slot;
 
 use crate::{
+    config::KitHooks,
     kit_material::{SlotRequests, load_map},
-    workload::KitHooks,
 };
 
 pub const SHADER: &str = "shaders/car_material.wesl";

@@ -81,7 +81,7 @@ export function account(dist) {
   const kit = (p) => join(kitDir, p);
   const famFile = (stem, fam) => kit(`${stem}.${FAMILIES[fam]}`);
 
-  // Read here, never fetched: the wasm embeds it (hex-render kit_scene::MANIFEST, include_str!).
+  // Read here, never fetched: the wasm embeds it (hex-render kit_runtime::MANIFEST, include_str!).
   const manifestPath = join(kitDir, "manifest.json");
   if (!existsSync(manifestPath)) die(`no ${manifestPath}; run make build-web first`);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));

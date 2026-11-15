@@ -14,7 +14,7 @@ use hex_play::{
     trains::{StockKind, StockPose, TrainsView},
 };
 use hex_render::{ActiveScenario, AgentsPaused, Scenario};
-use hex_render::{GateConfig, post::QualityTier};
+use hex_render::{RenderConfig, post::QualityTier};
 use hex_sim::{CAR_FADE_TICKS, HIGH_TIER_CAR_CAP, SimConfig, Simulation, TICK_HZ};
 use serde_json::{Value, json};
 
@@ -491,11 +491,11 @@ pub fn mirror_world(
 #[derive(Resource, Default, Clone, Copy, Debug, PartialEq)]
 pub struct CarCapOverride(pub Option<usize>);
 
-/// Keeps the car cap on the quality tier in force (`GateConfig::tier`): startup detection, the
+/// Keeps the car cap on the quality tier in force (`RenderConfig::tier`): startup detection, the
 /// probe's step-down and `set_tier` all change it there. Cars over a lowered cap fade out over
 /// [`CAR_FADE_TICKS`], or go at once under reduced motion.
 pub fn follow_tier(
-    gate: Option<Res<GateConfig>>,
+    gate: Option<Res<RenderConfig>>,
     reduced: Option<Res<ReducedMotion>>,
     held: Option<Res<CarCapOverride>>,
     mut sim: ResMut<CarSim>,
@@ -1000,7 +1000,7 @@ mod tests {
     /// The trip events of the cars proof layout over two simulated minutes: every pull-out is at
     /// the car's spot as it was parked, every park at the spot the car was driving to, a car parks
     /// only after it pulled out, and the driving count is pull-outs minus parks throughout.
-    /// The car cap follows the tier in `GateConfig` (PRD §7.2, §9.2): 75, 150, 300 and 300.
+    /// The car cap follows the tier in `RenderConfig` (PRD §7.2, §9.2): 75, 150, 300 and 300.
     #[test]
     fn car_cap_follows_the_quality_tier() {
         use bevy::ecs::system::RunSystemOnce;
@@ -1030,7 +1030,7 @@ mod tests {
         assert!(full > 1, "the checkpoint world has {full} cars");
         /// Sets the tier, runs `follow_tier` and returns the cap and the car count.
         fn tier(world: &mut bevy::ecs::world::World, t: QualityTier) -> (usize, usize) {
-            world.insert_resource(GateConfig {
+            world.insert_resource(RenderConfig {
                 tier: t,
                 ..Default::default()
             });

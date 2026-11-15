@@ -63,7 +63,7 @@ use crate::{
     },
     water::tiles::{WATER_Y, WaterKind, water_kind},
 };
-use hex_render::{ActiveScenario, Scenario, kit_scene::piece_rotation};
+use hex_render::{ActiveScenario, Scenario, kit_runtime::piece_rotation};
 
 /// The walker's body radius (m): how close its centre comes to a wall, a trunk or an edge.
 pub const BODY_RADIUS: f32 = 0.3;
@@ -2078,7 +2078,7 @@ pub(crate) mod tests {
 
     use super::*;
     use crate::play::scatter::{Instance, layout, prepare};
-    use hex_render::kit_scene::MANIFEST;
+    use hex_render::kit_runtime::MANIFEST;
 
     type Tris = Option<Vec<(Tri, String)>>;
 

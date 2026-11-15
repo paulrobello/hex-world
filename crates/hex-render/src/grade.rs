@@ -9,7 +9,7 @@ use bevy::{
     render::view::{ColorGrading, ColorGradingGlobal, ColorGradingSection},
 };
 
-use crate::workload::{Ev100, GateConfig, Tonemap};
+use crate::config::{Ev100, RenderConfig, Tonemap};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -150,18 +150,18 @@ pub fn graded(s: crate::Scenario) -> bool {
     s == crate::Scenario::Kit || s.has_water() || s == crate::Scenario::Play
 }
 
-/// Switches the grade live: `GateConfig` (so a rebuild and the time of day keep it), every 3D
+/// Switches the grade live: `RenderConfig` (so a rebuild and the time of day keep it), every 3D
 /// camera's tone mapper, exposure and grading, and the clear colour. Exposure moves by the change
 /// in base EV, which keeps photo-mode and time-of-day offsets; that change is returned.
 pub fn apply(world: &mut World, grade: Grade) -> f32 {
-    let before = world.resource::<GateConfig>().ev100.get();
+    let before = world.resource::<RenderConfig>().ev100.get();
     {
-        let mut c = world.resource_mut::<GateConfig>();
+        let mut c = world.resource_mut::<RenderConfig>();
         c.grade = grade;
         c.tonemap = grade.tonemap();
         c.ev100 = Ev100::from_f32(grade.ev100());
     }
-    let after = world.resource::<GateConfig>().ev100.get();
+    let after = world.resource::<RenderConfig>().ev100.get();
     if !graded(world.resource::<crate::ActiveScenario>().0) {
         return 0.0;
     }
@@ -185,7 +185,7 @@ pub fn apply(world: &mut World, grade: Grade) -> f32 {
 }
 
 /// The grade's camera components, inserted by `scene::setup`.
-pub fn camera_bundle(config: &GateConfig) -> (Tonemapping, Exposure, ColorGrading) {
+pub fn camera_bundle(config: &RenderConfig) -> (Tonemapping, Exposure, ColorGrading) {
     (
         crate::lighting::tonemapping(config.tonemap),
         crate::lighting::exposure(config.ev100),
@@ -205,12 +205,12 @@ mod tests {
         }
         assert_eq!(Grade::parse("filmic"), None);
         assert_eq!(Grade::default(), Grade::Rich3);
-        assert_eq!(GateConfig::default().grade, Grade::default());
+        assert_eq!(RenderConfig::default().grade, Grade::default());
     }
 
     #[test]
     fn rich3_is_the_shipped_look_and_tony_and_aces_the_earlier_ones() {
-        let d = GateConfig::default();
+        let d = RenderConfig::default();
         assert_eq!(Grade::Rich3.tonemap(), d.tonemap);
         assert_eq!(Grade::Rich3.ev100(), d.ev100.get());
         assert_eq!(

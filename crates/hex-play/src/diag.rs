@@ -585,7 +585,7 @@ fn sample(
     cameras: Query<(Has<TemporalAntiAliasing>, Has<Bloom>, Has<DepthOfField>), With<Camera3d>>,
     lights: Query<(&DirectionalLight, &CascadeShadowConfig)>,
     instanced: Option<Res<hex_render::instanced::InstancedScene>>,
-    config: Option<Res<hex_render::workload::GateConfig>>,
+    workload: Option<Res<hex_render::workload::GateWorkload>>,
     (frame, gpu_timing, virt, windows): (
         Res<FrameCount>,
         Option<Res<crate::gpu_timing::GpuTiming>>,
@@ -658,7 +658,7 @@ fn sample(
         let (cascades, shadow_dist) = lights.iter().next().map_or((0, 0.0), |(_, c)| {
             (c.bounds.len(), c.bounds.last().copied().unwrap_or(0.0))
         });
-        let casters = config.map_or("all", |c| c.shadow_casters.name());
+        let casters = workload.map_or("all", |c| c.shadow_casters.name());
         let passes = PASS_CENSUS
             .lock()
             .unwrap()

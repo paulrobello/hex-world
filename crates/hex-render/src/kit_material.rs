@@ -20,7 +20,7 @@ use hex_assets::{
     Blossom, Channel, KitManifest, PieceEntry, PieceKind, Slot, TextureFamily, map_file,
 };
 
-use crate::workload::KitHooks;
+use crate::config::KitHooks;
 
 pub const SHADER: &str = "shaders/kit_material.wesl";
 /// Forward vertex stage: Bevy's mesh vertex plus the foliage wind (`foliage_wind.wesl`).
@@ -582,7 +582,7 @@ mod tests {
     /// retreating swash never bares a hard sand-to-gravel line (owner report 2026-10-19).
     #[test]
     fn coast_seabeds_take_the_wet_band_seabed_side() {
-        let m = parse_manifest(crate::kit_scene::MANIFEST).unwrap();
+        let m = parse_manifest(crate::kit_runtime::MANIFEST).unwrap();
         let mut checked = 0;
         for p in m
             .pieces

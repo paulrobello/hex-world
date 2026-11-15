@@ -50,7 +50,7 @@ use super::{
     slope_ground::{self, SlopeMeshes},
 };
 use crate::water::{self, WaterField, tiles::WaterKind};
-use hex_render::{ActiveScenario, Scenario, SceneEntity, kit_scene::piece_rotation};
+use hex_render::{ActiveScenario, Scenario, SceneEntity, kit_runtime::piece_rotation};
 
 pub const GHOST_SHADER: &str = "shaders/ghost.wesl";
 

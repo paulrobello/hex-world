@@ -509,7 +509,7 @@ pub fn run_commands(
         Command::SetGrass { density } => {
             match hex_play::play::grass::Density::from_share(density) {
                 Some(d) => commands.queue(move |w: &mut World| {
-                    w.resource_mut::<hex_render::GateConfig>().grass = d;
+                    w.resource_mut::<hex_render::RenderConfig>().grass = d;
                 }),
                 None => warn!("set_grass command: density {density} is not a number, skipped"),
             }
@@ -517,7 +517,7 @@ pub fn run_commands(
         Command::SetGrassDistance { scale } => {
             match hex_play::play::grass::GrassDistance::from_scale(scale) {
                 Some(d) => commands.queue(move |w: &mut World| {
-                    w.resource_mut::<hex_render::GateConfig>().grass_distance = d;
+                    w.resource_mut::<hex_render::RenderConfig>().grass_distance = d;
                 }),
                 None => {
                     warn!("set_grass_distance command: scale {scale} is not a number, skipped")
@@ -795,7 +795,8 @@ pub struct AgentSnapshot<'w> {
 
 #[derive(bevy::ecs::system::SystemParam)]
 pub struct PresentationSnapshot<'w> {
-    config: Option<Res<'w, hex_render::GateConfig>>,
+    config: Option<Res<'w, hex_render::RenderConfig>>,
+    workload: Option<Res<'w, hex_render::GateWorkload>>,
     gpu: Option<Res<'w, hex_render::GpuLimits>>,
     tilt: Res<'w, TiltShiftSettings>,
     tilt_chosen: Res<'w, TiltPinned>,
@@ -870,6 +871,7 @@ pub fn publish_state(
     } = agents;
     let PresentationSnapshot {
         config,
+        workload,
         gpu,
         tilt,
         tilt_chosen,
@@ -907,7 +909,7 @@ pub fn publish_state(
     let camera = cameras.iter().next().map(|t| {
         serde_json::json!({ "pos": t.translation.to_array(), "forward": t.forward().to_array() })
     });
-    let kit_src = config.as_ref().map(|c| c.kit_src).unwrap_or_default();
+    let kit_src = workload.as_ref().map(|c| c.kit_src).unwrap_or_default();
     let grade = grade_json(config.map(|c| c.grade).unwrap_or_default());
     let gpu_limits = gpu.as_deref().copied();
     // `null` until the render device exists (the web renderer starts asynchronously).

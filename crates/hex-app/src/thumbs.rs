@@ -73,8 +73,8 @@ const TEARDOWN_DELAY_ENV: &str = "HEXW_THUMBS_TEARDOWN_DELAY_SECS";
 /// or FPS counter, the fixed clock, and the supersampled window.
 pub fn force_flags(f: &mut Flags) {
     f.scenario = Scenario::Play;
-    f.gate.post = PostMode::None;
-    f.gate.tilt = TiltMode::Off;
+    f.render.post = PostMode::None;
+    f.render.tilt = TiltMode::Off;
     f.fps_on = false;
     f.clock_fixed = true;
     f.size = Some(RENDER_SIZE);

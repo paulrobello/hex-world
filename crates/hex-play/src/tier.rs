@@ -27,9 +27,9 @@ use crate::{
 };
 use hex_render::{
     SceneEntity,
+    config::{PostMode, RenderConfig},
     post::{QualityTier, TierWarmCamera, set_camera_ssao},
     tilt_shift::{TiltPinned, TiltShiftSettings, TiltTierDefault, kept_tilt, settings_for},
-    workload::{GateConfig, PostMode},
 };
 
 /// The rebuild the render world waits on: `(generation << 32) | frame`, the generation being
@@ -402,7 +402,7 @@ pub fn request(
 }
 
 fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: String) {
-    let current = world.resource::<GateConfig>().tier;
+    let current = world.resource::<RenderConfig>().tier;
     {
         let mut choice = world.resource_mut::<TierChoice>();
         choice.tier = tier;
@@ -416,7 +416,7 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
         return;
     }
     info!("tier: {} -> {}", current.name(), tier.name());
-    world.resource_mut::<GateConfig>().tier = tier;
+    world.resource_mut::<RenderConfig>().tier = tier;
     if world.resource::<hex_render::ActiveScenario>().0 == hex_render::Scenario::Play {
         retier_play(world, tier);
         return;
@@ -464,9 +464,9 @@ fn apply_tier(world: &mut World, tier: QualityTier, source: TierSource, reason: 
 /// camera stay, and only what the tier drives changes, to what `scene::setup` builds at the tier.
 /// The camera's SSAO and screen-space transmission, the water's shader variant and wave count, the
 /// tilt-shift default and the flock size change here; grass and the car cap follow
-/// `GateConfig::tier` on their own.
+/// `RenderConfig::tier` on their own.
 fn retier_play(world: &mut World, tier: QualityTier) {
-    let config = *world.resource::<GateConfig>();
+    let config = *world.resource::<RenderConfig>();
     crate::boids::set_budget(world, crate::boids::BoidBudget::for_tier(tier));
     let cams: Vec<(Entity, bool)> = world
         .query_filtered::<(Entity, Has<PlayWaterCamera>), (
@@ -875,7 +875,7 @@ mod tests {
         use crate::play::PlayTileRoot;
         use crate::water::{TerrainMaterial, materials};
         let mut world = World::new();
-        let config = GateConfig {
+        let config = RenderConfig {
             tier,
             post: PostMode::Full,
             ..default()
@@ -988,7 +988,7 @@ mod tests {
                     "{from:?}->{to:?}: {e} was despawned"
                 );
             }
-            assert_eq!(world.resource::<GateConfig>().tier, to);
+            assert_eq!(world.resource::<RenderConfig>().tier, to);
             assert_eq!(world.resource::<TierChoice>().changes, 1);
             let fresh = fresh_camera(&mut world, to);
             assert_eq!(
@@ -1002,7 +1002,7 @@ mod tests {
                 assert_eq!(m.key, WaterKey::for_tier(to));
                 assert_eq!(m.params.wave_count, wave_count(to));
             }
-            let config = *world.resource::<GateConfig>();
+            let config = *world.resource::<RenderConfig>();
             assert_eq!(
                 world.resource::<TiltTierDefault>().0,
                 settings_for(&config, true, to)

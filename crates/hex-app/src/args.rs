@@ -1,4 +1,6 @@
-pub use hex_render::{GateConfig, GateView, Layout, PostMode, Scenario, ShadowCasters};
+pub use hex_render::{
+    GateView, GateWorkload, Layout, PostMode, RenderConfig, Scenario, ShadowCasters,
+};
 
 /// Native present mode. `NoVsync` is Bevy's `AutoNoVsync` (immediate, else mailbox, else fifo).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -29,9 +31,10 @@ fn set_or_warn<T>(slot: &mut T, parsed: Option<T>, k: &str, v: &str, warnings: &
 
 #[derive(Clone, Debug, Default)]
 pub struct Flags {
-    /// Gate variant: `layout`, `post`, `shadows`, `chunk`, `shadow_casters`, `cascades`,
-    /// `shadow_dist`.
-    pub gate: GateConfig,
+    /// Production render settings: `post`, `shadows`, `cascades`, `shadow_dist`, `tier`, `grade`...
+    pub render: RenderConfig,
+    /// Gate and kit-showcase variant: `layout`, `chunk`, `shadow_casters`, `kit_src`.
+    pub workload: GateWorkload,
     /// Native only.
     pub present: Present,
     pub scenario: Scenario,
@@ -162,12 +165,12 @@ pub fn flags_from_pairs_or(pairs: &[(String, String)], default: Scenario) -> (Fl
     }
     // Explicit tonemap and exposure override the grade regardless of key order.
     if let Some(g) = state.grade {
-        state.f.gate.grade = g;
+        state.f.render.grade = g;
         if !state.tonemap_set {
-            state.f.gate.tonemap = g.tonemap();
+            state.f.render.tonemap = g.tonemap();
         }
         if !state.ev100_set {
-            state.f.gate.ev100 = hex_render::Ev100::from_f32(g.ev100());
+            state.f.render.ev100 = hex_render::Ev100::from_f32(g.ev100());
         }
     }
     (state.f, state.warnings)
@@ -248,7 +251,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("layout", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.layout,
+            &mut state.f.workload.layout,
             Layout::parse(v),
             k,
             v,
@@ -257,7 +260,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("post", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.post,
+            &mut state.f.render.post,
             PostMode::parse(v),
             k,
             v,
@@ -266,7 +269,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("shadows", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.shadows,
+            &mut state.f.render.shadows,
             hex_render::parse_shadows(v),
             k,
             v,
@@ -275,7 +278,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("chunk", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.chunk,
+            &mut state.f.workload.chunk,
             hex_render::parse_chunk(v),
             k,
             v,
@@ -284,7 +287,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("shadow_casters", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.shadow_casters,
+            &mut state.f.workload.shadow_casters,
             ShadowCasters::parse(v),
             k,
             v,
@@ -293,7 +296,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("cascades", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.cascades,
+            &mut state.f.render.cascades,
             hex_render::parse_cascades(v),
             k,
             v,
@@ -302,7 +305,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("shadow_dist", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.shadow_dist,
+            &mut state.f.render.shadow_dist,
             hex_render::parse_shadow_dist(v),
             k,
             v,
@@ -311,7 +314,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("kit_hooks", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.kit_hooks,
+            &mut state.f.render.kit_hooks,
             hex_render::KitHooks::parse(v),
             k,
             v,
@@ -320,7 +323,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("kit_src", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.kit_src,
+            &mut state.f.workload.kit_src,
             hex_render::KitSource::parse(v),
             k,
             v,
@@ -330,7 +333,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     ("tonemap", |state, k, v| {
         let t = hex_render::Tonemap::parse(v);
         state.tonemap_set |= t.is_some();
-        set_or_warn(&mut state.f.gate.tonemap, t, k, v, &mut state.warnings);
+        set_or_warn(&mut state.f.render.tonemap, t, k, v, &mut state.warnings);
     }),
     ("grade", |state, _k, v| match hex_render::Grade::parse(v) {
         Some(g) => state.grade = Some(g),
@@ -340,7 +343,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("ibl", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.ibl,
+            &mut state.f.render.ibl,
             hex_render::parse_ibl(v),
             k,
             v,
@@ -350,11 +353,11 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     ("ev100", |state, k, v| {
         let e = hex_render::Ev100::parse(v);
         state.ev100_set |= e.is_some();
-        set_or_warn(&mut state.f.gate.ev100, e, k, v, &mut state.warnings);
+        set_or_warn(&mut state.f.render.ev100, e, k, v, &mut state.warnings);
     }),
     ("tilt", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.tilt,
+            &mut state.f.render.tilt,
             hex_render::TiltMode::parse(v),
             k,
             v,
@@ -364,11 +367,11 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     ("tier", |state, k, v| {
         let t = hex_render::post::QualityTier::parse(v);
         state.f.tier_explicit |= t.is_some();
-        set_or_warn(&mut state.f.gate.tier, t, k, v, &mut state.warnings);
+        set_or_warn(&mut state.f.render.tier, t, k, v, &mut state.warnings);
     }),
     ("tier_warm", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.tier_warm,
+            &mut state.f.render.tier_warm,
             hex_render::parse_shadows(v),
             k,
             v,
@@ -400,7 +403,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("tilt_strength", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.tilt_strength,
+            &mut state.f.render.tilt_strength,
             hex_render::TiltStrength::parse(v),
             k,
             v,
@@ -409,7 +412,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("grass", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.grass,
+            &mut state.f.render.grass,
             hex_render::parse_grass(v),
             k,
             v,
@@ -418,7 +421,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("grass_distance", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.grass_distance,
+            &mut state.f.render.grass_distance,
             hex_render::parse_grass_distance(v),
             k,
             v,
@@ -428,7 +431,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     // The hyphenated spelling, natively (`--grass-distance far`).
     ("grass-distance", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.grass_distance,
+            &mut state.f.render.grass_distance,
             hex_render::parse_grass_distance(v),
             k,
             v,
@@ -456,7 +459,7 @@ const FLAG_HANDLERS: &[(&str, FlagHandler)] = &[
     }),
     ("water_clock", |state, k, v| {
         set_or_warn(
-            &mut state.f.gate.water_fixed,
+            &mut state.f.render.water_fixed,
             match v.as_str() {
                 "fixed" => Some(true),
                 "real" => Some(false),
@@ -622,16 +625,16 @@ mod tests {
     #[test]
     fn grass_distance_flag() {
         let (f, w) = flags_from_pairs(&[]);
-        assert_eq!(f.gate.grass_distance.hundredths(), 100, "Near by default");
+        assert_eq!(f.render.grass_distance.hundredths(), 100, "Near by default");
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("grass_distance", "far")]));
-        assert_eq!(f.gate.grass_distance.hundredths(), 200);
+        assert_eq!(f.render.grass_distance.hundredths(), 200);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("grass-distance", "1.5")]));
-        assert_eq!(f.gate.grass_distance.hundredths(), 150);
+        assert_eq!(f.render.grass_distance.hundredths(), 150);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("grass_distance", "farther")]));
-        assert_eq!(f.gate.grass_distance.hundredths(), 100);
+        assert_eq!(f.render.grass_distance.hundredths(), 100);
         assert_eq!(w.len(), 1);
     }
 
@@ -639,20 +642,20 @@ mod tests {
     fn kit_scenario_and_hooks() {
         let (f, w) = flags_from_pairs(&p(&[("shot", "kit"), ("kit_hooks", "snow")]));
         assert_eq!(f.scenario, Scenario::Kit);
-        assert_eq!(f.gate.kit_hooks, hex_render::KitHooks::Snow);
+        assert_eq!(f.render.kit_hooks, hex_render::KitHooks::Snow);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("kit_hooks", "hail")]));
-        assert_eq!(f.gate.kit_hooks, hex_render::KitHooks::None);
+        assert_eq!(f.render.kit_hooks, hex_render::KitHooks::None);
         assert_eq!(w.len(), 1);
     }
 
     #[test]
     fn kit_source_parses_or_warns() {
         let (f, w) = flags_from_pairs(&p(&[("scenario", "kit"), ("kit_src", "fixture")]));
-        assert_eq!(f.gate.kit_src, hex_render::KitSource::Fixture);
+        assert_eq!(f.workload.kit_src, hex_render::KitSource::Fixture);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("kit_src", "p0")]));
-        assert_eq!(f.gate.kit_src, hex_render::KitSource::Runtime);
+        assert_eq!(f.workload.kit_src, hex_render::KitSource::Runtime);
         assert_eq!(w.len(), 1);
     }
 
@@ -664,11 +667,11 @@ mod tests {
             ("water_clock", "fixed"),
         ]));
         assert_eq!(f.scenario, Scenario::Water);
-        assert_eq!(f.gate.tier, hex_render::post::QualityTier::Low);
-        assert!(f.gate.water_fixed && w.is_empty());
+        assert_eq!(f.render.tier, hex_render::post::QualityTier::Low);
+        assert!(f.render.water_fixed && w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("tier", "epic"), ("water_clock", "x")]));
-        assert_eq!(f.gate.tier, hex_render::post::QualityTier::High);
-        assert!(!f.gate.water_fixed);
+        assert_eq!(f.render.tier, hex_render::post::QualityTier::High);
+        assert!(!f.render.water_fixed);
         assert_eq!(w.len(), 2);
     }
 
@@ -755,11 +758,11 @@ mod tests {
     #[test]
     fn tier_warm_flag() {
         let (f, w) = flags_from_pairs(&[]);
-        assert!(!f.gate.tier_warm, "off by default (owner A33 O2)");
+        assert!(!f.render.tier_warm, "off by default (owner A33 O2)");
         let (f, w2) = flags_from_pairs(&p(&[("tier_warm", "on")]));
-        assert!(f.gate.tier_warm && w.is_empty() && w2.is_empty());
+        assert!(f.render.tier_warm && w.is_empty() && w2.is_empty());
         let (f, _) = flags_from_pairs(&p(&[("tier_warm", "off")]));
-        assert!(!f.gate.tier_warm);
+        assert!(!f.render.tier_warm);
         let (_, w) = flags_from_pairs(&p(&[("tier_warm", "maybe")]));
         assert_eq!(w.len(), 1);
     }
@@ -794,23 +797,23 @@ mod tests {
     fn grade_sets_tone_map_and_exposure_unless_their_keys_override() {
         let (f, w) = flags_from_pairs(&p(&[("grade", "aces")]));
         assert!(w.is_empty(), "{w:?}");
-        assert_eq!(f.gate.grade, hex_render::Grade::Aces);
-        assert_eq!(f.gate.tonemap, hex_render::Tonemap::AcesFitted);
-        assert_eq!(f.gate.ev100.get(), 12.5);
+        assert_eq!(f.render.grade, hex_render::Grade::Aces);
+        assert_eq!(f.render.tonemap, hex_render::Tonemap::AcesFitted);
+        assert_eq!(f.render.ev100.get(), 12.5);
         let (f, _) = flags_from_pairs(&p(&[("ev100", "13"), ("grade", "aces")]));
         assert_eq!(
-            (f.gate.tonemap, f.gate.ev100.get()),
+            (f.render.tonemap, f.render.ev100.get()),
             (hex_render::Tonemap::AcesFitted, 13.0)
         );
         let (f, _) = flags_from_pairs(&p(&[("grade", "rich-2"), ("tonemap", "agx")]));
         assert_eq!(
-            (f.gate.grade, f.gate.tonemap),
+            (f.render.grade, f.render.tonemap),
             (hex_render::Grade::Rich2, hex_render::Tonemap::AgX)
         );
         let (f, w) = flags_from_pairs(&p(&[("grade", "vivid")]));
-        assert_eq!((f.gate.grade, w.len()), (hex_render::Grade::Rich3, 1));
+        assert_eq!((f.render.grade, w.len()), (hex_render::Grade::Rich3, 1));
         assert_eq!(
-            (f.gate.tonemap, f.gate.ev100.get()),
+            (f.render.tonemap, f.render.ev100.get()),
             (hex_render::Tonemap::AcesFitted, 12.5)
         );
     }
@@ -818,28 +821,28 @@ mod tests {
     #[test]
     fn tonemap_and_ibl_keys() {
         let (f, w) = flags_from_pairs(&p(&[("tonemap", "agx"), ("ibl", "off")]));
-        assert_eq!(f.gate.tonemap, hex_render::Tonemap::AgX);
-        assert!(!f.gate.ibl && w.is_empty());
+        assert_eq!(f.render.tonemap, hex_render::Tonemap::AgX);
+        assert!(!f.render.ibl && w.is_empty());
     }
 
     #[test]
     fn ev100_key() {
         let (f, w) = flags_from_pairs(&p(&[("ev100", "13.3")]));
-        assert_eq!(f.gate.ev100.get(), 13.3);
+        assert_eq!(f.render.ev100.get(), 13.3);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("ev100", "dark")]));
-        assert_eq!(f.gate.ev100, hex_render::GateConfig::default().ev100);
+        assert_eq!(f.render.ev100, hex_render::RenderConfig::default().ev100);
         assert_eq!(w.len(), 1);
     }
 
     #[test]
     fn tilt_keys() {
         let (f, w) = flags_from_pairs(&p(&[("tilt", "on"), ("tilt_strength", "0.5")]));
-        assert_eq!(f.gate.tilt, hex_render::TiltMode::On);
-        assert_eq!(f.gate.tilt_strength.get(), 0.5);
+        assert_eq!(f.render.tilt, hex_render::TiltMode::On);
+        assert_eq!(f.render.tilt_strength.get(), 0.5);
         assert!(w.is_empty());
         let (f, w) = flags_from_pairs(&p(&[("tilt", "maybe"), ("tilt_strength", "2")]));
-        assert_eq!(f.gate.tilt, hex_render::TiltMode::Off);
+        assert_eq!(f.render.tilt, hex_render::TiltMode::Off);
         assert_eq!(w.len(), 2);
     }
 
@@ -965,10 +968,10 @@ mod tests {
             ("present", "novsync"),
         ]));
         assert!(w.is_empty(), "{w:?}");
-        assert_eq!(f.gate.layout, Layout::Chunks);
-        assert_eq!(f.gate.post, PostMode::None);
-        assert!(!f.gate.shadows);
-        assert_eq!(f.gate.chunk, 19);
+        assert_eq!(f.workload.layout, Layout::Chunks);
+        assert_eq!(f.render.post, PostMode::None);
+        assert!(!f.render.shadows);
+        assert_eq!(f.workload.chunk, 19);
         assert_eq!(f.present, Present::NoVsync);
     }
 
@@ -981,26 +984,27 @@ mod tests {
             ("shadow_dist", "800"),
         ]));
         assert!(w.is_empty(), "{w:?}");
-        assert_eq!(f.gate.layout, Layout::Instanced);
-        assert_eq!(f.gate.shadow_casters, ShadowCasters::Large);
-        assert_eq!(f.gate.cascades, 3);
-        assert_eq!(f.gate.shadow_dist, 800);
+        assert_eq!(f.workload.layout, Layout::Instanced);
+        assert_eq!(f.workload.shadow_casters, ShadowCasters::Large);
+        assert_eq!(f.render.cascades, 3);
+        assert_eq!(f.render.shadow_dist, 800);
         let (f, w) = flags_from_pairs(&p(&[
             ("shadow_casters", "few"),
             ("cascades", "9"),
             ("shadow_dist", "50"),
         ]));
         assert_eq!(w.len(), 3, "{w:?}");
-        assert_eq!(f.gate, GateConfig::default());
+        assert_eq!(f.render, RenderConfig::default());
+        assert_eq!(f.workload, GateWorkload::default());
     }
 
     #[test]
     fn gate_config_defaults() {
         let (f, _) = flags_from_pairs(&[]);
-        assert_eq!(f.gate.layout, Layout::Entities);
-        assert_eq!(f.gate.post, PostMode::Full);
-        assert!(f.gate.shadows);
-        assert_eq!(f.gate.chunk, 7);
+        assert_eq!(f.workload.layout, Layout::Entities);
+        assert_eq!(f.render.post, PostMode::Full);
+        assert!(f.render.shadows);
+        assert_eq!(f.workload.chunk, 7);
         assert_eq!(f.present, Present::Fifo);
     }
 
@@ -1017,7 +1021,8 @@ mod tests {
         for (warning, bad) in w.iter().zip(["blob", "half", "maybe", "8", "fast"]) {
             assert!(warning.contains(bad), "{warning}");
         }
-        assert_eq!(f.gate, GateConfig::default());
+        assert_eq!(f.render, RenderConfig::default());
+        assert_eq!(f.workload, GateWorkload::default());
         assert_eq!(f.present, Present::Fifo);
         let (f, w) = flags_from_pairs(&p(&[
             ("layout", "entities"),
@@ -1025,7 +1030,8 @@ mod tests {
             ("chunk", "7"),
         ]));
         assert!(w.is_empty());
-        assert_eq!(f.gate, GateConfig::default());
+        assert_eq!(f.render, RenderConfig::default());
+        assert_eq!(f.workload, GateWorkload::default());
     }
 
     #[test]

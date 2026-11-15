@@ -12,7 +12,7 @@ use super::{
     scatter::{self, Surface},
 };
 use crate::walk::tests::mesh_tris;
-use hex_render::kit_scene::MANIFEST;
+use hex_render::kit_runtime::MANIFEST;
 
 /// One tile build's inputs, as `grass::sync` gathers them before it starts the clock.
 struct Case {

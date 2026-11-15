@@ -1,7 +1,9 @@
 #[cfg(feature = "gate-tools")]
 use crate::{
+    ActiveView,
     chunks::{chunk_tiles, merge_by_material},
-    workload::{GATE, ShadowCasters, piece_material, unit_hash},
+    config::unit_hash,
+    workload::{GATE, GateView, GateWorkload, Layout, ShadowCasters, piece_material},
 };
 use bevy::{
     asset::RenderAssetUsages,
@@ -11,13 +13,13 @@ use bevy::{
     prelude::*,
 };
 #[cfg(feature = "gate-tools")]
-use hex_core::spiral;
-use hex_core::{Axial, HEX_RADIUS, hex_prism};
+use hex_core::{Axial, spiral};
+use hex_core::{HEX_RADIUS, hex_prism};
 
 use crate::{
-    ActiveScenario, ActiveView, Scenario,
+    ActiveScenario, Scenario,
+    config::{PostMode, RenderConfig},
     post::{camera_post_bundle, set_camera_ssao},
-    workload::{GateConfig, GateView, Layout, PostMode},
 };
 
 pub const TILE_HEIGHT: f32 = 4.0;
@@ -438,7 +440,7 @@ fn spawn_gate(
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<StandardMaterial>,
-    config: GateConfig,
+    config: GateWorkload,
 ) {
     let m = PieceMeshes::new(meshes);
     let mats = gate_materials(materials);
@@ -631,7 +633,7 @@ fn spawn_single(
         tris_lod0_per_tile: p.indices.len() / 3,
         materials: 1,
         pieces: 1,
-        layout: Layout::Entities.name(),
+        layout: "entities",
         chunk_size: 0,
         chunks: 0,
     });
@@ -660,6 +662,7 @@ fn spawn_single(
 }
 
 /// Closeup: 40 m above tile (3, 2), looking across the world.
+#[cfg(feature = "gate-tools")]
 pub fn gate_camera(view: GateView) -> Transform {
     match view {
         GateView::Strategic => {
@@ -672,13 +675,40 @@ pub fn gate_camera(view: GateView) -> Transform {
     }
 }
 
+/// Drops the kit showcase's loading state when a scenario switch leaves it.
+fn clear_kit_showcase(commands: &mut Commands) {
+    #[cfg(feature = "gate-tools")]
+    {
+        commands.remove_resource::<crate::kit_scene::KitPending>();
+        commands.remove_resource::<crate::kit_scene::KitLoading>();
+    }
+    #[cfg(not(feature = "gate-tools"))]
+    let _ = commands;
+}
+
+/// The water look-dev patch and its camera pose.
+fn spawn_water_scene(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    (images, water_mats, terrain_mats): (
+        &mut Assets<Image>,
+        &mut Assets<crate::water::WaterMaterial>,
+        &mut Assets<crate::water::TerrainMaterial>,
+    ),
+    tier: crate::post::QualityTier,
+) -> Transform {
+    crate::water::spawn(commands, meshes, images, water_mats, terrain_mats, tier);
+    Transform::from_xyz(-8.0, 34.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
+}
+
 pub fn setup(
     mut commands: Commands,
     scenario: Res<ActiveScenario>,
-    _view: Res<ActiveView>,
+    #[cfg(feature = "gate-tools")] _view: Res<ActiveView>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    config: Option<Res<GateConfig>>,
+    config: Option<Res<RenderConfig>>,
+    #[cfg(feature = "gate-tools")] workload: Option<Res<GateWorkload>>,
     play_setup: Option<Res<crate::PlaySceneSetup>>,
     server: Res<AssetServer>,
     (mut images, mut water_mats, mut terrain_mats): (
@@ -688,6 +718,8 @@ pub fn setup(
     ),
 ) {
     let config = config.map(|c| *c).unwrap_or_default();
+    #[cfg(feature = "gate-tools")]
+    let workload = workload.map(|w| *w).unwrap_or_default();
     // Look-dev applies to the kit, water and play scenarios only: single/gate2000 keep the P0 camera, so
     // the P0 perf baseline and the instanced pipeline's mesh-view bind-group layout are unchanged.
     let water = scenario.0.has_water();
@@ -704,8 +736,7 @@ pub fn setup(
         Scenario::Single => {
             #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
-            commands.remove_resource::<crate::kit_scene::KitPending>();
-            commands.remove_resource::<crate::kit_scene::KitLoading>();
+            clear_kit_showcase(&mut commands);
             spawn_single(&mut commands, &mut meshes, &mut materials);
             #[cfg(feature = "gate-tools")]
             commands.insert_resource(crate::kit_test::KitTestPending);
@@ -713,51 +744,53 @@ pub fn setup(
         }
         #[cfg(feature = "gate-tools")]
         Scenario::Gate2000 => {
-            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
-            commands.remove_resource::<crate::kit_scene::KitPending>();
-            commands.remove_resource::<crate::kit_scene::KitLoading>();
-            spawn_gate(&mut commands, &mut meshes, &mut materials, config);
+            clear_kit_showcase(&mut commands);
+            spawn_gate(&mut commands, &mut meshes, &mut materials, workload);
             gate_camera(_view.0)
         }
         #[cfg(not(feature = "gate-tools"))]
         Scenario::Gate2000 => panic!("gate2000 requires gate-tools"),
+        #[cfg(feature = "gate-tools")]
         Scenario::Kit => {
-            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
-            #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
             commands.insert_resource(crate::kit_scene::KitPending);
             Transform::from_xyz(14.0, 38.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
         }
-        Scenario::Water | Scenario::WaterKit => {
+        #[cfg(not(feature = "gate-tools"))]
+        Scenario::Kit | Scenario::WaterKit => panic!("the kit showcase requires gate-tools"),
+        Scenario::Water => {
             #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
             #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
-            if scenario.0 == Scenario::WaterKit {
-                commands.insert_resource(crate::kit_scene::KitPending);
-            } else {
-                commands.remove_resource::<crate::kit_scene::KitPending>();
-                commands.remove_resource::<crate::kit_scene::KitLoading>();
-            }
-            crate::water::spawn(
+            clear_kit_showcase(&mut commands);
+            spawn_water_scene(
                 &mut commands,
                 &mut meshes,
-                &mut images,
-                &mut water_mats,
-                &mut terrain_mats,
+                (&mut images, &mut water_mats, &mut terrain_mats),
                 config.tier,
-            );
-            Transform::from_xyz(-8.0, 34.0, 62.0).looking_at(Vec3::new(14.0, 0.0, 0.0), Vec3::Y)
+            )
+        }
+        #[cfg(feature = "gate-tools")]
+        Scenario::WaterKit => {
+            commands.remove_resource::<crate::instanced::InstancedScene>();
+            commands.remove_resource::<crate::kit_test::KitTestPending>();
+            commands.insert_resource(crate::kit_scene::KitPending);
+            spawn_water_scene(
+                &mut commands,
+                &mut meshes,
+                (&mut images, &mut water_mats, &mut terrain_mats),
+                config.tier,
+            )
         }
         Scenario::Play => {
             #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::instanced::InstancedScene>();
             #[cfg(feature = "gate-tools")]
             commands.remove_resource::<crate::kit_test::KitTestPending>();
-            commands.remove_resource::<crate::kit_scene::KitPending>();
-            commands.remove_resource::<crate::kit_scene::KitLoading>();
+            clear_kit_showcase(&mut commands);
             (play_setup
                 .expect("the play scenario requires HexPlayPlugin")
                 .0)(&mut commands, &mut meshes, &mut materials)

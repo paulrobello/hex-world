@@ -26,7 +26,7 @@ pub struct HexPlayPlugin {
 }
 impl Plugin for HexPlayPlugin {
     fn build(&self, app: &mut App) {
-        let config = *app.world().resource::<hex_render::GateConfig>();
+        let config = *app.world().resource::<hex_render::RenderConfig>();
         app.insert_resource(hex_render::PlaySceneSetup(play::setup))
             .add_plugins((
                 play::PlayPlugin,

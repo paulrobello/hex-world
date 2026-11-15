@@ -266,7 +266,7 @@ fn build_parts(
     (server, mut materials, config): (
         Res<AssetServer>,
         ResMut<Assets<KitMaterial>>,
-        Res<hex_render::workload::GateConfig>,
+        Res<hex_render::RenderConfig>,
     ),
 ) {
     let (Some(kit), Some(packs)) = (kit, packs) else {

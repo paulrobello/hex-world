@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::workload::{Ev100, Tonemap};
+use crate::config::{Ev100, Tonemap};
 
 /// cd/m² scale for the prefiltered HDRI; set at the owner's look-dev checkpoint.
 pub const IBL_INTENSITY: f32 = 1500.0;
@@ -36,7 +36,7 @@ pub fn first_cascade_far_bound(kit: bool) -> f32 {
     if kit {
         KIT_FIRST_CASCADE_FAR_BOUND
     } else {
-        crate::workload::FIRST_CASCADE_FAR_BOUND
+        crate::config::FIRST_CASCADE_FAR_BOUND
     }
 }
 
@@ -69,7 +69,7 @@ pub fn environment(server: &AssetServer) -> EnvironmentMapLight {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::workload::GateConfig;
+    use crate::config::RenderConfig;
 
     #[test]
     fn maps_every_tonemap() {
@@ -80,7 +80,7 @@ mod tests {
         );
         assert_eq!(tonemapping(Tonemap::AcesFitted), Tonemapping::AcesFitted);
         assert_eq!(
-            GateConfig::default().tonemap,
+            RenderConfig::default().tonemap,
             crate::grade::Grade::default().tonemap()
         );
     }
@@ -89,7 +89,7 @@ mod tests {
     fn exposure_follows_config_and_sun_points_down_the_hdri_direction() {
         assert_eq!(exposure(Ev100::from_f32(13.3)).ev100, 13.3);
         assert_eq!(
-            exposure(GateConfig::default().ev100).ev100,
+            exposure(RenderConfig::default().ev100).ev100,
             crate::grade::Grade::default().ev100()
         );
         let t = sun_transform();
@@ -101,7 +101,7 @@ mod tests {
     fn only_the_kit_scenario_tightens_the_first_cascade() {
         assert_eq!(
             first_cascade_far_bound(false),
-            crate::workload::FIRST_CASCADE_FAR_BOUND
+            crate::config::FIRST_CASCADE_FAR_BOUND
         );
         assert_eq!(first_cascade_far_bound(true), KIT_FIRST_CASCADE_FAR_BOUND);
     }

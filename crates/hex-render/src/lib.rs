@@ -4,12 +4,15 @@ use bevy::prelude::*;
 pub mod animal;
 pub mod car_material;
 pub mod chunks;
+pub mod config;
 pub mod grade;
 pub mod hooks;
 #[cfg(feature = "gate-tools")]
 pub mod instanced;
 pub mod kit_instances;
 pub mod kit_material;
+pub mod kit_runtime;
+#[cfg(feature = "gate-tools")]
 pub mod kit_scene;
 #[cfg(feature = "gate-tools")]
 mod kit_test;
@@ -19,14 +22,18 @@ pub mod post;
 pub mod scene;
 pub mod tilt_shift;
 pub mod water;
+#[cfg(feature = "gate-tools")]
 pub mod workload;
+pub use config::{
+    Ev100, KitHooks, PostMode, RenderConfig, TiltMode, TiltStrength, Tonemap, parse_cascades,
+    parse_grass, parse_grass_distance, parse_ibl, parse_shadow_dist, parse_shadows,
+};
 pub use grade::Grade;
 pub use hex_assets::bevy::{AssetLoadFailures, MeshoptGlbPlugin};
 pub use scene::{SceneEntity, TILE_HEIGHT, Tile, Vehicle, setup as setup_scene};
+#[cfg(feature = "gate-tools")]
 pub use workload::{
-    Ev100, GATE, GateConfig, GateView, GateWorkload, KitHooks, KitSource, Layout, PostMode,
-    ShadowCasters, TiltMode, TiltStrength, Tonemap, parse_cascades, parse_chunk, parse_grass,
-    parse_grass_distance, parse_ibl, parse_shadow_dist, parse_shadows,
+    GATE, GateShape, GateView, GateWorkload, KitSource, Layout, ShadowCasters, parse_chunk,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, serde::Deserialize)]
@@ -60,6 +67,7 @@ impl Scenario {
     }
 
     /// Hex cells the scenario lays out. The kit scenarios depend on the source (`kit_src`).
+    #[cfg(feature = "gate-tools")]
     pub fn tile_count(self, kit_src: KitSource) -> usize {
         match self {
             Scenario::Single => 1,
@@ -122,20 +130,34 @@ fn record_gpu_limits(
 pub struct ActiveScenario(pub Scenario);
 
 /// Camera view used when the gate scenario is (re)built.
+#[cfg(feature = "gate-tools")]
 #[derive(Resource, Clone, Copy)]
 pub struct ActiveView(pub GateView);
 
 pub struct HexRenderPlugin {
     pub scenario: Scenario,
+    #[cfg(feature = "gate-tools")]
     pub view: GateView,
-    pub config: GateConfig,
+    pub config: RenderConfig,
+    #[cfg(feature = "gate-tools")]
+    pub workload: GateWorkload,
 }
 
 impl Plugin for HexRenderPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "gate-tools")]
         app.add_plugins(instanced::InstancedPlugin)
-            .add_systems(Update, (kit_test::spawn_when_ready, scene::move_vehicles));
+            .add_systems(
+                Update,
+                (
+                    kit_test::spawn_when_ready,
+                    scene::move_vehicles,
+                    kit_scene::start_kit,
+                    kit_scene::finish_kit,
+                ),
+            )
+            .insert_resource(ActiveView(self.view))
+            .insert_resource(self.workload);
         bevy::shader::load_shader_library!(app, "kit_common.wesl");
         bevy::shader::load_shader_library!(app, "kit_instances.wesl");
         bevy::shader::load_shader_library!(app, "water_common.wesl");
@@ -150,7 +172,6 @@ impl Plugin for HexRenderPlugin {
             } else {
                 lighting::BACKDROP
             }))
-            .insert_resource(ActiveView(self.view))
             .insert_resource(self.config)
             .add_plugins((
                 MaterialPlugin::<kit_material::KitMaterial>::default(),
@@ -168,9 +189,7 @@ impl Plugin for HexRenderPlugin {
             .add_systems(
                 Update,
                 (
-                    kit_scene::start_kit,
-                    kit_scene::finish_kit,
-                    kit_scene::spin_rotors,
+                    kit_runtime::spin_rotors,
                     scene::band_shadows.run_if(|s: Res<ActiveScenario>| s.0 != Scenario::Gate2000),
                     record_gpu_limits,
                     water::tick,
@@ -195,6 +214,7 @@ mod tests {
         assert_eq!(Scenario::parse(""), None);
     }
 
+    #[cfg(feature = "gate-tools")]
     #[test]
     fn tile_counts() {
         assert_eq!(Scenario::Single.tile_count(KitSource::Runtime), 1);

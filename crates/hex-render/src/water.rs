@@ -344,7 +344,7 @@ pub fn hex_grid(n: u32, radius: f32) -> (Vec<Vec3>, Vec<u32>) {
 
 pub fn cell_transform(cell: Axial, rot: u8) -> Transform {
     let [x, z] = cell.to_world(HEX_RADIUS);
-    Transform::from_xyz(x, 0.0, z).with_rotation(crate::kit_scene::piece_rotation(rot))
+    Transform::from_xyz(x, 0.0, z).with_rotation(crate::kit_runtime::piece_rotation(rot))
 }
 
 /// One cell's water surface in cell-local space at the field's level: COLOR carries (flow.x,

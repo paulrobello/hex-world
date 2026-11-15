@@ -78,7 +78,7 @@ use super::{
     packs::PlayPacks,
     scatter::{self, Instance, PlayScatter, Rng, ScatterLayouts, Surface},
 };
-use hex_render::{ActiveScenario, Scenario, SceneEntity, post::QualityTier, workload::GateConfig};
+use hex_render::{ActiveScenario, RenderConfig, Scenario, SceneEntity, post::QualityTier};
 
 /// Mean linear albedo of the `grass` tileable set (`p1/materials/grass/grass.albedo.png`, sRGB
 /// decoded per texel, as the GPU samples it). `albedo_mean_matches_the_png` holds it to the file.
@@ -1104,7 +1104,7 @@ pub struct PlayGrass {
 pub struct GrassReport(pub String);
 
 /// Why grass draws or not: the density, the tier, the scenario.
-pub fn status(active: Scenario, config: &GateConfig) -> &'static str {
+pub fn status(active: Scenario, config: &RenderConfig) -> &'static str {
     if config.grass.is_off() {
         "off"
     } else if !matches!(config.tier, QualityTier::High | QualityTier::Ultra) {
@@ -1213,7 +1213,7 @@ pub fn sync(
     mut commands: Commands,
     (active, config, time, view): (
         Res<ActiveScenario>,
-        Res<GateConfig>,
+        Res<RenderConfig>,
         Res<Time>,
         Res<PlayView>,
     ),
@@ -1598,7 +1598,7 @@ mod tests {
         }
     }
 
-    use hex_render::kit_scene::MANIFEST;
+    use hex_render::kit_runtime::MANIFEST;
 
     #[test]
     fn grass_slots_are_the_grass_sets_minus_foliage() {
@@ -2617,7 +2617,7 @@ mod tests {
 
     #[test]
     fn status_follows_flag_tier_and_scenario() {
-        let mut c = GateConfig::default();
+        let mut c = RenderConfig::default();
         assert_eq!(status(Scenario::Play, &c), "on");
         assert_eq!(status(Scenario::Kit, &c), "scenario");
         c.tier = QualityTier::Medium;

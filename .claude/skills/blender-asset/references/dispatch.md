@@ -40,8 +40,8 @@ that built it instead of starting a fresh one.
      `kit-renders`.
    - Then, by whoever owns the manifest: the manifest entry, `kit-provenance REFS=…`,
      `kit-check` and `checkall`.
-   - After a size or footprint change: `cargo test -p hex-play -p hex-render --lib -- boids
-     scatter walk kit_scene` (walk and scatter live in hex-play, as `project.md` gives it).
+   - After a size or footprint change: `cargo test -p hex-play -p hex-render --features
+     hex-render/gate-tools --lib -- boids scatter walk kit_scene` (walk and scatter live in hex-play, as `project.md` gives it).
    - A piece that blocks the walker or changes a tile's scatter layout also runs `make ui-e2e`:
      its first-person walk check walks from a meadow toward the tile centre, and B1's outcrop
      stopped it short of 3 m after B1 had passed every other gate (2026-10-27).

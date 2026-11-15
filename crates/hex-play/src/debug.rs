@@ -37,7 +37,7 @@ use crate::{
 use hex_render::{
     car_material::CarMaterial,
     kit_material::KitMaterial,
-    kit_scene::piece_rotation,
+    kit_runtime::piece_rotation,
     scene::{Lod, LodCover, lod_cover_range},
 };
 

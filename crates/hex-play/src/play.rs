@@ -46,10 +46,10 @@ use rise::{PlayRises, PropKind, ReducedMotion, RiseMessage, RisePart, RiseRole};
 use crate::water;
 use hex_render::{
     ActiveScenario, Scenario, SceneEntity,
+    config::RenderConfig,
     kit_material::{KitMaterial, build_material, slot_requests},
-    kit_scene::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
+    kit_runtime::{KitRotor, MANIFEST, piece_rotation, rotor_phase},
     scene::{Lod, LodCover, lod_cover, lod_cover_range, lod_range},
-    workload::GateConfig,
 };
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
@@ -271,7 +271,7 @@ pub fn finish_kit(
         ResMut<Assets<KitMaterial>>,
         ResMut<Assets<Mesh>>,
     ),
-    config: Res<GateConfig>,
+    config: Res<RenderConfig>,
     mut coalesced: Local<coalesce::KitCoalesced>,
 ) {
     let (Some(kit), Some(packs)) = (kit.as_mut(), packs.as_deref_mut()) else {
@@ -369,7 +369,7 @@ fn build_piece(
         &Assets<GltfNode>,
         &mut Assets<KitMaterial>,
     ),
-    hooks: hex_render::workload::KitHooks,
+    hooks: hex_render::config::KitHooks,
 ) -> Vec<KitPart> {
     let (manifest, family) = (&packs.manifest, packs.family);
     let failed = |h: &Handle<Gltf>| {
@@ -476,7 +476,7 @@ fn spawn_kit(
 /// [`spawn_kit`], returning the spawned part entities (`None` when the piece is not in the kit).
 ///
 /// A rotor part spawns as a child of its LOD's first body part, at its node transform, so it rides
-/// the hero's placement and rise (scale and visibility) and [`hex_render::kit_scene::spin_rotors`] turns
+/// the hero's placement and rise (scale and visibility) and [`hex_render::kit_runtime::spin_rotors`] turns
 /// it in its parent's frame. Its phase comes from the cell and where its hub stands on the tile.
 fn spawn_kit_parts(
     p: &mut ChildSpawnerCommands,
@@ -982,7 +982,7 @@ pub fn sync(
     plain: Option<Res<PlainAssets>>,
     kit: Option<Res<PlayKit>>,
     catalog: Res<PlayCatalog>,
-    config: Res<GateConfig>,
+    config: Res<RenderConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
     (packs, waiting_out, children, no_stops, no_bounds, slope): (
@@ -1438,7 +1438,7 @@ pub(crate) mod tests {
             .init_asset::<KitMaterial>()
             .init_resource::<PlayView>()
             .init_resource::<PlayCatalog>()
-            .init_resource::<GateConfig>()
+            .init_resource::<RenderConfig>()
             .init_resource::<Seen>()
             .insert_resource(PlayKit::Ready(HashMap::new()))
             .insert_resource(PlayPacks::new(

@@ -3038,7 +3038,7 @@ mod tests {
     use hex_core::{AgentKind, SocketKind, World};
 
     use super::*;
-    use hex_render::kit_scene::{MANIFEST, piece_rotation};
+    use hex_render::kit_runtime::{MANIFEST, piece_rotation};
 
     type Tris = Option<Vec<(Tri, String)>>;
 

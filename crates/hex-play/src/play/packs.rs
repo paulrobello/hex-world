@@ -401,7 +401,7 @@ impl PlayPacks {
 mod tests {
     use super::*;
     use hex_assets::parse_manifest;
-    use hex_render::kit_scene::MANIFEST;
+    use hex_render::kit_runtime::MANIFEST;
 
     fn packs() -> PlayPacks {
         PlayPacks::new(parse_manifest(MANIFEST).unwrap(), TextureFamily::Png)
