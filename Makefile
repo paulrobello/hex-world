@@ -100,14 +100,7 @@ ui-schema:
 # e2e/ui-motion.mjs (input never waits on feedback, reduced motion from the OS or the engine flag, and frame
 # strips; e2e/test-results/ui-motion/, or MOTION_OUT=docs/checkpoints/ui-feedback for the committed strips).
 ui-e2e: build-web $(E2E_NPM)
-	node e2e/ui.mjs dist
-	node e2e/ui-motion.mjs dist
-	node e2e/photo-fx.mjs dist
-	node e2e/persist.mjs dist
-	node e2e/saves-ui.mjs dist
-	node e2e/audio.mjs dist
-	node e2e/debug.mjs dist
-	node e2e/version.mjs dist
+	bash e2e/run-all.sh dist
 
 # Local only: the web audio layer (PRD §8) read through hexWorld.audio.state(): nothing loads before a
 # gesture, the context runs after one, events fire their cues, the focus mix, and mute. Writes
