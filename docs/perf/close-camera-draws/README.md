@@ -150,7 +150,7 @@ The changes contribute as follows:
 
 ## Far-cascade LOD rules (rejected) and the kit bind-group cache
 
-Two far-cascade LOD rules cut the 2,066-tile close camera's draws: a clamp per cascade (`d8cd4cd`) to 1,235, and one LOD per cascade (`e06edcf`) to 1,018, from 1,535. They raised the kit's shadow indices by 9-26% and 1.8-2.8 times. MiniMac timed them (`results-clamp-2026-10-26.json`, branch perf-batch27, `386f459`). The clamp, together with the bind-group cache (`6c3bd36`), was slower than `041ad32` on the 2,066-tile world:
+Two far-cascade LOD rules cut the 2,066-tile close camera's draws: a clamp per cascade (`d8cd4cd`) to 1,235, and one LOD per cascade (`e06edcf`) to 1,018, from 1,535. They raised the kit's shadow indices by 9-26% and 1.8-2.8 times. MiniMac timed them (`results-clamp-2026-10-26.json`, committed in `01d371d` on branch perf-batch27, not on main: the branch is deleted). The clamp, together with the bind-group cache (`6c3bd36`), was slower than `041ad32` on the 2,066-tile world:
 
 - web mean: +1.03 ms at the close camera, +1.43 ms at the overview;
 - web p95: +3.0 ms and +3.5 ms;
