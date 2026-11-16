@@ -123,3 +123,9 @@ export function animationsSettled(page) {
     await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
   });
 }
+
+/** Resolves after `n` animation frames; the engine draws and reads input in the page's own
+ * animation frames, so a press and release that share a frame reach it as one merged event. */
+export function engineFrames(page, n) {
+  return page.evaluate((n) => new Promise((done) => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : done()); step(n); }), n);
+}

@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";
-import { gpuArgs, launch, waiter } from "./lib/browser.mjs";
+import { engineFrames, gpuArgs, launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/audio";
@@ -422,10 +422,11 @@ try {
   await pointAt(1, 0);
   check((await audio()).context === "none", "no gesture yet before the placing click");
   await page.keyboard.down("Shift");
-  await page.waitForTimeout(80);
+  await engineFrames(page, 3);
   await page.mouse.down();
+  await engineFrames(page, 3);
   await page.mouse.up();
-  await page.waitForTimeout(80);
+  await engineFrames(page, 3);
   await page.keyboard.up("Shift");
   await waitFor(async () => (await tiles()) === 2, "the first gesture places a meadow at (1, 0)");
   a = await audio();

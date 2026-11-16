@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { PICKER, fitEntry, needsAt, tileMap } from "../web/ui/src/rules.ts";
 import { serveDist } from "./lib/harness.mjs";
-import { animationsSettled, launch, waiter } from "./lib/browser.mjs";
+import { animationsSettled, engineFrames, launch, waiter } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
 const out = "e2e/test-results/ui";
@@ -76,9 +76,6 @@ async function key(k) {
   await animationsSettled(page);
   await page.keyboard.press(k);
 }
-/** Resolves after `n` animation frames; the engine draws and reads input in the page's own animation frames. */
-const engineFrames = (n) =>
-  page.evaluate((n) => new Promise((done) => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : done()); step(n); }), n);
 /**
  * A click with a modifier held across engine frames, as a player holds it: the engine reads the
  * modifier and the button once per frame, so a press and release that share a frame (a long frame
@@ -86,11 +83,11 @@ const engineFrames = (n) =>
  */
 async function modClick(mod) {
   await page.keyboard.down(mod);
-  await engineFrames(3);
+  await engineFrames(page, 3);
   await page.mouse.down();
-  await engineFrames(3);
+  await engineFrames(page, 3);
   await page.mouse.up();
-  await engineFrames(3);
+  await engineFrames(page, 3);
   await page.keyboard.up(mod);
 }
 const rowNumber = async (id) => (await text(`.row[data-tile=${id}] .row__num`)).trim();
@@ -1179,8 +1176,14 @@ try {
   check(JSON.stringify(opts.filter((o) => o.on === "true").map((o) => o.id)) === '["rich-3"]', "Rich 3 is the one marked option");
   check(JSON.stringify(opts.filter((o) => o.tag).map((o) => [o.id, o.tag])) === '[["rich-3","Default"]]', "only Rich 3 is labelled Default");
   check((await gradeActive()) === "grade-opt-rich-3", "the current option is highlighted on open");
-  const inView = await gradeListInView();
-  check(inView.inside && inView.onTop, `the open list (${inView.rect}) sits inside the viewport, unclipped`);
+  let inView = await gradeListInView();
+  // A leftover undo toast can stay hit-testable while it fades and block a corner of the open
+  // list; wait out the fade instead of failing on its timing.
+  for (let tries = 0; !(inView.inside && inView.onTop) && tries < 8; tries++) {
+    await page.waitForTimeout(1000);
+    inView = await gradeListInView();
+  }
+  check(inView.inside && inView.onTop, `the open list (${inView.rect}) sits inside the viewport, unclipped (${inView.why})`);
   await page.mouse.move(700, 450);
   await gradeSettled();
   await animationsSettled(page);
