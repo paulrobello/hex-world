@@ -1,3 +1,5 @@
+// The user-facing messages of the save flow (toasts and their actions). `persist.ts` owns the state
+// machine and calls these; the host supplies `notify` and `download`, so this file touches no DOM.
 import type { PlayTile } from "./bridge.ts";
 import type { Note } from "./persist.ts";
 import { cleanName, fileName, mapOf, mixOf, nameFromFile, nextName } from "./slots.ts";

@@ -1,3 +1,6 @@
+// Drives the tile sheet from engine state. The engine owns the pinned slot, the hovered slot and
+// whether the inventory is open: `sync` adopts them from `play` state each frame, and the controller
+// sends a command only to open the engine's inventory at first sync or to resend a hover.
 import type { Cell, Command, Ghost, PlayState } from "./bridge.ts";
 import { PICKER, type TileMap, cellKey, fitEntry, isSheetSlot, needsAt } from "./rules.ts";
 import { Sheet } from "./sheet.ts";

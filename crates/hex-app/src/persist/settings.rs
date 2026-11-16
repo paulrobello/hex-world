@@ -1,3 +1,5 @@
+//! Saved settings and the camera pose as the save format stores them. Every value that reaches the
+//! engine from a `.hexworld` file is clamped here, because a save is untrusted input.
 use crate::camera::{self, MAX_DISTANCE, MAX_PITCH, MIN_DISTANCE, MIN_PITCH};
 use bevy::prelude::*;
 use hex_core::{AudioVolumes, CameraState, QualitySetting};

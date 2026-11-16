@@ -1,3 +1,6 @@
+//! The Hex World app: wires the render, play, sim and persistence plugins and starts the native or
+//! wasm run from one entry point. Code behind `cfg(target_arch = "wasm32")` is invisible to a native
+//! build, so `make lint` and `make typecheck` also run a `wasm32-unknown-unknown` pass.
 use bevy::prelude::*;
 #[cfg(not(target_arch = "wasm32"))]
 use bevy::window::WindowResolution;

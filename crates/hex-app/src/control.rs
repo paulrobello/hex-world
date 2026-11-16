@@ -65,6 +65,11 @@ impl From<ForceLod> for Option<u8> {
     }
 }
 
+/// The bridge command set: one `{"cmd": ...}` JSON object per variant, shared by `--script` files,
+/// `hexWorld.cmd` and the `hex_world_*` wasm exports. A contract test checks it against
+/// `web/ui/src/bridge-schema.json`, so a variant or field change needs `make ui-schema` and the
+/// matching `web/ui/src/bridge.ts` update before `make checkall` passes again. The reference table is
+/// `docs/agent-operability.md`.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(tag = "cmd", rename_all = "snake_case")]
 pub enum Command {

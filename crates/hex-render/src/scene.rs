@@ -1,3 +1,7 @@
+//! Scene construction for every `Scenario`: `setup` spawns the scenario's world and camera, and
+//! everything it spawns carries `SceneEntity` so a `scenario` command can despawn and rebuild it. The
+//! play scenario is built by `hex-play` through `PlaySceneSetup`, not here. Gate, chunk and
+//! single-piece scenes exist only with the `gate-tools` feature.
 #[cfg(feature = "gate-tools")]
 use crate::{
     ActiveView,

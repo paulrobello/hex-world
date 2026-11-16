@@ -3,7 +3,9 @@ use crate::{TextureFamily, family_suffix};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 
-pub const GLB_MAX_BYTES: u64 = 2_097_152; // PRD §10
+/// Largest allowed kit GLB, in bytes (2 MiB, PRD §10 "Per-GLB size"). Mirrors `GLB_MAX` in
+/// `scripts/assets/kit-lib.mjs`, which `kit_gate` checks.
+pub const GLB_MAX_BYTES: u64 = 2_097_152;
 /// KTX2 bytes per texture family (BC7 and ASTC counted separately), by budget class. Owner ruling
 /// 2026-10-13. Mirrors `KTX_BUDGETS` in `scripts/assets/kit-lib.mjs`; change both together (S33).
 pub const KTX_BUDGETS: [(BudgetClass, u64); 3] = [
@@ -18,8 +20,16 @@ pub const CORE_PACK: &str = "core";
 /// (PRD §10 "Kit content streams in by biome pack"). A pack id outside this list is a manifest
 /// error, so a typo cannot start a pack of its own.
 pub const PACKS: [&str; 6] = [CORE_PACK, "props", "forest", "hero", "village", "water"];
+/// LOD1's triangle count as a fraction of LOD0's, at most (PRD §10 "LOD1 / LOD2"). Mirrors
+/// `scripts/blender/lib/budgets.py`, which `kit_gate` checks.
 pub const LOD1_MAX_RATIO: f32 = 0.5;
+/// LOD2's triangle count as a fraction of LOD0's, at most (PRD §10). The lane-cut river bases and
+/// the coast-corner bases take 0.20 instead (`kit_gate`'s `LANE_CUT_LOD2_MAX_RATIO` and
+/// `COAST_ARC_LOD2_MAX_RATIO`). Mirrors `scripts/blender/lib/budgets.py`.
 pub const LOD2_MAX_RATIO: f32 = 0.15;
+/// A hex tile's apothem (edge midpoint distance from the centre) in metres: `HEX_RADIUS` 16 times
+/// sqrt(3)/2. The kit gate measures edge cross-sections at this distance; `hex_core_apothem` repeats
+/// the arithmetic because `hex-assets` does not depend on `hex-core`.
 pub const APOTHEM: f32 = hex_core_apothem();
 
 /// The mesh (and node) of LOD `lod` of piece `id`; the runtime looks meshes up by this name.

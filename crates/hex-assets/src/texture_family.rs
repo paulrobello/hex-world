@@ -1,3 +1,6 @@
+//! The texture variant a device loads (PRD §9.3): BC7 where the adapter has BC, else ASTC, else the
+//! PNG fallback. `family_suffix` names the file each family loads, so it must match what
+//! `make kit-compress` writes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TextureFamily {
     Bc7,
