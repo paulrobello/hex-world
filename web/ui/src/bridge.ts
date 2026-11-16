@@ -21,7 +21,7 @@ export const GRADES = ["aces", "tony", "rich-1", "rich-2", "rich-3"] as const;
 export type GradeName = (typeof GRADES)[number];
 /**
  * The stepped grass levels the density slider replaced, Off to Lush, still accepted by `?grass=` /
- * `--grass` (`hex_render::play::grass::Density::ALIASES`).
+ * `--grass` (`hex_play_state::Density::ALIASES`).
  */
 export const GRASS = ["off", "sparse", "normal", "lush"] as const;
 export type GrassAlias = (typeof GRASS)[number];

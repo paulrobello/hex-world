@@ -1,4 +1,4 @@
-// Grass blade cost (crates/hex-render/src/play/grass.rs) on a ~2,000-tile play world: the water world of
+// Grass blade cost (crates/hex-play/src/play/grass.rs) on a ~2,000-tile play world: the water world of
 // e2e/water-world.mjs at radius 26 (2,066 tiles: ocean, coast, rivers, forests, meadows, roads and
 // houses) built by script in the play scenario on High at 2560x1440, DPR 1, tilt-shift off, then read
 // from a low camera over the start meadows (the grass close-up the owner asked for, with the rest of

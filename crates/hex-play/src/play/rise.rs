@@ -695,7 +695,7 @@ impl Layer {
 const PUFF_RGB: [f32; 3] = [0.66, 0.58, 0.46];
 
 /// The bulldoze cloud's size and duration against the first look's, which [`CLOUD_BASE_LAYERS`]
-/// and [`cloud_base`] spell out: 80% of each (owner, 2026-10-14). Every phase scales with the
+/// and `cloud_base` spell out: 80% of each (owner, 2026-10-14). Every phase scales with the
 /// duration, so the envelope keeps its shape.
 const CLOUD_SIZE: f32 = 0.8;
 const CLOUD_TIME: f32 = 0.8;
@@ -920,14 +920,14 @@ fn dust_particles(kind: Dust, anchor: Axial, footprint: bool) -> Vec<Particle> {
         .collect()
 }
 
-/// The bulldoze cloud at `cell` as drawn: [`cloud_base`] at [`CLOUD_SIZE`] the size about the
+/// The bulldoze cloud at `cell` as drawn: `cloud_base` at [`CLOUD_SIZE`] the size about the
 /// cell's centre on the ground and [`CLOUD_TIME`] the duration. Deterministic per cell.
 #[cfg(test)]
 fn cloud(cell: Axial) -> Vec<Particle> {
     cloud_share(cell, 1.0)
 }
 
-/// [`cloud`] with `share` of each of its particle groups.
+/// `cloud` with `share` of each of its particle groups.
 fn cloud_share(cell: Axial, share: f32) -> Vec<Particle> {
     let [cx, cz] = cell.to_world(HEX_RADIUS);
     let centre = Vec3::new(cx, 0.0, cz);
@@ -944,7 +944,7 @@ fn cloud_base(cell: Axial) -> Vec<Particle> {
     cloud_base_share(cell, 1.0)
 }
 
-/// [`cloud_base`] with `share` of each of its particle groups.
+/// `cloud_base` with `share` of each of its particle groups.
 fn cloud_base_share(cell: Axial, share: f32) -> Vec<Particle> {
     use std::f32::consts::TAU;
     let part = |n: u32| (n as f32 * share).round() as u32;

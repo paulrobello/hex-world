@@ -8,7 +8,7 @@ runtime (x, -y), so formulas convert first):
 - `beach_inner` (bay): s = 24 - |p - C|, C = (+2 apothems, 0), sea inside
 Profile `height(s)`: 0 for s <= -8, the beach curve to the waterline (-1.4) at s = 0, a shelf to
 -1.76 at s = 3, a smoothstep drop to the ocean bed (-4.0) at s = 8. It mirrors
-`crates/hex-render/src/water/tiles.rs` `coast_height`, which the kit gate checks every LOD against.
+`crates/hex-play/src/water/tiles.rs` `coast_height`, which the kit gate checks every LOD against.
 
 Construction (one continuous cap per LOD, plus the soil skirt):
 - Every iso-s line with |s| < 8 crosses the border only on the two beach edges, at the point s m

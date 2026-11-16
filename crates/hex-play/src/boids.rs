@@ -151,7 +151,7 @@ pub fn form_flags(masks: bool, fish: Option<FishPiece>) -> u32 {
 }
 
 /// A bird piece and its runtime contract, the `boid` object of its GLB root extras (checked by a
-/// test): the shoulder hinge line (x = +-hinge[0], y = hinge[1]), the perch fold (wing offset
+/// test): the shoulder hinge line (x = +-`hinge[0]`, y = `hinge[1]`), the perch fold (wing offset
 /// scaled by fold_k, rolled fold_roll_deg, moved fold_back * U back) and the pivot's height over
 /// the feet. Every bird shares the flap and fold formulas in `boid_material.wesl`.
 #[derive(Clone, Copy, Debug)]

@@ -1,7 +1,7 @@
 """Shared car family builder for car_sedan, car_van and car_pickup (PRD §6 runtime recolour, §7.2).
 
 Frame: Blender (x, y, z) exports as runtime (x, z, -y). The car faces +x (its driving direction,
-the frame `hex_render::cars::car_transform` turns onto the heading), its wheels stand on z = 0 and
+the frame `hex_play::cars::car_transform` turns onto the heading), its wheels stand on z = 0 and
 its pivot is the centre of its length and width. Real-metre scale (the sedan is about 4.2 m long).
 
 Budget class: a car is kind `prop` (LOD0 <= 1,500 tris, LOD1 <= 50 %, LOD2 <= 15 %, KTX2 class

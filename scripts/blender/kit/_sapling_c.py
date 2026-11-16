@@ -45,7 +45,7 @@ _SAP_BRANCHES = _sapling.branches
 BOW = 0.14  # sideways offset (m) of the crook at its middle
 BOW_DIR = math.radians(200)
 BOW_Z0 = 1.0  # height (m) where the crook starts; it ends at the stem tip (F.HEIGHT)
-GROUND_MAX = 0.1  # sapling group's largest FOOTPRINTS ground (crates/hex-play/src/play/scatter.rs)
+GROUND_MAX = 0.1  # sapling group's largest FOOTPRINTS ground (crates/hex-play/src/play/scatter/tables.rs)
 CROWN_MAX = 1.1  # and its largest crown
 TOP_MAX = 2.45  # sapling_spruce's leader tip (HEIGHT 2.2 + 0.25)
 

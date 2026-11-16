@@ -1,6 +1,6 @@
 // `hex_render::grass_common`: the grass blade bindings, instance unpacking and pose shared by
 // assets/shaders/grass.wesl (forward) and grass_prepass.wesl (depth, normal and motion prepass), so
-// both passes place every vertex with the same expressions (crates/hex-render/src/play/grass.rs,
+// both passes place every vertex with the same expressions (crates/hex-play/src/play/grass.rs,
 // instanced by play/grass_gpu.rs). Embedded like kit_common.
 //
 // Instanced: the shared blade mesh's vertex is a corner (offset across in widths, height fraction

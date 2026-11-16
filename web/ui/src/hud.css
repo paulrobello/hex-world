@@ -369,7 +369,7 @@
 .lod-legend__row b { font-size: var(--fs-2); color: var(--ink); }
 .lod-legend__row small { font-size: var(--fs-1); font-weight: 600; color: var(--ink-3); }
 .lod-legend__count { font-weight: 700; color: var(--ink); }
-/* The engine's LOD tints (hex_render::debug::LOD_TINTS): the --lod-* data tokens. */
+/* The engine's LOD tints (hex_play::debug::LOD_TINTS): the --lod-* data tokens. */
 .lod-swatch { width: 14px; height: 10px; border-radius: var(--r-swatch); box-shadow: inset 0 0 0 1px var(--ink-2); }
 .lod-swatch--0 { background: var(--lod-0); }
 .lod-swatch--1 { background: var(--lod-1); }

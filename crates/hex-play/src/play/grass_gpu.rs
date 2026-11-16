@@ -5,7 +5,7 @@
 //! ordered by `keep`, uploaded once when the group appears. A density is a prefix of that buffer, so
 //! a slider move changes only the drawn instance count ([`GrassGroup::drawn`]).
 //!
-//! As in [`hex_render::instanced`], the draws are `NonMesh` items in the binned `Opaque3d` and
+//! As in `hex_render::instanced`, the draws are `NonMesh` items in the binned `Opaque3d` and
 //! `Opaque3dPrepass` phases of every camera, culled per view against each group's Lush-set bounds
 //! under its `GlobalTransform`. The main pass uses Bevy's `MeshPipeline` layout and
 //! `apply_pbr_lighting` (blades receive shadows); the prepass writes depth, normals and motion

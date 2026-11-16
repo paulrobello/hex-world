@@ -1,6 +1,6 @@
 """River mouth bed profile (docs/kit/water-contract.md §3a), shared by the mouth bases and centres.
 
-Mirrors `crates/hex-render/src/water/tiles.rs` `Mouth::height`, which the engine draws every water
+Mirrors `crates/hex-play/src/water/tiles.rs` `Mouth::height`, which the engine draws every water
 input from and the kit gate checks every LOD against. Pure math, Blender frame: Blender (x, y) is
 runtime (x, -y). Two handednesses, each authored at rotation 0 and never mirrored by the engine:
 - "r" (`river_mouth`): River on edge 3, the centre line runs from edge 3's midpoint along +x.

@@ -6,7 +6,7 @@ colour on the body, like the cars; two carriages").
 Frame and pivot, as the cars (`_car.py`): Blender (x, y, z) exports as runtime (x, z, -y). A vehicle
 faces +x (the engine's smokebox end), its pivot is the centre of its length and width, and z = 0 is
 the wheel tread's contact line, i.e. the rail top: the runtime stands it at the rail pieces' rail top
-(`_rail.RAIL_TOP` = 0.46 m above the cap), as `hex_render::cars` stands a car on ROAD_SURFACE_Y.
+(`_rail.RAIL_TOP` = 0.46 m above the cap), as `hex_play::cars` stands a car on ROAD_SURFACE_Y.
 
 Rail fit (`_rail.py`): gauge 1.6 m between the rail heads' inner faces (|y| = 0.80), heads 0.08 m wide
 (centres at |y| = 0.84). The treads span |y| in [TREAD_IN, TREAD_OUT] over the whole head, and each

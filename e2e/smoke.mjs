@@ -46,7 +46,7 @@ const WATER_SAMPLED = { high: { water: 10, terrain: 10 }, medium: { water: 8, te
 // material's fragment does, as the kit fragment does.
 const WATER_COMPAT_ALIASES = KIT_COMPAT_ALIASES;
 
-// The boid material (crates/hex-render/src/boids.rs: StandardMaterial + `masks`, the boid buffer a
+// The boid material (crates/hex-play/src/boids.rs: StandardMaterial + `masks`, the boid buffer a
 // vertex-stage storage binding) draws in every scenario. Its forward pipeline samples exactly what the
 // kit forward pipeline does in the same view: 15 with the IBL, 13 without, 16 beside refracting water.
 async function waitBoids(page, ibl, deadline) {
@@ -502,7 +502,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   });
 }
 
-// 8. Water tiles in play (P2 W3c, crates/hex-render/src/water/tiles.rs): the play camera always
+// 8. Water tiles in play (P2 W3c, crates/hex-play/src/water/tiles.rs): the play camera always
 // carries the water camera components (depth prepass, screen-space transmission at High), and placed
 // river, beach and ocean tiles draw with the water and terrain materials next to the kit pieces. With
 // the device clamped to WebGPU's default 16 the kit forward pipeline must bind the transmission
@@ -550,7 +550,7 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     console.log(`${tag}: ghost ${JSON.stringify(ghost)}`);
     if (ghost.meshes !== true || ghost.at?.q !== -2 || ghost.at?.r !== 0)
       fail(`${tag}: the ghost at (-2, 0) is not drawn with its meshes: ${JSON.stringify(ghost)}`);
-    // Grass blades (crates/hex-render/src/play/grass.rs, one uniform and no texture) near a low camera
+    // Grass blades (crates/hex-play/src/play/grass.rs, one uniform and no texture) near a low camera
     // over the start meadow beside refracting water: their forward and prepass pipelines are created
     // under the same clamp and sample only the view's textures.
     await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [6, 6, 16], look_at: [0, 0, 0] }));

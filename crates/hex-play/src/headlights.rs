@@ -4,7 +4,7 @@
 //! ahead. No scene lights: the rig is two or three tiny meshes per vehicle.
 //!
 //! The rig shows when the vehicle's `lamps` level (published by the sim: 1 inside a tunnel,
-//! ramping over [`hex_sim::LAMP_RAMP`] metres at each arch) is above zero, and its beam grows with
+//! ramping over `hex_sim::LAMP_RAMP` metres at each arch) is above zero, and its beam grows with
 //! the level. The day and night cycle (P5) will raise the same level at night.
 
 use std::collections::HashMap;

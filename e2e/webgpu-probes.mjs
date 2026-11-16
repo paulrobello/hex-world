@@ -57,7 +57,7 @@ export function countSampledTextures() {
       waterModules.set(mod, { pass: /\bwave_count\b/.test(code) ? "water" : "terrain", ibl: /diffuse_environment_map/.test(code),
         transmission: /view_transmission_texture/.test(code) });
     if (/\bfocus_uv_y\b/.test(code)) tiltModules.add(mod);
-    // Grass blades (crates/hex-render/src/play/grass.rs, play/grass_gpu.rs): both stages import grass_common's uniforms.
+    // Grass blades (crates/hex-play/src/play/grass.rs, play/grass_gpu.rs): both stages import grass_common's uniforms.
     if (/thin_keep/.test(code))
       grassModules.set(mod, { ibl: /diffuse_environment_map/.test(code), forward: /apply_pbr_lighting/.test(code) });
     if (/\bboid_verts\b/.test(code))

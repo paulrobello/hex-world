@@ -1369,7 +1369,7 @@ try {
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "set_tier", tier: "high" }));
   await waitFor(async () => (await st()).tier?.tier === "high", "High for the grass slider", 30_000);
   await waitFor(async () => !(await slider.isDisabled()), "the Grass slider is enabled on High");
-  // Instanced grass (crates/hex-render/src/play/grass_gpu.rs): over the start meadow every group's
+  // Instanced grass (crates/hex-play/src/play/grass_gpu.rs): over the start meadow every group's
   // whole 150% set is already on the GPU, so the slider move only grows the drawn instance count:
   // no buffer is uploaded and no group is rebuilt.
   const view = (await st()).camera;

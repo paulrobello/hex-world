@@ -10,7 +10,7 @@
 //!   sum (a CPU port of `water_common.wesl`, damped as `wave_atten`) and the beach swash, on the
 //!   water clock ([`WaterClock`]), heaved to the mean of four hull samples and pitched and rolled
 //!   to their slope. Rivers are flat. The water also drops its surface inside each hull
-//!   ([`WaterParams::hulls`]), so swell never shows through the floor.
+//!   ([`hex_render::water::WaterParams::hulls`]), so swell never shows through the floor.
 //! - **Parts.** The oars and sails are part nodes (`hex_assets::part_of`) drawn at
 //!   `placement * node * swing`: oars stroke with the boat's stroke phase (sweep ±35°, the blade
 //!   buried 4.3° on the drive and lifted 6° on the recovery) or trail (80° aft, 5° up) while moored
