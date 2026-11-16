@@ -440,6 +440,7 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `inventory_open`, `photo_mode`, `walk_mode` | Toggle flags |
 | `tiles` | `[{q, r, tile, rotation, level}]`: `level` (0 to 3) is the level the tile stands on. A footprint tile is one row at its anchor (the centre); its six ring cells have no row |
 | `frontier` | Free cells next to the world, `[{q, r}]` |
+| `slot_levels` | The level each free slot's outline sits on where it is not 0, `[{q, r, level}]`: the level the selected tile's default orientation takes there, else the highest neighbour's level when it fits nowhere. Follows the selected tile |
 | `mega_slots` | World state, recomputed when the world changes: every legal centre of every footprint tile in the catalog, whatever is selected, as `[{q, r, tile, orientations}]` with `orientations` the legal `{rotation, level}` there in hex-core order (cliff-free first, then by level, then by rotation; hex-core `World::mega_slots`). A centre lies two steps from the world, with all seven cells free. The HUD lists the massif from these (`megaFit`) instead of re-deriving the seven-cell rules |
 | `hovered`, `hovered_kind` | `{q, r}` or `null`, and `slot`, `tile` or `empty`. `slot` is a free cell beside the world, or, only while a footprint tile (the massif) is selected, also a legal centre for it (two steps from the world); with a single tile selected a massif centre reads `empty` |
 | `pinned` | The pinned slot `{q, r}`, or `null`. Cleared by a placement, Esc or `unpin`, a click off it, bulldoze or photo mode, a loaded world, and an undo, redo or bulldoze that leaves it no longer a free slot |
@@ -450,6 +451,7 @@ In the play scenario the state JSON's `tiles` is the world's tile count, and `pl
 | `last_result` | Latest game action except hover: `{action, ok, cell, reason}` |
 | `recent_events` | The last 16 events, not drained, for native runs |
 | `cars` | Live cars in the simulation |
+| `parked_cars` | Cars standing in their parking spots (PRD §7.1), not counted in `cars` |
 | `car_cap` | The world's car cap at the tier in force: Low 75, Medium 150, High and Ultra 300 (PRD §7.2, §9.2) |
 | `car_list` | Every driving car: `id`, trip `phase`, world `x`/`z` and `opacity` (P4: 0 while inside a road tunnel, ramping 1 to 0 over the metres before an arch and back after the far one) |
 | `connected_destinations` | Houses that can reach at least one other house by road |
