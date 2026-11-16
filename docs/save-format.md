@@ -59,7 +59,7 @@ Camera { focus: [f32; 3], yaw: f32, pitch: f32, distance: f32 }
 Settings {
     quality: Quality,
     tilt_shift: bool,
-    tilt_shift_chosen: bool,   // v2 only: the player toggled tilt-shift themselves
+    tilt_shift_chosen: bool,   // since v2: the player toggled tilt-shift themselves
     tilt_shift_strength: f32,
     volume_master: f32,
     volume_music: f32,
@@ -78,7 +78,7 @@ Quality = Auto (0) | Low (1) | Medium (2) | High (3) | Ultra (4)
 |---|---|---|---|
 | 1 | 2026-10-13 (P2 wave 2, W2a) | First version | `v1-small-world.hexworld` |
 | 2 | 2026-10-14 (owner decision A21) | `Settings::tilt_shift_chosen`: whether the player toggled tilt-shift themselves. While it is false, a quality-tier change drives tilt-shift; while it is true, the tier keeps the player's toggle and strength. A v1 file upgrades with it false, because v1 cannot tell the player's toggle from the tier's default | `v2-tilt-chosen.hexworld` |
-| 3 | 2026-10-14 (owner feedback on placement) | The `Replace` history record: Ctrl or Cmd-click swaps a placed tile in one undoable step, which v2's place and bulldoze records cannot express without a disconnected or empty world in between. A v2 file upgrades with every record's `replaced` empty | `v3-replaced.hexworld` |
+| 3 | 2026-10-14 (owner feedback on placement) | The `Replace` history record: Ctrl or Cmd-click swaps a placed tile in one undoable step, which v2's place and bulldoze records cannot express without a disconnected or empty world in between. A v2 file upgrades with every record's `replaced` empty | `v3-replaced.hexworld`, `v3-massif.hexworld` (a mega tile; same wire format) |
 
 ## Decode order and errors
 
