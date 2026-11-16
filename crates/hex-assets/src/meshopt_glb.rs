@@ -1,6 +1,6 @@
 //! Rewrites a GLB that uses `EXT_meshopt_compression` into a plain one `bevy_gltf` can load (PRD
-//! TC3). The GLB is untrusted input: every offset is overflow-checked and decoded sizes are capped
-//! (`MAX_DECODED`), and a GLB without the extension passes through unchanged.
+//! TC3). The GLB is untrusted input: buffer slices are bounds-checked (`slice`) and decoded sizes
+//! are capped (`MAX_DECODED`). A GLB without the extension passes through unchanged.
 use meshoptimizer_rs::codec::{BufferView, Filter, Mode};
 use meshoptimizer_rs::{Limits, Workspace};
 use serde_json::{Map, Value};

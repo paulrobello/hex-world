@@ -1,6 +1,7 @@
 //! The play scenario's plugins, one per concern (tiles, scatter, grass, rise, ghost, affordances).
-//! `PlaySet` orders them inside `PlaySystems` as a chain: a system reads what the stages before it
-//! produced in the same frame, so a new system joins the set whose output it consumes.
+//! `PlaySet` chains the concerns inside `PlaySystems`, but systems within one set are unordered: a
+//! system that reads another's output from the same frame belongs in a later set or needs an
+//! explicit `.after(...)`.
 use bevy::prelude::*;
 
 use super::{

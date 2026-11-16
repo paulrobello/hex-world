@@ -1,5 +1,7 @@
-//! Saved settings and the camera pose as the save format stores them. Every value that reaches the
-//! engine from a `.hexworld` file is clamped here, because a save is untrusted input.
+//! Saved settings and the camera pose as the save format stores them. A save is untrusted input, so
+//! the audio volumes (non-finite becomes 0, then clamped to 0..=1) and the orbit camera's pitch and
+//! distance (clamped to the rig's limits) are bounded here. The tile data is validated by
+//! `SaveData::decode` in `hex-core`.
 use crate::camera::{self, MAX_DISTANCE, MAX_PITCH, MIN_DISTANCE, MIN_PITCH};
 use bevy::prelude::*;
 use hex_core::{AudioVolumes, CameraState, QualitySetting};

@@ -6,7 +6,7 @@
 //!   pipeline is untouched, so it gains no sampled texture (it sits at WebGPU's 16 next to
 //!   refracting water).
 //! - **Force LOD** pins every LOD-tagged part to one level by swapping its [`VisibilityRange`] and
-//!   restores [`lod_range`] on Auto. The instanced gate layout picks its LOD per chunk on the GPU
+//!   restores `hex_render::scene::lod_range` on Auto. The instanced gate layout picks its LOD per chunk on the GPU
 //!   path and is not covered.
 //! - **Perf** samples frame times over the last second, counts entities, and with the LOD overlays
 //!   counts drawn LOD parts and their triangles.

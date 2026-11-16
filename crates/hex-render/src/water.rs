@@ -8,7 +8,7 @@
 //! from world position too.
 //!
 //! The mesh builders take a [`WaterField`], the world-space description they sample: [`Lookdev`]
-//! is this patch's hand-laid scene, and [`tiles`] builds one per placed water tile in `play`.
+//! is this patch's hand-laid scene, and `hex_play::water::tiles` builds one per placed water tile in `play`.
 //!
 //! Both materials are custom `Material`s, not `ExtendedMaterial<StandardMaterial, _>`: the
 //! StandardMaterial layout binds its texture slots even when unused, and they keep their own

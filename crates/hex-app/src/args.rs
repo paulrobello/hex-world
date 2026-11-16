@@ -1,6 +1,6 @@
 //! Start-up flags: one key/value parser shared by native `--name value` arguments and web query
-//! parameters, so a key means the same on both. A bad value warns and keeps the default rather than
-//! aborting. The reference table is `docs/agent-operability.md`.
+//! parameters, so a key means the same on both. A bad value is reported in the returned warnings
+//! instead of aborting the run. The reference table is `docs/agent-operability.md`.
 pub use hex_render::{
     GateView, GateWorkload, Layout, PostMode, RenderConfig, Scenario, ShadowCasters,
 };

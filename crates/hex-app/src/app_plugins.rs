@@ -1,6 +1,7 @@
-//! The `hex-app` plugin groups and `AppSet`, the one chain that orders every `Update` system of the
-//! app. A new system joins the set whose stage it belongs to: commands run before the game applies
-//! them, and state is published after the cars and the view are updated.
+//! The `hex-app` plugins and `AppSet`, the chain `hex-app`'s `Update` systems are placed in:
+//! commands run before the game applies them, and state is published after the cars and the view
+//! are updated. A few systems (`capture::hold_time`, `exit_guard::arm_on_request`) order with
+//! `.after(...)` instead, and `hex-play` and `hex-render` order their own sets.
 use bevy::app::OnAppExitSystems;
 use bevy::prelude::*;
 
