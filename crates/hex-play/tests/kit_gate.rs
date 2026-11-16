@@ -791,12 +791,77 @@ fn world_matrices(doc: &gltf::Document) -> Vec<Mat4> {
     world
 }
 
+/// The LOD meshes of a piece, by LOD index.
+type LodMeshes<'a> = Vec<Option<gltf::Mesh<'a>>>;
+
+/// The gate's geometry checks for one piece, in a fixed order: each `geometry_*` function below
+/// is one check and appends to `e`, so the report for a piece is the same list it always was.
 fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
     let mut e = vec![];
     let (doc, buffers, glb_bytes) = match plain(kit, p) {
         Ok(x) => x,
         Err(err) => return vec![err],
     };
+    geometry_file(p, &doc, glb_bytes, &mut e);
+    let lods: LodMeshes = (0..3)
+        .map(|i| mesh_named(&doc, &lod_mesh_name(&p.id, i)))
+        .collect();
+    let Some(lod0) = &lods[0] else {
+        return vec![format!("{}: mesh {}_lod0 missing", p.id, p.id)];
+    };
+    let rotors: Vec<_> = (0..3)
+        .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
+        .collect();
+    e.extend(rotor_errors(&p.id, &rotors, &buffers));
+    let parts = part_meshes(&doc, &p.id);
+    e.extend(part_errors(&p.id, &parts));
+    geometry_budget(kit, p, &lods, &rotors, &parts, &mut e);
+    geometry_primitives(p, &lods, &rotors, &parts, &buffers, &mut e);
+    let lod0_parts: Vec<_> = std::iter::once(lod0)
+        .chain(&rotors[0])
+        .chain(&parts[0])
+        .collect();
+    e.extend(check_texel_density(kit, p, &lod0_parts, &buffers));
+    geometry_wind_and_paint(p, &lods, &buffers, &mut e);
+    if !doc
+        .nodes()
+        .any(|n| n.name() == Some(&format!("{}_collider", p.id)))
+    {
+        e.push(format!("{}: node {}_collider missing (D14)", p.id, p.id));
+    }
+    let mouth = (p.kind == PieceKind::Base)
+        .then(|| mouth_of_base(&p.id))
+        .flatten();
+    if let Some(m) = &mouth {
+        e.extend(mouth_base_errors(kit, p, m, &lods, &buffers));
+    }
+    let coast = (p.kind == PieceKind::Base && mouth.is_none())
+        .then(|| coast_of_base(&p.id))
+        .flatten();
+    if let Some(coast) = &coast {
+        geometry_coast(p, coast, &lods, lod0, &buffers, &mut e);
+    }
+    let plain_base = p.kind == PieceKind::Base && coast.is_none() && mouth.is_none();
+    let level = if plain_base {
+        base_ring_level(&p.id, &positions(lod0, &buffers)).unwrap_or_else(|err| {
+            e.push(err);
+            0.0
+        })
+    } else {
+        0.0
+    };
+    if p.kind.touches_border() && coast.is_none() && mouth.is_none() {
+        geometry_border_rings(kit, p, &lods, level, &buffers, &mut e);
+    }
+    if plain_base {
+        geometry_base_cap(p, lod0, level, &buffers, &mut e);
+    }
+    geometry_sockets(p, &doc, &mut e);
+    e
+}
+
+/// The GLB file itself: its size, that it embeds no images and uses no quantization.
+fn geometry_file(p: &PieceEntry, doc: &gltf::Document, glb_bytes: u64, e: &mut Vec<String>) {
     if glb_bytes > GLB_MAX_BYTES {
         e.push(format!("{}: GLB {glb_bytes} B > {GLB_MAX_BYTES}", p.id));
     }
@@ -809,18 +874,17 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             p.id
         ));
     }
-    let lods: Vec<_> = (0..3)
-        .map(|i| mesh_named(&doc, &lod_mesh_name(&p.id, i)))
-        .collect();
-    let Some(lod0) = &lods[0] else {
-        return vec![format!("{}: mesh {}_lod0 missing", p.id, p.id)];
-    };
-    let rotors: Vec<_> = (0..3)
-        .map(|i| mesh_named(&doc, &rotor_mesh_name(&p.id, i)))
-        .collect();
-    e.extend(rotor_errors(&p.id, &rotors, &buffers));
-    let parts = part_meshes(&doc, &p.id);
-    e.extend(part_errors(&p.id, &parts));
+}
+
+/// Triangle budgets per LOD, rotors and parts counted in.
+fn geometry_budget(
+    kit: &Kit,
+    p: &PieceEntry,
+    lods: &LodMeshes,
+    rotors: &LodMeshes,
+    parts: &[Vec<gltf::Mesh>; 3],
+    e: &mut Vec<String>,
+) {
     let lod_tris = [0, 1, 2].map(|i| {
         lods[i].as_ref().map(|m| {
             tris(m) + rotors[i].as_ref().map_or(0, tris) + parts[i].iter().map(tris).sum::<usize>()
@@ -832,9 +896,21 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         lod0_budget(p),
         lod2_max_ratio(kit, p),
     ));
+}
+
+/// Every primitive of every LOD, rotor and part: tangents, FLOAT attributes, a manifest slot for
+/// its material, and finite positions.
+fn geometry_primitives(
+    p: &PieceEntry,
+    lods: &LodMeshes,
+    rotors: &LodMeshes,
+    parts: &[Vec<gltf::Mesh>; 3],
+    buffers: &[gltf::buffer::Data],
+    e: &mut Vec<String>,
+) {
     for m in lods
         .iter()
-        .chain(&rotors)
+        .chain(rotors)
         .flatten()
         .chain(parts.iter().flatten())
     {
@@ -857,32 +933,36 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
                 e.push(format!("{}: material {name} has no manifest slot", p.id));
             }
         }
-        for (pos, _) in positions(m, &buffers) {
+        for (pos, _) in positions(m, buffers) {
             if !pos.iter().all(|c| c.is_finite()) {
                 e.push(format!("{}: non-finite position", p.id));
                 break;
             }
         }
     }
-    let lod0_parts: Vec<_> = std::iter::once(lod0)
-        .chain(&rotors[0])
-        .chain(&parts[0])
-        .collect();
-    e.extend(check_texel_density(kit, p, &lod0_parts, &buffers));
+}
+
+/// The wind attributes (trees and every slot) and the paint masks of runtime-painted pieces.
+fn geometry_wind_and_paint(
+    p: &PieceEntry,
+    lods: &LodMeshes,
+    buffers: &[gltf::buffer::Data],
+    e: &mut Vec<String>,
+) {
     if p.kind == PieceKind::Tree {
         for (i, m) in lods.iter().enumerate() {
             if let Some(m) = m {
                 e.extend(wind_errors(
                     &p.id,
                     &format!("{}_lod{i}", p.id),
-                    &wind_verts(p, m, &buffers),
+                    &wind_verts(p, m, buffers),
                 ));
             }
         }
     }
     for (i, m) in lods.iter().enumerate() {
         if let Some(m) = m {
-            e.extend(wind_slot_errors(&p.id, i, &wind_prims(p, m, &buffers)));
+            e.extend(wind_slot_errors(&p.id, i, &wind_prims(p, m, buffers)));
         }
     }
     if runtime_painted(&p.id) {
@@ -891,113 +971,115 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
                 e.extend(paint_mask_errors(
                     &p.id,
                     &format!("{}_lod{i}", p.id),
-                    &paint_prims(m, &buffers),
+                    &paint_prims(m, buffers),
                 ));
             }
         }
     }
-    if !doc
-        .nodes()
-        .any(|n| n.name() == Some(&format!("{}_collider", p.id)))
-    {
-        e.push(format!("{}: node {}_collider missing (D14)", p.id, p.id));
+}
+
+/// A coast base: its border rings, its profile against the coastline, and its skirt bottom.
+fn geometry_coast(
+    p: &PieceEntry,
+    coast: &Coastline,
+    lods: &LodMeshes,
+    lod0: &gltf::Mesh,
+    buffers: &[gltf::buffer::Data],
+    e: &mut Vec<String>,
+) {
+    let rings: Vec<_> = lods
+        .iter()
+        .flatten()
+        .map(|m| border_ring_any(&positions(m, buffers)))
+        .collect();
+    let flat: Vec<Vec<[f32; 2]>> = rings
+        .iter()
+        .map(|r| r.iter().map(|(q, _)| [q[0], q[2]]).collect())
+        .collect();
+    e.extend(ring_errors(&p.id, &flat, false));
+    for r in &rings {
+        e.extend(coast_ring_errors(&p.id, coast, r).0);
     }
-    let mouth = (p.kind == PieceKind::Base)
-        .then(|| mouth_of_base(&p.id))
-        .flatten();
-    if let Some(m) = &mouth {
-        e.extend(mouth_base_errors(kit, p, m, &lods, &buffers));
-    }
-    let coast = (p.kind == PieceKind::Base && mouth.is_none())
-        .then(|| coast_of_base(&p.id))
-        .flatten();
-    if let Some(coast) = &coast {
-        let rings: Vec<_> = lods
-            .iter()
-            .flatten()
-            .map(|m| border_ring_any(&positions(m, &buffers)))
-            .collect();
-        let flat: Vec<Vec<[f32; 2]>> = rings
-            .iter()
-            .map(|r| r.iter().map(|(q, _)| [q[0], q[2]]).collect())
-            .collect();
-        e.extend(ring_errors(&p.id, &flat, false));
-        for r in &rings {
-            e.extend(coast_ring_errors(&p.id, coast, r).0);
-        }
-        for (i, m) in lods.iter().enumerate() {
-            if let Some(m) = m {
-                let (_, err) = coast_profile_errors(
-                    &format!("{}_lod{i}", p.id),
-                    coast,
-                    &triangles(m, &buffers),
-                );
-                e.extend(err);
-            }
-        }
-        let min_y = positions(lod0, &buffers)
-            .iter()
-            .map(|(p, _)| p[1])
-            .fold(f32::MAX, f32::min);
-        if (min_y + hex_core::LEVEL_STEP).abs() > 0.005 {
-            e.push(format!(
-                "{}: skirt bottom {min_y} != -{}",
-                p.id,
-                hex_core::LEVEL_STEP
-            ));
+    for (i, m) in lods.iter().enumerate() {
+        if let Some(m) = m {
+            let (_, err) =
+                coast_profile_errors(&format!("{}_lod{i}", p.id), coast, &triangles(m, buffers));
+            e.extend(err);
         }
     }
-    let level = if p.kind == PieceKind::Base && coast.is_none() && mouth.is_none() {
-        base_ring_level(&p.id, &positions(lod0, &buffers)).unwrap_or_else(|err| {
-            e.push(err);
-            0.0
-        })
-    } else {
-        0.0
-    };
-    if p.kind.touches_border() && coast.is_none() && mouth.is_none() {
-        let rings: Vec<_> = lods
-            .iter()
-            .flatten()
-            .map(|m| border_ring_at(&positions(m, &buffers), level))
-            .collect();
-        let cuts: BTreeMap<u64, f32> = lane_sockets(kit, p)
-            .into_iter()
-            .filter_map(|(k, (_, c))| Some((k, c? as f32)))
-            .collect();
-        let lane_cut = p.kind == PieceKind::Base && !cuts.is_empty();
-        e.extend(ring_errors(
-            &p.id,
-            &rings,
-            p.kind == PieceKind::Base && !lane_cut,
+    let min_y = positions(lod0, buffers)
+        .iter()
+        .map(|(p, _)| p[1])
+        .fold(f32::MAX, f32::min);
+    skirt_bottom_error(&p.id, min_y, e);
+}
+
+/// A skirt's lowest point sits one level step under the cap.
+fn skirt_bottom_error(id: &str, min_y: f32, e: &mut Vec<String>) {
+    if (min_y + hex_core::LEVEL_STEP).abs() > 0.005 {
+        e.push(format!(
+            "{id}: skirt bottom {min_y} != -{}",
+            hex_core::LEVEL_STEP
         ));
-        if lane_cut && let Some(ring) = rings.first() {
-            e.extend(cut_ring_errors(&p.id, ring, &cuts));
-        }
     }
-    if p.kind == PieceKind::Base && coast.is_none() && mouth.is_none() {
-        let v = positions(lod0, &buffers);
-        if let Some((p_bad, n_bad)) = v.iter().find(|(q, n)| {
-            dist_to_border(q[0], q[2]).abs() < 1e-3
-                && (q[1] - level).abs() < 1e-3
-                && n[1] > 0.5
-                && n[1] < 0.999
-        }) {
-            e.push(format!(
-                "{}: cap border normal {n_bad:?} at {p_bad:?} is not +Y (seam shading)",
-                p.id
-            ));
-        }
-        let min_y = v.iter().map(|(p, _)| p[1]).fold(f32::MAX, f32::min);
-        if (min_y + hex_core::LEVEL_STEP).abs() > 0.005 {
-            e.push(format!(
-                "{}: skirt bottom {min_y} != -{}",
-                p.id,
-                hex_core::LEVEL_STEP
-            ));
-        }
+}
+
+/// The border ring of every LOD at the base's level, and a lane-cut base's cut ring.
+fn geometry_border_rings(
+    kit: &Kit,
+    p: &PieceEntry,
+    lods: &LodMeshes,
+    level: f32,
+    buffers: &[gltf::buffer::Data],
+    e: &mut Vec<String>,
+) {
+    let rings: Vec<_> = lods
+        .iter()
+        .flatten()
+        .map(|m| border_ring_at(&positions(m, buffers), level))
+        .collect();
+    let cuts: BTreeMap<u64, f32> = lane_sockets(kit, p)
+        .into_iter()
+        .filter_map(|(k, (_, c))| Some((k, c? as f32)))
+        .collect();
+    let lane_cut = p.kind == PieceKind::Base && !cuts.is_empty();
+    e.extend(ring_errors(
+        &p.id,
+        &rings,
+        p.kind == PieceKind::Base && !lane_cut,
+    ));
+    if lane_cut && let Some(ring) = rings.first() {
+        e.extend(cut_ring_errors(&p.id, ring, &cuts));
     }
-    let world = world_matrices(&doc);
+}
+
+/// A plain base's cap: border normals point up (seam shading) and the skirt bottom is a level down.
+fn geometry_base_cap(
+    p: &PieceEntry,
+    lod0: &gltf::Mesh,
+    level: f32,
+    buffers: &[gltf::buffer::Data],
+    e: &mut Vec<String>,
+) {
+    let v = positions(lod0, buffers);
+    if let Some((p_bad, n_bad)) = v.iter().find(|(q, n)| {
+        dist_to_border(q[0], q[2]).abs() < 1e-3
+            && (q[1] - level).abs() < 1e-3
+            && n[1] > 0.5
+            && n[1] < 0.999
+    }) {
+        e.push(format!(
+            "{}: cap border normal {n_bad:?} at {p_bad:?} is not +Y (seam shading)",
+            p.id
+        ));
+    }
+    let min_y = v.iter().map(|(p, _)| p[1]).fold(f32::MAX, f32::min);
+    skirt_bottom_error(&p.id, min_y, e);
+}
+
+/// Every `socket-lane-*` node sits on its lane contract, at its world position.
+fn geometry_sockets(p: &PieceEntry, doc: &gltf::Document, e: &mut Vec<String>) {
+    let world = world_matrices(doc);
     for node in doc
         .nodes()
         .filter(|n| n.name().is_some_and(|s| s.starts_with("socket-lane-")))
@@ -1015,7 +1097,6 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
             [t[0], t[1], t[2]],
         ));
     }
-    e
 }
 
 /// Cross-section errors for one edge piece, given each LOD's (y, z) section at x = APOTHEM.
