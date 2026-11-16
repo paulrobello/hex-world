@@ -1210,6 +1210,11 @@ fn hero_variants_fit_inside_the_authored_piece() {
     }
 }
 
+/// Pieces that deliberately keep [`DEFAULT_FOOTPRINT`]'s 1 m reach. A measured row for the station
+/// shelter (4.77 m) moves the wildflowers around it, which re-renders every `rail_station`
+/// thumbnail, so it waits for an owner-approved checkpoint.
+const DEFAULT_FOOTPRINT_KEPT: &[&str] = &["rail_station_shelter"];
+
 /// Every table lookup (`footprint`, `ground_box`, `fence`) falls back silently for a piece
 /// without a row, and every table test iterates the table, so a missing row is invisible.
 /// This iterates the catalog instead: each hero and scatter piece, with its scatter group and
@@ -1219,7 +1224,8 @@ fn every_prop_piece_has_a_footprint_row() {
     let missing: Vec<String> = crate::walk::tests::catalog_props()
         .into_iter()
         .filter(|p| {
-            !FOOTPRINTS.iter().any(|(id, _)| id == p)
+            !DEFAULT_FOOTPRINT_KEPT.contains(&p.as_str())
+                && !FOOTPRINTS.iter().any(|(id, _)| id == p)
                 && !FENCES.iter().any(|(id, _)| id == p)
                 && !GROUND_PROPS.contains(&p.as_str())
         })
