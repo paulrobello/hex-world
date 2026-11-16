@@ -5,7 +5,7 @@ Shared with `bird_starling` (builder `scripts/blender/kit/_fauna.py`); see its l
 1. **Hooks gate and an under-water prop.** The §9.4 hooks gate requires masks R (snow) > 0 on every
    slot outside its `SUBMERGED` list. A fish only ever swims inside the water volume, so authoring snow
    capacity on it would be wrong; `fish_trout_body` is added to `SUBMERGED` in
-   `crates/hex-render/tests/hooks/mod.rs` with that reason, and its masks carry R = 0, G = 1. No skill
+   `crates/hex-play/tests/hooks/mod.rs` with that reason, and its masks carry R = 0, G = 1. No skill
    change: the list is the documented mechanism. Lost about 2 minutes.
 2. **Two palettes without a second texture.** The manifest has no variant field (`deny_unknown_fields`),
    and a palette tint per slot cannot turn a silver fish olive with spots. Both palettes share one
