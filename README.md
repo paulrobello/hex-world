@@ -41,7 +41,7 @@ Asset authoring is optional for playing or running the normal gates. Install its
 | Kit texture compression | KTX-Software **4.4.2**. `make fetch-tools` downloads and extracts **only this tool**, locally under `tools/`, on macOS ARM64, and writes `tools/ktx-env.sh`. Other platforms need their own KTX installation. |
 | Audio mastering and checkpoint images/video | Python 3, ffmpeg/ffprobe (including `libopus` for audio and `libx264` for video), and ImageMagick (`magick`). |
 | Tile thumbnails | [uv](https://docs.astral.sh/uv/) and Python **3.11+**. `make thumbs` uses uv to install the script's pinned **Pillow 12.2.0** dependency. |
-| Brand rebuilds | **resvg 0.48.1** (`brew install resvg` on macOS, then verify the version). |
+| Brand rebuilds | **resvg 0.48.1**. Homebrew ships a newer build, so `cargo install resvg --version 0.48.1 --locked --root target/tools/resvg-0.48.1` and run `make brand` with `PATH="$PWD/target/tools/resvg-0.48.1/bin:$PATH"`. |
 
 ## Getting started
 
