@@ -1143,7 +1143,7 @@ try {
       inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && r.height > 40,
       onTop: hit(r.left + 6, r.top + 6) && hit(r.right - 6, r.bottom - 6),
       rect: [r.left, r.top, r.width, r.height].map(Math.round).join(","),
-      why: `viewport ${innerWidth}x${innerHeight}, top-left covered by ${at(r.left + 6, r.top + 6)}, bottom-right by ${at(r.right - 6, r.bottom - 6)}, toast "${document.querySelector(".toast.is-shown")?.textContent ?? ""}"`,
+      why: `viewport ${innerWidth}x${innerHeight}, top-left covered by ${at(r.left + 6, r.top + 6)}, bottom-right by ${at(r.right - 6, r.bottom - 6)}, toast "${document.querySelector(".toast.is-shown")?.textContent ?? ""}", toasts ${[...document.querySelectorAll(".toast")].map((t) => `${t.className}|h=${t.offsetHeight}|pe=${getComputedStyle(t).pointerEvents}|text="${t.textContent.slice(0, 40)}"`).join(" ; ") || "none"}, list data-select=${list.closest(".select")?.getAttribute("data-select")}`,
     };
   });
   check((await grade())?.name === "rich-3", `the grade starts at the default rich-3 (${(await grade())?.name})`);
