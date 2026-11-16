@@ -7,6 +7,7 @@
 //   3. a car with opacity 0 (`car_list[].opacity`) is inside it, near the cover.
 // Exits 0 only when all three hold and the page logged no error. Not a timing run, so it takes no
 // load guard. Run after `make build-web`: node e2e/elevation.mjs dist
+// DEBUG_GHOST (any value) logs the ghost state of each probed cell while it looks for a level tag.
 import { readFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";

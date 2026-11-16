@@ -11,7 +11,10 @@
 //   PERF_OUT (default docs/perf/p2-grass.json), GRASS_ROUNDS (default 2), GRASS_RADIUS (default 26),
 //   GRASS_ARMS (default off,normal,lush), GRASS_DISTANCES (default near; e.g. near,far runs every arm
 //   at each grass_distance stop), GRASS_CAMERA (optional "x,y,z,lx,ly,lz"), GRASS_TRACE (optional Chrome trace + CPU profile path),
-//   GRASS_GPU_TIMING=on (diagnostic only, not budget runs), GRASS_SAVE (optional exact-world save)
+//   GRASS_GPU_TIMING=on (diagnostic only, not budget runs), GRASS_SAVE (optional exact-world save),
+//   GRASS_LOAD (optional .hexworld to load instead of building the water world; human desktop Chrome
+//   spikes are then tolerated), PERF_EXCLUSIVE=1 (wait for, and monitor, exclusive GPU use: no other
+//   automated Chrome or hex-world process; e2e/perf-exclusivity.mjs)
 import { readFile, writeFile } from "node:fs/promises";
 import { LOAD_LIMIT, guarded } from "./perf-load.mjs";
 import { BAD_TEXT } from "./console-errors.mjs";

@@ -14,6 +14,7 @@
 // WARMUP=1 runs the first arm once on the first world before round 0 and discards it (a session's first run
 // can read fast). Each camera window also records `cpu`: the main-thread time of each engine rAF callback
 // that submitted GPU work, over the window's last 600 frames, so a delta splits into CPU and the rest.
+// SAVE is the 2,066-tile save (default docs/perf/post-arc001-2026-10-16/local-world.hexworld).
 // An arm key `pause_agents=1` opens photo mode with the agents paused (no sim tick). GPU_CALLS=1 and
 // PROFILE_DIR are diagnostics (docs/perf/large-world-cpu/), not timing evidence.
 import { readFile, writeFile } from "node:fs/promises";

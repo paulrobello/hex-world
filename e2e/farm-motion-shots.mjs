@@ -5,7 +5,8 @@
 // (`animal_cow_b`). The camera is set beside the animal from its `play.farm` position at the
 // start of each sequence and held, and each frame records the animal's `play.farm` row (state,
 // phase, walk, head). Writes docs/checkpoints/farm-motion/<seq>-<n>.jpg and farm-motion.json.
-// Run: node e2e/farm-motion-shots.mjs dist
+// Run: node e2e/farm-motion-shots.mjs dist   FARM_MOTION_OUT (default docs/checkpoints/farm-motion)
+// is the output directory.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
 import { serveDist } from "./lib/harness.mjs";

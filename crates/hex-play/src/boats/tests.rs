@@ -463,7 +463,8 @@ fn boats_ride_the_surface() {
 }
 
 /// The water's hull clip stays inside each hull's waterline planform (LOD0 vertices within 4 cm of
-/// the waterline), so no water is cut away outside a hull.
+/// the waterline), so no water is cut away outside a hull. `HULL_PROFILE` (any value) prints the
+/// interpolated half breadth at 25 stations along each hull.
 #[test]
 fn hull_ellipses_lie_inside_the_hulls() {
     for kind in [BoatKind::Rowing, BoatKind::Sailing] {

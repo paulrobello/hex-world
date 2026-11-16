@@ -1,5 +1,6 @@
 // Exact saved perf-grass world, native release, guarded separately from browser runs.
 // Usage: node e2e/perf-play-native.mjs <binary> <save.hexworld> <output-directory>
+//   PERF_EXCLUSIVE=1 waits for, and monitors, exclusive GPU use (e2e/perf-exclusivity.mjs).
 import { spawn } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { resolve, join } from "node:path";

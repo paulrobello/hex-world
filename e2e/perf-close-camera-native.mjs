@@ -10,7 +10,8 @@
 // shaders differ.
 // The 31-tile mixed world (docs/checkpoints/scatter/scatter-mixed.json) runs at its every-tile overview and
 // the 20-tile overview pose. WORLDS (comma list) runs only the named worlds; every world by default.
-// usage: node e2e/perf-close-camera-native.mjs <repo-before> <repo-after> <out.json>   ROUNDS (default 5), WORLDS
+// usage: node e2e/perf-close-camera-native.mjs <repo-before> <repo-after> <out.json>   ROUNDS (default 5), WORLDS,
+// SAVE (the 2,066-tile save, default docs/perf/post-arc001-2026-10-16/local-world.hexworld)
 import { spawn } from "node:child_process";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { cpus, hostname } from "node:os";

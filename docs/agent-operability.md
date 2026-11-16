@@ -59,7 +59,7 @@ Every exit path waits until pending screenshots have been written. Natively, the
 
 ## Environment variables
 
-These are process environment variables, not URL parameters. Unset means the variable is absent. The source column names the consumer (paths are relative to the repository root). Cargo-provided build variables such as `CARGO_MANIFEST_DIR` are not game tunables. Make arguments such as `BLENDER`, `PIECE` and `*_DOCS` are Make variables, not additional runtime environment settings.
+These are process environment variables, not URL parameters. Unset means the variable is absent. The source column names the consumer (paths are relative to the repository root). Cargo-provided build variables such as `CARGO_MANIFEST_DIR` are not game tunables. Make arguments such as `BLENDER`, `PIECE` and `*_DOCS` are Make variables, not additional runtime environment settings. Per-script knobs are documented in each harness's header comment (`e2e/*.mjs`, `scripts/perf/*.sh`) or beside the test that reads them; the tables here list the shared ones.
 
 ### Engine, schema and asset tooling
 
@@ -79,6 +79,7 @@ These are process environment variables, not URL parameters. Unset means the var
 | `HEXW_BLEND_STORE` | Blender source lookup | Main checkout's `assets-source/blend` | Override the shared source-store root. `scripts/blender/lib/paths.py` |
 | `HEXW_BLEND` | Hero oak generator | Store's `tree_hero_oak` blend path | Override the input `.blend`. `scripts/blender/kit/tree_hero_oak.py` |
 | `HEXW_MOUTH_DEBUG` | Mouth mesh generator | Unset | A nonempty value logs mesh-refinement diagnostics. `scripts/blender/kit/_mouth.py` |
+| `HEXW_BLESS_TRIPS` | `hex-sim` test `trips_turn_no_sharper_than_the_baseline` | Unset | Any present value rewrites `crates/hex-sim/tests/fixtures/trip_turns.txt` from the current code. Bless only an intended change. `crates/hex-sim/tests/trip_geometry.rs` |
 | `HEX_MUSIC_STORE` | Audio source lookup | This checkout's `assets-source/audio/music`, then the main checkout's | Override the first music source-store root. `scripts/audio/audio_lib.py` |
 | `INITIAL_DOWNLOAD_BUDGET_BYTES` | Initial-download gate | `31457280` (30 MiB) | Positive integer byte budget, primarily for gate self-tests. `scripts/size/initial-download.mjs` |
 | `TRUNK_STAGING_DIR` | Web URL versioning | `dist` if no positional path | Trunk supplies its staging path to the post-build hook. `scripts/web/version-dist.mjs` |
@@ -147,6 +148,7 @@ Keep host load at most 15 before and after timing runs. Overrides are diagnostic
 | `VERSION_OUT` | `e2e/version.mjs` | `e2e/test-results/version` | Evidence directory. |
 | `PLACEMENT_OUT` | `e2e/ui.mjs` | `e2e/test-results/placement` | Placement evidence directory. |
 | `GHOST_OUT` | `e2e/ghost-shots.mjs` | `docs/checkpoints/ghost` | Ghost evidence directory. |
+| `MOTION_OUT` | `e2e/ui-motion.mjs` | `e2e/test-results/ui-motion` | Frame-strip evidence directory; `docs/checkpoints/ui-feedback` for the committed strips for the owner. |
 
 ## Web query parameters
 
