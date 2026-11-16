@@ -1,6 +1,6 @@
 # Water bed contract (river and coast kit families)
 
-**Status: DRAFT (W3c, 2026-10-13).** The numbers below are what the engine renders in `play` today. The ones marked *may move* wait on the owner's look check of water in play. A change to any number is announced and lands in the engine and this file in the same commit.
+**Status: draft (W3c, 2026-10-13); water in play is owner-approved (A5, 2026-10-14).** The numbers below are what the engine renders in `play` today. The four marked *may move* (water surface, ocean bed, beach width, shelf length) await an explicit owner freeze. A change to any number is announced and lands in the engine and this file in the same commit.
 
 **The profiles in §2–§4 are requirements, not illustrations.** The engine never reads the bed geometry. It computes every per-vertex water input from these analytic profiles, and it keeps doing so after a kit piece replaces the placeholder bed. Those inputs are water depth (wave damping, swash weight), shore distance (swash phase, wet line), river weight and flow. A kit bed that drifts from its profile shows as swash running up a slope that isn't there, or waves damped over the wrong depth.
 - **Where the water is shallower than 2.5 m** (river banks, the beach slope and shelf): stay within ±0.03 m of the profile. Swash and wave damping act here.
