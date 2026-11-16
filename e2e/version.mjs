@@ -42,7 +42,11 @@ const polls = [];
 const { server, base: origin } = await serveDist(dist, {
   respond: (req, res, file) => {
     const url = new URL(req.url, "http://x");
-    const path = decodeURIComponent(url.pathname);
+    // serveDist normalizes "/" to "/index.html" before dispatch; mirror that here, or a
+    // navigation to the bare origin falls through to the static fallback and serves the
+    // on-disk build instead of the swapped pageAs(id) (found via the booked-window diag).
+    let path = decodeURIComponent(url.pathname);
+    if (path.endsWith("/")) path += "index.html";
     const id = live && live !== "fail" ? live : built;
     if (path === "/version.json") {
       polls.push({ t: Number(url.searchParams.get("t")), search: url.search, cache: req.headers["cache-control"] ?? "" });
