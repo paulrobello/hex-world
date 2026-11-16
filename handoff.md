@@ -112,5 +112,5 @@ No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. 
 
 - `docs/agent-operability.md`: CLI flags, web query params, `window.hexWorld` bridge, script commands, shot targets.
 - `.claude/skills/blender-asset/`: the asset pipeline; `references/dispatch.md` is the brief template (11 parts).
-- `crates/hex-core/src/variant.rs` (hero variants), `crates/hex-play/src/play/scatter.rs` (`VARIANTS`, `FOOTPRINTS`, `GROUND_BOXES`, `FENCES`, verge band), `crates/hex-play/src/walk.rs` (`OBSTACLES`, `prop_kind`, per-part colliders), `crates/hex-render/src/kit_scene.rs` (kit showcase layout; `tile_counts` in `lib.rs`).
+- `crates/hex-core/src/variant.rs` (hero variants), `crates/hex-play/src/play/scatter/tables.rs` (`VARIANTS`, `FOOTPRINTS`, `GROUND_BOXES`, `FENCES`) and `scatter/bands.rs` (verge band), `crates/hex-play/src/walk/tables.rs` (`OBSTACLES`, `WALK_THROUGH`, `prop_kind`, per-part colliders), `crates/hex-render/src/kit_scene.rs` (kit showcase layout; `tile_counts` in `lib.rs`).
 - CI: `.github/workflows/ci.yml` (auto-deploy to Pages on a `main` push).

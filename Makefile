@@ -773,7 +773,7 @@ shots-grass:
 	cp target/shots/grass-state-*.json $(GRASS_DOCS)/
 	@echo "wrote $(GRASS_DOCS)/"
 
-# Scatter checkpoint (PRD §5.3, crates/hex-play/src/play/scatter.rs): runs
+# Scatter checkpoint (PRD §5.3, crates/hex-play/src/play/scatter/): runs
 # docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a cluster
 # of pine forests and oak tiles with their junctions, meadows with flower drifts, a forest between a
 # road and a river, a house cluster; then a forest rising,
