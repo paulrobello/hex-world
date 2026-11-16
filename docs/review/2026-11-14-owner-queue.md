@@ -1,6 +1,6 @@
 # Owner review queue, 2026-11-14
 
-Requests waiting on you. Nothing here is approved unless it says answered. Paths are relative to the repo root, on branch `rail-levels-p1`. Every piece is committed with a `pending` approval entry. The in-engine shots come from the booked window of 2026-11-15 2:30 AM PST (`make shots-open-tunnels`, `make shots-raised-rail`) and go in `docs/checkpoints/open_tunnels/` and `docs/checkpoints/rail-levels/raised/`.
+Requests waiting on you. Nothing here is approved unless it says answered. Paths are relative to the repo root, on branch `rail-levels-p1`. Every piece is committed with a `pending` approval entry. The in-engine shots come from the booked window of 2026-11-15 2:30 AM PST (`make shots-open-tunnels`, `make shots-raised-rail`) and go in `docs/checkpoints/open_tunnels/` and `docs/checkpoints/rail-levels/raised/`. (merged to main as `edbc7ad`, 2026-11-15)
 
 ## In-engine results, 2026-11-15 (booked window)
 

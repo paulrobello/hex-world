@@ -1,9 +1,10 @@
-# Hex World handoff (2026-11-13)
+# Hex World handoff (2026-11-15)
 
 Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE.md`, `PRD.md` §15 and `.claude/skills/blender-asset/SKILL.md` before any asset work.
 
 ## State
 
+- 2026-11-15: a full audit ran against `edbc7ad`: `AUDIT.md` (2026-11-15), its cards tagged `audit-2026-11-15` on the board, and the enhancement plans in `docs/fable/`. Remediation lands on branch `fix/audit-remediation`.
 - 2026-11-13: P4 mega tiles first round is **merged** (`5930c0b`), pushed, CI green including deploy, `dist/` rebuilt, web-smoke OK. Card 01a13bcc closed.
   - **Scope:** one 7-cell `massif_granite` tile (owner A52–A55, in-engine approval C3). Spec `docs/superpowers/specs/2026-10-29-mega-tiles-design.md`.
   - **Determinism:** the massif exports single-threaded, because threaded MikkTSpace flipped a tangent rounding tie. Card 01a1d3d3 generalises this to the whole kit build: the thread count also changes decimation output.
@@ -11,7 +12,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 - 2026-11-14: the owner answered the 2026-11-13 queue and everything built ahead is merged (see `docs/review/2026-11-13-owner-queue.md`):
   - outcrop redo and `outcrop_granite_b` (`1772b55`), single-tile hills `hill_meadow` and `peak_granite` (`96512f3`, hero pack; the original peak stays, the jointed passes were rejected and their branch deleted 2026-11-14), raised land tiles taking matching edge heights (`1ee90b0`), and the rail tunnel portal and viaduct references (`e481ad7`).
   - Only `worktree-agent-abbcb3566f8fc0322` (parked shared scatter, A45 O1) remains as an agent branch.
-  - 2026-11-14 (late): rail at levels and open tunnels are built on branch `rail-levels-p1` (unmerged, unpushed): raised rail, rail tunnels, viaducts, bores, headlights, walker and vehicle floors. Plan `docs/superpowers/plans/2026-11-14-rail-at-levels.md`, specs `docs/superpowers/specs/2026-11-14-rail-at-levels-design.md` and `2026-11-14-open-tunnels-design.md`, owner questions `docs/review/2026-11-14-owner-queue.md`. Thumbnails (`make thumbs`) and the in-engine shots (`make shots-open-tunnels`, `make shots-raised-rail`, the viaduct stills) ran in the 2026-11-15 window and are committed. Still to do: owner looks at the frames in `docs/checkpoints/open_tunnels/`, `rail-levels/raised/` and `rail_viaduct/`, then merge, `make build-web`, push.
+  - 2026-11-14 (late): rail at levels and open tunnels are **merged** to main (`edbc7ad`, 2026-11-15), pushed, CI green (run of 2026-11-15, 6:44 AM PST), `dist/` rebuilt after the merge: raised rail, rail tunnels, viaducts, bores, headlights, walker and vehicle floors. Plan `docs/superpowers/plans/2026-11-14-rail-at-levels.md`, specs `docs/superpowers/specs/2026-11-14-rail-at-levels-design.md` and `2026-11-14-open-tunnels-design.md`, owner questions `docs/review/2026-11-14-owner-queue.md`. The owner reviewed the frames in `docs/checkpoints/open_tunnels/`, `rail-levels/raised/` and `rail_viaduct/` before the merge.
 - 2026-11-14: the owner lifted the rail-at-levels hold (rail on raised ground, rail tunnels, viaducts). The RL answers (Q1 O2, portal ref-2 + ref-3, viaduct ref-2 + ref-4, no deck walking, one viaduct design) are in `assets-source/refs/rail_*/approval.json`.
   - KTX-Software 5.0.0 is not released (2026-11-14): newest is v5.0.0-rc2 (2026-08-17), stable is 4.4.2. Card 01a179379e46 stays blocked on the release.
 - `main` holds P4 elevation's first round (squash-merged 2026-10-29) and everything before it. Pushed with the P4 merge (CI watched) and deployed; `dist/` rebuilt.
@@ -79,7 +80,7 @@ Start here in a fresh session (Claude Code or Claude Desktop). Then read `CLAUDE
 
 ## Next asset work
 
-No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. The next wave is the P4 first-round pieces (tunnel portal and whatever the approved elevation spec needs); it starts after the spec is approved. P5-P8 asset work (the lighthouse) stays held. Recipes are deferred.
+No Blender agents are running (2026-11-15). The P4 first round, single-tile hills and peaks, the massif and the rail-at-levels pieces are landed. P5-P8 asset work (the lighthouse) stays held. Recipes are deferred.
 
 ## Standing rules from the owner (still in force)
 
@@ -97,15 +98,10 @@ No Blender agents are running (2026-10-28): B1, B2 and B3 are built and landed. 
 
 ## Waiting on Paul
 
-- C3: the owner approves the massif in engine before mega-tiles merges, once form pass 3 and the parity fix land.
 - Non-blocking tuning lists from 2026-10-20 and the older numbered lists below each ship with a default.
 
 ## Filed follow-ups
 
-- Rail network (Rail socket, tiles, switch routing, junction lever), card `01a1579e911c`.
-- Station tile integration (platform walker ground, shelter obstacle, train stop), card `01a157994d7a`.
-- Cars follow road height (`ROAD_SURFACE_Y` is a fixed 0.11 m; the crossing deck is 0.46 m), card `01a1575a45d4`.
-- Large play worlds slow on web, card `01a14028862a` (high). Dependabot alerts, card `01a1547b6ac5747e967b94e245b57a6e` (high).
 - Known small items: LOD2 dark neck patches on the grazing animals (draws past 400 m only).
 
 ## References
