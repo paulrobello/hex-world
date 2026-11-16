@@ -14,8 +14,9 @@ Agents and scripts can drive, screenshot and inspect the game natively and on th
 - **P0 foundations:** done. Engine decision (Bevy stays, provisional) in [docs/decisions/0001-engine.md](docs/decisions/0001-engine.md).
 - **P1 asset pipeline proof:** done. Blender pipeline, kit material, look-dev, meadow/road pieces, hero oak and provenance gates. Decisions in [docs/decisions/0002-asset-pipeline.md](docs/decisions/0002-asset-pipeline.md).
 - **P2 prototypes already on main:** the hero-water look-dev scenario (`--scenario water`) and the tilt-shift post pass (`--tilt`), both owner-approved.
-- **P2 MVP vertical slice:** most boxes done, live at hex-world.pardev.net; the open ones are owner approvals and measurements (`PRD.md` §15 P2).
-- **P3 content ahead of recipes:** the windmill, farm (barn, bales, paddock fence, cows and sheep), wheat field and bakery tiles are in the inventory; rail pieces (track, crossing, junction, station, steam train, river rail bridge) are modelled but not yet in play. Kit variety grew on 2026-10-20: house, oak and hay hero variants, forest undergrowth (ferns, logs, shrubs, saplings) and road verge bushes. Recipes, rail routing and animal wander are next.
+- **P2 MVP vertical slice:** done (every `PRD.md` §15 P2 box checked, 2026-10-29), live at hex-world.pardev.net.
+- **P3 content ahead of recipes:** windmill, farm with wandering animals, wheat field, bakery, boats, and rail (track, bends, junction, crossing, station, river rail bridge, trains routing between stations) are in play. The recipe system is deferred by the owner.
+- **P4 elevation:** levels 0 to 3, hillsides, road ramps, road and rail tunnels, rail viaducts, single-tile hills and peaks, and the 7-cell granite massif are on main. Rivers and waterfalls at levels are deferred (`PRD.md` §15 P4).
 - **Current state for a new session:** [handoff.md](handoff.md).
 
 ## Change history
