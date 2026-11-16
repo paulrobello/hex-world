@@ -68,15 +68,29 @@ async function pinHere(q, r) {
 }
 /** Events since the last call (the overlay watches without draining them from us). */
 const events = () => page.evaluate(() => window.hexWorld.events());
-const key = (k) => page.keyboard.press(k);
-/** A click with a modifier held across frames, as a player holds it (one frame would collapse its press and release). */
+/**
+ * A key press, sent once the HUD has rendered the state the test just read: the HUD decides what a
+ * key does from its last rendered frame, so an Esc in the frame a pin lands would see no pin.
+ */
+async function key(k) {
+  await animationsSettled(page);
+  await page.keyboard.press(k);
+}
+/** Resolves after `n` animation frames; the engine draws and reads input in the page's own animation frames. */
+const engineFrames = (n) =>
+  page.evaluate((n) => new Promise((done) => { const step = (k) => (k ? requestAnimationFrame(() => step(k - 1)) : done()); step(n); }), n);
+/**
+ * A click with a modifier held across engine frames, as a player holds it: the engine reads the
+ * modifier and the button once per frame, so a press and release that share a frame (a long frame
+ * under host load) would reach it as a plain click with no modifier.
+ */
 async function modClick(mod) {
   await page.keyboard.down(mod);
-  // Elapsed time is the input: the modifier is held 80 ms around the click, as a person's would be.
-  await page.waitForTimeout(80);
+  await engineFrames(3);
   await page.mouse.down();
+  await engineFrames(3);
   await page.mouse.up();
-  await page.waitForTimeout(80);
+  await engineFrames(3);
   await page.keyboard.up(mod);
 }
 const rowNumber = async (id) => (await text(`.row[data-tile=${id}] .row__num`)).trim();
@@ -1127,10 +1141,12 @@ try {
     const list = document.querySelector(".select[data-select=grade] [role=listbox]");
     const r = list.getBoundingClientRect();
     const hit = (x, y) => list.contains(document.elementFromPoint(x, y));
+    const at = (x, y) => { const e = document.elementFromPoint(x, y); return e ? e.tagName + "." + e.className : "none"; };
     return {
       inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight && r.height > 40,
       onTop: hit(r.left + 6, r.top + 6) && hit(r.right - 6, r.bottom - 6),
       rect: [r.left, r.top, r.width, r.height].map(Math.round).join(","),
+      why: `viewport ${innerWidth}x${innerHeight}, top-left covered by ${at(r.left + 6, r.top + 6)}, bottom-right by ${at(r.right - 6, r.bottom - 6)}, toast "${document.querySelector(".toast.is-shown")?.textContent ?? ""}"`,
     };
   });
   check((await grade())?.name === "rich-3", `the grade starts at the default rich-3 (${(await grade())?.name})`);
@@ -1254,11 +1270,13 @@ try {
     await page.setViewportSize({ width: w, height: hgt });
     await waitFor(async () => (await page.evaluate(() => innerWidth)) === w, `the viewport is ${w} wide`);
     await animationsSettled(page);
+    // A toast from the steps above (TOAST_MS 4 s) sits over the bottom-left of a phone-width list.
+    await waitFor(async () => !(await page.locator(".toast.is-shown").count()), `no toast covers the list at ${w}×${hgt}`, 6_000);
     await gradeBtn.scrollIntoViewIfNeeded();
     await gradeBtn.click();
     await waitFor(gradeOpen, `the list opens at ${w}×${hgt}`);
     const v = await gradeListInView();
-    check(v.inside && v.onTop, `at ${w}×${hgt} the open list (${v.rect}) sits inside the viewport, unclipped`);
+    check(v.inside && v.onTop, `at ${w}×${hgt} the open list (${v.rect}) sits inside the viewport, unclipped (${v.why})`);
     await page.mouse.move(2, 2);
     await gradeSettled();
     await animationsSettled(page);
