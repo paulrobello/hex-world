@@ -9,7 +9,7 @@ Hex World is a browser world-building game on hexagon tiles: Rust workspace comp
 - `PRD.md` — product plan. §15 is the phase list, §10 perf/size budgets, §12 architecture as built, §14 gates.
 - `docs/agent-operability.md` — every native CLI flag, web query parameter, `window.hexWorld` API, script command and state field. The reference for driving, screenshotting and measuring the game.
 - `handoff.md` — current orchestrator state: standing owner rules, open work, blocked cards. Read this first in a fresh session.
-- `docs/decisions/` — ADRs (engine, asset pipeline). `docs/kit/` — water bed and shader-hooks contracts. `docs/save-format.md` — `.hexworld` format.
+- `docs/decisions/` — ADRs (engine, asset pipeline, render/play crate split). `docs/kit/` — water bed and shader-hooks contracts. `docs/save-format.md` — `.hexworld` format.
 - `.claude/skills/blender-asset/` — project skill for all 3D kit-piece work (Blender generators, bakes, LODs, provenance, gates).
 - `DESIGN.md` — the UI design system; `design/` — brand and UI sources.
 
@@ -22,8 +22,8 @@ trunk serve                       # dev server on 127.0.0.1:8094 (rebuilds live,
 python3 scripts/dev/serve.py 8094 dist   # static serve of dist/ (8095 serves the repo for review pages)
 ./scripts/worktree-bootstrap.sh [--web]   # fresh worktree: clone target/, node_modules, KTX tools from main
 
-make checkall                     # fast gate: fmt-check + clippy -D warnings + typecheck (native AND wasm32) + cargo test --workspace + ui-check + shots-test (the shot runner's tests in both need Pillow)
-make checkall-ci                  # push gate: checkall + web-size (12 MiB gzip wasm) + initial-download (30 MiB)
+make checkall                     # fast gate, in order: fmt-check, ui-check, shots-test (needs Pillow), py-lint (ruff), lint (clippy -D warnings, native and wasm32), typecheck (native, wasm32 and the gate-tools-off hex-render/hex-play), test (cargo test --workspace)
+make checkall-ci                  # push gate: checkall + check-wgpu (single wgpu version) + web-size (12 MiB gzip wasm) + initial-download (30 MiB)
 
 # Single tests
 cargo test -p hex-core socket                     # one Rust test by name
