@@ -7,7 +7,7 @@
 - **Elsewhere:** stay within ±0.10 m. That covers the river bed below 2.5 m of water, the ocean floor, and the dry bank and beach above y = -1.0. On the ocean floor the 0.10 m is all upward (§4). Gerstner waves reach full height and the swash stops only at 2.5 m depth, so a patch raised more than 0.1 m would put the water there under 2.5 m and bring damping and swash back.
 - **Border ring:** every vertex sits exactly on the profile, so neighbouring pieces meet without a step.
 
-Sources: `crates/hex-render/src/water.rs` (the approved look-dev and the shared mesh builders), `crates/hex-render/src/water/tiles.rs` (play water and the placeholder beds), `assets/shaders/water.wesl`, `assets/shaders/water_terrain.wesl`, `crates/hex-render/src/water_common.wesl`, `scripts/blender/kit/meadow_base.py`, `data/sockets.ron`, `data/tiles/*.ron`.
+Sources: `crates/hex-render/src/water.rs` (the approved look-dev and the shared mesh builders), `crates/hex-play/src/water/tiles.rs` (play water and the placeholder beds), `assets/shaders/water.wesl`, `assets/shaders/water_terrain.wesl`, `crates/hex-render/src/water_common.wesl`, `scripts/blender/kit/meadow_base.py`, `data/sockets.ron`, `data/tiles/*.ron`.
 
 Coordinates are runtime metres, Y up, tile-local before rotation, with edge 0 facing +x and edges running clockwise viewed from +Y (`hexgeo.py`). `R = 16`, apothem `13.856`, `LEVEL_STEP = 4`.
 

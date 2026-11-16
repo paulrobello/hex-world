@@ -1,6 +1,6 @@
 # Atmosphere hook contract (PRD §9.4, D7)
 
-**Status: in force (P2, 2026-10-14).** Every MVP kit piece and every shader the kit and water draw with carries the six §9.4 hooks, and every hook is inert at the MVP values: noon, no snow, dry, summer tint, open water. The asset gate holds the manifest and the shaders to this contract (`crates/hex-render/tests/hooks/mod.rs`, a module of `kit_gate`, so `make kit-check` and `make test` run it).
+**Status: in force (P2, 2026-10-14).** Every MVP kit piece and every shader the kit and water draw with carries the six §9.4 hooks, and every hook is inert at the MVP values: noon, no snow, dry, summer tint, open water. The asset gate holds the manifest and the shaders to this contract (`crates/hex-play/tests/hooks/mod.rs`, a module of `kit_gate`, so `make kit-check` and `make test` run it).
 
 Sources: `crates/hex-render/src/hooks.rs` and `hooks.wesl`, `assets/shaders/kit_material.wesl`, `car_material.wesl` and `water.wesl`, `crates/hex-render/src/kit_material.rs`, `car_material.rs` and `water.rs`.
 
