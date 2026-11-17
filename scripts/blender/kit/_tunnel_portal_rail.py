@@ -27,12 +27,8 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import os
 import pathlib
-import shutil
-import subprocess
 import sys
-import tempfile
 
 import bmesh
 import bpy
@@ -796,33 +792,6 @@ def build_lod(spec, lod, isl, mats):
     return o
 
 
-def export_single_thread(root, path):
-    """export_glb in a child Blender run with one thread (`-t 1`) on a saved copy of this scene, as
-    _massif.export_single_thread does: threaded MikkTSpace sums follow the thread schedule and can flip
-    a tangent on a rounding tie between runs."""
-    tmp = tempfile.mkdtemp(prefix="rail_tunnel_portal-export-")
-    glb = pathlib.Path(path)
-    glb.parent.mkdir(parents=True, exist_ok=True)
-    glb.unlink(missing_ok=True)
-    try:
-        blend = os.path.join(tmp, "export.blend")
-        bpy.ops.wm.save_as_mainfile(filepath=blend, copy=True)
-        code = (f"import sys; sys.path.insert(0, {str(pathlib.Path(__file__).resolve().parents[1])!r}); "
-                f"import bpy; from lib import export; export.export_glb(bpy.data.objects[{root.name!r}], {str(glb)!r})")
-        run = subprocess.run([bpy.app.binary_path, "-b", "--factory-startup", "-t", "1", blend,
-                              "--python-exit-code", "1", "--python-expr", code], capture_output=True, text=True)
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-    if not glb.is_file() or run.returncode != 0:
-        raise RuntimeError(f"single-threaded export failed (exit {run.returncode}): {run.stderr[-2000:]}")
-    export.check_unit_vectors(str(glb))
-
-
-class _Export:
-    export_glb = staticmethod(export_single_thread)
-    write_export_report = staticmethod(export.write_export_report)
-
-
 def _set_end_b():
     """The road's check_field asserts the wall's end lines stay END_B + 0.3 under the field."""
     ends = min(tp.cut_height_at(X_F - tp.CAP_OUT + (X_E - X_F + tp.CAP_OUT) * i / 40, z) for i in range(41)
@@ -836,6 +805,17 @@ tp.build_templates = build_templates
 tp.jamb_stone = jamb_stone
 tp.build_lod = build_lod
 tp.panel_cell = panel_cell
+
+
+class _Export:
+    """tp.export with export_glb forced to the deterministic single-thread run: the portal is a
+    review surface for the open-tunnel pieces, and `_tunnel_portal.py` exports whatever its
+    builder set, road or rail."""
+
+    export_glb = staticmethod(lambda root, path, **_: export.export_glb(root, path, threads=1))
+    write_export_report = staticmethod(export.write_export_report)
+
+
 tp.export = _Export
 
 

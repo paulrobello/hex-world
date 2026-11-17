@@ -154,14 +154,14 @@ assets-p0: fetch-tools
 kit-build:
 	@test -n "$(PIECE)" || { echo "usage: make kit-build PIECE=<id>"; exit 2; }
 	rm -rf target/kit-stage/$(PIECE) && mkdir -p target/kit-stage/$(PIECE) assets-source/kit/$(PIECE)
-	$(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-stage/$(PIECE)
+	HEXW_EXPORT_THREADS=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-stage/$(PIECE)
 	cp target/kit-stage/$(PIECE)/bake-report.json target/kit-stage/$(PIECE)/export-report.json assets-source/kit/$(PIECE)/
 
 kit-determinism:
 	@test -n "$(PIECE)" || { echo "usage: make kit-determinism PIECE=<id>"; exit 2; }
 	rm -rf target/kit-det && mkdir -p target/kit-det/a target/kit-det/b
-	HEXW_SKIP_BAKE=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/a
-	HEXW_SKIP_BAKE=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/b
+	HEXW_SKIP_BAKE=1 HEXW_EXPORT_THREADS=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/a
+	HEXW_SKIP_BAKE=1 HEXW_EXPORT_THREADS=1 $(BLENDER_RUN) -P scripts/blender/kit/$(PIECE).py -- target/kit-det/b
 	@a=$$(shasum -a 256 target/kit-det/a/$(PIECE).glb | cut -d' ' -f1); b=$$(shasum -a 256 target/kit-det/b/$(PIECE).glb | cut -d' ' -f1); \
 	test "$$a" = "$$b" && echo "deterministic $$a" || { echo "FAIL: GLB differs $$a $$b"; exit 1; }
 

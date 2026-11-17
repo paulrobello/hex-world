@@ -307,7 +307,11 @@ passed. The landing then ran `make kit-build PIECE=massif_granite`, `make kit-co
   normals byte-identical at every stage. Only the full-precision tangents differed, from the
   LOD0 join on. So OpenVDB, decimate, the collapses and the loose-face drop the
   `drop_degenerate` docstring blamed were not involved. Fix: `_massif.export_single_thread` saves
-  the scene and exports it in a child Blender run with `-t 1`. The bake keeps every thread. With
+  the scene and exports it in a child Blender run with `-t 1` (2026-11-16: that mechanism moved
+  into the shared exporter — `export.export_glb(..., threads=1)` re-runs the export single-threaded.
+  `kit-build` and `kit-determinism` select it for every piece through `HEXW_EXPORT_THREADS=1`,
+  while callers outside that build path retain in-process export by default. The piece-local copies are gone —
+  so the determinism here is now general, not a massif special case). The bake keeps every thread. With
   one thread, three fresh processes gave the same full-precision LOD0 tangents (40 of 40 calls
   each). The fix removes the cause, not just this flip: with the sums in a fixed order, the
   tangents depend on the mesh alone, and the mesh was already deterministic. `make

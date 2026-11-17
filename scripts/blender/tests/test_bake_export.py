@@ -7,7 +7,7 @@ import unittest
 import bpy
 import numpy as np
 
-from lib import bake, collider, export, hexgeo, materials, scene, uv
+from lib import bake, collider, export, geom, hexgeo, materials, scene, uv
 from tests import fixture_piece
 
 LOD_MESHES = {"fixture_lod0", "fixture_lod1", "fixture_lod2"}
@@ -98,6 +98,30 @@ class BakeExport(unittest.TestCase):
         export.export_glb(self.root, str(a))
         self.root, self.lods = fixture_piece.build()
         export.export_glb(self.root, str(b))
+        self.assertEqual(bake.sha256_file(a), bake.sha256_file(b))
+
+    def test_single_thread_export_is_deterministic_for_large_meshes(self):
+        # Threaded MikkTSpace can flip tangent rounding ties on large meshes. The single-thread
+        # path must round-trip the scene and keep tangent bytes identical across fresh processes.
+        def build_big():
+            scene.reset_scene("big")
+            root = scene.empty("big")
+            bpy.ops.mesh.primitive_grid_add(x_subdivisions=61, y_subdivisions=61, size=20)
+            grid = bpy.context.active_object
+            grid.name = "big_lod0"
+            if not grid.data.uv_layers:
+                grid.data.uv_layers.new(name="UVMap")
+            grid.data.materials.append(materials.pbr_material("big_cap", materials.srgb("#5a8f3a"), 0.8))
+            grid.parent = root
+            return root, grid
+
+        root, grid = build_big()
+        self.assertGreater(geom.tri_count(grid), 7000)
+        a = self.tmp / "big-a.glb"
+        export.export_glb(root, str(a), threads=1)
+        root, _ = build_big()
+        b = self.tmp / "big-b.glb"
+        export.export_glb(root, str(b), threads=1)
         self.assertEqual(bake.sha256_file(a), bake.sha256_file(b))
 
     def test_ao_bake_masks_and_report(self):

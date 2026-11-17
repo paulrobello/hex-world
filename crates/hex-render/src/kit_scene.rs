@@ -65,28 +65,16 @@ const fn hero(piece: &'static str, q: i32, r: i32, at: [f32; 2], yaw_deg: f32) -
 }
 
 /// Manifest props, trees and heroes [`kit_layout`] does not place, each with the reason
-/// (`every_showcase_piece_is_placed_or_listed`). "not yet placed" marks a piece the showcase still
-/// lacks a block for.
+/// (`every_showcase_piece_is_placed_or_listed`).
 pub const NOT_SHOWCASED: &[(&str, &str)] = &[
     (
         "road_tunnel_portal",
         "a ground hero on a straight-road tile that needs its cutting and the tunnel around it: reviewed in the elevation shots (docs/checkpoints/elevation/)",
     ),
-    ("rail_tunnel_portal", "not yet placed"),
-    ("rail_tunnel_bore", "not yet placed"),
-    ("tree_hero_oak_b", "not yet placed"),
-    ("tree_hero_oak_c", "not yet placed"),
-    ("wheat_field", "not yet placed"),
-    ("river_spring_center", "not yet placed"),
-    ("rock_small_b", "not yet placed"),
-    ("rock_small_c", "not yet placed"),
-    ("wildflower_clump_b", "not yet placed"),
-    ("wildflower_clump_c", "not yet placed"),
-    ("wildflower_single", "not yet placed"),
-    ("wildflower_single_b", "not yet placed"),
-    ("wildflower_single_c", "not yet placed"),
-    ("wildflower_single_d", "not yet placed"),
-    ("animal_cow_c", "not yet placed"),
+    (
+        "rail_tunnel_portal",
+        "a ground hero on a rail tile that needs its cutting and the tunnel around it: reviewed in the open-tunnels shots (docs/checkpoints/open_tunnels/)",
+    ),
     (
         "car_van",
         "traffic spawned by hex_play::cars; the layout shows car_sedan for scale",
@@ -142,6 +130,7 @@ pub fn kit_layout() -> Vec<Placement> {
     block_boats(&mut v);
     block_landforms(&mut v);
     block_tunnel_bore(&mut v);
+    block_hero_oak_variants(&mut v);
     v
 }
 
@@ -547,6 +536,13 @@ fn block_river_rail_bridge(v: &mut Vec<Placement>) {
     for k in [1, 3, 5] {
         v.push(place("river_edge", -3, 4, k));
     }
+    // The spring (owner request, PLAN Q6) on (-4, 4), the fork's edge-3 arm: river_spring_base at
+    // rot 0, its pool centred on the tile and its stream running out of world edge 0 into the
+    // fork, with a river_edge stub at that lane. The kit scenario draws no water, so the pool
+    // shows dry here (its lily pads and the granite ring stand on the bed), as at the fork.
+    v.push(place("river_spring_base", -4, 4, 0));
+    v.push(place("river_spring_center", -4, 4, 0));
+    v.push(place("river_edge", -4, 4, 0));
     // The tight river bend (river_bend_60: lanes on local edges 0 and 1) on (-2, 3) at rot 1 (lanes
     // on world edges 1 and 2): it joins the straight on (-2, 4) across world edge 1 to the fork's
     // edge-5 arm on (-3, 4) across world edge 2. Its own channel-cut base with a river_edge stub at
@@ -592,9 +588,10 @@ fn block_farms(v: &mut Vec<Placement>) {
         v.push(hero(piece, -1, 5, at, yaw_deg));
     }
     // The farm animal variants (PRD §6 Variety) on a second farm at (0, 5), east of the first: the
-    // grazing cow animal_cow_b head to tail with animal_cow, and the lamb animal_sheep_b beside a
-    // ewe, each hoof within 2.3 cm of the meadow relief at y = 0 (option O2 proposed for farm.ron),
-    // and the grazing sheep animal_sheep_c west of the lamb, its worst hoof 2.8 cm above the relief.
+    // grazing cow animal_cow_b head to tail with animal_cow, the grazing cow animal_cow_c east of
+    // them, and the lamb animal_sheep_b beside a ewe, each hoof within 2.3 cm of the meadow relief
+    // at y = 0 (option O2 proposed for farm.ron), and the grazing sheep animal_sheep_c west of the
+    // lamb, its worst hoof 2.8 cm above the relief.
     v.push(place("meadow_base", 0, 5, 0));
     for &(piece, at, yaw_deg) in FARM_VARIANTS {
         v.push(hero(piece, 0, 5, at, yaw_deg));
@@ -607,6 +604,11 @@ fn block_farms(v: &mut Vec<Placement>) {
     for &(piece, at, yaw_deg) in FARM_HAY_VARIANTS {
         v.push(hero(piece, 1, 5, at, yaw_deg));
     }
+    // The wheat field (P3 farm content) on its own tile at (0, 6), south of the farm variants: the
+    // ripe-wheat centre piece on meadow_base, rows along the tile's x (rot 0), its grass margin
+    // clear of the neighbours. The centre piece carries the relief itself, as fence_paddock does.
+    v.push(place("meadow_base", 0, 6, 0));
+    v.push(place("wheat_field", 0, 6, 0));
 }
 
 fn block_field_boundaries(v: &mut Vec<Placement>) {
@@ -662,9 +664,29 @@ fn block_landforms(v: &mut Vec<Placement>) {
 fn block_tunnel_bore(v: &mut Vec<Placement>) {
     // The open road tunnel's bore (P4 open tunnels, 2026-11-14) alone on a meadow at (4, 1), east of
     // the ocean corner: the tube at the meadow's level with its ends open, so the lining, the lamps'
-    // always-on glow and the road on its floor show in kit light.
+    // always-on glow and the road on its floor show in kit light. The rail bore beside it at (5, 1),
+    // same treatment, so the two compare one to one; the portals are reviewed in the elevation and
+    // open-tunnels shots instead (NOT_SHOWCASED).
     v.push(place("meadow_base", 4, 1, 0));
     v.push(place("road_tunnel_bore", 4, 1, 0));
+    v.push(place("meadow_base", 5, 1, 0));
+    v.push(place("rail_tunnel_bore", 5, 1, 0));
+}
+
+/// The hero oaks' variants (PRD §6 Variety) on their own meadows at (2, 2) and (3, 2), south of the
+/// ocean corner so the originals' cell (0, 1) and the water patch keep their framing, each on the
+/// meadow relief at the tile centre and yawed apart, so the three crowns compare one to one.
+fn block_hero_oak_variants(v: &mut Vec<Placement>) {
+    v.push(place("meadow_base", 2, 2, 0));
+    v.push(Placement {
+        y: MEADOW_CENTRE_Y,
+        ..hero("tree_hero_oak_b", 2, 2, [0.0, 0.0], 40.0)
+    });
+    v.push(place("meadow_base", 3, 2, 0));
+    v.push(Placement {
+        y: MEADOW_CENTRE_Y,
+        ..hero("tree_hero_oak_c", 3, 2, [0.0, 0.0], 100.0)
+    });
 }
 
 /// The play water at rest (`hex_play::water::tiles::WATER_Y`).
@@ -690,12 +712,14 @@ const FARM_HAY_VARIANTS: &[(&str, [f32; 2], f32)] = &[
 ];
 
 /// (piece, at, yaw) of the farm-variants showcase on (0, 5): the farm's barn, fence and ewes, its cow
-/// moved beside the grazing cow, the lamb, and the grazing sheep animal_sheep_c west of the lamb.
+/// moved beside the grazing cow, the grazing cow animal_cow_c east of them, the lamb, and the
+/// grazing sheep animal_sheep_c west of the lamb.
 const FARM_VARIANTS: &[(&str, [f32; 2], f32)] = &[
     ("fence_paddock", [0.0, 0.0], 0.0),
     ("barn_red", [4.75, -8.227], 30.0),
     ("animal_cow", [0.5, 8.125], 135.0),
     ("animal_cow_b", [-0.5, 8.75], 315.0),
+    ("animal_cow_c", [1.75, 9.2], 75.0),
     ("animal_sheep", [-0.5, 10.75], 45.0),
     ("animal_sheep", [-2.25, 11.25], 345.0),
     ("animal_sheep_b", [-1.25, 9.625], 30.0),
@@ -813,8 +837,11 @@ const STATION_PLATFORM_TOP: f32 = 1.38;
 const STATION_SHELTER_AT: [f32; 2] = [-0.3, -5.0];
 
 /// The meadow relief at the cap's centre (`relief(0, 0)` in scripts/blender/kit/meadow_base.py), where
-/// the windmill stands.
+/// the windmill and the hero-oak variants stand.
 const WINDMILL_Y: f32 = -0.185;
+
+/// The hero-oak variants stand on that same centre relief.
+const MEADOW_CENTRE_Y: f32 = -0.185;
 
 /// (piece, offset, yaw, relief height) of the hay bales on the oak's meadow (0, 1), base rotation 0.
 const HAY_BALES: &[(&str, [f32; 2], f32, f32)] = &[
@@ -912,11 +939,21 @@ const BOULDERS: &[(&str, [f32; 2], f32, f32)] = &[
     ("boulder_granite", [-0.5, -9.0], 300.0, 0.0),
 ];
 
-/// (piece, offset, rotation, relief height) of the meadow props in the kit layout.
+/// (piece, offset, rotation, relief height) of the meadow props in the kit layout: the originals
+/// and, beside them, the rock and wildflower variants (PRD §6 Variety).
 const MEADOW_PROPS: &[(&str, [f32; 2], u8, f32)] = &[
     ("rock_small", [-6.0, 5.0], 0, 0.0),
     ("rock_small", [5.0, 6.0], 2, 0.0),
     ("rock_small", [-2.5, -7.0], 4, -0.011),
+    // The rock and wildflower variants (PRD §6 Variety), beside the originals' spots.
+    ("rock_small_b", [-5.5, -4.0], 1, 0.0),
+    ("rock_small_c", [5.5, -3.0], 3, 0.0),
+    ("wildflower_clump_b", [-3.0, -2.5], 1, -0.001),
+    ("wildflower_clump_c", [-5.5, -2.0], 3, 0.0),
+    ("wildflower_single", [-7.3, -4.2], 0, 0.0),
+    ("wildflower_single_b", [-1.0, -3.0], 2, -0.011),
+    ("wildflower_single_c", [1.0, -4.5], 4, 0.0),
+    ("wildflower_single_d", [4.0, -5.0], 3, 0.0),
     ("wildflower_clump", [-4.8, 4.2], 1, -0.036),
     ("wildflower_clump", [-6.9, 6.4], 3, 0.0),
     ("wildflower_clump", [-5.0, 6.6], 5, 0.0),
@@ -1210,8 +1247,8 @@ mod tests {
     use super::*;
     use hex_assets::parse_manifest;
 
-    const PINNED_LEN: usize = 253;
-    const PINNED_HASH: u64 = 0xd945_d65d_f3cf_30ab;
+    const PINNED_LEN: usize = 273;
+    const PINNED_HASH: u64 = 0x472f_65fd_985f_20f4;
 
     /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or listed in
     /// [`NOT_SHOWCASED`] with its reason, and no listed piece is placed or missing from the manifest,
@@ -1235,7 +1272,10 @@ mod tests {
             "placed by no block of kit_layout and not in NOT_SHOWCASED: {unaccounted:?}"
         );
         for (piece, reason) in NOT_SHOWCASED {
-            assert!(!reason.is_empty(), "{piece} has no reason");
+            assert!(
+                !reason.trim().is_empty() && !reason.contains("not yet placed"),
+                "{piece} needs a concrete disposition: {reason}"
+            );
             assert!(!placed.contains(piece), "{piece} is placed: drop its row");
             assert!(
                 manifest.pieces.iter().any(|e| e.id == *piece),

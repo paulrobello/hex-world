@@ -1,8 +1,12 @@
 import ast
 import json
 import math
+import os
 import pathlib
+import shutil
 import struct
+import subprocess
+import tempfile
 
 import bpy
 import numpy as np
@@ -31,9 +35,22 @@ def _tree(root):
     return out
 
 
-def export_glb(root, path):
-    """One root per GLB; no images (textures ship as sidecar KTX2/PNG, R6); tangents on; Y-up."""
+def export_glb(root: bpy.types.Object, path: str, threads: int = 0) -> None:
+    """Export one root, without images, with tangents and Y-up.
+
+    The default preserves in-process export with Blender's current thread count. A positive
+    thread count exports a saved scene in a child Blender. Use 1 for deterministic MikkTSpace
+    rounding on large meshes. Kit builds select that path through HEXW_EXPORT_THREADS.
+    """
     pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+    threads = int(os.environ.get("HEXW_EXPORT_THREADS", threads))
+    if threads:
+        _export_glb_child(root, path, threads)
+        return
+    _export_glb_inproc(root, path)
+
+
+def _export_glb_inproc(root, path):
     objs = _tree(root)
     for o in objs:
         o.hide_render = False
@@ -45,6 +62,31 @@ def export_glb(root, path):
         export_normals=True, export_texcoords=True, export_cameras=False, export_lights=False,
         export_image_format="NONE", export_materials="EXPORT", export_animations=False)
     check_unit_vectors(path)
+
+
+def _export_glb_child(root: bpy.types.Object, path: str, threads: int) -> None:
+    """MikkTSpace's threaded float sums can flip tangent rounding ties on large meshes."""
+    tmp = tempfile.mkdtemp(prefix="export-single-thread-")
+    glb = pathlib.Path(path).resolve()
+    glb.parent.mkdir(parents=True, exist_ok=True)
+    glb.unlink(missing_ok=True)
+    try:
+        blend = os.path.join(tmp, "export.blend")
+        bpy.ops.wm.save_as_mainfile(filepath=blend, copy=True)
+        code = (f"import sys; sys.path.insert(0, {str(pathlib.Path(__file__).resolve().parents[1])!r}); "
+                f"import bpy; from lib import export; "
+                f"export.export_glb(bpy.data.objects[{root.name!r}], {str(glb)!r}, threads=0)")
+        env = {**os.environ, "HEXW_EXPORT_THREADS": "0"}
+        run = subprocess.run([bpy.app.binary_path, "-b", "--factory-startup", "-t", str(threads), blend,
+                              "--python-exit-code", "1", "--python-expr", code], capture_output=True, text=True,
+                             env=env)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    if not glb.is_file():
+        raise RuntimeError(f"single-threaded export wrote no GLB (exit {run.returncode}): {run.stderr[-2000:]}")
+    check_unit_vectors(str(glb))
+    if run.returncode != 0:
+        raise RuntimeError(f"single-threaded export failed (exit {run.returncode}): {run.stderr[-2000:]}")
 
 
 # gltf-validator (run by kit-compress) rejects NORMAL/TANGENT xyz whose length is off 1 by more than

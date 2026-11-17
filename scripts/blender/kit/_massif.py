@@ -40,10 +40,7 @@ the ground), A ground AO; the rock's AO is in ORM.R (masks.A = 1 there, the boul
 import math
 import os
 import pathlib
-import shutil
-import subprocess
 import sys
-import tempfile
 
 import bmesh
 import bpy
@@ -643,7 +640,7 @@ def drop_degenerate(obj, loose=False):
     after the collapses are cut, and the count is printed. `loose` also drops loose bits
     (`drop_loose`): LOD1 and LOD2 only. LOD0 as approved keeps its loose faces, since dropping
     them moves its islands. The fourth-decimal tangent flips once blamed on that drop came from
-    the threaded tangents that `export_single_thread` removes."""
+    the threaded tangents that `export_glb`'s single-thread path removes."""
     n0 = len(obj.data.polygons)
     me = obj.data
 
@@ -1170,43 +1167,13 @@ def zero_tangents(path):
     return out
 
 
-def export_single_thread(root, path):
-    """export_glb run in a child Blender with one thread (`-t 1`) on a saved copy of this scene.
-    Blender 5.2.2's MikkTSpace (`Mesh.calc_tangents`, which the glTF exporter calls) runs threaded
-    on a mesh the size of the LOD0 body (11,468 tris; the 7,148-tri rock alone and LOD1 run on one
-    thread), and its float sums follow the thread schedule: two calls on the same mesh differ by
-    up to 1.8e-7 on about a third of LOD0's corners. The exporter rounds tangents to 4 decimals,
-    so a component on a rounding tie (a rock tangent x of -0.74554998, which float32 rounds to the
-    tie -7455.5) exported as -0.7455 or -0.7456 from run to run. With one thread the sums run in
-    a fixed order, so the tangents depend on the mesh alone (40 of 40 calls identical). The bake
-    keeps every thread. Raises ValueError, as export_glb does, when the GLB has a non-unit vector."""
-    tmp = tempfile.mkdtemp(prefix=f"{PIECE}-export-")
-    glb = pathlib.Path(path)
-    glb.parent.mkdir(parents=True, exist_ok=True)
-    glb.unlink(missing_ok=True)
-    try:
-        blend = os.path.join(tmp, "export.blend")
-        bpy.ops.wm.save_as_mainfile(filepath=blend, copy=True)
-        code = (f"import sys; sys.path.insert(0, {str(pathlib.Path(__file__).resolve().parents[1])!r}); "
-                f"import bpy; from lib import export; export.export_glb(bpy.data.objects[{root.name!r}], {str(glb)!r})")
-        run = subprocess.run([bpy.app.binary_path, "-b", "--factory-startup", "-t", "1", blend,
-                              "--python-exit-code", "1", "--python-expr", code], capture_output=True, text=True)
-    finally:
-        shutil.rmtree(tmp, ignore_errors=True)
-    if not glb.is_file():
-        raise RuntimeError(f"{PIECE}: single-threaded export wrote no GLB (exit {run.returncode}): {run.stderr[-2000:]}")
-    export.check_unit_vectors(str(glb))
-    if run.returncode != 0:
-        raise RuntimeError(f"{PIECE}: single-threaded export failed (exit {run.returncode}): {run.stderr[-2000:]}")
-
-
 def export_clean(root, lods, path):
-    """export_single_thread, collapsing (UVs kept) the shortest edge at any vertex the exporter
+    """export_glb (single-threaded), collapsing (UVs kept) the shortest edge at any vertex the exporter
     writes with a zero tangent and exporting again: the exporter's tangents can vanish at a fold
     vertex whose own tangents in Blender are fine (one on LOD0's rock, form pass 2)."""
     for _ in range(4):
         try:
-            export_single_thread(root, path)
+            export.export_glb(root, path, threads=1)
             return
         except ValueError as err:
             bad = zero_tangents(path)
@@ -1230,7 +1197,7 @@ def export_clean(root, lods, path):
             bm.to_mesh(body.data)
             bm.free()
             body.data.update()
-    export_single_thread(root, path)
+    export.export_glb(root, path, threads=1)
 
 
 # --- build --------------------------------------------------------------------------------------
