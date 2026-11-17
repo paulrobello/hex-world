@@ -583,7 +583,7 @@ impl World {
         out
     }
 
-    /// Orientations in which `def` fits with its anchor at `cell`, in [`World::placement_key`]
+    /// Orientations in which `def` fits with its anchor at `cell`, in `World::placement_key`
     /// order. Empty when `cell` is not a slot for `def` ([`World::is_slot_for`]).
     pub fn legal_orientations(
         &self,
@@ -660,7 +660,7 @@ impl World {
     /// What R steps through at `cell` for a picker entry (`members`, a group in rotation order or one
     /// lone tile): each member's distinct legal orientations (orientations at one level whose
     /// rotations give every world edge an equal socket count once, PRD §4.7 Q6), across the whole
-    /// entry in [`World::placement_key`] order with member after member before rotation (owner, 2026-10-20: the
+    /// entry in `World::placement_key` order with member after member before rotation (owner, 2026-10-20: the
     /// Beach Curve's headland orientations, then its bay ones), then by rotation.
     pub fn group_orientations<'a>(
         &self,

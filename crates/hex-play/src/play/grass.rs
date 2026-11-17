@@ -3,7 +3,7 @@
 //! `set_grass` and the Settings → Graphics → Grass density slider (0-150% of [`DENSITY`]).
 //!
 //! - **Ground.** Blades grow on the topmost LOD0 surface of a tile's ground pieces (scatter's
-//!   [`Surface`], from [`PlayScatter::ground`]) where its slot is a grass slot: a manifest slot whose
+//!   [`Surface`], from `PlayScatter::ground`) where its slot is a grass slot: a manifest slot whose
 //!   tileable set is `grass` and that is not foliage ([`grass_slots`]: `meadow_base_cap`,
 //!   `forest_base_rim` and `_edge`, `road_verge`, `river_grass`, `beach_grass` and the tunnel
 //!   portals' wall-top `road_tunnel_portal_turf` and `rail_tunnel_portal_turf`; the hedge is
@@ -29,7 +29,7 @@
 //!   salt, so a tile always grows the same blades and scatter's stream is untouched. Every tile
 //!   seeds this 150% set once; a density draws the blades whose `keep` is under its share of it, so
 //!   every lower value is a subset of every higher one and a slider move only changes how many
-//!   instances draw, never the scene. Each blade has a random scale ([`SCALE`]), yaw, lean and tilt,
+//!   instances draw, never the scene. Each blade has a random scale (`SCALE`), yaw, lean and tilt,
 //!   and a hue and lightness [`jitter`]. Arithmetic and `sqrt` only, so native and wasm agree.
 //! - **Drawing.** GPU instancing ([`super::grass_gpu`]): one shared blade mesh ([`BLADE_CORNERS`],
 //!   two crossed tapered planes, so a blade holds a silhouette from any side) and, per tile, one
@@ -348,9 +348,9 @@ impl Distances {
 pub struct Style {
     /// Share of [`DENSITY`] kept.
     pub density: f32,
-    /// Blade height range (m), before the per-blade [`SCALE`] and the shader's clump noise.
+    /// Blade height range (m), before the per-blade `SCALE` and the shader's clump noise.
     pub height: [f32; 2],
-    /// Blade width at the root (m), before the per-blade [`SCALE`]: about 0.3 of the height, so the
+    /// Blade width at the root (m), before the per-blade `SCALE`: about 0.3 of the height, so the
     /// crossed pair reads chunky (owner 2026-10-14, after small-world's grass).
     pub width: [f32; 2],
 }

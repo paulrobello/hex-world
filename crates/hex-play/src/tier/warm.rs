@@ -1,5 +1,5 @@
 //! Pipeline warm-up for a quality change (PRD §9.2). A change in play keeps the scene
-//! ([`super::retier_play`]), so what is left of its stall is creating the new tier's render
+//! (`super::retier_play`), so what is left of its stall is creating the new tier's render
 //! pipelines: the camera's SSAO and normal prepass key every mesh pipeline, and the water's shader
 //! variant follows the tier. On the web the browser compiles each new pipeline in its GPU process
 //! and presents nothing meanwhile, seconds with a cold Metal shader cache. So once the play scene

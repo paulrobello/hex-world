@@ -2,7 +2,7 @@
 //! `assets/shaders/car_material.wesl`.
 //!
 //! One model per car type, painted per instance. The model marks its paintable surfaces in COLOR_0.a
-//! (no texture) and each car entity carries its paint colour as a [`MeshTag`] (sRGB8 packed
+//! (no texture) and each car entity carries its paint colour as a `MeshTag` (sRGB8 packed
 //! 0xBBGGRR). `MeshTag` lives in the per-entity mesh uniform, so it never splits a batch: every car
 //! of one type and LOD draws as one instanced batch per slot, whatever its colour, and no material
 //! is made per colour. Glass, tyres, lights and trim keep their COLOR_0 colours.

@@ -404,7 +404,7 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
 
 /// Where a river segment ends: a world edge's lane, a spring (a node on a tile without a
 /// coastline), a mouth (a node on a coast tile) or a junction (a node where two or more of the
-/// tile's River segments meet, [`river_junction`]; the tile's arms continue each other there).
+/// tile's River segments meet, `river_junction`; the tile's arms continue each other there).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum RiverEnd {
     Edge(u8),
@@ -536,7 +536,7 @@ type ChainEnd = (Axial, RiverEnd, usize);
 /// contract §6): each chain starts at its spring, else at its open end with the lowest
 /// (cell, edge), else at its mouth; among several of the same kind, at the lowest cell. A loop
 /// starts at its lowest cell. Chains that meet at a junction (`river_fork`) are oriented together
-/// by [`junction_sources`]. Keyed by (cell, segment index among the tile's river segments).
+/// by `junction_sources`. Keyed by (cell, segment index among the tile's river segments).
 pub fn oriented_rivers(
     tiles: &[PlayTile],
     catalog: &TileCatalog,
@@ -1069,9 +1069,9 @@ impl WaterField for TileField<'_> {
     }
 
     /// The flow's advective acceleration on a river tile, `speed * |d flow / d s|` along the flow
-    /// (central difference over [`CHURN_STEP`]): 0 on a straight, `speed² / R` round a bend of
+    /// (central difference over `CHURN_STEP`): 0 on a straight, `speed² / R` round a bend of
     /// radius R, and where the fork's arms turn into each other and slow. Faded to 0 over
-    /// [`CHURN_EDGE_FADE`] inside the hex border, so every river edge reads 0 on both sides.
+    /// `CHURN_EDGE_FADE` inside the hex border, so every river edge reads 0 on both sides.
     fn churn(&self, x: f32, z: f32) -> f32 {
         if self.cell.kind != WaterKind::River {
             return 0.0;
@@ -1097,7 +1097,7 @@ const CHURN_STEP: f32 = 0.5;
 /// Width (m) inside the hex border over which the churn fades to 0 at the edge.
 const CHURN_EDGE_FADE: f32 = 3.0;
 
-/// Rows of a river strip along `path`: every [`RIBBON_STEP`] m, each with the lateral axis
+/// Rows of a river strip along `path`: every `RIBBON_STEP` m, each with the lateral axis
 /// across the flow. The end rows lie exactly along their tile edges.
 pub fn ribbon_rows(path: &RiverPath) -> Vec<(Vec2, Vec2)> {
     let pts = &path.points;

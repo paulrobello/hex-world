@@ -5,7 +5,7 @@
 //! Detection never picks Ultra, the opt-in tier. A tier change rebuilds the scene through the same
 //! path as the `scenario` command and keeps the camera where it was. Most of a first change to a
 //! tier is the browser compiling that tier's pipelines after the rebuild frame, so the change counts
-//! as drawn only once the GPU has finished a frame drawn with the rebuilt scene ([`mark_drawn`]).
+//! as drawn only once the GPU has finished a frame drawn with the rebuilt scene (`mark_drawn`).
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicUsize, Ordering};
 
 pub mod warm;
@@ -503,7 +503,7 @@ fn retier_play(world: &mut World, tier: QualityTier) {
 /// Frames the water's shader variant trails the camera's view in an in-place change.
 const WATER_RETIER_FRAMES: u8 = 2;
 
-/// An in-place change's water variant, applied [`WATER_RETIER_FRAMES`] after the camera's view
+/// An in-place change's water variant, applied `WATER_RETIER_FRAMES` after the camera's view
 /// components. The frames between draw the old variant under the new view, a pipeline the warm-up
 /// created (its camera draws the real water); the other order would create the new variant under
 /// the old view, a pipeline no tier draws again.

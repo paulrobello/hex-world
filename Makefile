@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 build dev dev-start dev-stop dev-restart run shot run-shot run-diag shots web-shots fmt fmt-check lint typecheck test py-lint checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-open-tunnels shots-raised-rail shots-massif shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 build dev dev-start dev-stop dev-restart run shot run-shot run-diag shots web-shots fmt fmt-check doc lint typecheck test py-lint checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-open-tunnels shots-raised-rail shots-massif shots-test
 
 fmt:
 	cargo fmt --all
@@ -43,7 +43,13 @@ check-wgpu:
 audit:
 	cargo audit --deny warnings --ignore RUSTSEC-2026-0192
 
-checkall: fmt-check ui-check shots-test py-lint lint typecheck test
+# rustdoc over the workspace (--no-deps: dependency warnings are not ours to fix). Broken
+# intra-doc links fail the leg via RUSTDOCFLAGS; other rustdoc warnings stay advisory, so a
+# toolchain update cannot break the gate on a new advisory lint. Cost sits between typecheck and test.
+doc:
+	RUSTDOCFLAGS="-D rustdoc::broken_intra_doc_links" cargo doc --workspace --no-deps --document-private-items
+
+checkall: fmt-check ui-check shots-test py-lint lint typecheck doc test
 
 # Python lint (ruff.toml): scripts/ is the maintained Python; docs/checkpoints, docs/perf and
 # assets-source are excluded. CI's ui job installs ruff from scripts/requirements.txt.

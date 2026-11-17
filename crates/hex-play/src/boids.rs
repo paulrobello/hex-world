@@ -443,7 +443,7 @@ pub struct BoidFormAssets {
 /// scenario switch neither duplicates nor leaks them. `forms` (each bird species in [`BIRDS`]
 /// order, then each fish species in [`FISH`] order) are built once the pieces have loaded;
 /// `generation` counts the builds, so
-/// [`sync_flock`] respawns the flock entities only when the handles change.
+/// `sync_flock` respawns the flock entities only when the handles change.
 #[derive(Resource, Clone)]
 pub struct BoidAssets {
     pub boids: Handle<ShaderBuffer>,
@@ -651,7 +651,7 @@ fn storage<T: bytemuck::NoUninit>(
 }
 
 /// Resizes the flock for a new budget (a tier change): new buffers, meshes and materials, and a
-/// fresh plan on the next frame. [`sync_flock`] spawns the flock from the new `BoidAssets`.
+/// fresh plan on the next frame. `sync_flock` spawns the flock from the new `BoidAssets`.
 pub fn set_budget(world: &mut World, budget: BoidBudget) {
     let Some(mut state) = world.get_resource_mut::<BoidState>() else {
         return;
@@ -1109,7 +1109,7 @@ pub struct FishTrack {
     /// Readbacks folded in.
     pub samples: u32,
     /// Fish (a slot and its generation) seen in river water and later in sea water, and the
-    /// other way round: across a mouth's fan ([`FAN_S`]), which is neither.
+    /// other way round: across a mouth's fan (`FAN_S`), which is neither.
     pub river_to_sea: u32,
     pub sea_to_river: u32,
     /// The same crossings per mouth cell, credited to the last mouth tile the fish swam in

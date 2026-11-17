@@ -187,7 +187,7 @@ impl LanePath {
         Self::from_points(offset_points(&line, offset))
     }
 
-    /// [`LanePath::new`] with every corner sharper than [`CORNER_MIN`] rounded by a circular arc
+    /// [`LanePath::new`] with every corner sharper than `CORNER_MIN` rounded by a circular arc
     /// of radius at most [`CORNER_RADIUS`], as a car steers through a junction node. Each arc is
     /// shrunk until it stays on its own side of `centerline`, between half of `offset` and
     /// `offset` from it, so the rounded lane never leaves the band an unrounded one keeps to. Two
@@ -195,7 +195,7 @@ impl LanePath {
     ///
     /// - Next to either end of the path (the inner corner of a destination spur) the arc may swing
     ///   [`INNER_SWING`] wider, since the band's outer edge alone caps it too tight to drive.
-    /// - Anywhere else, turning at least [`TURN_MIN`] (a right turn through a junction node; a
+    /// - Anywhere else, turning at least `TURN_MIN` (a right turn through a junction node; a
     ///   bend's sampled arc turns far less at each point), the corner sits a full `offset` from both
     ///   steps, and its arc, of radius up to [`TURN_RADIUS`], may swing [`TURN_SWING`] wider, out
     ///   over the kerb fillet between the two arms. A tighter turn swings the body's back across

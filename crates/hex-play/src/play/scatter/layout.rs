@@ -142,7 +142,7 @@ pub struct Mask {
 /// footprint tile's are its centre cell's, and `ring` holds each ring member (in the tile frame),
 /// its offset from the centre and its ground in its own frame, since a [`Surface`] spans one hex.
 /// A ring cell's `share` scales each rule's planned count by its mask area over the same rule's on
-/// a [`RING_GROUND`] cell, so it places as many per m² of free ground ([`meadow_share`]), and so
+/// a [`RING_GROUND`] cell, so it places as many per m² of free ground (`meadow_share`), and so
 /// does a single-tile landform's ([`LANDFORMS`]); every other single tile's is empty.
 pub struct Prepared {
     pub surface: Surface,

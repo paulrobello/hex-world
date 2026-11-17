@@ -119,6 +119,20 @@ jobs:
       - run: make typecheck
       - run: make check-wgpu
 
+  # rustdoc over the workspace (make doc): broken intra-doc links fail the job. Full checkout like
+  # lint and typecheck: the docs build expands include_str! fixtures the same way.
+  doc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Install Rust
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: make doc
+
   test:
     needs: [scope]
     runs-on: ${{ matrix.os }}
@@ -181,13 +195,23 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
         run: rustup show active-toolchain || rustup toolchain install
+      # cargo-audit compiles from source (~minutes); cache the pinned binary, keyed on the version
+      # below — bump both together.
+      - name: Cache cargo-audit
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/bin/cargo-audit
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+          key: cargo-audit-${{ runner.os }}-0.23.0
       - name: Install cargo-audit (pinned)
-        run: cargo install cargo-audit --version 0.23.0 --locked
+        run: command -v cargo-audit >/dev/null 2>&1 || cargo install cargo-audit --version 0.23.0 --locked
       - run: make audit
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [fmt, ui, lint, typecheck, test, web]
+    needs: [fmt, ui, lint, typecheck, doc, test, web]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

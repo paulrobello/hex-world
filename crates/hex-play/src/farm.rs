@@ -83,7 +83,7 @@ pub const WALK_EASE: f32 = TICK_SECONDS / 0.3;
 /// Head weight change per tick: a full raise or lowering takes 1 s.
 pub const HEAD_EASE: f32 = TICK_SECONDS / 1.0;
 /// A grazing piece's nibble: every [`NIBBLE_TICKS`] ticks of grazing its head lifts by up to this
-/// head weight and settles again over the first [`NIBBLE_LIFT_TICKS`].
+/// head weight and settles again over the first `NIBBLE_LIFT_TICKS`.
 pub const NIBBLE: f32 = 0.15;
 pub const NIBBLE_TICKS: u64 = 100;
 const NIBBLE_LIFT_TICKS: u64 = 40;

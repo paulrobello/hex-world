@@ -13,7 +13,7 @@
 //! the shadow passes. Only raised ground hides an affordance (P4): with any raised or sloped tile
 //! placed, [`occlude`] cuts each part's lines and fills where [`Terrain`] stands between the eye and
 //! them, so props and grass never do and a flat world draws exactly as before. On a sloped tile the
-//! lines and fills follow its ground ([`drape`]). A tunnel preview is never cut (`on_top`).
+//! lines and fills follow its ground (`drape`). A tunnel preview is never cut (`on_top`).
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::hash::{DefaultHasher, Hash, Hasher};
 
@@ -489,8 +489,8 @@ impl Terrain {
     }
 
     /// Whether raised ground stands between `eye` and world point `p`: the ray from `p` toward the
-    /// eye, sampled every [`MARCH_STEP`] while it is under the highest ground, dips more than
-    /// [`MARCH_MARGIN`] below it somewhere past the first [`MARCH_SKIP`].
+    /// eye, sampled every `MARCH_STEP` while it is under the highest ground, dips more than
+    /// `MARCH_MARGIN` below it somewhere past the first `MARCH_SKIP`.
     pub fn occluded(&self, eye: Vec3, p: Vec3) -> bool {
         let to_eye = eye - p;
         let len = to_eye.length();

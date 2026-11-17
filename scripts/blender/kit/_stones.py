@@ -3,8 +3,8 @@ into the tile ... scatter is something that can be controlled via LOD also"): th
 beach_center, beach_inner_center and beach_outer_center baked at the grass line, and the rocks and
 pebbles ocean_center baked on the ocean floor, rebuilt as props the play scatter places per tile.
 
-- `beach_pebbles`, `_b`, `_c`: one cluster of 5, 3 or 7 pebbles each (refs/beach ref-1), the same
-  pebble as `_beach_dress._pebble` (a jittered icosahedron, 2r wide, 0.85 x 2r deep, 0.45-0.65 r
+- `beach_pebbles`, `_b`, `_c`: one cluster of 5, 3 or 7 pebbles each (refs/beach ref-1), the pebble
+  the retired beach dressing baked (a jittered icosahedron, 2r wide, 0.85 x 2r deep, 0.45-0.65 r
   high, its centre 0.2 of its half height above the ground) and the same `beach_pebble` slot colour.
 - `seabed_rock`: one low rock, `seabed_pebbles`: one cluster of six pebbles (refs/ocean ref-1), the
   old `_coast.stone` (a jittered, flattened icosphere sunk 30% of its height), slots `coast_rock` and

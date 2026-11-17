@@ -614,7 +614,7 @@ pub fn terrain_mesh_for(field: &impl WaterField, cell: Axial, rot: u8, floor: f3
     .with_inserted_indices(Indices::U32(idx))
 }
 
-/// The look-dev patch's terrain for one cell, walls down to [`SKIRT_FLOOR`].
+/// The look-dev patch's terrain for one cell, walls down to `SKIRT_FLOOR`.
 pub fn terrain_mesh(cell: Axial, rot: u8) -> Mesh {
     terrain_mesh_for(&Lookdev, cell, rot, SKIRT_FLOOR)
 }

@@ -2,7 +2,7 @@
 //! pieces at the ghost's cell and rotation, tinted by role and drawn at 45% with [`GhostMaterial`].
 //!
 //! Scatter: the ghost draws the tile's seeded scatter ([`scatter`]) exactly as the placed tile will
-//! get it: the same prepared ground ([`PlayScatter::ground`]), the seed `cell_seed(world seed, cell)`
+//! get it: the same prepared ground (`PlayScatter::ground`), the seed `cell_seed(world seed, cell)`
 //! and each instance's own transform under a root that carries the tile's rotation. The layout
 //! depends on the tile and the seed only, never on the neighbours, so it is known before placement.
 //! The ghost draws every part at LOD0, as the placed tile does within the kit's near LOD range.
@@ -20,7 +20,7 @@
 //! Fades: the meshes fade in and out through the uniform's opacity alone (blended, as the outline
 //! is), so a fade adds no binding and no pipeline and sorts in the transparent phase as the steady
 //! ghost does. A ghost that leaves its cell (the pointer moves off the slot or to another one) keeps
-//! its root and its own materials while it fades out over [`GHOST_OUT`], the outline's fade; the
+//! its root and its own materials while it fades out over `GHOST_OUT`, the outline's fade; the
 //! new ghost gets fresh materials. A placement removes the ghost at once, as the rise takes over.
 //!
 //! While a piece the tile draws is in a pack still streaming there is no mesh to show: the

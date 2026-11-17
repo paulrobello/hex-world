@@ -148,7 +148,7 @@ impl DebugOverlays {
     }
 }
 
-/// What the overlays measured. Counts update every [`CENSUS_FRAMES`] frames while an overlay that
+/// What the overlays measured. Counts update every `CENSUS_FRAMES` frames while an overlay that
 /// needs them is on, and hold their last values while it is off.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct DebugReport {

@@ -314,7 +314,7 @@ pub fn beach_count(seed: u64) -> usize {
 pub const RIVER_MAX: usize = 4;
 
 /// Whether a tile is dressed as a riverbank: it scatters bank props ([`bank_band`]), and nothing
-/// else but water props ([`water_prop`], capped on their own by [`keep_water`]).
+/// else but water props ([`water_prop`], capped on their own by `keep_water`).
 pub fn river_family(def: &TileDef) -> bool {
     let rules = &def.props.scatter;
     rules.iter().any(|r| bank_band(r.piece.as_str()).is_some())
