@@ -1,0 +1,189 @@
+[
+  {
+    "name": "cars",
+    "about": "Cars checkpoint: road chains and seam crossings, a refused bulldoze, the disconnect and its undo",
+    "doc": "Cars checkpoint: runs `docs/checkpoints/cars/cars.json` natively at 1280x800 with `--tilt off --clock fixed`: two house clusters joined by a road chain with a 120° bend, cars driving across the tile seams (overview, close-up and seam stills), a refused bulldoze of the middle road, a filler meadow that makes it legal, the bulldoze that disconnects the houses (cars despawn, spawn rate 0) and its undo. Copies JPEG stills and the state dumps to `docs/checkpoints/cars/` (see [Cars](#cars))",
+    "runs": [
+      {
+        "script": "docs/checkpoints/cars/cars.json",
+        "out": "docs/checkpoints/cars",
+        "args": "--scenario play --clock fixed",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "coast",
+    "about": "Coast checkpoint (owner O1): a closed island under ten rotations inside an ocean ring, refused beach placements",
+    "doc": "Coast checkpoint for the directional beach sockets (owner O1): runs `docs/checkpoints/coast/coast.json` natively at 1600x1000 under `caffeinate -d -u` with `--tilt off --clock fixed --water_clock fixed`. An island of four meadows is closed by 12 coast tiles (2 straight beaches, 8 headlands, 2 bays, under 10 tile-rotation pairs) inside a ring of 18 ocean tiles. Before that, three placements are refused and dumped: ocean against a beach edge, grass against a beach edge, and a beach edge against grass. The run writes an overview, headland and bay views, and straight-to-headland seam close-ups (oblique and top-down), and the last headland 59 frames into its rise with its water filling from the base (`coast-08-rise-headland-fill`), and copies JPEG stills and the state dumps to `docs/checkpoints/coast/`. `water::tiles` test `coast_proof_script_closes_an_island` replays the script on the rules",
+    "runs": [
+      {
+        "script": "docs/checkpoints/coast/coast.json",
+        "out": "docs/checkpoints/coast",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "elevation",
+    "about": "Elevation review shots (P4): overview, ramp low and a car burst into the east tunnel portal",
+    "doc": "Elevation review shots (P4): runs `docs/checkpoints/elevation/elevation-shots.json` (the world of `elevation.json`, then a house at each end of the tunnel road) natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed`: `elevation-overview`, `elevation-ramp-low` and a burst `elevation-car-portal-0..7` with a state dump each (`car_list[].opacity`). Booked load-sensitive window only. The cliff-edge frame reuses `docs/checkpoints/elevation/visual-parity/`; the HUD \"Level N\" frame (`hud-level.jpg`) comes from `e2e/elevation.mjs`, because native shots draw no HUD",
+    "runs": [
+      {
+        "script": "docs/checkpoints/elevation/elevation-shots.json",
+        "out": "docs/checkpoints/elevation",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "farm-play",
+    "about": "Farm tile in play: play distance, barn, hay and animal close-ups, walk views and the paddock fence",
+    "doc": "Farm tile in play: runs `docs/checkpoints/farm/farm-play.json` natively at 1280x800 under `caffeinate -d -u` with `--tilt off --clock fixed --water_clock fixed`. It places the farm tile among meadows and shoots it at play distance (`farm-play`), the barn and hay close up (`farm-barn`), the cow and sheep close up (`farm-animals`), an eye-level walk view across the pasture to the barn (`farm-walk-eye`), then walks into the barn's front wall and dumps the block (`farm-walk-state.json`: `blocked` `building`, `blocked_by` `barn_red`), then looks along the wall to the hay (`farm-walk-blocked`), then walks from the yard into the paddock fence's north run west of the gate and dumps the block (`farm-walk-fence-state.json`: `blocked` `fence`, `blocked_by` `fence_paddock`) and shoots the fence (`farm-walk-fence`), then walks through the 3 m gate into the paddock (`farm-walk-gate-state.json`: no fence block) and looks toward the animals (`farm-walk-gate`). The farm tile is the barn, three hay bales, a cow and two sheep inside the post-and-rail paddock fence (one `fence_paddock` hero at the tile centre, its gate toward the yard), on the meadow base with wildflowers and rocks. It fails on a black still (an idle display, or an occluded window under `--offscreen off`) and leaves the committed stills alone",
+    "runs": [
+      {
+        "script": "docs/checkpoints/farm/farm-play.json",
+        "out": "docs/checkpoints/farm",
+        "args": "--scenario play --clock fixed --water_clock fixed",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "farm-wander",
+    "about": "Farm animals wandering (P3): a close pair 10 s apart, the walk inside the paddock, a five-farm world",
+    "doc": "Farm animals wandering (P3): runs `docs/checkpoints/farm-wander/farm-wander.json` natively at 1280x800 with `--seed 1 --fps off --tilt off --clock fixed --water_clock fixed --diag`: the farm among meadows at play distance, a close pair 10 s apart (600 frames) with each `play.farm` dumped, an eye-level walk view inside the paddock, and a 20-tile world with five farms whose `play.farm` counts and `diag` entities and draws are dumped. Writes JPEG stills and the state dumps to `docs/checkpoints/farm-wander/`",
+    "runs": [
+      {
+        "script": "docs/checkpoints/farm-wander/farm-wander.json",
+        "out": "docs/checkpoints/farm-wander",
+        "args": "--scenario play --clock fixed --water_clock fixed --diag",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "first-person",
+    "about": "First-person walk checkpoint (PRD P8): eye-level views of a village street, forest, river, beach and map edge",
+    "doc": "First-person walk checkpoint (PRD P8): see [Walk mode](#walk-mode)",
+    "runs": [
+      {
+        "script": "docs/checkpoints/first-person/first-person.json",
+        "out": "docs/checkpoints/first-person",
+        "args": "--scenario play --clock fixed --water_clock fixed",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "grass",
+    "about": "Grass checkpoint: meadow, verge and border close-ups, a gust, density levels and the place/bulldoze dumps",
+    "doc": "Grass checkpoint: `docs/checkpoints/grass/grass.json` on the scatter checkpoint's world, natively at 1280x800, High, `--grade rich-3`, `--tilt off --clock fixed --water_clock fixed`: meadow, forest-margin, road-verge and river-bank close-ups, straight-down views across a meadow-meadow and a meadow-forest tile border, an eye-level view (1.7 m), a mid-zoom showing the fade, a gust rolling over the meadows in four frames 75 frames (1.25 s) apart, the eye-level view at 50% and 150%, Low (no grass), and the place, bulldoze and Start over state dumps; `grass-off.json` repeats the eye-level view with `--grass off`. Copies JPEG stills and the dumps to `docs/checkpoints/grass/`. A GPU capture: check the host load is at or below 15 first",
+    "runs": [
+      {
+        "script": "docs/checkpoints/grass/grass.json",
+        "out": "docs/checkpoints/grass",
+        "args": "--scenario play --clock fixed --water_clock fixed --tier high --grade rich-3",
+        "size": "1280x800"
+      },
+      {
+        "script": "docs/checkpoints/grass/grass-off.json",
+        "out": "docs/checkpoints/grass",
+        "args": "--scenario play --clock fixed --water_clock fixed --tier high --grade rich-3 --grass off",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "massif",
+    "about": "Massif review shots (P4 mega tiles): the massif ringed by Meadow with forest edge, road and level-1 neighbour",
+    "doc": "Massif review shots (P4 mega tiles): runs `docs/checkpoints/massif_granite/massif-shots.json` natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed`. The world is a massif ringed by Meadow with a forest edge on its north side and a road through its east side cell, and a level-1 massif beside level-0 Meadow to the west. Frames: `massif-overview`, `massif-seam-low` (along the ring-to-Meadow seam), `massif-cliff-raised`, `massif-ghost-0` and `-1` (two rotations, with state dumps) and `massif-sink-0` and `-1` (the bulldoze sink), plus `massif-world-state` and `massif-sink-state`. Booked load-sensitive window only. The browser check is `node e2e/massif.mjs dist` (after `make build-web`): place, R, undo, redo and bulldoze through the bridge, asserting the ghost `footprint`, `mega_slots` and the anchor-only `tiles` after each step and the Tiles sheet's massif row against `megaFit`",
+    "runs": [
+      {
+        "script": "docs/checkpoints/massif_granite/massif-shots.json",
+        "out": "docs/checkpoints/massif_granite",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "open-tunnels",
+    "about": "Open tunnels review shots (P4): the rail tunnel down q = 1 and the elevation world's road tunnel, two scripts",
+    "doc": "Open tunnels review shots (P4): runs `docs/checkpoints/open_tunnels/rail-tunnel-shots.json` and `road-tunnel-shots.json` (written by `make_shots.py`) through `scripts/shots/piece.py` under `caffeinate -d -u` with fixed clocks: a rail tunnel down q = 1 and the elevation smoke world's road tunnel, shot as overview, mouth, ridge, the bore from inside with vehicles passing, and a walk view inside it. Writes `docs/checkpoints/open_tunnels/`. Booked load-sensitive window only",
+    "runs": [
+      {
+        "script": "docs/checkpoints/open_tunnels/rail-tunnel-shots.json",
+        "out": "docs/checkpoints/open_tunnels",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      },
+      {
+        "script": "docs/checkpoints/open_tunnels/road-tunnel-shots.json",
+        "out": "docs/checkpoints/open_tunnels",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "play",
+    "about": "Play checkpoint (P2 placement loop): the scripted proof with its JPEG stills and state dumps",
+    "doc": "Play checkpoint: runs `docs/checkpoints/play/play.json` natively at 1280x800 with `--tilt off` and copies JPEG stills and the state dumps to `docs/checkpoints/play/` (see [Play scenario](#play-scenario))",
+    "runs": [
+      {
+        "script": "docs/checkpoints/play/play.json",
+        "out": "docs/checkpoints/play",
+        "args": "--scenario play",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "raised-rail",
+    "about": "Raised rail review shots (P4 rail at levels): the 216 m loop on level 1 with trains",
+    "doc": "Raised rail review shots (P4 rail at levels): runs `docs/checkpoints/rail-levels/raised/raised-rail.json` (the 216 m loop on level 1 with trains) through `scripts/shots/piece.py` under `caffeinate -d -u` with fixed clocks. Writes `docs/checkpoints/rail-levels/raised/`. Booked load-sensitive window only",
+    "runs": [
+      {
+        "script": "docs/checkpoints/rail-levels/raised/raised-rail.json",
+        "out": "docs/checkpoints/rail-levels/raised",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "river-mouth",
+    "about": "River mouth and spring (water contract §3a/§3b): spring-to-sea chains, fan and foam, edge seams, fish at the mouth",
+    "doc": "River mouth and spring (owner 2026-10-14, water contract §3a and §3b): runs `docs/checkpoints/river-mouth/river-mouth.json` natively at 1600x1000 with `--seed 1 --fps off --tilt off --clock fixed --water_clock fixed`: a spring-to-sea chain through each mouth handedness, the fan and foam, the spring pool, River and Beach edge seams, and fish at the mouth. Writes 16 JPEG stills and `river-mouth-state.json` to `docs/checkpoints/river-mouth/`",
+    "runs": [
+      {
+        "script": "docs/checkpoints/river-mouth/river-mouth.json",
+        "out": "docs/checkpoints/river-mouth",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "wheat-play",
+    "about": "Wheat field tile in play: seam and sun/shade close-ups, scale shot, eye level, the walk into the field",
+    "doc": "Wheat field tile in play: runs `docs/checkpoints/wheat_field/wheat-play.json` natively at 1280x800 with `--tilt off --clock fixed --water_clock fixed`. It places two wheat fields one row apart, the farm and meadows, and shoots play distance (`wheat-play`), the seams with the grass margin and the second field (`wheat-seam`), sun-side and shade-side close-ups (`wheat-close-sun`, then `wheat-close-sun-1s` 60 frames later for the wind sway, `wheat-close-shade`), a scale shot across the wheat to the barn (`wheat-scale`), eye level in walk mode (`wheat-walk-eye`), then walks 9 s into the field and dumps the state (`wheat-walk-state.json`: `blocked` null, the walker stands on the earth) and shoots it (`wheat-walk-inside`). It fails on a black still and copies JPEG stills and the dumps to `docs/checkpoints/wheat_field/`; `python3 docs/checkpoints/wheat_field/sheet.py` builds the review sheet",
+    "runs": [
+      {
+        "script": "docs/checkpoints/wheat_field/wheat-play.json",
+        "out": "docs/checkpoints/wheat_field",
+        "args": "--scenario play --clock fixed --water_clock fixed",
+        "size": "1280x800"
+      }
+    ]
+  },
+  {
+    "name": "windmill-play",
+    "about": "Windmill tile in play: two frames 1 s apart and a blocked walk into the tower",
+    "doc": "Windmill tile in play: runs `docs/checkpoints/windmill/windmill-play.json` natively at 1280x800 under `caffeinate -d -u` with `--tilt off --clock fixed --water_clock fixed`. It places the windmill tile among meadows and an oak, shoots it twice 60 frames apart (`windmill-play`, `windmill-play-1s`: the sails turn 24° at 4 rpm), then walks into the tower and dumps the block (`windmill-walk-state.json`: `blocked` `building`, `blocked_by` `windmill`) and looks up from its foot (`windmill-walk-blocked`). It fails on a black still (an idle display, or an occluded window under `--offscreen off`) and copies JPEG stills and the dumps to `docs/checkpoints/windmill/`",
+    "runs": [
+      {
+        "script": "docs/checkpoints/windmill/windmill-play.json",
+        "out": "docs/checkpoints/windmill",
+        "args": "--scenario play --clock fixed --water_clock fixed",
+        "size": "1280x800"
+      }
+    ]
+  }
+]

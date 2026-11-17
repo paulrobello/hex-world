@@ -1,4 +1,4 @@
-.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 build dev dev-start dev-stop dev-restart run shot run-shot run-diag shots web-shots fmt fmt-check doc lint typecheck test py-lint checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download shots-play shots-cars brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-coast shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust shots-river-mouth shots-grass perf-grass perf-grass-drag shots-first-person shots-foliage-wind shots-windmill-play shots-farm-play shots-farm-wander shots-wheat-play shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-elevation shots-open-tunnels shots-raised-rail shots-massif shots-test
+.PHONY: clean ui-build ui-typecheck ui-lint ui-test ui-schema ui-check ui-e2e fetch-tools fetch-hdri assets-p0 build dev dev-start dev-stop dev-restart run shot run-shot run-diag shots web-shots fmt fmt-check doc lint typecheck test py-lint checkall checkall-ci ref-bevy build-web web-size web-smoke perf-gate perf-matrix shots-chunks shots-instanced blender-test blender-test-selfcheck refs kit-build kit-determinism kit-compress kit-material kit-compress-test kit-fixture kit-renders kit-check kit-provenance kit-material-provenance shots-kit web-shots-kit lookdev-ibl shots-lookdev shots-tilt web-shots-tilt shots-water perf-water perf-passes initial-download brand audio-master audio-check audio-check-selftest shots-water-play thumbs shots-rise shots-wet-band audio-e2e shots-boids shots-photo shots-photo-fx shots-scatter web-scatter perf-water-world shots-ghost shots-bulldoze-dust perf-grass perf-grass-drag shots-foliage-wind shots-rail-play shots-rail-routing web-shots-rail-routing shots-piece shots-test
 
 fmt:
 	cargo fmt --all
@@ -347,7 +347,6 @@ web-shots: build-web $(E2E_NPM)
 
 # The kit scenario's shots. ARGS / QUERY pass kit keys, e.g. ARGS="--kit_src fixture" and
 # QUERY="kit_src=fixture" for the gate fixture.
-KIT_SHOTS = kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-lod1 kit-lod2
 # Foliage wind evidence (PRD §9.1): fixed-clock frame pairs of a pine forest, the hero oak, its
 # shadow, a river reed bed and wildflowers, with a difference image per pair, into
 # docs/checkpoints/foliage-wind/ (shoot.sh).
@@ -365,44 +364,23 @@ shots-piece:
 	cargo build -p hex-app --release
 	env $(ENV) python3 scripts/shots/piece.py --script $(SCRIPT) --out $(OUT) -- $(ARGS)
 
-# Elevation review shots (P4): docs/checkpoints/elevation/elevation-shots.json (from elevation.json)
-# builds the elevation world, then shoots an overview, a low camera up the ramp and a burst of frames
-# of a car driving into the east tunnel portal, each with its state dump (play.car_list opacity).
-# The cliff-edge frame is not re-shot here: the elevation world has no cliff by design, so it reuses
-# docs/checkpoints/elevation/visual-parity/parity-cliff-low.jpg (rerun that script with
-# visual-parity/run.sh). Native shots draw no HUD; the "Level N" readout frame (hud-level.jpg) comes
-# from `node e2e/elevation.mjs dist`. Fixed clocks, so a rerun replays. GPU capture: run only inside
-# a booked load-sensitive window.
-shots-elevation:
-	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/elevation/elevation-shots.json OUT=docs/checkpoints/elevation ARGS='--scenario play --clock fixed --water_clock fixed'
-
-# Open tunnels review shots (P4): docs/checkpoints/open_tunnels/{rail,road}-tunnel-shots.json (written
-# by make_shots.py) build a rail tunnel down q = 1 and the elevation smoke world's road tunnel, then
-# shoot the overview, the mouth, the ridge, the bore from inside with vehicles passing and a walk
-# view inside it. Fixed clocks. Booked load-sensitive window only.
-shots-open-tunnels:
-	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/open_tunnels/rail-tunnel-shots.json OUT=docs/checkpoints/open_tunnels ARGS='--scenario play --clock fixed --water_clock fixed'
-	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/open_tunnels/road-tunnel-shots.json OUT=docs/checkpoints/open_tunnels ARGS='--scenario play --clock fixed --water_clock fixed'
-
-# Raised rail review shots (P4 rail at levels): the 216 m loop on level 1 with trains. Booked
-# load-sensitive window only.
-shots-raised-rail:
-	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/rail-levels/raised/raised-rail.json OUT=docs/checkpoints/rail-levels/raised ARGS='--scenario play --clock fixed --water_clock fixed'
-
-# Massif review shots (P4 mega tiles): docs/checkpoints/massif_granite/massif-shots.json builds a
-# massif ringed by Meadow, with a forest edge on its north side, a road through its east side cell
-# and a level-1 massif beside level-0 Meadow to the west, then shoots the overview, a low camera
-# along the ring-to-Meadow seam, the raised massif's cliff edge, the ghost at two rotations and two
-# frames of the bulldoze sink, with state dumps. Fixed clocks, so a rerun replays. GPU capture: run
-# only inside a booked load-sensitive window.
-shots-massif:
-	caffeinate -d -u $(MAKE) shots-piece SCRIPT=docs/checkpoints/massif_granite/massif-shots.json OUT=docs/checkpoints/massif_granite ARGS='--scenario play --clock fixed --water_clock fixed'
+# The manifest-driven checkpoint targets (scripts/shots/targets.json): `make shots-<name>` builds
+# hex-app once, then runs scripts/shots/piece.py once per run of the row (caffeinate -d -u, the
+# black-frame check with one re-run, JPEG copies, the state dumps and the shots.json report into
+# the row's OUT). $(shell) resolves the row when make expands the recipe, so `make -n
+# shots-<name>` prints the resolved commands; an unknown name or a bad manifest prints the error
+# and fails. Explicit rules keep precedence over the pattern, so the irregular targets above and
+# below stay as they are. ARGS adds hex-world flags to every run of the row.
+.PHONY: FORCE
+shots-%: FORCE
+	$(shell python3 scripts/shots/targets.py --commands $* -- $(ARGS))
+FORCE:
 
 shots-kit:
 	mkdir -p target/shots
 	rm -f target/shots/kit-*.png
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off $(ARGS)
-	@for n in $(KIT_SHOTS); do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
+	@for n in kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-lod1 kit-lod2; do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
 	@echo "wrote target/shots/kit-*.png"
 
 # Tone-mapping comparison (D4) of the kit shots over the `tony` grade's exposure, grading and
@@ -449,14 +427,13 @@ web-shots-kit: build-web $(E2E_NPM)
 # JPEG copies go to docs/checkpoints/water/), then a 3 s MP4 per view (90 frames at a fixed 1/30 s
 # water step, 960x600) in the same folder.
 # ARGS passes app keys, e.g. ARGS="--tier medium".
-WATER_SHOTS = water-overview water-ocean water-river water-beach water-seam-ocean water-seam-river water-edge water-edge-river
 WATER_VIEWS = ocean river beach seam-ocean seam-river edge edge-river
 WATER_DOCS = docs/checkpoints/water
 shots-water:
 	mkdir -p target/shots $(WATER_DOCS)
 	rm -f target/shots/water-*.png
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/water.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(WATER_DOCS) $(WATER_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(WATER_DOCS) water-overview water-ocean water-river water-beach water-seam-ocean water-seam-river water-edge water-edge-river
 	node scripts/shots/water-motion.mjs target/shots/water-motion-script.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script target/shots/water-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
 	@for v in $(WATER_VIEWS); do \
@@ -505,104 +482,6 @@ perf-grass: build-web $(E2E_NPM)
 perf-grass-drag: build-web $(E2E_NPM)
 	caffeinate -d -u node e2e/perf-grass-drag.mjs dist
 
-# Play scenario checkpoint (P2 placement loop): runs the scripted proof docs/checkpoints/play/play.json
-# at 1280x800 with tilt-shift off, then copies JPEG stills and the state dumps next to it.
-PLAY_SHOTS = play-01-start play-02-ghost-road play-03-placed play-04-illegal-ghost play-05-undo play-06-redo play-07-bulldoze-leaf play-08-bulldoze-bridge
-PLAY_DOCS = docs/checkpoints/play
-shots-play:
-	mkdir -p target/shots $(PLAY_DOCS)
-	rm -f target/shots/play-*.png target/shots/play-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PLAY_DOCS)/play.json --size 1280x800 --seed 1 --fps off --tilt off $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(PLAY_DOCS) $(PLAY_SHOTS)
-	cp target/shots/play-*.json $(PLAY_DOCS)/
-	@echo "wrote $(PLAY_DOCS)/"
-
-# Windmill tile in play: docs/checkpoints/windmill/windmill-play.json places the windmill tile among
-# meadows and an oak, shoots it twice 60 frames (1 s, 24° of sail at 4 rpm) apart, then walks into the
-# tower and dumps the block. 1280x800, tilt-shift off and `--clock fixed`, so the sails replay exactly.
-# The app retakes a black frame (high load) for up to 60 s with the scene held; a still black after
-# that (an idle display) exits 1, so the target fails and leaves the committed stills alone.
-WINDMILL_SHOTS = windmill-play windmill-play-1s windmill-walk-blocked
-WINDMILL_DOCS = docs/checkpoints/windmill
-shots-windmill-play:
-	mkdir -p target/shots $(WINDMILL_DOCS)
-	rm -f target/shots/windmill-play*.png target/shots/windmill-play-state.json target/shots/windmill-walk-*
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WINDMILL_DOCS)/windmill-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(WINDMILL_DOCS) $(WINDMILL_SHOTS)
-	cp target/shots/windmill-play-state.json target/shots/windmill-walk-state.json $(WINDMILL_DOCS)/
-	@echo "wrote $(WINDMILL_DOCS)/"
-
-# Farm tile in play: docs/checkpoints/farm/farm-play.json places the farm tile among meadows, shoots
-# it at play distance, then close-ups of the barn and hay and of the animals, an eye-level walk view
-# across the pasture to the barn, and a walk into the barn's front wall with its block dumped, then
-# walks into the paddock fence's north run (blocked as `fence`) and through its gate, each dumped.
-# 1280x800, tilt-shift off and `--clock fixed`. A black still fails the target, as for the windmill.
-FARM_SHOTS = farm-play farm-barn farm-animals farm-walk-eye farm-walk-blocked farm-walk-fence farm-walk-gate
-FARM_DOCS = docs/checkpoints/farm
-shots-farm-play:
-	mkdir -p target/shots $(FARM_DOCS)
-	rm -f target/shots/farm-*.png target/shots/farm-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FARM_DOCS)/farm-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(FARM_DOCS) $(FARM_SHOTS)
-	cp target/shots/farm-play-state.json target/shots/farm-walk-state.json target/shots/farm-walk-fence-state.json target/shots/farm-walk-gate-state.json $(FARM_DOCS)/
-	@echo "wrote $(FARM_DOCS)/"
-
-# Farm animals wandering (P3): docs/checkpoints/farm-wander/farm-wander.json places the farm among
-# meadows, shoots it at play distance, then a close pair 10 s apart (600 frames under `--clock
-# fixed`) with each `play.farm` dumped, an eye-level walk view inside the paddock, and a 20-tile
-# world with five farms whose state (`play.farm` counts, `diag` entities and draws) is dumped.
-FARM_WANDER_SHOTS = farm-wander-play farm-wander-a farm-wander-b farm-wander-walk-eye
-FARM_WANDER_DOCS = docs/checkpoints/farm-wander
-shots-farm-wander:
-	mkdir -p target/shots $(FARM_WANDER_DOCS)
-	rm -f target/shots/farm-wander-*.png target/shots/farm-wander-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FARM_WANDER_DOCS)/farm-wander.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --diag $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(FARM_WANDER_DOCS) $(FARM_WANDER_SHOTS)
-	cp target/shots/farm-wander-a-state.json target/shots/farm-wander-b-state.json target/shots/farm-wander-walk-state.json target/shots/farm-wander-world-state.json $(FARM_WANDER_DOCS)/
-	@echo "wrote $(FARM_WANDER_DOCS)/"
-
-# Wheat field tile in play: docs/checkpoints/wheat_field/wheat-play.json places two wheat fields one
-# row apart (rows continue across the seam), the farm and meadows, and shoots play distance, the
-# seam to the grass neighbour and to the second field, sun-side and shade-side close-ups, a scale
-# shot across the wheat to the barn, an eye-level walk view, and a walk into the field with its
-# state dumped (`walk.blocked` null). 1280x800, tilt-shift off and `--clock fixed`. A black still
-# fails the target. `python3 docs/checkpoints/wheat_field/sheet.py` then builds the review sheet.
-WHEAT_SHOTS = wheat-play wheat-seam wheat-close-sun wheat-close-sun-1s wheat-close-shade wheat-scale wheat-walk-eye wheat-walk-inside
-WHEAT_DOCS = docs/checkpoints/wheat_field
-shots-wheat-play:
-	mkdir -p target/shots $(WHEAT_DOCS)
-	rm -f target/shots/wheat-*.png target/shots/wheat-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WHEAT_DOCS)/wheat-play.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(WHEAT_DOCS) $(WHEAT_SHOTS)
-	cp target/shots/wheat-play-state.json target/shots/wheat-walk-state.json $(WHEAT_DOCS)/
-	@echo "wrote $(WHEAT_DOCS)/"
-
-# First-person walk checkpoint (PRD P8): builds a village street, a forest, a river, a beach and
-# an ocean with docs/checkpoints/first-person/first-person.json, walks them at eye level at
-# 1280x800 with tilt-shift off and `--clock fixed`, then copies JPEG stills and the state dumps.
-FP_SHOTS = fp-00-orbit fp-02-village-street fp-03-forest fp-04-river-bank fp-04b-river-crossed fp-05-beach fp-06-map-edge fp-07-orbit-back
-FP_DOCS = docs/checkpoints/first-person
-shots-first-person:
-	mkdir -p target/shots $(FP_DOCS)
-	rm -f target/shots/fp-*.png target/shots/fp-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(FP_DOCS)/first-person.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(FP_DOCS) $(FP_SHOTS)
-	cp target/shots/fp-*.json $(FP_DOCS)/
-	@echo "wrote $(FP_DOCS)/"
-
-# Cars checkpoint (P2 W3a): runs the scripted proof docs/checkpoints/cars/cars.json at 1280x800 with
-# tilt-shift off and `--clock fixed` (one 20 Hz sim tick every third frame, so the run replays
-# identically), then copies JPEG stills and the state dumps next to it.
-CARS_SHOTS = cars-02-overview cars-02-closeup cars-02-seam cars-04-disconnected cars-05-undo
-CARS_DOCS = docs/checkpoints/cars
-shots-cars:
-	mkdir -p target/shots $(CARS_DOCS)
-	rm -f target/shots/cars-*.png target/shots/cars-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(CARS_DOCS)/cars.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(CARS_DOCS) $(CARS_SHOTS)
-	cp target/shots/cars-*.json $(CARS_DOCS)/
-	@echo "wrote $(CARS_DOCS)/"
-
 # Photo mode checkpoint (PRD §4.6): runs docs/checkpoints/photo/photo.json at 1280x800 with the
 # game camera's tilt-shift off and `--clock fixed`: enter (tilt preset), a manual-DOF close-up and
 # the same shot with DOF off, the tilt preset with roll and exposure, one framing click-focused near
@@ -615,13 +494,12 @@ shots-cars:
 # tree within 2% of 35.8 m, the view depth of the forked oak's LOD0 mesh along that ray (hex-play
 # walk test `the_tree_click_shot_meets_the_forked_oak_mesh_at_35_8_m`).
 # The full-size PNG stays in target/shots.
-PHOTO_SHOTS = photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-06-click-focus-near photo-07-click-focus-far photo-08-tree-before photo-09-tree-click photo-04-export-4x photo-05-exit-orbit
 PHOTO_DOCS = docs/checkpoints/photo
 shots-photo:
 	mkdir -p target/shots $(PHOTO_DOCS)
 	rm -f target/shots/photo-*.png target/shots/photo-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) $(PHOTO_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) photo-01-enter-tilt photo-02-dof-closeup photo-02-dof-off-closeup photo-03-tilt-roll-exposure photo-06-click-focus-near photo-07-click-focus-far photo-08-tree-before photo-09-tree-click photo-04-export-4x photo-05-exit-orbit
 	magick identify -format '{"png": "%f", "width": %w, "height": %h, "mean": %[fx:mean]}\n' target/shots/photo-04-export-4x.png > $(PHOTO_DOCS)/photo-04-export-4x.size.json
 	@grep -q '"width": 5120, "height": 3200' $(PHOTO_DOCS)/photo-04-export-4x.size.json || { echo "4x export is not 5120x3200"; cat $(PHOTO_DOCS)/photo-04-export-4x.size.json; exit 1; }
 	@r=$$(magick compare -metric RMSE target/shots/photo-02-dof-closeup.png target/shots/photo-02-dof-off-closeup.png null: 2>&1 | sed -E 's/.*\(([0-9.e-]+)\).*/\1/'); \
@@ -639,12 +517,11 @@ shots-photo:
 # 1280x800 like shots-photo: one still per effect (none, black and white, sepia, vignette, grain,
 # chromatic aberration), a combined look, its 2x export, the game camera after leaving photo mode,
 # and state dumps. scripts/photo-fx-check.py asserts each effect and writes photo-fx-measure.json.
-PHOTO_FX_SHOTS = photo-fx-00-none photo-fx-01-mono photo-fx-02-sepia photo-fx-03-vignette photo-fx-04-grain photo-fx-05-aberration photo-fx-06-combined photo-fx-07-export-2x photo-fx-08-exit-orbit
 shots-photo-fx:
 	mkdir -p target/shots $(PHOTO_DOCS)
 	rm -f target/shots/photo-fx-*.png target/shots/photo-fx-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(PHOTO_DOCS)/photo-fx.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) $(PHOTO_FX_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(PHOTO_DOCS) photo-fx-00-none photo-fx-01-mono photo-fx-02-sepia photo-fx-03-vignette photo-fx-04-grain photo-fx-05-aberration photo-fx-06-combined photo-fx-07-export-2x photo-fx-08-exit-orbit
 	python3 scripts/photo-fx-check.py
 	cp target/shots/photo-fx-*.json $(PHOTO_DOCS)/
 	@echo "wrote $(PHOTO_DOCS)/photo-fx-*"
@@ -667,14 +544,13 @@ audio-check-selftest:
 # river chain, cut faces, bulldoze/undo/redo) at 1600x1000 with tilt-shift off and a fixed water
 # clock, copies JPEG stills and state dumps next to it, then a 3 s motion clip per view in VIEWS of
 # motion.mjs (90 frames, 960x600) encoded to MP4.
-WATER_PLAY_SHOTS = water-play-01-overview water-play-02-coast water-play-03-river water-play-04-seam-river water-play-05-seam-bridge water-play-06-seam-coast water-play-07-seam-ocean water-play-08-edge-ocean water-play-09-edge-river water-play-10-before-bulldoze water-play-11-bulldozed water-play-12-undo water-play-13-redo
 WATER_PLAY_VIEWS = coast seam-river seam-coast edge-ocean
 WATER_PLAY_DOCS = docs/checkpoints/water-play
 shots-water-play:
 	mkdir -p target/shots $(WATER_PLAY_DOCS)
 	rm -f target/shots/water-play-*.png target/shots/water-play-*.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WATER_PLAY_DOCS)/water-play.json --size 1600x1000 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(WATER_PLAY_DOCS) $(WATER_PLAY_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(WATER_PLAY_DOCS) water-play-01-overview water-play-02-coast water-play-03-river water-play-04-seam-river water-play-05-seam-bridge water-play-06-seam-coast water-play-07-seam-ocean water-play-08-edge-ocean water-play-09-edge-river water-play-10-before-bulldoze water-play-11-bulldozed water-play-12-undo water-play-13-redo
 	cp target/shots/water-play-state*.json $(WATER_PLAY_DOCS)/
 	node $(WATER_PLAY_DOCS)/motion.mjs target/shots/water-play-motion-script.json
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script target/shots/water-play-motion-script.json --size 960x600 --seed 1 --fps off --tilt off --water_clock fixed $(ARGS)
@@ -685,46 +561,14 @@ shots-water-play:
 	rm -f target/shots/water-play-motion-*.png
 	@echo "wrote $(WATER_PLAY_DOCS)/"
 
-# Coast checkpoint (owner O1, directional beach sockets): runs docs/checkpoints/coast/coast.json at
-# 1600x1000 with tilt-shift off and fixed clocks (an island closed by straight, headland and bay
-# tiles under ten rotations inside an ocean ring, seam close-ups, a headland filling mid-rise, and
-# the refused beach-against-ocean and beach-against-grass placements), then copies JPEG stills and
-# the state dumps next to it.
-# caffeinate keeps the display awake: a sleeping display captures every frame black, and `test -s`
-# passes on a black frame.
-COAST_SHOTS = coast-01-overview coast-02-refused-beach coast-03-headland coast-04-bay coast-05-seam-straight-headland coast-06-seam-topdown coast-07-seam-straight-headland coast-08-rise-headland-fill
-COAST_DOCS = docs/checkpoints/coast
-shots-coast:
-	mkdir -p target/shots $(COAST_DOCS)
-	rm -f target/shots/coast-*.png target/shots/coast-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(COAST_DOCS)/coast.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(COAST_DOCS) $(COAST_SHOTS)
-	cp target/shots/coast-*.json $(COAST_DOCS)/
-	@echo "wrote $(COAST_DOCS)/"
-
-# River mouth and spring (owner 2026-10-14, water contract §3a/§3b): runs
-# docs/checkpoints/river-mouth/river-mouth.json (a spring-to-sea chain through each mouth
-# handedness, the fan and foam, the spring pool, River and Beach edge seams, fish at the mouth) at
-# 1600x1000 with tilt-shift off and fixed clocks, then copies JPEG stills and the state dump.
-RIVER_MOUTH_SHOTS = river-mouth-01-chain-right river-mouth-02-chain-mirrored river-mouth-03-fan-right river-mouth-04-fan-foam-topdown river-mouth-05-fan-mirrored river-mouth-06-spring-pool river-mouth-07-seam-river-edge river-mouth-08-seam-river-edge-bend river-mouth-09-seam-beach-edge5 river-mouth-10-seam-beach-edge2 river-mouth-11-fish-at-mouth river-mouth-12-fan-sand-oblique river-mouth-13-grass-line-right-long river-mouth-14-grass-line-right-short river-mouth-15-grass-line-mirrored-long river-mouth-16-grass-line-mirrored-short
-RIVER_MOUTH_DOCS = docs/checkpoints/river-mouth
-shots-river-mouth:
-	mkdir -p target/shots $(RIVER_MOUTH_DOCS)
-	rm -f target/shots/river-mouth-*.png target/shots/river-mouth-*.json
-	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(RIVER_MOUTH_DOCS)/river-mouth.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(RIVER_MOUTH_DOCS) $(RIVER_MOUTH_SHOTS)
-	cp target/shots/river-mouth-state.json $(RIVER_MOUTH_DOCS)/
-	@echo "wrote $(RIVER_MOUTH_DOCS)/"
-
 # Kit beach wet band (water contract §3): the coast island of the beach close-ups, four waterline
 # close-ups as JPEG, and a 5 s MP4 of the straight beach (150 frames at the fixed 1/30 s water step).
-WET_BAND_SHOTS = wet-band-01-straight wet-band-02-bay wet-band-03-seam-straight-headland wet-band-04-headland
 WET_BAND_DOCS = docs/checkpoints/wet-band
 shots-wet-band:
 	mkdir -p target/shots $(WET_BAND_DOCS)
 	rm -f target/shots/wet-band-*.png
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(WET_BAND_DOCS)/wet-band.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(WET_BAND_DOCS) $(WET_BAND_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(WET_BAND_DOCS) wet-band-01-straight wet-band-02-bay wet-band-03-seam-straight-headland wet-band-04-headland
 	@test -s target/shots/wet-band-motion-149.png || { echo "missing wet-band-motion frames"; exit 1; }
 	ffmpeg -loglevel error -y -framerate 30 -i target/shots/wet-band-motion-%03d.png -vf scale=960:-2 -c:v libx264 -pix_fmt yuv420p -crf 22 $(WET_BAND_DOCS)/wet-band-motion.mp4
 	@echo "wrote $(WET_BAND_DOCS)/"
@@ -742,35 +586,15 @@ shots-wet-band:
 # HEXW_PACK_READY_FRAMES pins each streamed pack's arrival to 30 frames after its request, so the
 # waiting tiles rise and their fish spawn on the same frame every run: three runs give identical
 # dumps (fish_track digest included).
-BOIDS_SHOTS = boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river boids-15-mouth-l-fan boids-15-mouth-l-side boids-15-mouth-l-wide
 BOIDS_DOCS = docs/checkpoints/boids
 shots-boids:
 	mkdir -p target/shots $(BOIDS_DOCS)
 	rm -f target/shots/boids-*.png target/shots/boids-*.json
 	HEXW_PACK_READY_FRAMES=30 bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(BOIDS_DOCS)/boids.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(BOIDS_DOCS) $(BOIDS_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(BOIDS_DOCS) boids-01-flock boids-02-roost boids-02-roost-close boids-03-fish-ocean boids-04-fish-river boids-04-fish-river-close boids-04-fish-river-play boids-07-settle boids-07-flap-close boids-10-mouth-fan boids-11-mouth-river boids-15-mouth-l-fan boids-15-mouth-l-side boids-15-mouth-l-wide
 	cp target/shots/boids-*.json $(BOIDS_DOCS)/
 	node $(BOIDS_DOCS)/check.mjs $(BOIDS_DOCS)
 	@echo "wrote $(BOIDS_DOCS)/"
-
-# Grass checkpoint (crates/hex-play/src/play/grass.rs): docs/checkpoints/grass/grass.json on the
-# scatter checkpoint's world at 1280x800, High, rich-3, fixed clocks and tilt-shift off: meadow,
-# forest margin, road verge and river bank close-ups, straight down across two tile borders, an eye-level view, a mid-zoom showing the fade,
-# a gust over the meadows in four frames 1.25 s apart, Low (no grass), then the place, bulldoze and
-# Start over dumps; grass-off.json repeats the eye-level view with --grass off. A GPU capture:
-# check the host load is at or below 15 first.
-GRASS_SHOTS = grass-01-meadow grass-02-forest grass-03-road-verge grass-04-river-bank grass-05-eye grass-06-eye-off grass-07-midzoom grass-08-gust-1 grass-08-gust-2 grass-08-gust-3 grass-08-gust-4 grass-09-low grass-10-eye-sparse grass-10-eye-lush grass-11-border-meadow grass-12-border-forest
-GRASS_DOCS = docs/checkpoints/grass
-GRASS_RUN = bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --size 1280x800 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed --tier high --grade rich-3
-
-shots-grass:
-	mkdir -p target/shots $(GRASS_DOCS)
-	rm -f target/shots/grass-*.png target/shots/grass-*.json
-	$(GRASS_RUN) --script $(GRASS_DOCS)/grass.json $(ARGS)
-	$(GRASS_RUN) --script $(GRASS_DOCS)/grass-off.json --grass off $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(GRASS_DOCS) $(GRASS_SHOTS)
-	cp target/shots/grass-state-*.json $(GRASS_DOCS)/
-	@echo "wrote $(GRASS_DOCS)/"
 
 # Scatter checkpoint (PRD §5.3, crates/hex-play/src/play/scatter/): runs
 # docs/checkpoints/scatter/scatter.json at 1600x1000 with tilt-shift off and fixed clocks (a cluster
@@ -784,7 +608,6 @@ shots-grass:
 # the 20-tile overview's draw calls gated at 500 with the close cameras tracked, the mixed world's
 # pieces; its overview draws, over 500 until shared scatter materials land, and the scatter pairs
 # are tracked).
-SCATTER_SHOTS = scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts scatter-15-mixed-overview
 SCATTER_DOCS = docs/checkpoints/scatter
 shots-scatter:
 	mkdir -p target/shots $(SCATTER_DOCS)
@@ -792,7 +615,7 @@ shots-scatter:
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
 	HEXW_PACK_HOLD_FRAMES=120 bash scripts/shots/run.sh --state-only cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-stream.json --size 1280x800 --seed 1 --fps off --tilt off --clock fixed $(ARGS)
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --scenario play --script $(SCATTER_DOCS)/scatter-mixed.json --size 1600x1000 --seed 1 --fps off --tilt off --clock fixed --water_clock fixed $(ARGS)
-	bash scripts/shots/run.sh --jpegs $(SCATTER_DOCS) $(SCATTER_SHOTS)
+	bash scripts/shots/run.sh --jpegs $(SCATTER_DOCS) scatter-01-overview scatter-02-forest-cluster scatter-03-meadow scatter-04-road-river scatter-05-forest-closeup scatter-06-rise-props scatter-07-rise-settled scatter-12-oak scatter-13-junction scatter-14-meadow-drifts scatter-15-mixed-overview
 	cp target/shots/scatter-*.json $(SCATTER_DOCS)/
 	node $(SCATTER_DOCS)/check.mjs $(SCATTER_DOCS)
 	@echo "wrote $(SCATTER_DOCS)/"

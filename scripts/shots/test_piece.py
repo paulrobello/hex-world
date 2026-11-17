@@ -12,6 +12,7 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import piece  # noqa: E402
+import targets  # noqa: E402
 
 # A stand-in for hex-world: writes the frames named on its command line, black on the first run
 # when BLACK_ONCE marks it, then normal. Exit code from EXIT.
@@ -142,6 +143,39 @@ class Shoot(unittest.TestCase):
         self.assertEqual(len(tries), 2)
         self.assertTrue(all(t["timed_out"] for t in tries))
         self.assertIn("timed out after 0.3 s", tries[-1]["problems"])
+
+
+class Targets(unittest.TestCase):
+    """The shots manifest (scripts/shots/targets.json) and its generated doc block."""
+
+    def test_manifest_rows_are_well_formed(self) -> None:
+        # load() itself raises on a bad row shape or a duplicate name.
+        rows = targets.load()
+        self.assertGreaterEqual(len(rows), 14)
+        for row in rows:
+            self.assertRegex(row["name"], r"^[a-z0-9-]+$")
+            self.assertTrue(row["about"].strip())
+            self.assertTrue(row["doc"].strip())
+
+    def test_every_script_exists_and_ends_with_exit(self) -> None:
+        for row in targets.load():
+            for run in row["runs"]:
+                path = targets.REPO / run["script"]
+                self.assertTrue(path.exists(), run["script"])
+                self.assertTrue(piece.ends_with_exit(path), f'{run["script"]}: last command must be "exit"')
+
+    def test_every_out_is_under_docs_checkpoints(self) -> None:
+        for row in targets.load():
+            for run in row["runs"]:
+                out = pathlib.PurePosixPath(run["out"])
+                self.assertEqual(out.parts[:2], ("docs", "checkpoints"), run["out"])
+
+    def test_doc_block_matches_the_manifest(self) -> None:
+        doc = targets.DOC.read_text()
+        begin = doc.index(targets.DOC_BEGIN)
+        end = doc.index(targets.DOC_END)
+        block = doc[begin + len(targets.DOC_BEGIN) + 1 : end - 1]
+        self.assertEqual(block, targets.markdown())
 
 
 if __name__ == "__main__":
