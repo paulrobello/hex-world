@@ -1070,6 +1070,7 @@ mod tests {
     /// the world shows in the next frame's copy. The only test touching `LATEST`.
     #[test]
     fn save_now_encodes_the_latest_frame_without_a_queued_command() {
+        let _outbox = outbox();
         use bevy::ecs::system::RunSystemOnce;
         let (game, cam) = played();
         let mut world = bevy::prelude::World::new();
@@ -1186,6 +1187,7 @@ mod tests {
     /// autosave resume) does not count as their choice, so the tier keeps driving tilt-shift.
     #[test]
     fn an_unchosen_save_leaves_the_tier_driving_tilt_shift() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let mut tilt = Tilt {
             s: TiltShiftSettings {
