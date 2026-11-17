@@ -373,6 +373,6 @@ mod target_tests {
 
     #[test]
     fn the_settle_window_fits_inside_the_frame_cap() {
-        assert!(MIN_FRAMES + WARM_SETTLE_FRAMES <= MAX_FRAMES);
+        const { assert!(MIN_FRAMES + WARM_SETTLE_FRAMES <= MAX_FRAMES) };
     }
 }

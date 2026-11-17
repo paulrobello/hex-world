@@ -769,16 +769,16 @@ impl World {
             let kind = self
                 .facing(catalog, cell.neighbor(w), opposite_edge(w))
                 .map(|f| f.socket.kind);
-            if let Some(kind) = kind {
-                if !seen.contains(&kind) {
-                    seen.push(kind);
-                    if !def
-                        .edges
-                        .iter()
-                        .any(|e| catalog.sockets().kinds_compatible(kind, e.kind))
-                    {
-                        return Some(Refusal::Missing { kind });
-                    }
+            if let Some(kind) = kind
+                && !seen.contains(&kind)
+            {
+                seen.push(kind);
+                if !def
+                    .edges
+                    .iter()
+                    .any(|e| catalog.sockets().kinds_compatible(kind, e.kind))
+                {
+                    return Some(Refusal::Missing { kind });
                 }
             }
         }
