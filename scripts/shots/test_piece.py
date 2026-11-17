@@ -148,6 +148,10 @@ class Shoot(unittest.TestCase):
 class Targets(unittest.TestCase):
     """The shots manifest (scripts/shots/targets.json) and its generated doc block."""
 
+    # CI's sparse checkout excludes all of docs/ (the checkpoint media), so the two
+    # file-backed cases skip there and run in the local gates. The manifest itself
+    # travels in scripts/ and its two pure cases always run.
+
     def test_manifest_rows_are_well_formed(self) -> None:
         # load() itself raises on a bad row shape or a duplicate name.
         rows = targets.load()
@@ -158,6 +162,8 @@ class Targets(unittest.TestCase):
             self.assertTrue(row["doc"].strip())
 
     def test_every_script_exists_and_ends_with_exit(self) -> None:
+        if not targets.DOC.exists():
+            self.skipTest("docs/ is absent (CI sparse checkout excludes it)")
         for row in targets.load():
             for run in row["runs"]:
                 path = targets.REPO / run["script"]
@@ -171,6 +177,8 @@ class Targets(unittest.TestCase):
                 self.assertEqual(out.parts[:2], ("docs", "checkpoints"), run["out"])
 
     def test_doc_block_matches_the_manifest(self) -> None:
+        if not targets.DOC.exists():
+            self.skipTest("docs/ is absent (CI sparse checkout excludes it)")
         doc = targets.DOC.read_text()
         begin = doc.index(targets.DOC_BEGIN)
         end = doc.index(targets.DOC_END)
