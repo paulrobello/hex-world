@@ -1077,12 +1077,16 @@ mod schema {
         let c = TileCatalog::builtin().unwrap();
         let worlds = [
             scripted_world(include_str!("../../../docs/checkpoints/play/play.json")),
-            scripted_world(include_str!("../../../docs/checkpoints/water-play/water-play.json")),
+            scripted_world(include_str!(
+                "../../../docs/checkpoints/water-play/water-play.json"
+            )),
             scripted_world(COAST_PART_BUILT),
             scripted_world(include_str!("../../../docs/checkpoints/coast/coast.json")),
             rail_ends_world(&c),
             raised_world(&c),
-            scripted_world(include_str!("../../../docs/checkpoints/elevation/elevation.json")),
+            scripted_world(include_str!(
+                "../../../docs/checkpoints/elevation/elevation.json"
+            )),
             massif_world(&c),
         ];
         for w in &worlds {
@@ -1118,7 +1122,8 @@ mod schema {
                                     .unwrap();
                                 let mut out: Vec<[u8; 2]> = vec![];
                                 for o in m["orientations"].as_array().unwrap() {
-                                    let rot = u8::try_from(o["rotation"].as_u64().unwrap()).unwrap();
+                                    let rot =
+                                        u8::try_from(o["rotation"].as_u64().unwrap()).unwrap();
                                     let level = u8::try_from(o["level"].as_u64().unwrap()).unwrap();
                                     if !out
                                         .iter()

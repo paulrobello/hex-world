@@ -120,9 +120,7 @@ pub enum Refusal {
     /// can be here.
     InnerSlot,
     /// No edge of the tile meets the slot's need `kind`.
-    Missing {
-        kind: SocketKind,
-    },
+    Missing { kind: SocketKind },
     /// A deck end faces an empty cell: the deck spans to the rail it meets.
     DeckEnd,
     /// The tile's `mine` kind meets the placed `theirs` kind across an edge.
@@ -167,10 +165,15 @@ impl Refusal {
     /// Every code the placement check can return, in the order bridge-schema.json's
     /// `enums.refusal` lists them.
     pub fn codes() -> Vec<String> {
-        let mut out: Vec<String> = ["inner_slot", "deck_end", "footprint_edges", "no_footprint_room"]
-            .iter()
-            .map(|s| s.to_string())
-            .collect();
+        let mut out: Vec<String> = [
+            "inner_slot",
+            "deck_end",
+            "footprint_edges",
+            "no_footprint_room",
+        ]
+        .iter()
+        .map(|s| s.to_string())
+        .collect();
         for kind in SocketKind::ALL {
             out.push(format!("missing_{}", kind_word(kind)));
         }
@@ -693,7 +696,13 @@ impl World {
     /// The world edges where `def` ghosted at `cell` in `o` fails the placement check
     /// ([`World::fits`]): an edge whose neighbour socket does not fit, or a deck end with nothing
     /// placed across it (a viaduct's deck spans to the rail it meets). The sheet's `clashes`.
-    fn clash_edges(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> Vec<u8> {
+    fn clash_edges(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> Vec<u8> {
         let mut out = vec![];
         each_face(cell, def, o, |m, w, mine| {
             let status = self.face(catalog, m, w, mine, false).status;
@@ -708,7 +717,13 @@ impl World {
     }
 
     /// How many world edges [`World::clash_edges`] finds (fewest wins, the sheet's `bestK`).
-    pub fn clash_count(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> usize {
+    pub fn clash_count(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> usize {
         self.clash_edges(catalog, cell, def, o).len()
     }
 
@@ -717,7 +732,12 @@ impl World {
     /// wording (ENH-002). Classification first found in the sheet's mirror, kept in step:
     /// a need no edge of the tile meets takes precedence over what the least-clashing rotation's
     /// first clashing edge meets.
-    pub fn placement_refusal(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef) -> Option<Refusal> {
+    pub fn placement_refusal(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+    ) -> Option<Refusal> {
         if !self.legal_orientations(catalog, cell, def).is_empty() {
             return None;
         }
@@ -734,7 +754,12 @@ impl World {
         }
         // The least-clashing rotation at level 0, the first on ties (the mirror's `bestK`).
         let best = (0..6)
-            .map(|k| (self.clash_count(catalog, cell, def, Orientation::new(k, 0)), k))
+            .map(|k| {
+                (
+                    self.clash_count(catalog, cell, def, Orientation::new(k, 0)),
+                    k,
+                )
+            })
             .min()
             .unwrap_or((0, 0))
             .1;
@@ -3600,21 +3625,28 @@ pub(crate) mod tests {
     /// Codes are flat snake_case strings, one per closed-set member.
     #[test]
     fn refusal_codes_are_flat_strings() {
+        assert_eq!(Refusal::InnerSlot.code(), "inner_slot",);
         assert_eq!(
-            Refusal::InnerSlot.code(),
-            "inner_slot",
-        );
-        assert_eq!(
-            Refusal::Clash { mine: SocketKind::Grass, theirs: SocketKind::Beach }.code(),
+            Refusal::Clash {
+                mine: SocketKind::Grass,
+                theirs: SocketKind::Beach
+            }
+            .code(),
             "clash_grass_beach",
         );
         assert_eq!(
-            serde_json::to_value(Refusal::Missing { kind: SocketKind::Beach }).unwrap(),
+            serde_json::to_value(Refusal::Missing {
+                kind: SocketKind::Beach
+            })
+            .unwrap(),
             serde_json::json!("missing_beach"),
         );
         // The closed set: the four fixed codes, a missing_ code per kind, a clash_ code per pair.
         let codes = Refusal::codes();
-        assert_eq!(codes.len(), 4 + SocketKind::ALL.len() + SocketKind::ALL.len() * SocketKind::ALL.len());
+        assert_eq!(
+            codes.len(),
+            4 + SocketKind::ALL.len() + SocketKind::ALL.len() * SocketKind::ALL.len()
+        );
         assert_eq!(codes[0], "inner_slot");
         assert_eq!(codes[1], "deck_end");
         assert_eq!(codes[2], "footprint_edges");
@@ -3632,7 +3664,9 @@ pub(crate) mod tests {
         let w = World::new(1);
         assert_eq!(
             w.placement_refusal(&c, Axial::new(1, 0), c.get("ocean").unwrap()),
-            Some(Refusal::Missing { kind: SocketKind::Grass }),
+            Some(Refusal::Missing {
+                kind: SocketKind::Grass
+            }),
         );
         // DeckEnd: rail meadows hold the slot's sides, so every viaduct rotation clashes, and the
         // least-clashing rotation's first clashing edge faces an empty cell.
@@ -3684,8 +3718,14 @@ pub(crate) mod tests {
     fn placement_refusal_is_none_where_the_tile_fits() {
         let c = catalog();
         let w = World::new(1);
-        assert_eq!(w.placement_refusal(&c, Axial::new(1, 0), c.get("meadow").unwrap()), None);
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(1, 0), c.get("meadow").unwrap()),
+            None
+        );
         // A forest also fits beside the meadow, so its refusal is None too.
-        assert_eq!(w.placement_refusal(&c, Axial::new(1, 0), c.get("forest").unwrap()), None);
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(1, 0), c.get("forest").unwrap()),
+            None
+        );
     }
 }

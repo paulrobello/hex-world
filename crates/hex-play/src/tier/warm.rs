@@ -220,7 +220,9 @@ pub(super) fn warm(
     if let Some(live) = &mut state.live {
         live.frames += 1;
         live.quiet = if waiting == 0 { live.quiet + 1 } else { 0 };
-        if (live.frames >= MIN_FRAMES && live.quiet >= WARM_SETTLE_FRAMES) || live.frames >= MAX_FRAMES {
+        if (live.frames >= MIN_FRAMES && live.quiet >= WARM_SETTLE_FRAMES)
+            || live.frames >= MAX_FRAMES
+        {
             let live = state.live.take().unwrap();
             for e in live.entities {
                 commands.entity(e).try_despawn();

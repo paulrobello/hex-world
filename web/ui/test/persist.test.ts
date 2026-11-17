@@ -1009,10 +1009,7 @@ test("safe start after a crash: the raised flag skips the resume, the notice say
   await p.start();
   assert.equal(host.loads.length, 0, "no resume load");
   assert.equal(p.ready, true);
-  assert.equal(
-    notes[0]?.sub,
-    "Hex World did not finish opening it last time. Open, export or delete it from Worlds.",
-  );
+  assert.equal(notes[0]?.sub, "Hex World did not finish opening it last time. Open, export or delete it from Worlds.");
   assert.equal(resumeFlagRaised(), true, "no answer yet, so the flag stays for the next reload");
   // The player opens the world deliberately: the answered load clears the flag.
   host.result = { ok: true, tiles: 2, version: 1 };

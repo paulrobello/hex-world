@@ -1376,13 +1376,17 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
                 .map(|f| {
                     (
                         f.socket.kind,
-                        f.local.is_some_and(|e| catalog.rail_ends(f.def).0 & (1 << e) != 0),
+                        f.local
+                            .is_some_and(|e| catalog.rail_ends(f.def).0 & (1 << e) != 0),
                     )
                 })
         })
         .collect();
     let needs: Vec<Option<SocketKind>> = facings.iter().map(|f| f.as_ref().map(|f| f.0)).collect();
-    let stopped: Vec<bool> = facings.iter().map(|f| f.as_ref().is_some_and(|f| f.1)).collect();
+    let stopped: Vec<bool> = facings
+        .iter()
+        .map(|f| f.as_ref().is_some_and(|f| f.1))
+        .collect();
     let entries = catalog
         .picker()
         .iter()
@@ -1435,8 +1439,7 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
                             worst = Some((m, count));
                         }
                     }
-                    world
-                        .placement_refusal(catalog, slot, worst.expect("the entry has members").0)
+                    world.placement_refusal(catalog, slot, worst.expect("the entry has members").0)
                 }
             } else {
                 None
@@ -1585,7 +1588,12 @@ mod tests {
         let slot = g.world.frontier()[0];
         let fits = g.fits_of(slot);
         let json = serde_json::to_string(&*fits).unwrap();
-        let max_entry = fits.entries.iter().map(|e| e.orientations.len()).max().unwrap();
+        let max_entry = fits
+            .entries
+            .iter()
+            .map(|e| e.orientations.len())
+            .max()
+            .unwrap();
         let total: usize = fits.entries.iter().map(|e| e.orientations.len()).sum();
         let refused = fits.entries.iter().filter(|e| e.refusal.is_some()).count();
         println!(
