@@ -252,12 +252,14 @@ await withPage(["--disable-gpu"], async (page) => {
 });
 
 // 4. Forced WGSL compat shim (web/wgsl-compat.js, the Safari path): Tint must accept every rewritten module.
-// Exact per-module alias counts pin Bevy 0.20's PBR fragment shader (8 handle lets); a Bevy bump that changes
-// them must be re-checked in Safari. A pipeline compiled before the IBL loads is specialized again after it,
-// so the same fragment can be rewritten twice under host load: the shim records each rewritten module's
-// alias count (perModule), and every one must match exactly, however many modules a run rewrites.
-const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.perModule?.length === c.rewritten &&
-  c.perModule.every((n) => n === perModule) && c.aliases === perModule * c.rewritten;
+// Bevy 0.20's plain StandardMaterial PBR fragment contributes 8 handle lets. Its normal-map
+// variant adds exactly 2 (texture + sampler in pbr_fragment.wesl, gated by VERTEX_UVS &&
+// VERTEX_TANGENTS && STANDARD_MATERIAL_NORMAL_MAP), hence 10, including for BoidMaterial.
+// Coordinates are values, not handle aliases. IBL arrival can re-specialize either variant,
+// so module multiplicity is not pinned, but every module and the total must match exactly.
+const compatOk = (c, perModule) => c?.active && c.rewritten >= 1 && c.unhandled === 0 &&
+  c.perModule?.length === c.rewritten && c.perModule.every((n) => n === perModule || n === perModule + 2) &&
+  c.aliases === c.perModule.reduce((sum, n) => sum + n, 0);
 for (const [query, aliases] of [["?wgsl_compat=1&scenario=single", 8],
   ["?wgsl_compat=1&scenario=gate2000&view=closeup&layout=instanced", 8]]) {
   await withPage(gpuArgs(), async (page) => {
@@ -265,7 +267,7 @@ for (const [query, aliases] of [["?wgsl_compat=1&scenario=single", 8],
     await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 });
     const compat = await page.evaluate(() => window.__wgslCompat);
     if (!compatOk(compat, aliases))
-      fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
+      fail(`wgsl-compat ${query}: expected ${aliases} or ${aliases + 2} aliases per rewritten module, got ` + JSON.stringify(compat));
     else console.log(`wgsl-compat ${query}: ${compat.rewritten} module(s), ${compat.aliases} aliases, ${compat.ms.toFixed(1)} ms`);
     if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
   });
@@ -368,7 +370,7 @@ for (const [query, aliases, clamp] of [["?scenario=kit&kit_src=fixture", null, n
     }
     if (aliases !== null) {
       if (!compatOk(compat, aliases))
-        fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
+        fail(`wgsl-compat ${query}: expected ${aliases} or ${aliases + 2} aliases per rewritten module, got ` + JSON.stringify(compat));
       if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
       if (!marked?.some((m) => m.before > 0 && m.after === 0))
         fail(`wgsl-compat ${query}: the kit fragment (masks_texture) was not rewritten: ` + JSON.stringify(marked));
@@ -425,7 +427,7 @@ for (const [query, aliases, clamp] of [["?scenario=water&post=full", null, WEBGP
     }
     if (aliases !== null) {
       if (!compatOk(compat, aliases))
-        fail(`wgsl-compat ${query}: expected ${aliases} aliases per rewritten module, got ` + JSON.stringify(compat));
+        fail(`wgsl-compat ${query}: expected ${aliases} or ${aliases + 2} aliases per rewritten module, got ` + JSON.stringify(compat));
       if (compat?.unhandled) fail(`wgsl-compat ${query} left handle lets unrewritten: ` + compat.unhandled);
       if (!marked?.length || !marked.every((m) => m.after === 0))
         fail(`wgsl-compat ${query}: the water module kept handle aliases: ` + JSON.stringify(marked));
@@ -666,7 +668,9 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     const added = after.sampled.labels.slice(created, drawnAt ?? undefined);
     console.log(`${tag}: the change to Medium drawn ${drawn}, ${added.length} pipelines created ${JSON.stringify(added)}; tiles ${after.state.tiles}`);
     if (!drawn) fail(`${tag}: the change to Medium was never drawn: ${JSON.stringify(after.state.tier)}`);
-    if (added.length) fail(`${tag}: the change to Medium created ${added.length} pipelines after the warm-up: ${JSON.stringify(added)}`);
+    if (added.length)
+      fail(`${tag}: the change to Medium created ${added.length} pipelines after the warm-up: ${JSON.stringify(added)}; ` +
+        `kit layouts ${JSON.stringify(after.sampled.kit)}, water layouts ${JSON.stringify(after.sampled.water)}`);
     if (after.state.tiles !== 5) fail(`${tag}: tiles ${after.state.tiles} after the change, expected 5`);
     if (!(after.sampled.max <= clamp)) fail(`${tag}: a pipeline layout uses ${after.sampled.max} sampled textures`);
   });
@@ -1015,9 +1019,15 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     await frames(page, 60);
     const canvas = page.locator("canvas#hex-world");
     const before = (await canvas.screenshot()).toString("base64");
-    await cmd({ cmd: "set_car_cap", cap: 1 });
-    await cmd({ cmd: "wait", frames: 6 });
-    await cmd({ cmd: "photo", pause_agents: true });
+    // Queue the whole sample window in one browser task: round trips between these commands can
+    // exhaust the 250 ms fade before the pause arrives. During must include the excess fading
+    // cars (at least 3 total); after resuming, only the cap's single survivor may remain.
+    await page.evaluate(() => {
+      const h = window.hexWorld;
+      h.cmd({ cmd: "set_car_cap", cap: 1 });
+      h.cmd({ cmd: "wait", frames: 2 });
+      h.cmd({ cmd: "photo", pause_agents: true });
+    });
     // Elapsed time is the thing measured: the cars fade out over their fade duration, not a frame count.
     await page.waitForTimeout(1_000);
     const fading = (await canvas.screenshot()).toString("base64");

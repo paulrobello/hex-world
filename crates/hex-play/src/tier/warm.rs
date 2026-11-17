@@ -45,6 +45,11 @@ pub const STABLE_FRAMES: u32 = 60;
 /// view's key gains the environment map a frame or two after it first draws (Bevy gathers its light
 /// probes late), so a shorter warm-up specializes for a key no game camera has.
 pub const MIN_FRAMES: u32 = 10;
+/// Frames with nothing waiting that a warm-up draws past [`MIN_FRAMES`] before it ends. The per-view
+/// queues specialize through the warm cameras on different frames (the kit chunk queue, material
+/// preparation, pack completions), and the first quiet frame can precede a path's first request, so
+/// the warm-up must hold through that variance instead of ending at the earliest quiet frame.
+pub const WARM_SETTLE_FRAMES: u32 = 30;
 pub const MAX_FRAMES: u32 = 120;
 /// The layer only warm cameras see: their copy of a water surface on another tier's variant.
 pub const WARM_LAYER: usize = 7;
@@ -106,6 +111,7 @@ impl WarmReport {
 struct Live {
     entities: Vec<Entity>,
     frames: u32,
+    quiet: u32,
     before: usize,
     from: QualityTier,
     tiers: Vec<QualityTier>,
@@ -213,7 +219,8 @@ pub(super) fn warm(
     };
     if let Some(live) = &mut state.live {
         live.frames += 1;
-        if (live.frames >= MIN_FRAMES && waiting == 0) || live.frames >= MAX_FRAMES {
+        live.quiet = if waiting == 0 { live.quiet + 1 } else { 0 };
+        if (live.frames >= MIN_FRAMES && live.quiet >= WARM_SETTLE_FRAMES) || live.frames >= MAX_FRAMES {
             let live = state.live.take().unwrap();
             for e in live.entities {
                 commands.entity(e).try_despawn();
@@ -270,6 +277,15 @@ pub(super) fn warm(
         .iter()
         .next()
         .and_then(|(mesh, mat)| Some((mesh.0.clone(), water_mats.get(&mat.0)?.clone())));
+    // Source of truth for the pipeline set a warm-up must cover: the per-view specializations the
+    // render queues create for a camera carrying the target tier's components, enumerated in
+    // crates/hex-render/src/kit_instances.rs `queue_kit` — KitKey = view key | primitive topology |
+    // material pipeline bits | LOD-band dither, plus the material's StandardMaterialKey bits — for
+    // the instanced chunk path, bevy_pbr's material queue for the per-entity meshes, and
+    // `WaterKey::for_tier` for the water variant. The warm set reproduces exactly those inputs per
+    // neighbour tier: a clone of the game camera with the tier's SSAO and transmission
+    // (`set_camera_ssao`, `set_transmission`), drawing the live scene, beside a water copy on the
+    // tier's variant that only the warm cameras see.
     for &tier in &tiers {
         entities.push(spawn_camera(
             &mut commands,
@@ -309,6 +325,7 @@ pub(super) fn warm(
     state.live = Some(Live {
         entities,
         frames: 0,
+        quiet: 0,
         before: cached,
         from: config.tier,
         tiers,
@@ -350,5 +367,10 @@ mod target_tests {
         for t in [Low, Medium, High, Ultra] {
             assert!(!targets(t).contains(&t));
         }
+    }
+
+    #[test]
+    fn the_settle_window_fits_inside_the_frame_cap() {
+        assert!(MIN_FRAMES + WARM_SETTLE_FRAMES <= MAX_FRAMES);
     }
 }
