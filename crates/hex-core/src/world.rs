@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use crate::axial::Axial;
 use crate::catalog::{Facing, START_TILE, TileCatalog};
 use crate::footprint;
-use crate::socket::HeightMeet;
+use crate::socket::{HeightMeet, SocketKind};
 use crate::tile::{EdgePieces, KitRef, TileDef, local_edge, opposite_edge};
 use crate::tunnel;
 
@@ -110,6 +110,84 @@ impl fmt::Display for PlaceError {
 }
 
 impl std::error::Error for PlaceError {}
+
+/// Why a tile has no legal orientation at a slot (ENH-002): a closed set that crosses the bridge
+/// as a string code (`play.fits` entries' `refusal`, contract-tested through `enums.refusal` in
+/// bridge-schema.json) and is worded in web/ui/src/words.ts. The wording stays out of the engine.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Refusal {
+    /// The cell is inside the world: only a footprint tile, standing on a covering legal centre,
+    /// can be here.
+    InnerSlot,
+    /// No edge of the tile meets the slot's need `kind`.
+    Missing {
+        kind: SocketKind,
+    },
+    /// A deck end faces an empty cell: the deck spans to the rail it meets.
+    DeckEnd,
+    /// The tile's `mine` kind meets the placed `theirs` kind across an edge.
+    Clash {
+        mine: SocketKind,
+        theirs: SocketKind,
+    },
+    /// A footprint tile's outer edges clash at every free centre beside the slot.
+    FootprintEdges,
+    /// A footprint tile has no seven free cells beside the world.
+    NoFootprintRoom,
+}
+
+/// The lower-case word for a socket kind in a [`Refusal`] code.
+fn kind_word(kind: SocketKind) -> &'static str {
+    match kind {
+        SocketKind::Grass => "grass",
+        SocketKind::Forest => "forest",
+        SocketKind::Road => "road",
+        SocketKind::River => "river",
+        SocketKind::Beach => "beach",
+        SocketKind::Ocean => "ocean",
+        SocketKind::Rail => "rail",
+    }
+}
+
+impl Refusal {
+    /// The code the bridge publishes, kind pairs in kind-word order.
+    pub fn code(&self) -> String {
+        match self {
+            Refusal::InnerSlot => "inner_slot".into(),
+            Refusal::Missing { kind } => format!("missing_{}", kind_word(*kind)),
+            Refusal::DeckEnd => "deck_end".into(),
+            Refusal::Clash { mine, theirs } => {
+                format!("clash_{}_{}", kind_word(*mine), kind_word(*theirs))
+            }
+            Refusal::FootprintEdges => "footprint_edges".into(),
+            Refusal::NoFootprintRoom => "no_footprint_room".into(),
+        }
+    }
+
+    /// Every code the placement check can return, in the order bridge-schema.json's
+    /// `enums.refusal` lists them.
+    pub fn codes() -> Vec<String> {
+        let mut out: Vec<String> = ["inner_slot", "deck_end", "footprint_edges", "no_footprint_room"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        for kind in SocketKind::ALL {
+            out.push(format!("missing_{}", kind_word(kind)));
+        }
+        for mine in SocketKind::ALL {
+            for theirs in SocketKind::ALL {
+                out.push(format!("clash_{}_{}", kind_word(mine), kind_word(theirs)));
+            }
+        }
+        out
+    }
+}
+
+impl serde::Serialize for Refusal {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.code())
+    }
+}
 
 /// A removal refusal: the remaining world must stay nonempty and connected.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -610,6 +688,91 @@ impl World {
                     .any(|l| (0..6).any(|k| self.fits(catalog, cell, def, Orientation::new(k, l))))
             })
             .collect()
+    }
+
+    /// The world edges where `def` ghosted at `cell` in `o` fails the placement check
+    /// ([`World::fits`]): an edge whose neighbour socket does not fit, or a deck end with nothing
+    /// placed across it (a viaduct's deck spans to the rail it meets). The sheet's `clashes`.
+    fn clash_edges(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> Vec<u8> {
+        let mut out = vec![];
+        each_face(cell, def, o, |m, w, mine| {
+            let status = self.face(catalog, m, w, mine, false).status;
+            if status == EdgeStatus::Incompatible
+                || (mine.socket.deck() > 0 && status != EdgeStatus::Compatible)
+            {
+                out.push(w);
+            }
+            true
+        });
+        out
+    }
+
+    /// How many world edges [`World::clash_edges`] finds (fewest wins, the sheet's `bestK`).
+    pub fn clash_count(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> usize {
+        self.clash_edges(catalog, cell, def, o).len()
+    }
+
+    /// Why `def` has no legal orientation with its anchor at `cell` ([`World::legal_orientations`]
+    /// is empty), or `None` when it fits: the codes `play.fits` publishes for the sheet's refusal
+    /// wording (ENH-002). Classification first found in the sheet's mirror, kept in step:
+    /// a need no edge of the tile meets takes precedence over what the least-clashing rotation's
+    /// first clashing edge meets.
+    pub fn placement_refusal(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef) -> Option<Refusal> {
+        if !self.legal_orientations(catalog, cell, def).is_empty() {
+            return None;
+        }
+        if !self.is_slot_for(cell, def) {
+            return Some(if def.is_mega() {
+                Refusal::NoFootprintRoom
+            } else {
+                Refusal::InnerSlot
+            });
+        }
+        if def.is_mega() {
+            // Room at this centre, but every orientation clashes on an outer edge.
+            return Some(Refusal::FootprintEdges);
+        }
+        // The least-clashing rotation at level 0, the first on ties (the mirror's `bestK`).
+        let best = (0..6)
+            .map(|k| (self.clash_count(catalog, cell, def, Orientation::new(k, 0)), k))
+            .min()
+            .unwrap_or((0, 0))
+            .1;
+        // The first need kind in edge order that no edge of `def` meets (the mirror's `lacking`).
+        let mut seen: Vec<SocketKind> = vec![];
+        for w in 0..6 {
+            let kind = self
+                .facing(catalog, cell.neighbor(w), opposite_edge(w))
+                .map(|f| f.socket.kind);
+            if let Some(kind) = kind {
+                if !seen.contains(&kind) {
+                    seen.push(kind);
+                    if !def
+                        .edges
+                        .iter()
+                        .any(|e| catalog.sockets().kinds_compatible(kind, e.kind))
+                    {
+                        return Some(Refusal::Missing { kind });
+                    }
+                }
+            }
+        }
+        let w = self
+            .clash_edges(catalog, cell, def, Orientation::new(best, 0))
+            .into_iter()
+            .next()
+            .expect("a tile with no legal orientation has a clashing edge");
+        match self.facing(catalog, cell.neighbor(w), opposite_edge(w)) {
+            // Only a deck end clashes with nothing placed across it.
+            None => Some(Refusal::DeckEnd),
+            Some(theirs) => {
+                let mine = Facing::single(def, best, 0, w);
+                Some(Refusal::Clash {
+                    mine: mine.socket.kind,
+                    theirs: theirs.socket.kind,
+                })
+            }
+        }
     }
 
     /// Every legal centre for the mega tile `def`, sorted, with its legal orientations
@@ -3432,5 +3595,97 @@ pub(crate) mod tests {
             Err(ReplaceError::TunnelCover)
         );
         assert!(!w.can_undo());
+    }
+
+    /// Codes are flat snake_case strings, one per closed-set member.
+    #[test]
+    fn refusal_codes_are_flat_strings() {
+        assert_eq!(
+            Refusal::InnerSlot.code(),
+            "inner_slot",
+        );
+        assert_eq!(
+            Refusal::Clash { mine: SocketKind::Grass, theirs: SocketKind::Beach }.code(),
+            "clash_grass_beach",
+        );
+        assert_eq!(
+            serde_json::to_value(Refusal::Missing { kind: SocketKind::Beach }).unwrap(),
+            serde_json::json!("missing_beach"),
+        );
+        // The closed set: the four fixed codes, a missing_ code per kind, a clash_ code per pair.
+        let codes = Refusal::codes();
+        assert_eq!(codes.len(), 4 + SocketKind::ALL.len() + SocketKind::ALL.len() * SocketKind::ALL.len());
+        assert_eq!(codes[0], "inner_slot");
+        assert_eq!(codes[1], "deck_end");
+        assert_eq!(codes[2], "footprint_edges");
+        assert_eq!(codes[3], "no_footprint_room");
+        assert_eq!(codes[4], "missing_grass");
+        assert_eq!(codes.last().unwrap(), "clash_rail_rail");
+    }
+
+    /// Each refusal code fires where the mirror's wording for it does (ENH-002), on worlds built
+    /// from legal placements alone.
+    #[test]
+    fn placement_refusal_classifies_each_reason() {
+        let c = catalog();
+        // Missing: an ocean tile has no edge that meets the start meadow's grass.
+        let w = World::new(1);
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(1, 0), c.get("ocean").unwrap()),
+            Some(Refusal::Missing { kind: SocketKind::Grass }),
+        );
+        // DeckEnd: rail meadows hold the slot's sides, so every viaduct rotation clashes, and the
+        // least-clashing rotation's first clashing edge faces an empty cell.
+        let mut w = World::new(1);
+        for (q, r) in [(1, 0), (2, -1), (1, 1), (2, 1)] {
+            w.place(&c, Axial::new(q, r), "meadow", o(0, 0)).unwrap();
+        }
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(2, 0), c.get("rail_viaduct_l1").unwrap()),
+            Some(Refusal::DeckEnd),
+        );
+        // InnerSlot: (2,1) touches no placed tile, so only a footprint tile can be there.
+        let w = World::new(1);
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(2, 1), c.get("meadow").unwrap()),
+            Some(Refusal::InnerSlot),
+        );
+        // NoFootprintRoom: far outside the world, a massif has no seven free cells beside it.
+        let w = World::new(1);
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(7, 7), c.get("massif_granite").unwrap()),
+            Some(Refusal::NoFootprintRoom),
+        );
+        // FootprintEdges: a beach past (1,0) holds room beside the world, but its coast runs the
+        // wrong way for a massif member, which faces it as grass at every rotation.
+        let mut w = World::new(1);
+        w.place(&c, Axial::new(1, 0), "beach", o(5, 0)).unwrap();
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(2, 1), c.get("massif_granite").unwrap()),
+            Some(Refusal::FootprintEdges),
+        );
+        // Clash: the road junction's road edges would dead-end into the two meadows, and its
+        // grass edges keep the need kinds met, so the least-clashing rotation's first clashing
+        // edge is a road edge facing grass.
+        let mut w = World::new(1);
+        w.place(&c, Axial::new(1, 0), "meadow", o(0, 0)).unwrap();
+        assert_eq!(
+            w.placement_refusal(&c, Axial::new(0, 1), c.get("road_junction").unwrap()),
+            Some(Refusal::Clash {
+                mine: SocketKind::Road,
+                theirs: SocketKind::Grass,
+            }),
+        );
+    }
+
+    /// The classification agrees with the mirror's wording order: the same slot's needs name the
+    /// missing kind, and a fitting tile has no refusal.
+    #[test]
+    fn placement_refusal_is_none_where_the_tile_fits() {
+        let c = catalog();
+        let w = World::new(1);
+        assert_eq!(w.placement_refusal(&c, Axial::new(1, 0), c.get("meadow").unwrap()), None);
+        // A forest also fits beside the meadow, so its refusal is None too.
+        assert_eq!(w.placement_refusal(&c, Axial::new(1, 0), c.get("forest").unwrap()), None);
     }
 }

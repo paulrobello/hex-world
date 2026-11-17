@@ -1,7 +1,8 @@
 // Player-facing words: tile names, coordinates, and the toast and tag lines built from engine
 // facts (the engine's own reason strings are for logs, not players).
-import type { Cell, PlayTile } from "./bridge.ts";
+import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
 import type { TileDiff } from "./rules.ts";
+import schema from "./bridge-schema.json" with { type: "json" };
 
 /** Display names for every catalog id (test/rules.test.ts keeps it in step with the catalog). */
 export const TILE_NAMES: Record<string, string> = {
@@ -122,3 +123,57 @@ export function bulldozeRefusal(reason: string | null, cut: readonly PlayTile[])
   }
   return { head: "This tile can't be removed", sub: reason ?? "" };
 }
+
+/** Socket kinds in hex-core declaration order (the order `enums.refusal` lists kind codes in). */
+const KINDS: SocketKind[] = ["Grass", "Forest", "Road", "River", "Beach", "Ocean", "Rail"];
+const COMPAT = schema.catalog.compatible as Record<SocketKind, SocketKind[]>;
+
+/** What may meet a need, the needed kind first ("Ocean or beach") — rules.ts's `accepting`. */
+const accepting = (n: SocketKind): SocketKind[] => [n, ...COMPAT[n].filter((k) => k !== n)];
+
+/** Why a tile cannot meet a socket kind at all — rules.ts's `missing`, verbatim. */
+const missingWord = (n: SocketKind): string => {
+  if (n === "River" || n === "Road" || n === "Rail" || n === "Beach")
+    return `Needs a ${n.toLowerCase()} edge to meet the ${n.toLowerCase()}.`;
+  const all = accepting(n).map((k) => k.toLowerCase());
+  const phrase = all.length === 1 ? all[0]! : `${all.slice(0, -1).join(", ")} or ${all.at(-1)}`;
+  return `Needs ${phrase} to meet the ${n === "Ocean" ? "sea" : n.toLowerCase()}.`;
+};
+
+/** Where a beach would end: "the sea" for ocean, else the kind — rules.ts's `end`. */
+const end = (k: SocketKind): string => (k === "Ocean" ? "the sea" : `the ${k.toLowerCase()}`);
+
+/** Why a tile's edge kind cannot meet the placed edge it faces — rules.ts's `clashPhrase`, verbatim. */
+const clashWord = (mine: SocketKind, theirs: SocketKind): string => {
+  if (mine === "Road") return `Its road would dead-end into the ${theirs.toLowerCase()}.`;
+  if (mine === "River") return `Its river would run into the ${theirs.toLowerCase()}.`;
+  if (mine === "Rail") return `Its railway would dead-end into the ${theirs.toLowerCase()}.`;
+  if (theirs === "Road") return `The road here would dead-end into its ${mine.toLowerCase()}.`;
+  if (theirs === "River") return `The river here would run into its ${mine.toLowerCase()}.`;
+  if (theirs === "Rail") return `The railway here would dead-end into its ${mine.toLowerCase()}.`;
+  // Beach meets only beach, with the land on opposite sides (owner O1): beach on beach is a side clash.
+  if (mine === "Beach" && theirs === "Beach") return "The coast here runs the other way.";
+  if (mine === "Beach") return `Its beach would end at ${end(theirs)}.`;
+  if (theirs === "Beach") return `The beach here would end at its ${mine === "Ocean" ? "sea" : mine.toLowerCase()}.`;
+  if (mine === "Ocean") return `Ocean can't meet ${theirs.toLowerCase()}. Coasts need a beach.`;
+  if (theirs === "Ocean") return `${mine} can't meet the ocean. Coasts need a beach.`;
+  return `${mine} can't meet ${theirs.toLowerCase()}.`;
+};
+
+/**
+ * Every refusal code's player-facing wording (ENH-002 step 2), copied from the mirror's own
+ * phrases so nothing changes user-visibly. rules.test.ts keeps every schema code covered here.
+ */
+const REFUSAL_WORDS: Record<string, string> = {
+  inner_slot: FOOTPRINT_INNER,
+  deck_end: DECK_END_REFUSAL,
+  footprint_edges: FOOTPRINT_EDGES,
+  no_footprint_room: FOOTPRINT_REFUSAL,
+};
+for (const k of KINDS) REFUSAL_WORDS[`missing_${k.toLowerCase()}`] = missingWord(k);
+for (const mine of KINDS)
+  for (const theirs of KINDS)
+    REFUSAL_WORDS[`clash_${mine.toLowerCase()}_${theirs.toLowerCase()}`] = clashWord(mine, theirs);
+
+/** The wording for an engine refusal code, empty for one the sheet does not word yet. */
+export const refusalWord = (code: string): string => REFUSAL_WORDS[code] ?? "";

@@ -575,8 +575,8 @@ const listOr = (xs: string[]): string => (xs.length === 1 ? xs[0]! : `${xs.slice
 const accepting = (n: SocketKind): SocketKind[] =>
   [n, ...COMPAT[n].filter((k) => k !== n)].filter((k) => COMPAT[n].includes(k));
 
-/** Why a tile cannot meet a socket kind at all. */
-function missing(n: SocketKind): string {
+/** Why a tile cannot meet a socket kind at all (words.ts words the engine's refusal codes with this). */
+export function missing(n: SocketKind): string {
   if (n === "River" || n === "Road" || n === "Rail" || n === "Beach")
     return `Needs a ${lower(n)} edge to meet the ${lower(n)}.`;
   return `Needs ${listOr(accepting(n).map(lower))} to meet the ${n === "Ocean" ? "sea" : lower(n)}.`;
@@ -585,7 +585,7 @@ function missing(n: SocketKind): string {
 /** Where a beach would end: "the sea" for ocean, else the kind ("the grass"). */
 const end = (k: SocketKind): string => (k === "Ocean" ? "the sea" : `the ${lower(k)}`);
 
-function clashPhrase(mine: SocketKind, theirs: SocketKind): string {
+export function clashPhrase(mine: SocketKind, theirs: SocketKind): string {
   if (mine === "Road") return `Its road would dead-end into the ${lower(theirs)}.`;
   if (mine === "River") return `Its river would run into the ${lower(theirs)}.`;
   if (mine === "Rail") return `Its railway would dead-end into the ${lower(theirs)}.`;

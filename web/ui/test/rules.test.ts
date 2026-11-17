@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { PlayTile } from "../src/bridge.ts";
+import type { PlayTile, SocketKind } from "../src/bridge.ts";
 import {
   TILES,
   cutOff,
@@ -29,6 +29,8 @@ import {
   needLines,
   needsAt,
   nothingFitsWhy,
+  missing,
+  clashPhrase,
   rotationReadout,
   summary,
   tileDef,
@@ -38,7 +40,9 @@ import {
   placementMeets,
 } from "../src/rules.ts";
 import {
+  DECK_END_REFUSAL,
   FOOTPRINT_EDGES,
+  FOOTPRINT_INNER,
   FOOTPRINT_REFUSAL,
   MASSIF_SWAP,
   SINGLE_SWAP,
@@ -46,7 +50,9 @@ import {
   actionText,
   bulldozeRefusal,
   coord,
+  refusalWord,
 } from "../src/words.ts";
+import schema from "../src/bridge-schema.json" with { type: "json" };
 import parity from "./rules-parity.json" with { type: "json" };
 
 const def = (id: string) => tileDef(id)!;
@@ -73,6 +79,29 @@ test("legal orientations match hex-core, in its order, at every frontier slot of
   }
   assert.ok(checked > 100, `checked ${checked}`);
   assert.ok(raised > 3, `slots beside raised tiles: ${raised}`);
+});
+
+test("every engine refusal code carries the mirror's wording, word for word (ENH-002)", () => {
+  const kind = (word: string): SocketKind => (word[0]!.toUpperCase() + word.slice(1)) as SocketKind;
+  for (const code of schema.enums.refusal) {
+    const said = refusalWord(code);
+    assert.ok(said.length > 0, `${code} has no wording in words.ts`);
+    const want =
+      code === "inner_slot"
+        ? FOOTPRINT_INNER
+        : code === "deck_end"
+          ? DECK_END_REFUSAL
+          : code === "footprint_edges"
+            ? FOOTPRINT_EDGES
+            : code === "no_footprint_room"
+              ? FOOTPRINT_REFUSAL
+              : code.startsWith("missing_")
+                ? missing(kind(code.slice("missing_".length)))
+                : code.startsWith("clash_")
+                  ? clashPhrase(...(code.slice("clash_".length).split("_").map(kind) as [SocketKind, SocketKind]))
+                  : "";
+    assert.equal(said, want, code);
+  }
 });
 
 test("heights meet seamless, as a cliff, or not at all (hex-core heights_meet)", () => {

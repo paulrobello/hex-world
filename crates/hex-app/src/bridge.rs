@@ -332,7 +332,10 @@ mod schema {
 
     use bevy::camera::CameraProjection;
     use bevy::prelude::{GlobalTransform, PerspectiveProjection, Transform, Vec2, Vec3};
-    use hex_core::{Axial, EdgeStatus, HEX_RADIUS, Orientation, SocketKind, TileCatalog, World};
+    use hex_core::{
+        Axial, EdgeStatus, HEX_RADIUS, Orientation, Refusal, SocketKind, TileCatalog, TileDef,
+        World,
+    };
     use serde_json::{Value, json};
 
     use super::{View, cell_rect};
@@ -744,6 +747,8 @@ mod schema {
             "mega_slot": keys(&place["mega_slots"][0]),
             "orientation": keys(&place["mega_slots"][0]["orientations"][0]),
             "bulldoze": keys(&bulldoze["bulldoze"]),
+            "fits": keys(&place["fits"]),
+            "fits_entry": keys(&place["fits"]["entries"][0]),
             "last_result": keys(&place["last_result"]),
             "tile": keys(&place["tiles"][0]),
             "rising": keys(&place["rising"][0]),
@@ -1020,6 +1025,7 @@ mod schema {
                 "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
                 "photo_filter": serde_variants::<crate::photo_fx::PhotoFilter>(r#""__none__""#),
                 "edge_status": edge_status_names(),
+                "refusal": Refusal::codes(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
                 "grass": hex_play::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
                 "grass_distance": hex_play::play::grass::GrassDistance::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
@@ -1047,6 +1053,119 @@ mod schema {
                 parity_of(&c, &massif_world(&c)),
             ],
         })
+    }
+
+    /// The world a script leaves, for the fits cross-check.
+    fn scripted_world(script: &str) -> World {
+        let mut g = GameState::new(1);
+        for cmd in parse_script(script).unwrap() {
+            if let Some(a) = cmd.action() {
+                g.apply(a);
+            }
+        }
+        g.world
+    }
+
+    /// The spike's `fits_at` agrees with the fixture's own answers: over every parity world and
+    /// every frontier slot, each entry's orientation list is hex-core's group merge (the sheet's
+    /// R-walk order) and holds exactly the fixture's per-tile legal orientations, deduped per
+    /// member; each footprint entry reads the fixture's own `mega_slots` for the centre covering
+    /// the slot. This is the shared-path check that lets the fixture retire with the mirror
+    /// (ENH-002 steps 3–5).
+    #[test]
+    fn fits_entries_match_the_parity_fixture() {
+        let c = TileCatalog::builtin().unwrap();
+        let worlds = [
+            scripted_world(include_str!("../../../docs/checkpoints/play/play.json")),
+            scripted_world(include_str!("../../../docs/checkpoints/water-play/water-play.json")),
+            scripted_world(COAST_PART_BUILT),
+            scripted_world(include_str!("../../../docs/checkpoints/coast/coast.json")),
+            rail_ends_world(&c),
+            raised_world(&c),
+            scripted_world(include_str!("../../../docs/checkpoints/elevation/elevation.json")),
+            massif_world(&c),
+        ];
+        for w in &worlds {
+            let fixture = parity_of(&c, w);
+            let slots = fixture["slots"].as_object().unwrap();
+            let mega = fixture["mega_slots"].as_array().unwrap();
+            let picker = c.picker();
+            for slot in w.frontier() {
+                let per_tile = &slots[&format!("{},{}", slot.q, slot.r)];
+                let fits = crate::game::fits_at(w, &c, slot);
+                assert_eq!(fits.slot, slot);
+                assert_eq!(fits.entries.len(), picker.len());
+                assert!(fits.entries.iter().zip(&picker).all(|(e, p)| e.id == p.id));
+                for entry in &fits.entries {
+                    let pick = picker.iter().find(|p| p.id == entry.id).unwrap();
+                    let members: Vec<&TileDef> =
+                        pick.tiles.iter().map(|id| c.get(id).unwrap()).collect();
+                    let at = format!("{} at {},{}", entry.id, slot.q, slot.r);
+                    if members[0].is_mega() {
+                        let def = members[0];
+                        let centre = std::iter::once(slot)
+                            .chain((0..6).map(|e| slot.neighbor(e)))
+                            .find(|&a| !w.legal_orientations(&c, a, def).is_empty());
+                        let expected: Vec<[u8; 2]> = match centre {
+                            Some(a) => {
+                                let m = mega
+                                    .iter()
+                                    .find(|m| {
+                                        m["tile"] == def.id.as_str()
+                                            && m["q"].as_i64() == Some(i64::from(a.q))
+                                            && m["r"].as_i64() == Some(i64::from(a.r))
+                                    })
+                                    .unwrap();
+                                let mut out: Vec<[u8; 2]> = vec![];
+                                for o in m["orientations"].as_array().unwrap() {
+                                    let rot = u8::try_from(o["rotation"].as_u64().unwrap()).unwrap();
+                                    let level = u8::try_from(o["level"].as_u64().unwrap()).unwrap();
+                                    if !out
+                                        .iter()
+                                        .any(|[r, l]| *l == level && def.same_orientation(*r, rot))
+                                    {
+                                        out.push([rot, level]);
+                                    }
+                                }
+                                out
+                            }
+                            None => vec![],
+                        };
+                        assert_eq!(entry.orientations, expected, "{at}");
+                    } else {
+                        // The order is hex-core's own group merge; the content is the fixture's
+                        // per-tile lists, deduped per member the way fitEntry does.
+                        let ordered: Vec<[u8; 2]> = w
+                            .group_orientations(&c, slot, &members)
+                            .into_iter()
+                            .map(|(_, o)| [o.rotation, o.level])
+                            .collect();
+                        assert_eq!(entry.orientations, ordered, "{at}");
+                        let mut merged: Vec<[u8; 2]> = vec![];
+                        for m in &members {
+                            // Per-member dedupe, member after member: the R walk keeps every
+                            // member's own steps (a group entry carries duplicates across members).
+                            let mut seen: Vec<[u8; 2]> = vec![];
+                            for o in per_tile[&m.id].as_array().unwrap() {
+                                let pair =
+                                    [o[0].as_u64().unwrap() as u8, o[1].as_u64().unwrap() as u8];
+                                if !seen
+                                    .iter()
+                                    .any(|[r, l]| *l == pair[1] && m.same_orientation(*r, pair[0]))
+                                {
+                                    seen.push(pair);
+                                }
+                            }
+                            merged.extend(seen);
+                        }
+                        merged.sort_unstable();
+                        let mut got = entry.orientations.clone();
+                        got.sort_unstable();
+                        assert_eq!(got, merged, "{at}");
+                    }
+                }
+            }
+        }
     }
 
     #[test]

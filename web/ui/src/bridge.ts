@@ -262,6 +262,46 @@ export interface MegaSlot {
   orientations: { rotation: number; level: number }[];
 }
 
+/**
+ * Every refusal code the engine can publish in `play.fits` entries (hex-core `Refusal::codes`,
+ * ENH-002), in bridge-schema.json's order: the four fixed codes, a `missing_` code per socket
+ * kind and a `clash_` code per ordered kind pair, kinds in declaration order. `REFUSAL_CODES`
+ * is checked against the schema by test/bridge-sync.test.ts; the type stays closed here.
+ */
+const KIND_WORDS = ["grass", "forest", "road", "river", "beach", "ocean", "rail"] as const;
+type KindWord = (typeof KIND_WORDS)[number];
+export type RefusalCode =
+  | "inner_slot"
+  | "deck_end"
+  | "footprint_edges"
+  | "no_footprint_room"
+  | `missing_${KindWord}`
+  | `clash_${KindWord}_${KindWord}`;
+const missingCode = (k: KindWord): RefusalCode => `missing_${k}`;
+const clashCode = (mine: KindWord, theirs: KindWord): RefusalCode => `clash_${mine}_${theirs}`;
+export const REFUSAL_CODES: RefusalCode[] = [
+  "inner_slot",
+  "deck_end",
+  "footprint_edges",
+  "no_footprint_room",
+  ...KIND_WORDS.map(missingCode),
+  ...KIND_WORDS.flatMap((mine) => KIND_WORDS.map((theirs) => clashCode(mine, theirs))),
+];
+
+/** Additive ENH-002 observation field. The sheet still uses the TypeScript mirror. */
+export interface Fits {
+  slot: Cell;
+  needs: (SocketKind | null)[];
+  stopped: boolean[];
+  entries: FitsEntry[];
+}
+
+export interface FitsEntry {
+  id: string;
+  orientations: [number, number][];
+  refusal: RefusalCode | null;
+}
+
 export interface BulldozeTarget {
   q: number;
   r: number;
@@ -352,6 +392,11 @@ export interface PlayState {
   ghost: Ghost | null;
   inventory: string[];
   bulldoze: BulldozeTarget | null;
+  /**
+   * Every picker entry's fits at the target slot (`play.fits`, ENH-002 spike): the sheet's
+   * observation field while the TypeScript mirror stays authoritative. Null with no slot.
+   */
+  fits: Fits | null;
   can_undo: boolean;
   can_redo: boolean;
   last_result: ActionResult | null;
@@ -604,6 +649,7 @@ export interface GrassState {
 
 /** `hexWorld.state()`: only the fields the overlay reads; the rest are documented in docs/agent-operability.md. */
 export interface State {
+  frames?: number;
   scenario?: string;
   play?: PlayState | null;
   photo?: PhotoState;
@@ -805,6 +851,7 @@ export const ENUMS = {
   spin: keys<Record<Spin, true>>({ cw: true, ccw: true }),
   toggle: keys<Record<ToggleTarget, true>>({ bulldoze: true, inventory: true, photo: true }),
   edge_status: keys<Record<EdgeStatus, true>>({ Compatible: true, Incompatible: true, Neutral: true }),
+  refusal: [...REFUSAL_CODES],
   dof: keys<Record<Dof, true>>({ off: true, tilt: true, manual: true }),
   photo_filter: keys<Record<PhotoFilter, true>>({ normal: true, mono: true, sepia: true }),
   // Display order, not sorted: the schema lists the presets as the engine shows them.
@@ -832,6 +879,7 @@ export const STATE_FIELDS = {
     ghost: true,
     inventory: true,
     bulldoze: true,
+    fits: true,
     can_undo: true,
     can_redo: true,
     last_result: true,
@@ -869,6 +917,8 @@ export const STATE_FIELDS = {
   mega_slot: keys<MegaSlot>({ q: true, r: true, tile: true, orientations: true }),
   orientation: keys<MegaSlot["orientations"][number]>({ rotation: true, level: true }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
+  fits: keys<Fits>({ slot: true, needs: true, stopped: true, entries: true }),
+  fits_entry: keys<FitsEntry>({ id: true, orientations: true, refusal: true }),
   last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
   tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true, level: true }),
   rising: keys<RisingTile>({ q: true, r: true, tile: true, stage: true, t: true }),

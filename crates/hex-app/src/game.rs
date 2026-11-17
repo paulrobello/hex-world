@@ -6,7 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use bevy::prelude::*;
 use hex_core::{
-    Axial, EdgeStatus, Orientation, ReplaceError, RotateDir, TileCatalog, TileDef, World,
+    Axial, EdgeStatus, Orientation, Refusal, ReplaceError, RotateDir, SocketKind, TileCatalog,
+    TileDef, World, opposite_edge,
 };
 use hex_play::play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage};
 use hex_render::{ActiveScenario, Scenario};
@@ -236,6 +237,9 @@ pub struct GameState {
     /// Per footprint tile id, its [`World::mega_slots`] and the [`World::stamp`] they were found
     /// at: a hover and the world state read them instead of searching the world again.
     mega_slots: Mutex<HashMap<String, (u64, MegaSlots)>>,
+    /// The [`World::stamp`] and, per slot, the [`Fits`] found at it: `fits_of` reads the cache
+    /// instead of recomputing every picker entry's orientations while the pointer moves.
+    fits: Mutex<(u64, HashMap<Axial, Arc<Fits>>)>,
 }
 
 /// A footprint tile's legal centres, sorted, each with its legal orientations.
@@ -267,6 +271,7 @@ impl GameState {
             epoch: 0,
             last_bulldoze: None,
             mega_slots: Mutex::default(),
+            fits: Mutex::new((0, HashMap::new())),
         }
     }
 
@@ -283,6 +288,27 @@ impl GameState {
         let slots = Arc::new(self.world.mega_slots(&self.catalog, d));
         cache.insert(d.id.clone(), (stamp, slots.clone()));
         slots
+    }
+
+    /// The [`Fits`] of the slot `slot` in the current world, found once per world state: every
+    /// picker entry's orientations (`play.fits`), what the Tiles sheet's fit readout reads instead
+    /// of mirroring the rules (ENH-002 spike).
+    fn fits_of(&self, slot: Axial) -> Arc<Fits> {
+        let stamp = self.world.stamp();
+        let mut cache = locked(&self.fits);
+        let (at, slots) = &mut *cache;
+        if *at == stamp
+            && let Some(fits) = slots.get(&slot)
+        {
+            return fits.clone();
+        }
+        if *at != stamp {
+            slots.clear();
+            *at = stamp;
+        }
+        let fits = Arc::new(fits_at(&self.world, &self.catalog, slot));
+        slots.insert(slot, fits.clone());
+        fits
     }
 
     /// The legal orientations of `d` with its anchor at `cell`, as
@@ -1168,6 +1194,9 @@ impl GameState {
         let bulldoze = self.bulldoze_target().map(|(c, reason)| {
             json!({ "q": c.q, "r": c.r, "allowed": reason.is_none(), "reason": reason })
         });
+        // Every picker entry's fits at the target slot (`play.fits`, ENH-002): null with no
+        // slot — in bulldoze mode, photo mode, walk mode or with nothing pointed at.
+        let fits = self.target_slot().map(|slot| self.fits_of(slot));
         json!({
             "tool": self.tool,
             "selected": self.selected,
@@ -1181,6 +1210,7 @@ impl GameState {
             "ghost": ghost,
             "inventory": inventory,
             "bulldoze": bulldoze,
+            "fits": fits.as_deref(),
             // Per selected tile, so it lives here with the selection rather than in the world block.
             "slot_levels": self.slot_levels(&self.world.frontier()).iter()
                 .map(|(c, l)| json!({ "q": c.q, "r": c.r, "level": l }))
@@ -1305,6 +1335,127 @@ pub fn mega_slot_json(centre: Axial, tile: &str, legal: &[Orientation]) -> Value
     json!({ "q": centre.q, "r": centre.r, "tile": tile, "orientations": orientations })
 }
 
+/// `play.fits` at one slot (ENH-002): what the slot touches and every picker entry's fits, what
+/// the Tiles sheet reads instead of mirroring the placement rules once the sheet switches
+/// (plan steps 3–5).
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct Fits {
+    /// The slot the fits are for.
+    pub slot: Axial,
+    /// What each world edge of the slot touches, in edge order: the placed neighbour's socket
+    /// kind, `None` where nothing is placed across it.
+    pub needs: Vec<Option<SocketKind>>,
+    /// Whether each world edge faces a stopped rail end (a station or junction end).
+    pub stopped: Vec<bool>,
+    /// One per picker entry, in catalog order.
+    pub entries: Vec<FitsEntry>,
+}
+
+/// One picker entry's fits at the slot: the sheet's `fitEntry` for it, from the engine.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct FitsEntry {
+    /// The picker entry id (`select_tile` takes it).
+    pub id: String,
+    /// Every member's distinct legal orientations as `[rotation, level]` pairs, in hex-core
+    /// ranking order (fewest cliffs, smallest drop, lowest level when cliff-free and highest
+    /// otherwise, member after member, then rotation) — the steps R walks.
+    pub orientations: Vec<[u8; 2]>,
+    /// Why nothing fits ([`Refusal`]), for the sheet's refusal wording in words.ts; `None` while
+    /// some orientation fits.
+    pub refusal: Option<Refusal>,
+}
+
+/// Every picker entry's fits at `slot`, from hex-core alone: a footprint entry reads the centre
+/// [`World::mega_centre_for`] picks for the slot and every other entry reads
+/// [`World::group_orientations`] at the slot, which the sheet's `fitEntry` recomputes today.
+pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
+    let facings: Vec<Option<(SocketKind, bool)>> = (0..6u8)
+        .map(|w| {
+            world
+                .facing(catalog, slot.neighbor(w), opposite_edge(w))
+                .map(|f| {
+                    (
+                        f.socket.kind,
+                        f.local.is_some_and(|e| catalog.rail_ends(f.def).0 & (1 << e) != 0),
+                    )
+                })
+        })
+        .collect();
+    let needs: Vec<Option<SocketKind>> = facings.iter().map(|f| f.as_ref().map(|f| f.0)).collect();
+    let stopped: Vec<bool> = facings.iter().map(|f| f.as_ref().is_some_and(|f| f.1)).collect();
+    let entries = catalog
+        .picker()
+        .iter()
+        .map(|entry| {
+            let members: Vec<&TileDef> = entry
+                .tiles
+                .iter()
+                .map(|id| catalog.get(id).expect("picker members are catalog tiles"))
+                .collect();
+            let orientations: Vec<[u8; 2]> = if members[0].is_mega() {
+                match world.mega_centre_for(catalog, slot, members[0]) {
+                    Some(centre) => world
+                        .group_orientations(catalog, centre, std::slice::from_ref(&members[0]))
+                        .into_iter()
+                        .map(|(_, o)| [o.rotation, o.level])
+                        .collect(),
+                    None => vec![],
+                }
+            } else {
+                world
+                    .group_orientations(catalog, slot, &members)
+                    .into_iter()
+                    .map(|(_, o)| [o.rotation, o.level])
+                    .collect()
+            };
+            let refusal = if orientations.is_empty() {
+                if members[0].is_mega() {
+                    // Room beside the world, but the outer edges clash at every free centre.
+                    let room = std::iter::once(slot)
+                        .chain((0..6u8).map(|e| slot.neighbor(e)))
+                        .any(|a| world.is_slot_for(a, members[0]));
+                    Some(if room {
+                        Refusal::FootprintEdges
+                    } else {
+                        Refusal::NoFootprintRoom
+                    })
+                } else if !world.is_slot(slot) {
+                    // The sheet's FOOTPRINT_INNER: only a massif, over a covering centre.
+                    Some(Refusal::InnerSlot)
+                } else {
+                    // The member with the fewest clashing edges at its best rotation, first on
+                    // ties (the sheet's `worst`), words the refusal for a whole group.
+                    let mut worst: Option<(&TileDef, usize)> = None;
+                    for m in &members {
+                        let count = (0..6u8)
+                            .map(|k| world.clash_count(catalog, slot, m, Orientation::new(k, 0)))
+                            .min()
+                            .unwrap_or(0);
+                        if worst.is_none_or(|(_, c)| count < c) {
+                            worst = Some((m, count));
+                        }
+                    }
+                    world
+                        .placement_refusal(catalog, slot, worst.expect("the entry has members").0)
+                }
+            } else {
+                None
+            };
+            FitsEntry {
+                id: entry.id.clone(),
+                orientations,
+                refusal,
+            }
+        })
+        .collect();
+    Fits {
+        slot,
+        needs,
+        stopped,
+        entries,
+    }
+}
+
 /// Events not yet drained by `hex_world_events`; nothing drains natively, so the oldest drop.
 pub const EVENT_QUEUE_CAP: usize = 256;
 
@@ -1388,6 +1539,62 @@ mod tests {
 
     fn game() -> GameState {
         GameState::new(1)
+    }
+
+    /// `fits_of` agrees with `fits_at` over the world, and the cache answers with the same fits
+    /// while the world state stands and recomputes after a placement changes it.
+    #[test]
+    fn fits_of_serves_the_slot_once_per_world_state() {
+        let mut g = game();
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Place(ax(1, 0)));
+        let slot = ax(-1, 0);
+        let fits = g.fits_of(slot);
+        assert_eq!(fits.slot, slot);
+        // The start meadow's grass faces the slot across its east edge; nothing else is placed.
+        assert_eq!(fits.needs[0], Some(SocketKind::Grass));
+        assert_eq!(fits.needs[3], None);
+        assert_eq!(fits.stopped, [false; 6]);
+        // The meadow entry fits one way round; the ocean never meets grass.
+        let meadow = fits.entries.iter().find(|e| e.id == "meadow").unwrap();
+        assert_eq!(meadow.orientations, [[0, 0]]);
+        let ocean = fits.entries.iter().find(|e| e.id == "ocean").unwrap();
+        assert!(ocean.orientations.is_empty());
+        // Cache: the same Arc twice, a different answer after the world changed.
+        assert!(Arc::ptr_eq(&fits, &g.fits_of(slot)));
+        g.apply(Action::Place(ax(0, 1)));
+        assert!(!Arc::ptr_eq(&fits, &g.fits_of(slot)));
+    }
+
+    /// The measurement the owner decision hangs on (ENH-002 step 1): how many bytes a `play.fits`
+    /// patch carries for one slot change on a real world (the elevation visual-parity scene).
+    /// Run with `cargo test -p hex-app fits_patch_size -- --nocapture`.
+    #[test]
+    fn fits_patch_size_on_a_real_world() {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../docs/checkpoints/elevation/visual-parity/visual-parity.json"
+        );
+        let script = crate::control::parse_script(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let mut g = game();
+        for cmd in &script {
+            if let Some(a) = cmd.action() {
+                g.apply(a);
+            }
+        }
+        let slot = g.world.frontier()[0];
+        let fits = g.fits_of(slot);
+        let json = serde_json::to_string(&*fits).unwrap();
+        let max_entry = fits.entries.iter().map(|e| e.orientations.len()).max().unwrap();
+        let total: usize = fits.entries.iter().map(|e| e.orientations.len()).sum();
+        let refused = fits.entries.iter().filter(|e| e.refusal.is_some()).count();
+        println!(
+            "fits patch for {slot:?}: {} entries, {} bytes, largest entry {max_entry} orientations, {total} orientation pairs, {refused} entries refused",
+            fits.entries.len(),
+            json.len(),
+        );
+        // The plan's sizing: a few kilobytes per slot change, nothing per frame at rest.
+        assert!(json.len() < 20_000, "{} bytes", json.len());
     }
 
     /// The elevation visual-parity capture script (`docs/checkpoints/elevation/visual-parity/`,
