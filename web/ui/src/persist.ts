@@ -1,6 +1,6 @@
 // Autosave, saved worlds and .hexworld files (PRD D9, §12.2). The engine encodes and validates; this
 // keeps the current world's name and slot, autosaves after every placement, bulldoze, undo and redo
-// (debounced), resumes the most recent slot on start, and moves bytes between the bridge, IndexedDB
+// (debounced; an empty world is skipped, because its save would not decode), resumes the most recent slot on start, and moves bytes between the bridge, IndexedDB
 // and files. With no storage the game plays on and the bar says autosave is off.
 import type { Command, GameEvent, InspectResult, LoadRefusalCode, LoadResult, PlayTile, Volumes } from "./bridge.ts";
 import {
@@ -17,6 +17,7 @@ import {
 
 import { PersistenceUx, type PersistenceUiHost } from "./persist-ux.ts";
 export { kb } from "./persist-ux.ts";
+import { clearResumeFlag, raiseResumeFlag, resumeFlagRaised, startupResume } from "./persist-model.ts";
 
 export type SaveState = "saved" | "saving" | "off";
 
@@ -72,6 +73,10 @@ export interface PersistOptions extends PersistenceUiHost {
    * open.
    */
   shown?: (fresh: boolean) => void;
+  /** The page address the start-up resume decision reads: `?safe=1` skips the resume (ENH-003). */
+  startupSearch?: string;
+  /** A safe start (the resume skipped) opens the Worlds screen, so the player reaches their worlds. */
+  openWorlds?: () => void;
 }
 
 /** The world on screen: its slot id, its name, and whether its slot exists in storage yet. */
@@ -176,6 +181,8 @@ export class Persistence {
   private readonly now: () => number;
   private readonly debounce: Debouncer;
   private tiles: PlayTile[] = [];
+  /** Set once `observe` has seen the live world at least once; before that `tiles` says nothing. */
+  private observed = false;
   private seq = 0;
   private readonly pending = new Map<string, PendingSave>();
   private readonly switches: Switch[] = [];
@@ -220,7 +227,9 @@ export class Persistence {
 
   /**
    * Resumes the most recent slot, or keeps the start world under a new name. With nothing stored, or no
-   * storage at all, it is a first visit: the start world is shown fresh, for the title cue.
+   * storage at all, it is a first visit: the start world is shown fresh, for the title cue. A safe
+   * start (`?safe=1`, or a start whose crash flag is still raised) skips the resume instead: the
+   * start world shows, a notice says the last world was not opened and the Worlds screen opens.
    */
   async start(): Promise<void> {
     if (!this.store) {
@@ -233,8 +242,29 @@ export class Persistence {
     await this.refresh();
     this.current = { id: newId(this.now()), name: this.ux.nextName(this.slots.map((s) => s.name)), stored: false };
     const last = this.slots[0];
-    if (!last) this.firstVisit();
-    if (!last || !(await this.open(last, false))) this.ready = true;
+    const crashed = resumeFlagRaised();
+    if (!last) {
+      this.firstVisit();
+      this.ready = true;
+    } else if (startupResume(this.opts.startupSearch ?? "", crashed) === "safe") {
+      // A safe start skips the resume: the start world stays under a fresh unsaved slot and the
+      // saved worlds stay listed for a deliberate open, export or delete, so the Worlds screen
+      // opens onto them. firstVisit is not called: this is not a first visit, so the title theme
+      // and the first-visit hints stay off.
+      this.ready = true;
+      this.ux.notify({
+        text: "Opened without your last world",
+        sub: crashed
+          ? "Hex World did not finish opening it last time. Open, export or delete it from Worlds."
+          : "Open, export or delete it from Worlds.",
+        icon: "alert",
+        tone: "caution",
+      });
+      this.opts.openWorlds?.();
+    } else {
+      raiseResumeFlag(last.id);
+      if (!(await this.open(last, false))) this.ready = true;
+    }
     this.changed();
   }
 
@@ -246,6 +276,7 @@ export class Persistence {
   /** The latest play tiles, read every frame (for each save's summary). */
   observe(tiles: PlayTile[]): void {
     this.tiles = tiles;
+    this.observed = true;
   }
 
   onEvents(batch: readonly GameEvent[]): void {
@@ -338,6 +369,7 @@ export class Persistence {
     const waiting =
       this.held || this.debounce.pending || [...this.pending.values()].some((p) => p.purpose === "autosave");
     if (!this.store || !this.ready || !waiting) return false;
+    if (this.skipEmptyAutosave()) return false;
     const bytes = this.host.saveNow(this.opts.volumes?.() ?? null);
     if (!bytes) return false;
     this.debounce.cancel();
@@ -370,7 +402,24 @@ export class Persistence {
   }
 
   private autosave(): void {
-    if (this.store) this.requestSave(this.current, "autosave");
+    if (!this.store || this.skipEmptyAutosave()) return;
+    this.requestSave(this.current, "autosave");
+  }
+
+  /**
+   * An empty world is never autosaved: `SaveData::encode` is infallible, but the decoder refuses
+   * an empty tile map, so a written slot could not open on the next start. Play cannot reach the
+   * state today (the start tile is not undoable, bulldoze refuses the last tile), so the skip
+   * guards the asymmetry. The waiting autosave is dropped and the slot keeps the last state that
+   * opens. Only a world `observe` has actually seen counts: before the first frame, `tiles` says
+   * nothing.
+   */
+  private skipEmptyAutosave(): boolean {
+    if (this.tiles.length > 0 || !this.observed) return false;
+    this.debounce.cancel();
+    this.unhold();
+    this.setState("saved");
+    return true;
   }
 
   private requestSave(world: CurrentWorld, purpose: PendingSave["purpose"]): void {
@@ -446,6 +495,8 @@ export class Persistence {
    * levels (hexWorld.audio, in localStorage), which a world from another browser must not override.
    */
   private onLoaded(): void {
+    // An answered load (the start-up resume, or the player's own open) ends the crash window.
+    clearResumeFlag();
     const sw = this.switches.shift() ?? {
       id: newId(this.now()),
       name: this.ux.nextName(this.slots.map((s) => s.name)),
@@ -518,6 +569,8 @@ export class Persistence {
     if (flush) this.flush();
     const r = this.host.load(bytes);
     if (!r.ok) {
+      // An answered refusal is not a crash: the flag clears, so the next start retries the slot.
+      clearResumeFlag();
       const w = refusalText(r.code, r.reason);
       this.ux.notify({ text: `${meta.name} can't be opened`, sub: w.text, icon: "alert", tone: "bad" });
       return false;

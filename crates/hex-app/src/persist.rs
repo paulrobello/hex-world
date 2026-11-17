@@ -49,6 +49,21 @@ static LATEST: Mutex<Latest> = Mutex::new(Latest {
     save: None,
 });
 
+/// What `hexWorld.inspect` last decoded, keyed by byte length and CRC: the import confirm's
+/// `hexWorld.load` of the same bytes takes it and skips the second full decode (ENH-003). One
+/// slot: a newer inspect replaces it, a refused inspect clears it, a load takes it or drops it.
+struct Inspected {
+    len: usize,
+    crc: u32,
+    save: SaveData,
+    version: u16,
+}
+static INSPECTED: Mutex<Option<Inspected>> = Mutex::new(None);
+
+/// The test-only decode count, so a test can prove a load reused the inspected save (ENH-003).
+#[cfg(test)]
+static DECODE_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
 /// Why a `.hexworld` file was refused, as the `loadRefused` event carries it.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Refusal {
@@ -107,6 +122,8 @@ impl From<&SaveError> for Refusal {
 /// Validates `.hexworld` bytes against the built-in catalog and migrates them. Returns the save
 /// and the file's format version.
 pub fn decode(bytes: &[u8]) -> Result<(SaveData, u16), Refusal> {
+    #[cfg(test)]
+    DECODE_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let catalog = TileCatalog::builtin().expect("the embedded catalog is validated by hex-core");
     let save = SaveData::decode(bytes, &catalog).map_err(|e| Refusal::from(&e))?;
     // A decoded file has a full header, so the version field is there.
@@ -226,7 +243,13 @@ pub fn take_save(tag: &str) -> Option<Vec<u8>> {
 /// play commands keep their order. A refusal is also published as a `loadRefused` event.
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 pub fn request_load(bytes: &[u8]) -> Result<(u32, u16), Refusal> {
-    match decode(bytes) {
+    // The import preview already decoded these exact bytes: reuse its save and skip the second
+    // decode (ENH-003). Anything else decodes from the bytes, and the stale slot drops.
+    let key = (bytes.len(), crc32fast::hash(bytes));
+    let cached = locked(&INSPECTED)
+        .take()
+        .filter(|i| i.len == key.0 && i.crc == key.1);
+    match cached.map_or_else(|| decode(bytes), |i| Ok((i.save, i.version))) {
         Ok((save, version)) => {
             let tiles = tile_count(&save.world);
             locked(&PENDING_LOADS).push_back((save, version));
@@ -272,16 +295,27 @@ pub fn inspect_json(bytes: &[u8]) -> String {
                     serde_json::json!({ "q": c.q, "r": c.r, "tile": t.def, "rotation": t.rotation, "level": t.level })
                 })
                 .collect();
+            // Kept for the confirm's load of the same bytes: the import decodes once (ENH-003).
+            *locked(&INSPECTED) = Some(Inspected {
+                len: bytes.len(),
+                crc: crc32fast::hash(bytes),
+                save,
+                version,
+            });
             serde_json::json!({
                 "ok": true, "version": version, "supported": SAVE_FORMAT_VERSION, "tiles": tiles,
             })
             .to_string()
         }
-        Err(e) => serde_json::json!({
-            "ok": false, "code": e.code, "reason": e.reason, "version": e.version,
-            "supported": SAVE_FORMAT_VERSION,
-        })
-        .to_string(),
+        Err(e) => {
+            // A refused preview leaves nothing cached for its load to reuse.
+            *locked(&INSPECTED) = None;
+            serde_json::json!({
+                "ok": false, "code": e.code, "reason": e.reason, "version": e.version,
+                "supported": SAVE_FORMAT_VERSION,
+            })
+            .to_string()
+        }
     }
 }
 
@@ -549,8 +583,9 @@ mod tests {
     use hex_core::{AudioVolumes, CameraState};
     use hex_render::post::QualityTier;
 
-    // SAVED and PENDING_LOADS are process-global and tests run in parallel: the cap test's 11 saves
-    // evict other tests' entries, so every test that touches them holds this lock.
+    // SAVED, PENDING_LOADS, INSPECTED and the decode counter are process-global and tests run in
+    // parallel: the cap test's 11 saves evict other tests' entries, so every test that touches
+    // any of them holds this lock.
     static OUTBOX: std::sync::Mutex<()> = std::sync::Mutex::new(());
     fn outbox() -> std::sync::MutexGuard<'static, ()> {
         locked(&OUTBOX)
@@ -807,8 +842,102 @@ mod tests {
         assert_eq!(locked(&PENDING_LOADS).len(), loads);
     }
 
+    /// ENH-003: the import confirm's `hexWorld.load` of the bytes an inspect just decoded reuses
+    /// that decode: one full decode for preview plus load, and the cache slot drops.
+    #[test]
+    fn load_after_inspect_of_the_same_bytes_decodes_once() {
+        let _outbox = outbox();
+        let (mut g, mut cam) = played();
+        let mut tilt = Tilt::default();
+        let mut saved = SavedSettings::default();
+        handle(
+            save_cmd("single-src", None),
+            &mut g,
+            Some(&mut cam),
+            tilt.live(),
+            &mut saved,
+            7,
+        );
+        let good = take_save("single-src").unwrap();
+
+        DECODE_CALLS.store(0, std::sync::atomic::Ordering::Relaxed);
+        let ok: serde_json::Value = serde_json::from_str(&inspect_json(&good)).unwrap();
+        assert_eq!(ok["ok"], true);
+        assert_eq!(decodes(), 1, "the preview is one decode");
+        let r = request_load(&good);
+        assert_eq!(r, Ok((5, SAVE_FORMAT_VERSION)));
+        assert_eq!(decodes(), 1, "the load reused the inspected save");
+        assert_eq!(locked(&PENDING_LOADS).len(), 1);
+        let queued: Vec<Command> = locked(&control::INBOX).drain(..).collect();
+        assert_eq!(queued, [Command::Load { path: None }]);
+        assert!(locked(&INSPECTED).is_none(), "the load took the slot");
+        locked(&PENDING_LOADS).clear();
+    }
+
+    /// ENH-003: bytes the inspect never saw decode as always, and a newer inspect replaces the
+    /// slot: the cache never answers for bytes it does not hold.
+    #[test]
+    fn load_after_inspect_of_other_bytes_decodes_again() {
+        let _outbox = outbox();
+        let mut tilt = Tilt::default();
+        let mut saved = SavedSettings::default();
+        let mut encode = |seed: u64, tag: &str| -> Vec<u8> {
+            let (mut g, mut cam) = small_game(seed);
+            handle(
+                save_cmd(tag, None),
+                &mut g,
+                Some(&mut cam),
+                tilt.live(),
+                &mut saved,
+                7,
+            );
+            take_save(tag).unwrap()
+        };
+        let a = encode(9, "cache-a");
+        let b = encode(11, "cache-b");
+        assert_ne!(a, b);
+
+        DECODE_CALLS.store(0, std::sync::atomic::Ordering::Relaxed);
+        let ok: serde_json::Value = serde_json::from_str(&inspect_json(&a)).unwrap();
+        assert_eq!(ok["ok"], true);
+        assert_eq!(decodes(), 1);
+        let r = request_load(&b);
+        assert_eq!(r, Ok((2, SAVE_FORMAT_VERSION)));
+        assert_eq!(
+            decodes(),
+            2,
+            "bytes the preview never saw decode from scratch"
+        );
+        // A newer inspect replaces the slot: a load of the older file decodes again.
+        let ok2: serde_json::Value = serde_json::from_str(&inspect_json(&b)).unwrap();
+        assert_eq!(ok2["ok"], true);
+        let r = request_load(&a);
+        assert_eq!(r, Ok((2, SAVE_FORMAT_VERSION)));
+        assert_eq!(
+            decodes(),
+            4,
+            "the replaced slot never answers for the older file"
+        );
+        locked(&PENDING_LOADS).clear();
+        locked(&control::INBOX).drain(..);
+    }
+
+    /// A smaller world (the start tile plus one placement) for a save whose bytes differ from
+    /// `played()`'s.
+    fn small_game(seed: u64) -> (GameState, Transform) {
+        let mut g = GameState::new(seed);
+        g.apply(Action::SelectTile("meadow".into()));
+        g.apply(Action::Place(ax(1, 0)));
+        let cam = camera::place(Vec3::new(30.0, 0.0, -12.0), 0.7, 0.9, 140.0);
+        (g, cam)
+    }
+
+    fn decodes() -> usize {
+        DECODE_CALLS.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     /// The web path: `hexWorld.load(bytes)` validates at once, then queues a `load` command that
-    /// applies the pending save in order. The only test touching the pending queue and the inbox.
+    /// applies the pending save in order, behind anything the import cache held or decoded.
     #[test]
     fn web_load_validates_at_once_and_applies_in_queue_order() {
         let _outbox = outbox();
@@ -873,6 +1002,7 @@ mod tests {
 
     #[test]
     fn load_and_save_files_natively() {
+        let _outbox = outbox();
         let dir = std::env::temp_dir().join(format!("hexw-persist-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join("world.hexworld").to_string_lossy().into_owned();
@@ -1109,6 +1239,7 @@ mod tests {
     /// The player's own toggle is kept through a save, a reload and a tier change.
     #[test]
     fn a_chosen_toggle_survives_save_reload_and_a_tier_change() {
+        let _outbox = outbox();
         let (mut g, mut cam) = played();
         let mut tilt = Tilt {
             s: TiltShiftSettings {

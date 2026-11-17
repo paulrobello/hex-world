@@ -131,6 +131,8 @@ function run(root: HTMLElement, hw: Bridge): void {
         switching: () => camera.flush(),
         removed: (id) => camera.forget(id),
         shown: (fresh) => audio.worldShown(fresh),
+        startupSearch: location.search,
+        openWorlds: () => h.openWorlds(),
       });
       h.attach(persist);
       const p = persist;

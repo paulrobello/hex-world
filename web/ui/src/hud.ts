@@ -178,6 +178,11 @@ export class Hud {
     this.worldBtn.classList.toggle("is-on", open);
   }
 
+  /** Opens the Worlds sheet (the safe start does: the last world must stay reachable). */
+  openWorlds(): void {
+    this.toggleWorlds(true);
+  }
+
   /** The bar title: world name, tile count and autosave state (owner Q3), and the open sheet. */
   syncWorld(): void {
     const p = this.persist;

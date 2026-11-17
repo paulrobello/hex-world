@@ -132,6 +132,12 @@ Wire structs never use serde attributes that postcard cannot honor: `#[serde(def
 
 **Catalog changes are migration events too.** Saves are validated against the built-in tile catalog. Renaming or removing a tile id, or changing sockets so that an existing adjacency becomes illegal, breaks older saves. The fixture test fails when that happens. Handle it with a version bump whose upgrade step maps or repairs the old data.
 
+## Tests
+
+The decoder's randomized coverage lives in `tests/save_props.rs` (ENH-004), running under `cargo test` so every gate covers it: `decode` never panics on arbitrary or mutated bytes (mutants are CRC-restamped so the payload parse runs), `encode`/`decode` round-trip a played world, a decoded world tolerates the operations play runs on a resume (undo, redo, `can_bulldoze`), and a world translated to the coordinate bound `CELL_LIMIT` (a mega tile's ring included) still decodes and stays playable. Cases default to 256 per property and `PROPTEST_CASES` raises it locally; found cases persist under `proptest-regressions/` and replay in every later run. A found case is a decoder or operation bug: fix that, and add the shrunk case as an example test beside the existing ones — never relax the property.
+
+`CELL_LIMIT` (±2^24) is a decode bound, not a rendering guarantee: `f32` world positions lose integer precision well inside it, so a loaded world near the bound simulates correctly (the `hex-sim` near-limit test) but is not promised to render correctly. Lowering the bound is an owner decision; until then the accepted range is wider than the playable-for-rendering range.
+
 ## Slots and autosave
 
 The web layer's IndexedDB slots (`web/ui/src/slots.ts` and `persist.ts`) store the same `.hexworld` bytes as a file export, produced by the bridge's `save` command and read back through `hexWorld.load(bytes)` (`crates/hex-app/src/persist.rs`). The world name is slot metadata, not part of the save, so a renamed world needs no format change and an imported file takes its name from the file name. Database `hex-world` version 1 has two object stores:
@@ -142,3 +148,7 @@ The web layer's IndexedDB slots (`web/ui/src/slots.ts` and `persist.ts`) store t
 | `saves` | slot id | The `.hexworld` bytes (a `Uint8Array`) |
 
 A write puts both records in one transaction. Autosave runs after every placement, bulldoze, undo and redo, debounced by 600 ms. hex-core's `SaveSlotMeta` (name, save time, tile count, format version) is the engine-side form of the summary; the caller supplies the save time, because hex-core reads no clock (`SystemTime::now` panics on `wasm32-unknown-unknown`).
+
+An empty world is never autosaved: `SaveData::encode` is infallible, but the decoder refuses an empty tile map, so a written slot could not open on the next start. Play cannot reach the state today (the start tile is not undoable and `can_bulldoze` refuses the last tile), so the autosave drops the waiting write and the slot keeps the last state that opens as a guard on the asymmetry (2026-11-16, from the SEC-002 review).
+
+A start recovers from a world that froze or aborted it (ENH-003, 2026-11-16). The start-up resume raises a `hexworld.resuming` flag in `sessionStorage` before it asks the engine to load the most recent slot, and the engine's `loaded` event clears it; a start that finds the flag still raised skips the resume as if the address had `?safe=1` (a refusal also clears the flag, so only an unanswered load keeps skipping). Skipped resumes show the start world, say so in a notice and open the Worlds screen, where the last world can be opened, exported or deleted; no slot is touched. A `.hexworld` file also decodes once per import: the preview's decode is kept keyed by byte length and CRC, and the confirm's load of the same bytes reuses it.

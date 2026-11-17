@@ -284,8 +284,11 @@ impl World {
     }
 
     /// Rebuilds a world from saved parts. No rule checks run here: [`crate::save`] validates the
-    /// result against the catalog before handing it out.
-    pub(crate) fn from_parts(
+    /// result against the catalog before handing it out. Exposed (hidden from docs) for the
+    /// integration tests that rebuild translated worlds the decoder accepts
+    /// (`tests/common/worlds.rs`, `hex-sim`'s near-limit test); play never calls it.
+    #[doc(hidden)]
+    pub fn from_parts(
         seed: u64,
         tiles: BTreeMap<Axial, PlacedTile>,
         undo: VecDeque<Action>,

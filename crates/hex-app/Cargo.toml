@@ -17,6 +17,7 @@ hex-render = { path = "../hex-render" }
 hex-play-state = { path = "../hex-play-state" }
 hex-sim = { path = "../hex-sim" }
 bevy = { workspace = true }
+crc32fast = "=1.5.2"
 serde = { workspace = true }
 serde_json = { workspace = true }
 image = { version = "0.25", default-features = false, features = ["png"] }

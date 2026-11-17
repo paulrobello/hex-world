@@ -3,7 +3,16 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import type { Command, GameEvent, InspectResult, LoadResult, PlayTile } from "../src/bridge.ts";
-import { LOAD_HOLD_MS, type Note, Persistence, refusalText, stateWords, whenText } from "../src/persist.ts";
+import {
+  LOAD_HOLD_MS,
+  type Note,
+  type PersistOptions,
+  Persistence,
+  refusalText,
+  stateWords,
+  whenText,
+} from "../src/persist.ts";
+import { raiseResumeFlag, resumeFlagRaised } from "../src/persist-model.ts";
 import {
   Debouncer,
   MAP_LIMIT,
@@ -120,6 +129,18 @@ test("storage unavailable: no IndexedDB, an open that throws, errors, is blocked
   assert.ok(Date.now() - t0 >= 50);
 });
 
+// Node has no sessionStorage; give the crash flag a Map-backed one so its paths run.
+const flagBacking = new Map<string, string>();
+globalThis.sessionStorage = {
+  getItem: (k: string) => flagBacking.get(k) ?? null,
+  setItem: (k: string, v: string) => {
+    flagBacking.set(k, v);
+  },
+  removeItem: (k: string) => {
+    flagBacking.delete(k);
+  },
+} as Storage;
+
 /** The bridge as persistence sees it: commands recorded, saves answered with fixed bytes. */
 class FakeHost {
   sent: Command[] = [];
@@ -158,7 +179,7 @@ class FakeHost {
 
 const settle = () => new Promise((r) => setTimeout(r, 0));
 
-function setup(store: MemoryBackend | null) {
+function setup(store: MemoryBackend | null, extra: Partial<PersistOptions> = {}) {
   const host = new FakeHost();
   const notes: Note[] = [];
   let now = 1_000;
@@ -167,6 +188,7 @@ function setup(store: MemoryBackend | null) {
     debounceMs: 30,
     notify: (n) => notes.push(n),
     volumes: () => ({ master: 0.5, music: 0.5, sfx: 0.5, ambience: 0.5, ui: 0.5 }),
+    ...extra,
   });
   return { host, notes, p, tick: (ms: number) => (now += ms) };
 }
@@ -205,6 +227,59 @@ test("autosave: a burst of edits is one debounced save, written to the current w
   assert.equal(p.current.stored, true);
 });
 
+test("autosave skips an empty world: the slot keeps its last openable bytes", async () => {
+  const store = new MemoryBackend();
+  const { host, p } = setup(store);
+  await p.start();
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest")]);
+  p.onEvents([placed, placed]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents());
+  await settle();
+  const [meta] = await store.list();
+  assert.equal(meta?.tiles, 2, "the non-empty world is in the slot");
+  const before = [...(store.data.get(meta!.id) ?? [])];
+
+  // An empty world (not reachable through play today, but the guard is the encode/decode
+  // asymmetry): its bytes would encode but the decoder refuses them, so the autosave writes
+  // nothing and the bar does not stick at Saving…
+  p.observe([]);
+  p.onEvents([{ type: "undone" }, { type: "undone" }]);
+  await new Promise((r) => setTimeout(r, 60));
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 1, "no save command for the empty world");
+  assert.equal(p.state, "saved");
+  assert.deepEqual([...(store.data.get(meta!.id) ?? [])], before, "slot bytes unchanged");
+
+  // The next placement autosaves as usual.
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest"), tile(2, 0, "forest")]);
+  p.onEvents([placed]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.equal((await store.list()).length, 1);
+  const [after] = await store.list();
+  assert.equal(after?.tiles, 3, "the repopulated world autosaves again");
+});
+
+test("page hide with an empty world writes nothing: the pending autosave is dropped", async () => {
+  const store = new MemoryBackend();
+  const { host, p } = setup(store);
+  await p.start();
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "meadow")]);
+  p.onEvents([placed]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents());
+  await settle();
+  const [meta] = await store.list();
+  const before = [...(store.data.get(meta!.id) ?? [])];
+  p.observe([]);
+  p.onEvents([{ type: "undone" }, { type: "undone" }]);
+  assert.equal(p.flushNow(), false, "an empty world holds nothing to write");
+  assert.equal(host.nowCalls, 0, "the engine is not asked to encode an empty world");
+  assert.equal(p.state, "saved");
+  assert.deepEqual([...(store.data.get(meta!.id) ?? [])], before);
+});
+
 test("resume: the most recent slot loads on start, and autosave waits for it", async () => {
   const store = new MemoryBackend();
   const old = { id: "w-old", name: "Old", tiles: 2, updatedAt: 10, bytes: 1, mix: {}, map: [] };
@@ -222,6 +297,38 @@ test("resume: the most recent slot loads on start, and autosave waits for it", a
   assert.equal(p.current.id, "w-new");
   assert.equal(p.current.name, "Riverside");
   assert.equal(p.ready, true);
+});
+
+test("safe start (?safe=1): the resume is skipped, the Worlds screen opens, and no slot is touched", async () => {
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-old", name: "Riverside", tiles: 2, updatedAt: 10, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([7]),
+  );
+  let opens = 0;
+  const { host, notes, p } = setup(store, {
+    startupSearch: "?safe=1",
+    openWorlds: () => {
+      opens += 1;
+    },
+  });
+  await p.start();
+  assert.equal(host.loads.length, 0, "no resume load");
+  assert.equal(p.ready, true);
+  assert.equal(p.current.stored, false, "the start world sits under a fresh unsaved slot");
+  assert.notEqual(p.current.id, "w-old");
+  assert.equal(notes[0]?.text, "Opened without your last world");
+  assert.equal(opens, 1, "the Worlds screen opens onto the saved worlds");
+  // The saved slot is neither opened, touched nor overwritten; an edit autosaves to the fresh slot.
+  p.observe([tile(0, 0, "meadow"), tile(1, 0, "forest")]);
+  p.onEvents([placed]);
+  await new Promise((r) => setTimeout(r, 60));
+  p.onEvents(host.savedEvents());
+  await settle();
+  assert.equal((await store.list()).length, 2, "the saved slot was not overwritten");
+  assert.deepEqual([...(store.data.get("w-old") ?? [])], [7], "its bytes are unchanged");
+  const kept = (await store.list()).find((s) => s.id === "w-old");
+  assert.equal(kept?.updatedAt, 10, "no recent-open touch happened for it");
 });
 
 test("switching worlds flushes the pending autosave ahead of the load, then saves to the right slot", async () => {
@@ -888,4 +995,61 @@ test("import replace (S10.6): Undo is byte-exact on a world opened by Save, then
   notes.at(-1)?.onAction?.();
   await settle();
   assert.deepEqual(store.data.get("w-b"), beta);
+});
+
+test("safe start after a crash: the raised flag skips the resume, the notice says why, and an answered load clears it", async () => {
+  flagBacking.clear();
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-old", name: "Riverside", tiles: 2, updatedAt: 10, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([7]),
+  );
+  raiseResumeFlag("w-old");
+  const { host, notes, p } = setup(store);
+  await p.start();
+  assert.equal(host.loads.length, 0, "no resume load");
+  assert.equal(p.ready, true);
+  assert.equal(
+    notes[0]?.sub,
+    "Hex World did not finish opening it last time. Open, export or delete it from Worlds.",
+  );
+  assert.equal(resumeFlagRaised(), true, "no answer yet, so the flag stays for the next reload");
+  // The player opens the world deliberately: the answered load clears the flag.
+  host.result = { ok: true, tiles: 2, version: 1 };
+  assert.equal(await p.loadSlot("w-old", "discard"), true);
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  assert.equal(resumeFlagRaised(), false);
+  flagBacking.clear();
+});
+
+test("a normal resume raises the crash flag before its load, and the loaded answer clears it", async () => {
+  flagBacking.clear();
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-old", name: "Riverside", tiles: 2, updatedAt: 10, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([2]),
+  );
+  const { host, p } = setup(store);
+  await p.start();
+  assert.equal(host.loads.length, 1, "resumed");
+  assert.equal(resumeFlagRaised(), true, "raised before the load");
+  p.onEvents([{ type: "loaded", tiles: 2, version: 1, settings: null }]);
+  assert.equal(resumeFlagRaised(), false, "cleared by the answer");
+  flagBacking.clear();
+});
+
+test("a refused resume clears the crash flag, so the next start retries the slot", async () => {
+  flagBacking.clear();
+  const store = new MemoryBackend();
+  await store.write(
+    { id: "w-old", name: "Riverside", tiles: 2, updatedAt: 10, bytes: 1, mix: {}, map: [] },
+    new Uint8Array([2]),
+  );
+  const { host, notes, p } = setup(store);
+  host.result = { ok: false, code: "invalid_world", reason: "invalid world: the world has no tiles", version: null };
+  await p.start();
+  assert.equal(host.loads.length, 1);
+  assert.equal(notes[0]?.tone, "bad", "the refusal toast still shows");
+  assert.equal(resumeFlagRaised(), false, "an answered refusal is not a crash");
+  flagBacking.clear();
 });

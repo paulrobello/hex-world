@@ -1325,6 +1325,31 @@ mod tests {
         assert_eq!(b.tile(WEST), None, "the bulldoze was redone last");
     }
 
+    /// An empty tile map encodes, and the decoder refuses it (`WorldIssue::Empty`): `encode` is
+    /// infallible, so any caller holding an empty `World` can produce a real `.hexworld` file no
+    /// load ever opens. Play cannot reach the state today (the start tile is not undoable and
+    /// `can_bulldoze` refuses the last tile), which is why the autosave also skips it
+    /// (web/ui/src/persist.ts) instead of trusting that nobody ever holds one.
+    #[test]
+    fn an_empty_world_encodes_but_does_not_decode() {
+        let save = SaveData {
+            world: World::from_parts(42, BTreeMap::new(), VecDeque::new(), Vec::new()),
+            unlocks: BTreeSet::new(),
+            camera: camera(),
+            settings: settings(),
+        };
+        let bytes = save.encode();
+        assert_eq!(
+            &bytes[..8],
+            b"HEXWORLD",
+            "encode produces a real .hexworld file"
+        );
+        assert_eq!(
+            decode(&bytes),
+            Err(SaveError::InvalidWorld(WorldIssue::Empty))
+        );
+    }
+
     /// The windmill tile (P3 piece, in the inventory ahead of P3) saves and loads like any tile:
     /// its id, rotation and the history that placed it.
     #[test]

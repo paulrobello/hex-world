@@ -632,6 +632,56 @@ try {
   check(sheetText.includes("· Autosave off") && !sheetText.includes("Not saved"), "the Worlds sheet reads Autosave off, as the bar does");
   await b.shot("storage-off-worlds");
   await blocked.close();
+  // ---------- Safe start (ENH-003): ?safe=1 and the crash flag skip the resume ----------
+  {
+    const slotsInDb = (page) => page.evaluate(() => new Promise((resolve, reject) => {
+      const req = indexedDB.open("hex-world");
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => {
+        const all = req.result.transaction("slots").objectStore("slots").getAll();
+        all.onerror = () => reject(all.error);
+        all.onsuccess = () => {
+          resolve(all.result.map((m) => ({ id: m.id, name: m.name, tiles: m.tiles })));
+          req.result.close();
+        };
+      };
+    }));
+    const up = async (page, h, msg) => {
+      await page.waitForFunction(() => window.hexWorld?.ready() && window.hexWorld.state().play, null, { timeout: 90_000 });
+      await h.until(async () => !(await page.locator(".load").count()), msg);
+    };
+    const safe = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const sp = await open(safe);
+    const s = helpers(sp);
+    await s.boot();
+    await sp.evaluate(() => { const h = window.hexWorld; h.selectTile("meadow"); h.placeTile(1, 0); h.selectTile("forest"); h.placeTile(-1, 0); });
+    await s.until(() => s.saveIs("saved", "3 tiles"), "safe-start setup: the world autosaves");
+    check((await slotsInDb(sp)).length === 1, "safe-start setup: one slot stored");
+
+    // ?safe=1: the start world shows, the notice fires and the Worlds screen opens; no slot is touched.
+    await sp.goto(`${base}&safe=1`);
+    await up(sp, s, "safe start: the loading layer leaves");
+    await s.until(async () => (await s.play()).tiles.length === 1, "?safe=1 opens the start world (1 tile), not the saved one");
+    await s.until(async () => (await s.text(".toast.is-shown")).includes("Opened without your last world"), "?safe=1 notice");
+    await s.until(async () => worldsOpen(sp), "?safe=1 opens the Worlds screen");
+    const kept = await slotsInDb(sp);
+    check(kept.length === 1 && kept[0].tiles === 3, "?safe=1 leaves the saved slot and its tiles intact");
+    await animationsSettled(sp);
+    await s.shot("safe-start");
+
+    // The crash flag: a start whose resume never got an answer skips the resume by itself.
+    await sp.evaluate(() => sessionStorage.setItem("hexworld.resuming", "set-by-test"));
+    await sp.reload();
+    await up(sp, s, "flag start: the loading layer leaves");
+    await s.until(async () => (await s.play()).tiles.length === 1, "a raised crash flag opens the start world");
+    await s.until(async () => (await s.text(".toast.is-shown")).includes("did not finish opening"), "the flag notice says why");
+    await s.until(async () => worldsOpen(sp), "the flag start opens the Worlds screen");
+    const kept2 = await slotsInDb(sp);
+    check(kept2.length === 1 && kept2[0].tiles === 3, "the flag start leaves the saved slot intact too");
+    await animationsSettled(sp);
+    await s.shot("safe-start-crash-flag");
+    await safe.close();
+  }
 } catch (e) {
   fail(String(e?.stack ?? e));
 } finally {
