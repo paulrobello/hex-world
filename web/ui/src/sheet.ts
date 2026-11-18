@@ -1,25 +1,22 @@
 // The Tiles sheet (S3): the slot key, "Fits here" and "Doesn't fit here" with reasons, socket codes,
 // number keys. Rows keep their identity across slots so a re-rank animates (FLIP) instead of blinking.
-import type { Cell, MegaSlot } from "./bridge.ts";
+import type { Cell, FitsEntry } from "./bridge.ts";
 import { h, isMac, motionMs, reduceMotion, s } from "./dom.ts";
 import { KIND_CLASS, TilePicture, hexPoints, socketHex } from "./glyph.ts";
 import { icon } from "./icons.ts";
 import {
-  type EntryFit,
   type Kinds,
-  type Needs,
   PICKER,
   type PickerEntry,
-  type TileMap,
   type Turn,
   entryMeta,
   entrySummary,
-  fitEntry,
   needLines,
   nothingFitsWhy,
+  tileDef,
   turnAngle,
 } from "./rules.ts";
-import { tileName } from "./words.ts";
+import { refusalWord, tileName } from "./words.ts";
 
 /** One member's picture and socket hex; a group row shows the member its current turn is on. */
 interface Face {
@@ -44,9 +41,20 @@ interface Row {
 /** How long after an R press the ghost's rotation may still land and turn the selected row (ms). */
 const TURN_FOLLOW_MS = 500;
 
+/** One row's fits at the slot, from the engine's published entry (`play.fits`). */
+interface RowFit {
+  ok: boolean;
+  /** The steps R walks: each member's distinct orientations, in the engine's ranking order. */
+  seq: Turn[];
+  /** Why nothing fits, worded from the engine's refusal code; empty when a step exists. */
+  why: string;
+  /** What an unfitting row shows: the member and rotation with the fewest clashing edges. */
+  best: Turn;
+}
+
 export interface SheetView {
-  /** The slot the filter reads (sticky), with what its edges touch. */
-  slot: { cell: Cell; needs: Needs } | null;
+  /** The slot the filter reads (sticky), with what its edges touch (`play.fits`). */
+  slot: { cell: Cell; needs: Kinds; stopped: boolean[] } | null;
   selected: string;
   /** The ghost's tile and rotation when it sits on the sheet's slot. */
   ghostTile: string | null;
@@ -55,12 +63,10 @@ export interface SheetView {
   /** R presses at this slot: every other fitting row turns in step, through its own distinct fits. */
   turns: number;
   bulldoze: boolean;
-  /** The nearest slot where something fits, offered when nothing fits here. */
+  /** The nearest slot where something fits, offered when nothing fits here (`play.fits.nearest`). */
   nearest: { cell: Cell; fits: number } | null;
-  /** The engine's legal footprint centres (`play.mega_slots`): where a massif row fits. */
-  megaSlots: readonly MegaSlot[];
-  /** Cell occupancy, for the wording of a massif's refusal. */
-  tiles: TileMap;
+  /** The engine's published entries (`play.fits`), keyed by picker entry id. */
+  entries: Map<string, FitsEntry>;
 }
 
 export class Sheet {
@@ -202,13 +208,19 @@ export class Sheet {
 
   render(v: SheetView): void {
     this.el.classList.toggle("is-inert", v.bulldoze);
-    const fits = new Map<string, EntryFit>();
-    for (const r of this.rows)
-      if (v.slot)
-        fits.set(
-          r.entry.id,
-          fitEntry(r.entry, v.slot.needs, { slot: v.slot.cell, megaSlots: v.megaSlots, tiles: v.tiles }),
-        );
+    const fits = new Map<string, RowFit>();
+    for (const r of this.rows) {
+      const e = v.entries.get(r.entry.id);
+      const seq: Turn[] = e ? e.orientations.map(([id, k, level]) => ({ def: tileDef(id)!, k, level })) : [];
+      fits.set(r.entry.id, {
+        ok: seq.length > 0,
+        seq,
+        why: e?.refusal ? refusalWord(e.refusal) : "",
+        best: e?.best
+          ? { def: tileDef(e.best[0])!, k: e.best[1], level: 0 }
+          : { def: r.entry.tiles[0]!, k: 0, level: 0 },
+      });
+    }
     const ok = (r: Row) => !v.slot || fits.get(r.entry.id)!.ok;
     const fitting = this.rows.filter(ok);
     const off = this.rows.filter((r) => !ok(r));
@@ -244,7 +256,7 @@ export class Sheet {
       const f = fits.get(r.entry.id);
       const selected = r.entry.tiles.some((t) => t.id === v.selected);
       const name = tileName(r.entry.tiles[0]!.id);
-      const meta = !v.slot ? entrySummary(r.entry) : f!.ok ? entryMeta(r.entry, f!) : f!.why;
+      const meta = !v.slot ? entrySummary(r.entry) : f!.ok ? entryMeta(r.entry, f!.seq) : f!.why;
       if (r.meta.textContent !== meta) r.meta.textContent = meta;
       r.btn.setAttribute("aria-pressed", String(selected));
       r.btn.setAttribute("aria-label", `${name}. ${v.slot && !f!.ok ? `Doesn't fit here. ${meta}` : meta}`);
@@ -355,7 +367,7 @@ export class Sheet {
     }
     if (!anyFit) k.classList.add("key--none");
     const list = h("ul", { class: "key__list" });
-    for (const l of needLines(v.slot.needs.kinds, v.slot.needs.stopped))
+    for (const l of needLines(v.slot.needs, v.slot.stopped))
       list.append(h("li", {}, h("i", { class: KIND_CLASS[l.kind] }), l.text));
     const body = h(
       "div",
@@ -364,7 +376,7 @@ export class Sheet {
       list,
     );
     if (!anyFit) {
-      body.append(h("p", { class: "empty-key" }, nothingFitsWhy(v.slot.needs.kinds)));
+      body.append(h("p", { class: "empty-key" }, nothingFitsWhy(v.slot.needs)));
       if (v.nearest) {
         const go = h("button", { class: "btn btn--sm", type: "button" }, icon("focus"), "Show the nearest slot");
         const near = v.nearest;
@@ -379,7 +391,7 @@ export class Sheet {
         );
       }
     }
-    k.append(keyHex(v.slot.needs.kinds, !anyFit), body);
+    k.append(keyHex(v.slot.needs, !anyFit), body);
   }
 }
 

@@ -7,7 +7,7 @@ import { h, isMac, reduceMotion, retrigger, s, syncReducedMotion } from "./dom.t
 import { icon } from "./icons.ts";
 import { Rebuild } from "./loading.ts";
 import { type Note, type Persistence, stateWords } from "./persist.ts";
-import { type TileMap, cellKey, cutOff, tunnelCover, diffTiles, refusedWhy, tileRise, tileMap } from "./rules.ts";
+import { type TileMap, cellKey, cutOff, tunnelCover, diffTiles, tileRise, tileMap } from "./rules.ts";
 import { Photo } from "./photo.ts";
 import { DebugHud } from "./debug.ts";
 import { Settings } from "./settings.ts";
@@ -15,7 +15,7 @@ import { SheetController } from "./sheet-controller.ts";
 import { type EscapeStep, type KeyFlags, keyAction } from "./key-model.ts";
 import { type PlacedNote, type RefusalNote, type TagPart, tagModel } from "./tag-model.ts";
 import { Walk } from "./walk.ts";
-import { actionText, bulldozeRefusal, plural, tileName } from "./words.ts";
+import { actionText, bulldozeRefusal, plural, replaceRefusal, tileName } from "./words.ts";
 import { Worlds } from "./worlds.ts";
 import { readStored, writeStored } from "./storage.ts";
 
@@ -391,7 +391,7 @@ export class Hud {
 
     this.syncBar(st);
     this.syncWorld();
-    this.inventory.render(st, this.map, this.tilesRev);
+    this.inventory.render(st, this.tilesRev);
     this.renderTag(st, now);
     this.root.classList.toggle("is-hidden", this.hidden || st.photo_mode || st.walk_mode);
     this.renderHint(st);
@@ -415,7 +415,13 @@ export class Hud {
         break;
       }
       case "placementRefused": {
-        const text = refusedWhy(e, this.map, this.coverCells().has(cellKey(e)));
+        const text = replaceRefusal(
+          e.tile,
+          this.map.get(cellKey(e)),
+          e.reason,
+          this.coverCells().has(cellKey(e)),
+          e.code,
+        );
         this.refusal = { cell: e, tile: e.tile, text, until: now + 2000 };
         if (!reduceMotion()) retrigger(this.tag, "is-pulse");
         this.say(`${tileName(e.tile)} doesn't fit here. ${text}`);

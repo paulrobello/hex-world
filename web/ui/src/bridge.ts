@@ -190,7 +190,17 @@ export interface DiagGpu {
 
 export type GameEvent =
   | { type: "tilePlaced"; q: number; r: number; tile: string; rotation: number; level: number }
-  | { type: "placementRefused"; q: number; r: number; tile: string; rotation: number; level: number; reason: string }
+  | {
+      type: "placementRefused";
+      q: number;
+      r: number;
+      tile: string;
+      rotation: number;
+      level: number;
+      reason: string;
+      /** The socket refusal behind an edges-don't-fit case, for words.ts; null otherwise. */
+      code: RefusalCode | null;
+    }
   | { type: "tileBulldozed"; q: number; r: number; tile: string }
   | { type: "bulldozeRefused"; q: number; r: number; reason: string }
   | { type: "tileReplaced"; q: number; r: number; tile: string; rotation: number; level: number; replaced: string }
@@ -288,18 +298,42 @@ export const REFUSAL_CODES: RefusalCode[] = [
   ...KIND_WORDS.flatMap((mine) => KIND_WORDS.map((theirs) => clashCode(mine, theirs))),
 ];
 
-/** Additive ENH-002 observation field. The sheet still uses the TypeScript mirror. */
+/**
+ * The sheet's fits at the target slot (`play.fits`, ENH-002): the ranking, refusals, the
+ * nearest-slot offer and what each slot edge touches, all from the engine — the sheet reads its
+ * view from here and the TypeScript rules mirror is gone. Null with no slot (bulldoze, photo,
+ * walk or nothing pointed at).
+ */
 export interface Fits {
   slot: Cell;
   needs: (SocketKind | null)[];
   stopped: boolean[];
+  /** The nearest frontier slot where some entry fits, when nothing fits at this slot. */
+  nearest: NearestSlot | null;
   entries: FitsEntry[];
+}
+
+/** Where the sheet's "Show the nearest slot" jumps and how many entries fit there. */
+export interface NearestSlot {
+  q: number;
+  r: number;
+  /** How many picker entries fit at this slot (the sheet's "N tiles fit there"). */
+  tiles: number;
 }
 
 export interface FitsEntry {
   id: string;
-  orientations: [number, number][];
+  /**
+   * Every member's distinct legal orientations as `[member tile id, rotation, level]`, in hex-core
+   * ranking order (fewest cliffs, smallest drop, lowest level when cliff-free and highest
+   * otherwise, then member, then rotation): the steps R walks, each tagged with its member so the
+   * sheet knows which member a step turns onto.
+   */
+  orientations: [member: string, rotation: number, level: number][];
+  /** Why nothing fits (hex-core `Refusal`'s code), for words.ts; null while something fits. */
   refusal: RefusalCode | null;
+  /** What an unfitting row shows: the member and rotation with the fewest clashing edges. */
+  best: [member: string, rotation: number] | null;
 }
 
 export interface BulldozeTarget {
@@ -393,8 +427,8 @@ export interface PlayState {
   inventory: string[];
   bulldoze: BulldozeTarget | null;
   /**
-   * Every picker entry's fits at the target slot (`play.fits`, ENH-002 spike): the sheet's
-   * observation field while the TypeScript mirror stays authoritative. Null with no slot.
+   * Every picker entry's fits at the target slot (`play.fits`): the Tiles sheet and the ghost tag
+   * read their fits from here. Null with no slot (bulldoze, photo, walk or nothing pointed at).
    */
   fits: Fits | null;
   can_undo: boolean;
@@ -810,6 +844,7 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
     rotation: true,
     level: true,
     reason: true,
+    code: true,
   }),
   tileBulldozed: keys<EventOf<"tileBulldozed">>({ q: true, r: true, tile: true }),
   bulldozeRefused: keys<EventOf<"bulldozeRefused">>({ q: true, r: true, reason: true }),
@@ -917,8 +952,8 @@ export const STATE_FIELDS = {
   mega_slot: keys<MegaSlot>({ q: true, r: true, tile: true, orientations: true }),
   orientation: keys<MegaSlot["orientations"][number]>({ rotation: true, level: true }),
   bulldoze: keys<BulldozeTarget>({ q: true, r: true, allowed: true, reason: true }),
-  fits: keys<Fits>({ slot: true, needs: true, stopped: true, entries: true }),
-  fits_entry: keys<FitsEntry>({ id: true, orientations: true, refusal: true }),
+  fits: keys<Fits>({ slot: true, needs: true, stopped: true, nearest: true, entries: true }),
+  fits_entry: keys<FitsEntry>({ id: true, orientations: true, refusal: true, best: true }),
   last_result: keys<ActionResult>({ action: true, ok: true, cell: true, reason: true }),
   tile: keys<PlayTile>({ q: true, r: true, tile: true, rotation: true, level: true }),
   rising: keys<RisingTile>({ q: true, r: true, tile: true, stage: true, t: true }),

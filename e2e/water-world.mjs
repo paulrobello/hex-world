@@ -2,13 +2,48 @@
 // breadth-first from the start meadow, east of a coastline ocean, a beach band along it, a river
 // chain on the west, forests in the north and meadows with a road and houses in between. Every tile
 // is placed at the rotation the game picks on its own (`place` hovers first, which snaps to the
-// first legal rotation, since no `rotate` is ever sent), checked with the overlay's fit rules
-// (web/ui/src/rules.ts, held to hex-core by rules-parity). Cells nothing fits stay empty.
+// first legal rotation, since no `rotate` is ever sent). The builder's offline fit oracle reads the
+// published catalog's edges and land sides: this tile set is level-0 flat, lane-symmetric within a
+// kind and directional only on the beaches, so kind compatibility plus beach side decides it
+// (ENH-002: the sheet's rules mirror is retired; hex-core validates every place command anyway).
+// Cells nothing fits stay empty.
 // usage: node e2e/water-world.mjs <out.json> [radius]   (also importable: waterWorld(radius))
 import { writeFile } from "node:fs/promises";
-import { TILES, cellKey, isSlot, legalRotations, needsAt, tileDef } from "../web/ui/src/rules.ts";
+import schema from "../web/ui/src/bridge-schema.json" with { type: "json" };
+import { TILES, cellKey, isSlot, rotated, tileDef } from "../web/ui/src/rules.ts";
 
 const dist = (q, r) => (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+const DIRS = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+const neighbor = (c, e) => {
+  const [dq, dr] = DIRS[((e % 6) + 6) % 6];
+  return { q: c.q + dq, r: c.r + dr };
+};
+const COMPAT = schema.catalog.compatible;
+/** The neighbour's facing edge's land side, null where it has none (a turn never changes a side). */
+const rotatedLand = (def, k) => [0, 1, 2, 3, 4, 5].map((w) => def.land[(((w - k) % 6) + 6) % 6]);
+/** What the occupant of the cell across `c`'s world edge `w` shows toward `c`, null when empty. */
+const needsAt = (c, tiles) =>
+  [0, 1, 2, 3, 4, 5].map((w) => {
+    const n = tiles.get(cellKey(neighbor(c, w)));
+    const def = n && tileDef(n.tile);
+    if (!def) return null;
+    const e = (w + 3) % 6;
+    return { kind: rotated(def, n.rotation)[e], land: rotatedLand(def, n.rotation)[e] };
+  });
+/** The rotations of `def` whose every edge meets its neighbour's facing edge, land sides included. */
+const fits = (def, needs) =>
+  [0, 1, 2, 3, 4, 5].filter((k) =>
+    needs.every((n, w) => {
+      if (!n) return true;
+      const theirs = COMPAT[n.kind];
+      return (
+        theirs.includes(rotated(def, k)[w]) &&
+        (n.land === null || rotatedLand(def, k)[w] === null
+          ? n.land === rotatedLand(def, k)[w]
+          : n.land !== rotatedLand(def, k)[w])
+      );
+    }),
+  );
 
 // Preferred tiles per region, in order; the catch-all keeps the disk filled where a coast closes.
 function prefs(q, r) {
@@ -41,7 +76,7 @@ export function waterWorld(radius = 8) {
         const needs = needsAt(c, tiles);
         const order = [...prefs(c.q, c.r), ...FALLBACK];
         for (const id of order) {
-          const legal = legalRotations(tileDef(id), needs);
+          const legal = fits(tileDef(id), needs);
           if (!legal.length) continue;
           tiles.set(cellKey(c), { ...c, tile: id, rotation: legal[0] });
           cmds.push({ cmd: "select_tile", id }, { cmd: "place", q: c.q, r: c.r });

@@ -322,9 +322,8 @@ mod exports {
 
 /// The bridge contract the web UI overlay is typed against (`web/ui/src/bridge-schema.json`):
 /// command and event names with their fields, enum spellings, the `hex_world_*` wasm export names
-/// the shim drives, the `play` state keys, the tile catalog with its socket table, and legal
-/// orientations for every frontier slot of six worlds (the overlay's fit rules are checked against
-/// them). `make ui-schema` rewrites the file;
+/// the shim drives, the `play` state keys, and the tile catalog with its socket table.
+/// `make ui-schema` rewrites the file;
 /// `web/ui/test/bridge-sync.test.ts` checks the TypeScript side against it.
 #[cfg(test)]
 mod schema {
@@ -332,10 +331,7 @@ mod schema {
 
     use bevy::camera::CameraProjection;
     use bevy::prelude::{GlobalTransform, PerspectiveProjection, Transform, Vec2, Vec3};
-    use hex_core::{
-        Axial, EdgeStatus, HEX_RADIUS, Orientation, Refusal, SocketKind, TileCatalog, TileDef,
-        World,
-    };
+    use hex_core::{Axial, EdgeStatus, HEX_RADIUS, Refusal, SocketKind, TileCatalog};
     use serde_json::{Value, json};
 
     use super::{View, cell_rect};
@@ -347,12 +343,7 @@ mod schema {
         env!("CARGO_MANIFEST_DIR"),
         "/../../web/ui/src/bridge-schema.json"
     );
-    const PARITY_PATH: &str = concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/../../web/ui/test/rules-parity.json"
-    );
     const COMMITTED: &str = include_str!("../../../web/ui/src/bridge-schema.json");
-    const COMMITTED_PARITY: &str = include_str!("../../../web/ui/test/rules-parity.json");
 
     /// The variant names serde accepts for an enum, read from its "unknown variant" error.
     fn serde_variants<T: serde::de::DeserializeOwned + std::fmt::Debug>(
@@ -503,6 +494,7 @@ mod schema {
                 rotation: 0,
                 level: 0,
                 reason: "edges [3] do not fit".into(),
+                code: None,
             },
             GameEvent::TileBulldozed {
                 q: 1,
@@ -830,155 +822,6 @@ mod schema {
         })
     }
 
-    /// A coast part-built (owner O1): four meadows, then a straight beach, a headland and a bay,
-    /// so the frontier asks for beach edges with the land on either side.
-    const COAST_PART_BUILT: &str = r#"[
-        {"cmd": "select_tile", "id": "meadow"},
-        {"cmd": "place", "q": 0, "r": 1},
-        {"cmd": "place", "q": 1, "r": 1},
-        {"cmd": "place", "q": -1, "r": 0},
-        {"cmd": "select_tile", "id": "beach"},
-        {"cmd": "place", "q": 0, "r": -1},
-        {"cmd": "select_tile", "id": "beach_outer"},
-        {"cmd": "place", "q": 1, "r": -1},
-        {"cmd": "select_tile", "id": "beach_inner"},
-        {"cmd": "place", "q": 1, "r": 0}
-    ]"#;
-
-    /// Stopped rail ends (owner, 2026-10-25): a station with a meadow beyond one end, a junction
-    /// off its other end and a level crossing west of the start meadow, so the frontier holds slots
-    /// that stopped ends of each kind face.
-    const RAIL_ENDS: &[(i32, i32, &str, u8)] = &[
-        (1, 0, "rail_station", 1),
-        (1, 1, "meadow", 0),
-        (1, -1, "rail_junction", 0),
-        (-1, 0, "rail_road_crossing", 1),
-    ];
-
-    /// [`RAIL_ENDS`] placed on a new world, each placement legal.
-    fn rail_ends_world(c: &TileCatalog) -> World {
-        let mut w = World::new(1);
-        for &(q, r, id, k) in RAIL_ENDS {
-            w.place(c, Axial::new(q, r), id, Orientation::new(k, 0))
-                .unwrap();
-        }
-        w
-    }
-
-    /// Raised ground (P4): [`RAIL_ENDS`] with the meadow beyond the station's stopped end on level
-    /// 1, a level-1 road beside that meadow and a level-2 meadow south of the start, so frontier
-    /// slots face neighbours at several levels (seamless, cliff, a lane across levels, a stopped
-    /// end against raised ground).
-    fn raised_world(c: &TileCatalog) -> World {
-        let mut w = World::new(1);
-        for &(q, r, id, k) in RAIL_ENDS {
-            let level = u8::from(id == "meadow");
-            w.place(c, Axial::new(q, r), id, Orientation::new(k, level))
-                .unwrap();
-        }
-        for (q, r, id, level) in [(2, 1, "road_straight", 1), (0, 1, "meadow", 2)] {
-            let cell = Axial::new(q, r);
-            let o = w
-                .legal_orientations(c, cell, c.get(id).unwrap())
-                .into_iter()
-                .find(|o| o.level == level)
-                .unwrap();
-            w.place(c, cell, id, o).unwrap();
-        }
-        w
-    }
-
-    /// A granite massif on level 1, centred two steps east of the start meadow, so single tiles
-    /// beside its members meet them across cliffs: a meadow and a forest that also touch the start,
-    /// and a river mouth east of it that only a member joins to the world.
-    fn massif_world(c: &TileCatalog) -> World {
-        let mut w = World::new(1);
-        let massif = c.get("massif_granite").unwrap();
-        let centre = Axial::new(2, 0);
-        let o = Orientation::new(2, 1);
-        assert!(w.legal_orientations(c, centre, massif).contains(&o));
-        w.place(c, centre, "massif_granite", o).unwrap();
-        for (q, r, id) in [(1, -1, "meadow"), (0, 1, "forest"), (4, 0, "river_mouth")] {
-            let cell = Axial::new(q, r);
-            let o = w.legal_orientations(c, cell, c.get(id).unwrap())[0];
-            w.place(c, cell, id, o).unwrap();
-        }
-        assert_eq!(
-            w.can_bulldoze(c, centre),
-            Err(hex_core::BulldozeError::WouldDisconnect)
-        );
-        assert_eq!(w.can_bulldoze(c, Axial::new(4, 0)), Ok(()));
-        w
-    }
-
-    /// Legal orientations of every catalog tile at every frontier slot of the world a script
-    /// leaves.
-    fn parity(c: &TileCatalog, script: &str) -> Value {
-        let mut g = GameState::new(1);
-        for cmd in parse_script(script).unwrap() {
-            if let Some(a) = cmd.action() {
-                g.apply(a);
-            }
-        }
-        parity_of(c, &g.world)
-    }
-
-    /// Legal orientations (`[rotation, level]`, in hex-core order) of every catalog tile at every
-    /// frontier slot of `w`, every footprint tile's legal centres as the state's `mega_slots`
-    /// publishes them, and the centre `World::mega_centre_for` picks for each frontier slot.
-    fn parity_of(c: &TileCatalog, w: &World) -> Value {
-        let tiles: Vec<Value> = w
-            .tiles()
-            .iter()
-            .map(|(cell, t)| json!([cell.q, cell.r, t.def, t.rotation, t.level]))
-            .collect();
-        let slots: BTreeMap<String, BTreeMap<String, Vec<[u8; 2]>>> = w
-            .frontier()
-            .iter()
-            .map(|s| {
-                let per_tile = c
-                    .tiles()
-                    .iter()
-                    .map(|t| {
-                        let legal = w.legal_orientations(c, *s, t);
-                        (
-                            t.id.clone(),
-                            legal.iter().map(|o| [o.rotation, o.level]).collect(),
-                        )
-                    })
-                    .collect();
-                (format!("{},{}", s.q, s.r), per_tile)
-            })
-            .collect();
-        let mega_slots: Vec<Value> = c
-            .tiles()
-            .iter()
-            .filter(|t| t.is_mega())
-            .flat_map(|t| {
-                w.mega_slots(c, t)
-                    .into_iter()
-                    .map(|(cell, legal)| crate::game::mega_slot_json(cell, &t.id, &legal))
-            })
-            .collect();
-        let mega_centres: BTreeMap<String, BTreeMap<String, [i32; 2]>> = w
-            .frontier()
-            .iter()
-            .map(|s| {
-                let per_tile = c
-                    .tiles()
-                    .iter()
-                    .filter(|t| t.is_mega())
-                    .filter_map(|t| {
-                        let a = w.mega_centre_for(c, *s, t)?;
-                        Some((t.id.clone(), [a.q, a.r]))
-                    })
-                    .collect();
-                (format!("{},{}", s.q, s.r), per_tile)
-            })
-            .collect();
-        json!({ "tiles": tiles, "slots": slots, "mega_slots": mega_slots, "mega_centres": mega_centres })
-    }
-
     /// The `hex_world_*` wasm exports the shim's `WasmBindings` interface drives
     /// (web/ui/src/shim.ts), sorted; `bridge-sync.test.ts` asserts the two lists equal.
     fn wasm_exports() -> Vec<String> {
@@ -1035,160 +878,17 @@ mod schema {
         })
     }
 
-    fn parity_worlds() -> Value {
-        let c = TileCatalog::builtin().unwrap();
-        json!({
-            "about": "Legal orientations ([rotation, level], in hex-core order) of every tile at every frontier slot of eight worlds, each world's mega_slots and the centre a footprint tile takes for each frontier slot (mega_centres), from hex-core (make ui-schema). web/ui/test/rules.test.ts checks the overlay's fit rules against it.",
-            "worlds": [
-                parity(&c, include_str!("../../../docs/checkpoints/play/play.json")),
-                parity(&c, include_str!("../../../docs/checkpoints/water-play/water-play.json")),
-                parity(&c, COAST_PART_BUILT),
-                parity(&c, include_str!("../../../docs/checkpoints/coast/coast.json")),
-                parity_of(&c, &rail_ends_world(&c)),
-                parity_of(&c, &raised_world(&c)),
-                parity(
-                    &c,
-                    include_str!("../../../docs/checkpoints/elevation/elevation.json"),
-                ),
-                parity_of(&c, &massif_world(&c)),
-            ],
-        })
-    }
-
-    /// The world a script leaves, for the fits cross-check.
-    fn scripted_world(script: &str) -> World {
-        let mut g = GameState::new(1);
-        for cmd in parse_script(script).unwrap() {
-            if let Some(a) = cmd.action() {
-                g.apply(a);
-            }
-        }
-        g.world
-    }
-
-    /// The spike's `fits_at` agrees with the fixture's own answers: over every parity world and
-    /// every frontier slot, each entry's orientation list is hex-core's group merge (the sheet's
-    /// R-walk order) and holds exactly the fixture's per-tile legal orientations, deduped per
-    /// member; each footprint entry reads the fixture's own `mega_slots` for the centre covering
-    /// the slot. This is the shared-path check that lets the fixture retire with the mirror
-    /// (ENH-002 steps 3–5).
-    #[test]
-    fn fits_entries_match_the_parity_fixture() {
-        let c = TileCatalog::builtin().unwrap();
-        let worlds = [
-            scripted_world(include_str!("../../../docs/checkpoints/play/play.json")),
-            scripted_world(include_str!(
-                "../../../docs/checkpoints/water-play/water-play.json"
-            )),
-            scripted_world(COAST_PART_BUILT),
-            scripted_world(include_str!("../../../docs/checkpoints/coast/coast.json")),
-            rail_ends_world(&c),
-            raised_world(&c),
-            scripted_world(include_str!(
-                "../../../docs/checkpoints/elevation/elevation.json"
-            )),
-            massif_world(&c),
-        ];
-        for w in &worlds {
-            let fixture = parity_of(&c, w);
-            let slots = fixture["slots"].as_object().unwrap();
-            let mega = fixture["mega_slots"].as_array().unwrap();
-            let picker = c.picker();
-            for slot in w.frontier() {
-                let per_tile = &slots[&format!("{},{}", slot.q, slot.r)];
-                let fits = crate::game::fits_at(w, &c, slot);
-                assert_eq!(fits.slot, slot);
-                assert_eq!(fits.entries.len(), picker.len());
-                assert!(fits.entries.iter().zip(&picker).all(|(e, p)| e.id == p.id));
-                for entry in &fits.entries {
-                    let pick = picker.iter().find(|p| p.id == entry.id).unwrap();
-                    let members: Vec<&TileDef> =
-                        pick.tiles.iter().map(|id| c.get(id).unwrap()).collect();
-                    let at = format!("{} at {},{}", entry.id, slot.q, slot.r);
-                    if members[0].is_mega() {
-                        let def = members[0];
-                        let centre = std::iter::once(slot)
-                            .chain((0..6).map(|e| slot.neighbor(e)))
-                            .find(|&a| !w.legal_orientations(&c, a, def).is_empty());
-                        let expected: Vec<[u8; 2]> = match centre {
-                            Some(a) => {
-                                let m = mega
-                                    .iter()
-                                    .find(|m| {
-                                        m["tile"] == def.id.as_str()
-                                            && m["q"].as_i64() == Some(i64::from(a.q))
-                                            && m["r"].as_i64() == Some(i64::from(a.r))
-                                    })
-                                    .unwrap();
-                                let mut out: Vec<[u8; 2]> = vec![];
-                                for o in m["orientations"].as_array().unwrap() {
-                                    let rot =
-                                        u8::try_from(o["rotation"].as_u64().unwrap()).unwrap();
-                                    let level = u8::try_from(o["level"].as_u64().unwrap()).unwrap();
-                                    if !out
-                                        .iter()
-                                        .any(|[r, l]| *l == level && def.same_orientation(*r, rot))
-                                    {
-                                        out.push([rot, level]);
-                                    }
-                                }
-                                out
-                            }
-                            None => vec![],
-                        };
-                        assert_eq!(entry.orientations, expected, "{at}");
-                    } else {
-                        // The order is hex-core's own group merge; the content is the fixture's
-                        // per-tile lists, deduped per member the way fitEntry does.
-                        let ordered: Vec<[u8; 2]> = w
-                            .group_orientations(&c, slot, &members)
-                            .into_iter()
-                            .map(|(_, o)| [o.rotation, o.level])
-                            .collect();
-                        assert_eq!(entry.orientations, ordered, "{at}");
-                        let mut merged: Vec<[u8; 2]> = vec![];
-                        for m in &members {
-                            // Per-member dedupe, member after member: the R walk keeps every
-                            // member's own steps (a group entry carries duplicates across members).
-                            let mut seen: Vec<[u8; 2]> = vec![];
-                            for o in per_tile[&m.id].as_array().unwrap() {
-                                let pair =
-                                    [o[0].as_u64().unwrap() as u8, o[1].as_u64().unwrap() as u8];
-                                if !seen
-                                    .iter()
-                                    .any(|[r, l]| *l == pair[1] && m.same_orientation(*r, pair[0]))
-                                {
-                                    seen.push(pair);
-                                }
-                            }
-                            merged.extend(seen);
-                        }
-                        merged.sort_unstable();
-                        let mut got = entry.orientations.clone();
-                        got.sort_unstable();
-                        assert_eq!(got, merged, "{at}");
-                    }
-                }
-            }
-        }
-    }
-
     #[test]
     fn schema_matches_web_ui() {
         let pretty = |v: &Value| format!("{}\n", serde_json::to_string_pretty(v).unwrap());
-        let (schema, parity) = (pretty(&schema()), pretty(&parity_worlds()));
+        let schema = pretty(&schema());
         if std::env::var_os("HEXW_UPDATE_SCHEMA").is_some() {
             std::fs::write(SCHEMA_PATH, &schema).unwrap();
-            std::fs::write(PARITY_PATH, &parity).unwrap();
             return;
         }
         let stale =
             "is stale: run `make ui-schema`, then update web/ui/src until `make ui-test` passes";
         assert!(COMMITTED == schema, "web/ui/src/bridge-schema.json {stale}");
-        assert!(
-            COMMITTED_PARITY == parity,
-            "web/ui/test/rules-parity.json {stale}"
-        );
     }
 
     #[test]

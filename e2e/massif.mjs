@@ -10,21 +10,34 @@
 // Bulldozing a ring cell names the anchor (`bulldoze` target and `tileBulldozed`). On the opening
 // world, with the massif placed, and on a pocket world (a frontier slot no footprint covers) it also
 // asserts that the HUD Tiles sheet lists the massif once, under "Fits here" exactly at the slots
-// where `megaFit` (web/ui/src/rules.ts) finds a centre and under "Doesn't fit here" elsewhere.
+// where the engine's `play.fits` entry lists a centre for the slot and under "Doesn't fit here"
+// elsewhere (ENH-002: the sheet reads the published fits; the megaFit mirror is gone).
 // Exits 0 only when every check holds and the page logged no error. Not a timing run, so it takes
 // no load guard. Run after `make build-web`: node e2e/massif.mjs dist
 import { BAD_TEXT } from "./console-errors.mjs";
-import { megaFit } from "../web/ui/src/rules.ts";
 import { serveDist } from "./lib/harness.mjs";
 import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
+const DIRS = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
+const neighbor = (c, edge) => {
+  const d = DIRS[edge % 6];
+  return { q: c.q + d[0], r: c.r + d[1] };
+};
+// Where the massif stands for `slot`, from the engine's published `mega_slots` (ENH-002: the old
+// `megaFit` mirror walked the same centres): the slot itself, then its neighbours in edge order.
+const megaCentre = (slot, megaSlots, tile) => {
+  for (const c of [slot, ...[0, 1, 2, 3, 4, 5].map((e) => neighbor(slot, e))]) {
+    const m = megaSlots.find((s) => s.tile === tile && s.q === c.q && s.r === c.r);
+    if (m) return { centre: { q: m.q, r: m.r }, orientations: m.orientations };
+  }
+  return null;
+};
 const MASSIF = "massif_granite";
 const STEP_MS = 15_000;
 const SHEET_MS = 5_000;
 // Frontier slots the sheet check hovers per world.
 const SHEET_SLOTS = 12;
-const DIRS = [[1, 0], [0, 1], [-1, 1], [-1, 0], [0, -1], [1, -1]];
 const { server, base } = await serveDist(dist);
 let failures = 0;
 const fail = (m) => { console.error("FAIL:", m); failures++; };
@@ -81,9 +94,9 @@ function checkGhostShape(name, g, centre) {
 // Hovers the first frontier slot a centre covers and checks the ghost there; returns {slot, centre}.
 async function checkGhost(name) {
   const s0 = await play();
-  const slot = s0.frontier.find((c) => megaFit(c, s0.mega_slots, MASSIF));
+  const slot = s0.frontier.find((c) => megaCentre(c, s0.mega_slots, MASSIF));
   if (!slot) { fail(`${name}: no frontier slot fits the massif`); return null; }
-  const centre = megaFit(slot, s0.mega_slots, MASSIF).centre;
+  const centre = megaCentre(slot, s0.mega_slots, MASSIF).centre;
   const s = await step(`${name} hover`, { cmd: "hover", q: slot.q, r: slot.r },
     (s) => s.ghost != null && s.ghost.tile === MASSIF && same(s.ghost, centre));
   const g = s?.ghost;
@@ -93,7 +106,7 @@ async function checkGhost(name) {
   return { slot, centre, ghost: g };
 }
 
-// The HUD sheet lists the massif exactly once, under "Fits here" exactly where megaFit finds a
+// The HUD sheet lists the massif exactly once, under "Fits here" exactly where play.fits lists a
 // centre and under "Doesn't fit here" everywhere else. `first` slots are checked before the
 // frontier's. Returns how many slots of each kind were checked.
 async function checkSheet(name, first = []) {
@@ -101,7 +114,7 @@ async function checkSheet(name, first = []) {
   let fits = 0, off = 0;
   const slots = [...first, ...s0.frontier.filter((c) => !first.some((f) => same(f, c))).slice(0, SHEET_SLOTS)];
   for (const slot of slots) {
-    const want = megaFit(slot, s0.mega_slots, MASSIF) != null;
+    const want = megaCentre(slot, s0.mega_slots, MASSIF) != null;
     await cmd({ cmd: "hover", q: slot.q, r: slot.r });
     const fitRow = page.locator(`.list--fit .row[data-tile=${MASSIF}]`);
     const offRow = page.locator(`.list--off .row[data-tile=${MASSIF}]`);
@@ -210,7 +223,7 @@ try {
     (s) => s.tiles.length === 1 + ring6.length);
   const pocketed = await step("pocket select", { cmd: "select_tile", id: MASSIF }, (s) => s.selected === MASSIF);
   if (!pocketed.frontier.some((c) => same(c, pocket))) fail(`pocket: ${key(pocket)} is not a frontier slot`);
-  if (megaFit(pocket, pocketed.mega_slots, MASSIF) != null) fail(`pocket: megaFit finds a centre for ${key(pocket)}`);
+  if (megaCentre(pocket, pocketed.mega_slots, MASSIF) != null) fail(`pocket: megaFit finds a centre for ${key(pocket)}`);
   const { off } = await checkSheet("pocket world", [pocket]);
   if (off === 0) fail("pocket world: no non-fitting slot was checked");
 

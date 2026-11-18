@@ -1,23 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import {
-  PICKER,
-  TILES,
-  entryMeta,
-  entryOf,
-  entryReadout,
-  entrySummary,
-  fitEntry,
-  needsAt,
-  rotationReadout,
-  tileDef,
-  tileMap,
-} from "../src/rules.ts";
-import { DECK_END_REFUSAL, FOOTPRINT_REFUSAL, tileName } from "../src/words.ts";
-import parity from "./rules-parity.json" with { type: "json" };
+import { PICKER, TILES, entryMeta, entryOf, entrySummary, tileDef, type Turn } from "../src/rules.ts";
+import { tileName } from "../src/words.ts";
 
-const world = (...t: [number, number, string, number][]) =>
-  tileMap(t.map(([q, r, tile, rotation]) => ({ q, r, tile, rotation, level: 0 })));
 const curve = () => PICKER.find((e) => e.id === "beach_curve")!;
 
 test("the picker lists one Beach Curve and neither the headland nor the bay", () => {
@@ -55,86 +40,20 @@ test("the picker lists one River mouth for both handednesses", () => {
   assert.equal(entryOf("river_mouth_l")!.id, "river_mouths");
 });
 
-test("Beach Curve fits where either member fits and counts both members' turns", () => {
-  // East of the start meadow: the headland one way, the bay three ways, as hex-core cycles them.
-  const f = fitEntry(curve(), needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0])));
-  assert.ok(f.ok);
-  assert.deepEqual(
-    f.seq.map((t) => [t.def.id, t.k]),
-    [
-      ["beach_outer", 0],
-      ["beach_inner", 0],
-      ["beach_inner", 1],
-      ["beach_inner", 5],
-    ],
+test("a lone tile's entry reads as its tile did, over the engine's steps", () => {
+  const turn = (id: string, k: number, level: number): Turn => ({ def: tileDef(id)!, k, level });
+  // A meadow fits any way round; the Beach Curve row counts its members' steps together.
+  assert.equal(entryMeta(PICKER.find((e) => e.id === "meadow")!, [turn("meadow", 0, 0)]), "Fits any way round");
+  assert.equal(
+    entryMeta(curve(), [
+      turn("beach_outer", 0, 0),
+      turn("beach_inner", 0, 0),
+      turn("beach_inner", 1, 0),
+      turn("beach_inner", 5, 0),
+    ]),
+    "4 rotations fit",
   );
-  assert.equal(entryMeta(curve(), f), "4 rotations fit");
-  assert.deepEqual(entryReadout(f, "beach_inner", 1), { index: 2, count: 4 });
-  assert.deepEqual(entryReadout(f, "beach_outer", 0), { index: 0, count: 4 });
-  // Three meadows around (1, 0): only the bay fits, and that is enough for the row to fit.
-  const land = world([0, 0, "meadow", 0], [0, 1, "meadow", 0], [1, 1, "meadow", 0]);
-  const bay = fitEntry(curve(), needsAt({ q: 1, r: 0 }, land));
-  assert.ok(bay.ok);
-  assert.ok(bay.seq.every((t) => t.def.id === "beach_inner"));
-  // Ocean on two opposite edges: neither member has opposite ocean edges, so the row is off, with
-  // a reason in the player's words.
-  const none = fitEntry(curve(), needsAt({ q: 1, r: 0 }, world([0, 0, "ocean", 0], [2, 0, "ocean", 0])));
-  assert.equal(none.ok, false);
-  assert.ok(none.why.length > 0, none.why);
-});
-
-test("a lone tile's entry reads as its tile did", () => {
-  const meadow = PICKER.find((e) => e.id === "meadow")!;
-  const f = fitEntry(meadow, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0])));
-  assert.equal(entryMeta(meadow, f), "Fits any way round");
-  assert.equal(entrySummary(meadow), "Grass all round");
+  // The count reads on the first step's level: steps on other levels do not enter it.
+  assert.equal(entryMeta(curve(), [turn("beach_outer", 0, 0), turn("beach_inner", 0, 1)]), "1 rotation fits");
   assert.equal(entrySummary(curve()), "Ocean, beach and grass edges");
-});
-
-test("a viaduct beside the start meadow is refused for its open deck end, not a clash", () => {
-  // Every turn leaves a deck end facing an empty cell, which clashes with nothing placed.
-  const viaduct = entryOf("rail_viaduct_l1")!;
-  assert.deepEqual(
-    viaduct.tiles.map((t) => t.id),
-    ["rail_viaduct_l1", "rail_viaduct_l2", "rail_viaduct_l3"],
-  );
-  const f = fitEntry(viaduct, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0])));
-  assert.equal(f.ok, false);
-  assert.equal(f.why, DECK_END_REFUSAL);
-});
-
-test("the Tiles sheet lists the massif at a slot a footprint covers and says why elsewhere", () => {
-  const massif = PICKER.find((e) => e.id === "massif_granite")!;
-  assert.deepEqual(
-    massif.tiles.map((t) => t.id),
-    ["massif_granite"],
-  );
-  const w = parity.worlds.find((p) => p.tiles.some((t) => t[2] === "massif_granite"))!;
-  const tiles = tileMap(
-    (w.tiles as [number, number, string, number, number][]).map(([q, r, tile, rotation, level]) => ({
-      q,
-      r,
-      tile,
-      rotation,
-      level,
-    })),
-  );
-  const centres = w.mega_centres as Record<string, Record<string, [number, number]>>;
-  const slots = Object.keys(w.slots);
-  const covered = slots.find((s) => centres[s]?.massif_granite)!;
-  const bare = slots.find((s) => !centres[s]?.massif_granite)!;
-  const at = (s: string) => {
-    const [q, r] = s.split(",").map(Number) as [number, number];
-    return fitEntry(massif, needsAt({ q, r }, tiles), { slot: { q, r }, megaSlots: w.mega_slots });
-  };
-  const f = at(covered);
-  assert.ok(f.ok, covered);
-  assert.equal(entryMeta(massif, f), "6 rotations fit");
-  const off = at(bare);
-  assert.equal(off.ok, false, bare);
-  assert.equal(off.why, FOOTPRINT_REFUSAL);
-  // Without engine slots nothing lists it: the HUD never derives a footprint fit itself.
-  assert.equal(fitEntry(massif, needsAt({ q: 1, r: 0 }, world([0, 0, "meadow", 0]))).ok, false);
-  // The ghost readout counts its six distinct turns, as any hero tile's.
-  assert.deepEqual(rotationReadout(tileDef("massif_granite")!, [0, 1, 2, 3, 4, 5], 3), { index: 3, count: 6 });
 });

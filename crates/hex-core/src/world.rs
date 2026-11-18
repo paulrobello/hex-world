@@ -752,18 +752,22 @@ impl World {
             // Room at this centre, but every orientation clashes on an outer edge.
             return Some(Refusal::FootprintEdges);
         }
-        // The least-clashing rotation at level 0, the first on ties (the mirror's `bestK`).
+        self.socket_refusal(catalog, cell, def)
+    }
+
+    /// Why `def` cannot meet the sockets around `cell` with any level-0 rotation, at a cell that
+    /// could host the tile — a need no edge of the tile meets takes precedence over what the
+    /// least-clashing rotation's first clashing edge meets (ENH-002: the sheet mirror's
+    /// classification, kept in step when the mirror retired). `None` when every edge meets, which
+    /// [`World::placement_refusal`] calls only for a tile with no legal orientation.
+    pub fn socket_refusal(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef) -> Option<Refusal> {
+        // The least-clashing rotation at level 0, the first on ties.
         let best = (0..6)
-            .map(|k| {
-                (
-                    self.clash_count(catalog, cell, def, Orientation::new(k, 0)),
-                    k,
-                )
-            })
+            .map(|k| (self.clash_count(catalog, cell, def, Orientation::new(k, 0)), k))
             .min()
             .unwrap_or((0, 0))
             .1;
-        // The first need kind in edge order that no edge of `def` meets (the mirror's `lacking`).
+        // The first need kind in edge order that no edge of `def` meets.
         let mut seen: Vec<SocketKind> = vec![];
         for w in 0..6 {
             let kind = self
@@ -785,8 +789,7 @@ impl World {
         let w = self
             .clash_edges(catalog, cell, def, Orientation::new(best, 0))
             .into_iter()
-            .next()
-            .expect("a tile with no legal orientation has a clashing edge");
+            .next()?;
         match self.facing(catalog, cell.neighbor(w), opposite_edge(w)) {
             // Only a deck end clashes with nothing placed across it.
             None => Some(Refusal::DeckEnd),

@@ -38,6 +38,9 @@ pub enum GameEvent {
         rotation: u8,
         level: u8,
         reason: String,
+        /// The socket refusal behind an edges-don't-fit case (`Refusal`'s code), for words.ts;
+        /// `None` when a tunnel cover, level range or footprint mismatch refused it instead.
+        code: Option<Refusal>,
     },
     TileBulldozed {
         q: i32,
@@ -1012,6 +1015,12 @@ impl GameState {
             Err(ReplaceError::Empty) => self.refuse("replace", ReplaceError::Empty.to_string()),
             Err(e) => {
                 let reason = e.to_string();
+                let code = matches!(e, ReplaceError::Incompatible(_))
+                    .then(|| {
+                        self.world
+                            .socket_refusal(&self.catalog, cell, self.catalog.get(&tile).expect("the event names a catalog tile"))
+                    })
+                    .flatten();
                 self.result("replace", Some(cell), Some(reason.clone()));
                 self.refusals += 1;
                 vec![GameEvent::PlacementRefused {
@@ -1021,6 +1030,7 @@ impl GameState {
                     rotation,
                     level,
                     reason,
+                    code,
                 }]
             }
         }
@@ -1051,6 +1061,15 @@ impl GameState {
             }
             Err(e) => {
                 let reason = e.to_string();
+                let code = matches!(e, hex_core::PlaceError::Incompatible(_))
+                    .then(|| {
+                        self.world.socket_refusal(
+                            &self.catalog,
+                            cell,
+                            self.catalog.get(&tile).expect("the event names a catalog tile"),
+                        )
+                    })
+                    .flatten();
                 self.result("place", Some(cell), Some(reason.clone()));
                 self.refusals += 1;
                 vec![GameEvent::PlacementRefused {
@@ -1060,6 +1079,7 @@ impl GameState {
                     rotation,
                     level,
                     reason,
+                    code,
                 }]
             }
         }
@@ -1326,7 +1346,7 @@ impl GameState {
 }
 
 /// One `mega_slots` entry: a legal centre of footprint tile `tile` and its legal orientations, in
-/// hex-core order. `bridge::schema` records the same shape for the parity worlds.
+/// hex-core order. The state publication and `bridge::schema` both write this shape.
 pub fn mega_slot_json(centre: Axial, tile: &str, legal: &[Orientation]) -> Value {
     let orientations: Vec<Value> = legal
         .iter()
@@ -1336,8 +1356,7 @@ pub fn mega_slot_json(centre: Axial, tile: &str, legal: &[Orientation]) -> Value
 }
 
 /// `play.fits` at one slot (ENH-002): what the slot touches and every picker entry's fits, what
-/// the Tiles sheet reads instead of mirroring the placement rules once the sheet switches
-/// (plan steps 3–5).
+/// the Tiles sheet reads instead of mirroring the placement rules.
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Fits {
     /// The slot the fits are for.
@@ -1347,8 +1366,21 @@ pub struct Fits {
     pub needs: Vec<Option<SocketKind>>,
     /// Whether each world edge faces a stopped rail end (a station or junction end).
     pub stopped: Vec<bool>,
+    /// The nearest frontier slot where some entry fits, when nothing fits here, so the sheet
+    /// offers the jump without mirroring the rules. `None` while something fits.
+    pub nearest: Option<NearestSlot>,
     /// One per picker entry, in catalog order.
     pub entries: Vec<FitsEntry>,
+}
+
+/// The nearest frontier slot where some picker entry fits (`play.fits.nearest`): where the
+/// sheet's "Show the nearest slot" jumps, and how many entries fit there.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub struct NearestSlot {
+    pub q: i32,
+    pub r: i32,
+    /// How many picker entries fit at this slot (the sheet's "N tiles fit there").
+    pub tiles: u32,
 }
 
 /// One picker entry's fits at the slot: the sheet's `fitEntry` for it, from the engine.
@@ -1356,18 +1388,22 @@ pub struct Fits {
 pub struct FitsEntry {
     /// The picker entry id (`select_tile` takes it).
     pub id: String,
-    /// Every member's distinct legal orientations as `[rotation, level]` pairs, in hex-core
+    /// Every member's distinct legal orientations as `[member id, rotation, level]`, in hex-core
     /// ranking order (fewest cliffs, smallest drop, lowest level when cliff-free and highest
-    /// otherwise, member after member, then rotation) — the steps R walks.
-    pub orientations: Vec<[u8; 2]>,
+    /// otherwise, then member, then rotation) — the steps R walks, each tagged with its member so
+    /// the sheet knows which member a step turns onto.
+    pub orientations: Vec<(String, u8, u8)>,
     /// Why nothing fits ([`Refusal`]), for the sheet's refusal wording in words.ts; `None` while
     /// some orientation fits.
     pub refusal: Option<Refusal>,
+    /// What an unfitting row shows: the member and rotation with the fewest clashing edges (the
+    /// sheet's "best" ghost). `Some` exactly when `refusal` is.
+    pub best: Option<(String, u8)>,
 }
 
 /// Every picker entry's fits at `slot`, from hex-core alone: a footprint entry reads the centre
 /// [`World::mega_centre_for`] picks for the slot and every other entry reads
-/// [`World::group_orientations`] at the slot, which the sheet's `fitEntry` recomputes today.
+/// [`World::group_orientations`] at the slot.
 pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
     let facings: Vec<Option<(SocketKind, bool)>> = (0..6u8)
         .map(|w| {
@@ -1387,7 +1423,7 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
         .iter()
         .map(|f| f.as_ref().is_some_and(|f| f.1))
         .collect();
-    let entries = catalog
+    let entries: Vec<FitsEntry> = catalog
         .picker()
         .iter()
         .map(|entry| {
@@ -1396,12 +1432,12 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
                 .iter()
                 .map(|id| catalog.get(id).expect("picker members are catalog tiles"))
                 .collect();
-            let orientations: Vec<[u8; 2]> = if members[0].is_mega() {
+            let orientations: Vec<(String, u8, u8)> = if members[0].is_mega() {
                 match world.mega_centre_for(catalog, slot, members[0]) {
                     Some(centre) => world
                         .group_orientations(catalog, centre, std::slice::from_ref(&members[0]))
                         .into_iter()
-                        .map(|(_, o)| [o.rotation, o.level])
+                        .map(|(d, o)| (d.id.clone(), o.rotation, o.level))
                         .collect(),
                     None => vec![],
                 }
@@ -1409,54 +1445,104 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
                 world
                     .group_orientations(catalog, slot, &members)
                     .into_iter()
-                    .map(|(_, o)| [o.rotation, o.level])
+                    .map(|(d, o)| (d.id.clone(), o.rotation, o.level))
                     .collect()
             };
-            let refusal = if orientations.is_empty() {
+            let (refusal, best): (Option<Refusal>, Option<(String, u8)>) = if orientations.is_empty() {
                 if members[0].is_mega() {
                     // Room beside the world, but the outer edges clash at every free centre.
                     let room = std::iter::once(slot)
                         .chain((0..6u8).map(|e| slot.neighbor(e)))
                         .any(|a| world.is_slot_for(a, members[0]));
-                    Some(if room {
+                    let refusal = Some(if room {
                         Refusal::FootprintEdges
                     } else {
                         Refusal::NoFootprintRoom
-                    })
+                    });
+                    (refusal, Some((members[0].id.clone(), 0)))
                 } else if !world.is_slot(slot) {
                     // The sheet's FOOTPRINT_INNER: only a massif, over a covering centre.
-                    Some(Refusal::InnerSlot)
+                    (Some(Refusal::InnerSlot), Some((members[0].id.clone(), 0)))
                 } else {
                     // The member with the fewest clashing edges at its best rotation, first on
-                    // ties (the sheet's `worst`), words the refusal for a whole group.
-                    let mut worst: Option<(&TileDef, usize)> = None;
+                    // ties (the sheet's `worst`), words the refusal for a whole group and shows
+                    // its least-clashing rotation (the sheet's `best`).
+                    let mut worst: Option<(&TileDef, u8, usize)> = None;
                     for m in &members {
-                        let count = (0..6u8)
-                            .map(|k| world.clash_count(catalog, slot, m, Orientation::new(k, 0)))
+                        let (count, best_k) = (0..6u8)
+                            .map(|k| (world.clash_count(catalog, slot, m, Orientation::new(k, 0)), k))
                             .min()
-                            .unwrap_or(0);
-                        if worst.is_none_or(|(_, c)| count < c) {
-                            worst = Some((m, count));
+                            .unwrap_or((0, 0));
+                        if worst.is_none_or(|(_, _, c)| count < c) {
+                            worst = Some((m, best_k, count));
                         }
                     }
-                    world.placement_refusal(catalog, slot, worst.expect("the entry has members").0)
+                    let worst = worst.expect("the entry has members");
+                    let refusal = world.placement_refusal(catalog, slot, worst.0);
+                    let best = refusal.is_some().then(|| (worst.0.id.clone(), worst.1));
+                    (refusal, best)
                 }
             } else {
-                None
+                (None, None)
             };
             FitsEntry {
                 id: entry.id.clone(),
                 orientations,
                 refusal,
+                best,
             }
         })
         .collect();
+    let nearest = entries
+        .iter()
+        .all(|e| e.orientations.is_empty())
+        .then(|| nearest_slot(world, catalog, slot))
+        .flatten();
     Fits {
         slot,
         needs,
         stopped,
+        nearest,
         entries,
     }
+}
+
+/// The nearest frontier slot where some picker entry fits, for `play.fits.nearest` (ENH-002):
+/// the slot itself is skipped, closer wins, first found on ties — the sheet's own sweep rule
+/// when its mirror still searched the frontier (sheet-controller's `nearest`).
+fn nearest_slot(world: &World, catalog: &TileCatalog, slot: Axial) -> Option<NearestSlot> {
+    let picker = catalog.picker();
+    let mut best: Option<(i32, NearestSlot)> = None;
+    for cell in world.frontier() {
+        if cell == slot {
+            continue;
+        }
+        let d = slot.distance(cell);
+        if best.as_ref().is_some_and(|(best_d, _)| d >= *best_d) {
+            continue;
+        }
+        let tiles = picker
+            .iter()
+            .filter(|entry| {
+                let members: Vec<&TileDef> = entry
+                    .tiles
+                    .iter()
+                    .map(|id| catalog.get(id).expect("picker members are catalog tiles"))
+                    .collect();
+                if members[0].is_mega() {
+                    world.mega_centre_for(catalog, cell, members[0]).is_some()
+                } else {
+                    members
+                        .iter()
+                        .any(|m| !world.legal_orientations(catalog, cell, m).is_empty())
+                }
+            })
+            .count();
+        if tiles > 0 {
+            best = Some((d, NearestSlot { q: cell.q, r: cell.r, tiles: tiles as u32 }));
+        }
+    }
+    best.map(|(_, n)| n)
 }
 
 /// Events not yet drained by `hex_world_events`; nothing drains natively, so the oldest drop.

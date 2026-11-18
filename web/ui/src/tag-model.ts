@@ -7,16 +7,14 @@ import {
   cellKey,
   cutOff,
   entryOf,
-  entryReadout,
-  fit,
-  fitEntry,
-  needsAt,
+  orientation,
   rotationReadout,
   tileDef,
   turnHint,
+  type Turn,
 } from "./rules.ts";
 import { ghostCovers } from "./sheet-controller.ts";
-import { bulldozeRefusal, plural, tileName } from "./words.ts";
+import { bulldozeRefusal, plural, refusalWord, tileName } from "./words.ts";
 
 /** A tile just placed (or swapped in), shown for a moment until `until` (ms on the HUD clock). */
 export interface PlacedNote {
@@ -115,7 +113,7 @@ export function tagModel(
       parts: [icon("alert"), text(tileName(map.get(cellKey(cell))?.tile ?? "")), fitPart("Covers a tunnel", "bad")],
     };
   }
-  if (st.tool === "place" && st.ghost) return ghostTag(st, st.ghost, map, refused);
+  if (st.tool === "place" && st.ghost) return ghostTag(st, st.ghost, refused);
   return null;
 }
 
@@ -143,31 +141,25 @@ function bulldozeTag(b: NonNullable<PlayState["bulldoze"]>, map: TileMap): TagMo
   };
 }
 
-function ghostTag(
-  st: PlayState,
-  g: NonNullable<PlayState["ghost"]>,
-  map: TileMap,
-  refusal: RefusalNote | null,
-): TagModel {
+function ghostTag(st: PlayState, g: NonNullable<PlayState["ghost"]>, refusal: RefusalNote | null): TagModel {
   const def = tileDef(g.tile);
-  const needs = needsAt(g, map);
-  const f = def ? fit(def, needs, g.level) : null;
   const entry = entryOf(g.tile);
-  // A footprint ghost stands on its centre, which fits where the engine lists it in `mega_slots`.
-  const entryFit =
-    entry && (def?.footprint || f?.ok)
-      ? fitEntry(entry, needs, { slot: g, megaSlots: st.mega_slots, tiles: map })
-      : null;
-  const ok = def?.footprint ? !!entryFit?.ok : !!f?.ok;
+  // The engine publishes fits for its target slot — the ghost's cell — so the entry's steps and
+  // refusal come from there; a patch for the previous slot lags by one frame and falls back to the
+  // ghost's own legal rotations for that frame.
+  const e = st.fits && sameCell(st.fits.slot, g) ? st.fits.entries.find((x) => x.id === entry?.id) : undefined;
+  const steps: Turn[] = e ? e.orientations.map(([id, k, level]) => ({ def: tileDef(id)!, k, level })) : [];
+  const ok = e ? steps.length > 0 : g.legal_rotations.length > 0;
   const name = tileName(g.tile);
   if (ok && g.valid) {
-    // A group (the Beach Curve) counts every member's orientations together, as R walks them.
+    // A group (the Beach Curve) counts every member's steps at this level together, as R walks them.
+    const atLevel = e ? e.orientations.filter(([, , l]) => l === g.level) : [];
     const { index, count } =
-      entry && entryFit && entry.tiles.length > 1
-        ? entryReadout(entryFit, g.tile, g.rotation, g.level)
+      entry && e && entry.tiles.length > 1
+        ? groupReadout(atLevel, g.tile, g.rotation)
         : rotationReadout(def!, g.legal_rotations, g.rotation);
     // R steps every level too, so the hint shows while any orientation is left to turn to.
-    const canTurn = turnHint(count, entryFit?.seq.length ?? 0);
+    const canTurn = turnHint(count, steps.length);
     const fits = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
     const pinned = ghostCovers(g, st.pinned);
     const parts = [text(name), fitPart(fits, "plain")];
@@ -183,14 +175,12 @@ function ghostTag(
       parts,
     };
   }
-  const clashes = (g.outer_edges ?? g.edges).filter((e) => e === "Incompatible").length;
+  const clashes = (g.outer_edges ?? g.edges).filter((edge) => edge === "Incompatible").length;
   const why =
     refusal && sameCell(refusal.cell, g)
       ? refusal.text
-      : !ok && f
-        ? def?.footprint && entryFit
-          ? entryFit.why
-          : f.why
+      : e?.refusal
+        ? refusalWord(e.refusal)
         : `${plural(clashes, "edge")} clash`;
   const parts = [icon("alert"), text(name), fitPart(why, "bad")];
   if (ok) parts.push({ kind: "kbd", key: "R" });
@@ -202,4 +192,16 @@ function ghostTag(
     stacked: false,
     parts,
   };
+}
+
+/** Where the ghost's member and rotation sit among a group's steps at its level ("Rotation 4 of 5"). */
+function groupReadout(
+  steps: readonly [member: string, rotation: number, level: number][],
+  tile: string,
+  k: number,
+): { index: number; count: number } {
+  const index = steps.findIndex(
+    ([id, r]) => id === tile && orientation(tileDef(id)!, r) === orientation(tileDef(tile)!, k),
+  );
+  return { index: index < 0 ? 0 : index, count: steps.length };
 }

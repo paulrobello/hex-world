@@ -12,6 +12,15 @@ const world = tileMap([tile(0, 0, "meadow")]);
 const road = tileMap([tile(0, 0, "meadow"), tile(1, 0, "road_straight", 1), tile(-1, 0, "meadow")]);
 const NONE: ReadonlySet<string> = new Set();
 
+/** The engine's published fits for a slot where only `entry` is refused (the sheet's tag reads it). */
+const fits = (slot: Cell, id: string, refusal: string) => ({
+  slot,
+  needs: [] as (string | null)[],
+  stopped: [] as boolean[],
+  nearest: null,
+  entries: [{ id, orientations: [], refusal, best: null }],
+});
+
 const ghost = (q: number, r: number, id: string, rotation: number, legal: number[], extra: object = {}) => ({
   q,
   r,
@@ -106,6 +115,15 @@ test("refused swap: names the selected tile and why it cannot replace the placed
   assert.equal(tag(state({}), world, { refusal, now: 1001 }), null);
 });
 
+/** Published fits whose lone entry has `steps` (member, rotation, level) as its R walk. */
+const stepsAt = (slot: Cell, id: string, steps: [string, number, number][]) => ({
+  slot,
+  needs: [] as (string | null)[],
+  stopped: [] as boolean[],
+  nearest: null,
+  entries: [{ id, orientations: steps, refusal: null, best: null }],
+});
+
 test("cover: the pointer on a tunnel's cover says so, unless the ghost is pinned there", () => {
   const over = state({ hovered_kind: "tile", hovered: at(0, 0) });
   const m = tag(over, world, { cover: new Set(["0,0"]) })!;
@@ -116,6 +134,12 @@ test("cover: the pointer on a tunnel's cover says so, unless the ghost is pinned
     hovered_kind: "tile",
     hovered: at(0, 0),
     pinned: at(1, 0),
+    fits: stepsAt(at(1, 0), "meadow", [
+      ["meadow", 0, 0],
+      ["meadow", 0, 1],
+      ["meadow", 0, 2],
+      ["meadow", 0, 3],
+    ]),
     ghost: ghost(1, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]),
   });
   assert.equal(tag(pinned, world, { cover: new Set(["0,0"]) })!.sig, "ok|1,0|meadow|Fits|0|true|true");
@@ -123,13 +147,36 @@ test("cover: the pointer on a tunnel's cover says so, unless the ghost is pinned
 });
 
 test("ghost fits: one orientation reads Fits, several read Rotation i of n with the R hint", () => {
-  const meadow = tag(state({ ghost: ghost(1, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]) }))!;
+  const meadowSteps: [string, number, number][] = [
+    ["meadow", 0, 0],
+    ["meadow", 0, 1],
+    ["meadow", 0, 2],
+    ["meadow", 0, 3],
+  ];
+  const meadow = tag(
+    state({ fits: stepsAt(at(1, 0), "meadow", meadowSteps), ghost: ghost(1, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]) }),
+  )!;
   assert.equal(meadow.sig, "ok|1,0|meadow|Fits|0|true|false");
   assert.deepEqual(read(meadow.parts), ["Meadow", "Fits", "kbd:R"]);
-  const first = tag(state({ ghost: ghost(1, 0, "road_straight", 1, [1, 2, 4, 5]) }))!;
+  const roadSteps: [string, number, number][] = [
+    ["road_straight", 1, 0],
+    ["road_straight", 2, 0],
+  ];
+  const first = tag(
+    state({
+      fits: stepsAt(at(1, 0), "road_straight", roadSteps),
+      ghost: ghost(1, 0, "road_straight", 1, [1, 2, 4, 5]),
+    }),
+  )!;
   assert.equal(first.sig, "ok|1,0|road_straight|Rotation 1 of 2|0|true|false");
   assert.deepEqual(read(first.parts), ["Road straight", "Rotation 1 of 2", "kbd:R"], "rotation count 2");
-  const second = tag(state({ pinned: at(1, 0), ghost: ghost(1, 0, "road_straight", 2, [1, 2, 4, 5]) }))!;
+  const second = tag(
+    state({
+      pinned: at(1, 0),
+      fits: stepsAt(at(1, 0), "road_straight", roadSteps),
+      ghost: ghost(1, 0, "road_straight", 2, [1, 2, 4, 5]),
+    }),
+  )!;
   assert.equal(second.sig, "ok|1,0|road_straight|Rotation 2 of 2|0|true|true");
   assert.deepEqual(read(second.parts), ["Road straight", "Rotation 2 of 2", "kbd:R", "Pinned · click to place"]);
 });
@@ -142,13 +189,21 @@ test("ghost fits: a raised ghost adds its level and anchors there", () => {
 });
 
 test("ghost does not fit: the tile's own reason, a swap refusal on that cell, or the edge-clash count", () => {
-  const ocean = tag(state({ ghost: ghost(1, 0, "ocean", 0, [], { valid: false }) }))!;
+  // The engine's published refusal for the entry words the tag ("missing_grass" → words.ts).
+  const ocean = tag(
+    state({ fits: fits(at(1, 0), "ocean", "missing_grass"), ghost: ghost(1, 0, "ocean", 0, [], { valid: false }) }),
+  )!;
   assert.equal(ocean.sig, "bad|1,0|ocean|Needs grass or forest to meet the grass.|0");
   assert.deepEqual([ocean.bad, ocean.stacked], [true, false]);
   assert.deepEqual(read(ocean.parts), ["icon:alert", "Ocean", "Needs grass or forest to meet the grass."]);
   const refusal = { cell: at(1, 0), tile: "ocean", text: "Not here", until: 1000 };
-  const refused = tag(state({ ghost: ghost(1, 0, "ocean", 0, [], { valid: false }) }), world, { refusal, now: 500 })!;
+  const refused = tag(
+    state({ fits: fits(at(1, 0), "ocean", "missing_grass"), ghost: ghost(1, 0, "ocean", 0, [], { valid: false }) }),
+    world,
+    { refusal, now: 500 },
+  )!;
   assert.equal(refused.sig, "bad|1,0|ocean|Not here|0");
+  // A tile that fits at some rotation falls to the ghost's own edge-clash count.
   const clash = tag(
     state({
       ghost: ghost(1, 0, "meadow", 0, [0, 1], {
@@ -166,6 +221,7 @@ test("ghost of a footprint tile: its refusal is the entry's, not the single-tile
   const m = tag(
     state({
       selected: "massif_granite",
+      fits: fits(at(1, 0), "massif_granite", "footprint_edges"),
       ghost: ghost(1, 0, "massif_granite", 0, [], { valid: false, outer_edges: outer, footprint: [] }),
     }),
   )!;

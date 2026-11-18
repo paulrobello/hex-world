@@ -4790,6 +4790,7 @@
       "cell"
     ],
     "placementRefused": [
+      "code",
       "level",
       "q",
       "r",
@@ -4884,11 +4885,13 @@
     ],
     "fits": [
       "entries",
+      "nearest",
       "needs",
       "slot",
       "stopped"
     ],
     "fits_entry": [
+      "best",
       "id",
       "orientations",
       "refusal"

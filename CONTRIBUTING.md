@@ -15,7 +15,7 @@ Gitignored dependencies, local configuration and build artifacts do not follow t
 
 ## Change both sides of the bridge
 
-The HUD communicates with Rust through the typed `window.hexWorld` bridge. After changing Rust bridge command/event enums, run `make ui-schema`, update the matching TypeScript contract/handling in `web/ui/src/bridge.ts`, and include regenerated `web/ui/src/bridge-schema.json` and `web/ui/test/rules-parity.json` in the change. Rust contract tests reject stale generated files. Do not hand-edit the generated JSON.
+The HUD communicates with Rust through the typed `window.hexWorld` bridge. After changing Rust bridge command/event enums, run `make ui-schema`, update the matching TypeScript contract/handling in `web/ui/src/bridge.ts`, and include regenerated `web/ui/src/bridge-schema.json` in the change. Rust contract tests reject stale generated files. Do not hand-edit the generated JSON.
 
 ## Verify and capture evidence
 

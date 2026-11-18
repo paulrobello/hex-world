@@ -90,8 +90,8 @@ ui-test:
 
 ui-check: ui-typecheck ui-lint ui-test ui-build
 
-# Rewrites the bridge contract (web/ui/src/bridge-schema.json) and the fit-rule parity fixture
-# (web/ui/test/rules-parity.json) from the Rust enums and hex-core; cargo test fails while they are stale.
+# Rewrites the bridge contract (web/ui/src/bridge-schema.json) from the Rust enums and hex-core;
+# cargo test fails while it is stale.
 ui-schema:
 	HEXW_UPDATE_SCHEMA=1 cargo test -p hex-app bridge::schema::schema_matches_web_ui
 

@@ -4,7 +4,6 @@
 // design/ui/legend/shots/), so each capture sits beside the approved mockup state it implements.
 import { mkdirSync, readFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
-import { PICKER, fitEntry, needsAt, tileMap } from "../web/ui/src/rules.ts";
 import { serveDist } from "./lib/harness.mjs";
 import { animationsSettled, engineFrames, launch, waiter } from "./lib/browser.mjs";
 
@@ -608,17 +607,26 @@ try {
   check(!/River mouth mirrored/.test(await text(".sheet--tiles")), "the sheet never says River mouth mirrored");
   await page.locator(".row[data-tile=beach_curve]").click();
   await waitFor(async () => ["beach_outer", "beach_inner"].includes((await play()).selected), "a click on Beach Curve selects a member");
-  // A free slot on screen where both members fit, by the overlay's own fit rules.
+  // A free slot on screen where both members fit, read from the engine's published fits: the
+  // hover makes `play.fits` answer for that slot (ENH-002; the overlay's fit rules are gone).
   const curveVp = page.viewportSize();
-  const curve = PICKER.find((e) => e.id === "beach_curve");
   const curveWorld = await play();
   let coast = null;
   let count = 0;
   for (const c of curveWorld.frontier) {
     const b = await page.evaluate(([q, r]) => window.hexWorld.cellRect(q, r), [c.q, c.r]);
     if (!b || b[0] < 40 || b[1] < 80 || b[2] > curveVp.width - 460 || b[3] > curveVp.height - 40) continue;
-    const f = fitEntry(curve, needsAt(c, tileMap(curveWorld.tiles)));
-    if (new Set(f.seq.map((t) => t.def.id)).size === 2) { coast = c; count = f.seq.length; break; }
+    await page.evaluate(([q, r]) => window.hexWorld.cmd({ cmd: "hover", q, r }), [c.q, c.r]);
+    await waitFor(async () => {
+      const f = (await play()).fits;
+      return f && f.slot.q === c.q && f.slot.r === c.r;
+    }, `play.fits answers for ${c.q},${c.r}`);
+    const entry = (await play()).fits.entries.find((e) => e.id === "beach_curve");
+    if (new Set(entry.orientations.map(([id]) => id)).size === 2) {
+      coast = c;
+      count = entry.orientations.length;
+      break;
+    }
   }
   check(!!coast, `a slot on screen fits both the headland and the bay (${JSON.stringify(coast)})`);
   if (coast) {

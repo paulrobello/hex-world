@@ -5,7 +5,6 @@
 // every frame whether or not the Settings sheet is open.
 import type { Command, DebugState, ForceLod, HexWorld, PlayState, State } from "./bridge.ts";
 import { h } from "./dom.ts";
-import { FitsAudit } from "./fits-audit.ts";
 import { icon } from "./icons.ts";
 import { tileRise } from "./rules.ts";
 import { seg } from "./photo.ts";
@@ -167,7 +166,6 @@ export class DebugHud {
   readonly labels: HTMLElement;
   private readonly rows = new Map<string, HTMLElement>();
   private readonly pool: HTMLElement[] = [];
-  private readonly fitsAudit = new FitsAudit();
   private perfAt = 0;
 
   constructor() {
@@ -179,7 +177,7 @@ export class DebugHud {
     const d = state.debug;
     this.perf.hidden = !d?.perf;
     this.labels.hidden = !d?.grid || !play;
-    if (d?.perf) this.renderPerf(state, d, play);
+    if (d?.perf) this.renderPerf(state, d);
     if (d?.grid && play) this.renderLabels(hw, play);
   }
 
@@ -194,7 +192,7 @@ export class DebugHud {
   }
 
   /** Text rebuilt at 4 Hz, so the readout itself stays off the per-frame path. */
-  private renderPerf(state: State, d: DebugState, play: PlayState | null): void {
+  private renderPerf(state: State, d: DebugState): void {
     const now = performance.now();
     if (now - this.perfAt < 250) return;
     this.perfAt = now;
@@ -209,8 +207,6 @@ export class DebugHud {
     this.row("tris", "Kit triangles", num(tris));
     const g = state.grass;
     this.row("grass", "Grass blades", g ? (g.status === "on" ? num(g.blades) : g.status) : "none");
-    // The ENH-002 spike's audit: engine fits against the sheet's mirror, at 4 Hz.
-    this.row("fits", "Fits audit", play ? this.fitsAudit.update(play, state.frames ?? 0) : "no play state");
     const gpu = state.diag?.gpu;
     const passes = gpu?.passes ? Object.entries(gpu.passes).sort((a, b) => b[1].mean - a[1].mean) : [];
     if (passes.length) {

@@ -1,8 +1,8 @@
 // Drives the tile sheet from engine state. The engine owns the pinned slot, the hovered slot and
 // whether the inventory is open: `sync` adopts them from `play` state each frame and sends a command
 // only to open the engine's inventory at first sync or to resend a hover.
-import type { Cell, Command, Ghost, PlayState } from "./bridge.ts";
-import { PICKER, type TileMap, cellKey, fitEntry, isSheetSlot, needsAt } from "./rules.ts";
+import type { Cell, Command, Fits, Ghost, PlayState } from "./bridge.ts";
+import { type TileMap, cellKey, isSheetSlot } from "./rules.ts";
 import { Sheet } from "./sheet.ts";
 
 const sameCell = (a: Cell | null | undefined, b: Cell | null | undefined): boolean =>
@@ -21,6 +21,8 @@ export class SheetController {
   private synced = false;
   private engineOpen: boolean | null = null;
   private signature = "";
+  /** The last `play.fits` that matched the current slot, kept for the frame a patch has not caught up. */
+  private lastFits: { key: string; value: Fits } | null = null;
   private readonly cmd: (command: Command | Command[]) => void;
   private readonly fire: () => void;
 
@@ -97,12 +99,16 @@ export class SheetController {
     return hovered;
   }
 
-  render(st: PlayState, map: TileMap, tilesRevision: number): void {
+  render(st: PlayState, tilesRevision: number): void {
     const slot = this.slot;
     const onSlot = ghostCovers(st.ghost, slot) ? st.ghost : null;
     const ghostRotation = onSlot ? onSlot.rotation : null;
     const ghostTile = onSlot ? onSlot.tile : null;
     const ghostLevel = onSlot ? onSlot.level : 0;
+    // The engine publishes fits for its own target slot; a patch for the previous slot lags the
+    // sheet's slot by one frame, so the last matching fits are kept until the new one lands.
+    if (st.fits && slot && sameCell(st.fits.slot, slot)) this.lastFits = { key: cellKey(slot), value: st.fits };
+    const fits = slot && this.lastFits?.key === cellKey(slot) ? this.lastFits.value : null;
     const signature = [
       tilesRevision,
       slot && cellKey(slot),
@@ -112,41 +118,20 @@ export class SheetController {
       ghostLevel,
       st.tool,
       this.turns,
+      fits ? "fits" : "-",
     ].join("|");
     if (signature === this.signature) return;
     this.signature = signature;
-    const needs = slot ? needsAt(slot, map) : null;
-    const nearest =
-      slot && needs && !PICKER.some((e) => fitEntry(e, needs, { slot, megaSlots: st.mega_slots, tiles: map }).ok)
-        ? this.nearest(st, slot, map)
-        : null;
     this.sheet.render({
-      slot: slot && needs ? { cell: slot, needs } : null,
+      slot: slot && fits ? { cell: slot, needs: fits.needs, stopped: fits.stopped } : null,
       selected: st.selected,
       ghostTile,
       ghostRotation,
       ghostLevel,
       turns: this.turns,
       bulldoze: st.tool === "bulldoze",
-      nearest,
-      megaSlots: st.mega_slots,
-      tiles: map,
+      nearest: fits?.nearest ? { cell: { q: fits.nearest.q, r: fits.nearest.r }, fits: fits.nearest.tiles } : null,
+      entries: new Map(fits?.entries.map((e) => [e.id, e])),
     });
-  }
-
-  private nearest(st: PlayState, from: Cell, map: TileMap): { cell: Cell; fits: number } | null {
-    let best: { cell: Cell; fits: number; d: number } | null = null;
-    for (const cell of st.frontier) {
-      if (sameCell(cell, from)) continue;
-      const d =
-        (Math.abs(cell.q - from.q) + Math.abs(cell.r - from.r) + Math.abs(cell.q + cell.r - from.q - from.r)) / 2;
-      if (best && d >= best.d) continue;
-      const needs = needsAt(cell, map);
-      const fits = PICKER.filter(
-        (e) => fitEntry(e, needs, { slot: cell, megaSlots: st.mega_slots, tiles: map }).ok,
-      ).length;
-      if (fits) best = { cell, fits, d };
-    }
-    return best && { cell: best.cell, fits: best.fits };
   }
 }

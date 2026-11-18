@@ -1,7 +1,7 @@
 // Player-facing words: tile names, coordinates, and the toast and tag lines built from engine
 // facts (the engine's own reason strings are for logs, not players).
 import type { Cell, PlayTile, SocketKind } from "./bridge.ts";
-import type { TileDiff } from "./rules.ts";
+import { tileDef, type TileDiff } from "./rules.ts";
 import schema from "./bridge-schema.json" with { type: "json" };
 
 /** Display names for every catalog id (test/rules.test.ts keeps it in step with the catalog). */
@@ -177,3 +177,31 @@ for (const mine of KINDS)
 
 /** The wording for an engine refusal code, empty for one the sheet does not word yet. */
 export const refusalWord = (code: string): string => REFUSAL_WORDS[code] ?? "";
+
+/** Why a refused replace of a tunnel's cover cell cannot go. */
+export const TUNNEL_COVER = "This tile covers a tunnel.";
+
+/**
+ * The tag text for a refused placement over a placed tile (the sheet mirror's `refusedWhy` chain,
+ * ENH-002): a tunnel's cover, the engine's level reason verbatim, a single-tile/massif mismatch
+ * from the two defs (MASSIF_SWAP, SINGLE_SWAP), then the engine's refusal code; "An edge doesn't
+ * match its neighbour." last.
+ */
+export function replaceRefusal(
+  selected: string,
+  there: PlayTile | undefined,
+  reason: string,
+  covered: boolean,
+  code: string | null,
+): string {
+  if (covered) return TUNNEL_COVER;
+  if (reason.includes("cannot stand at level")) return `${reason[0]!.toUpperCase()}${reason.slice(1)}.`;
+  const mine = tileDef(selected)?.footprint;
+  const theirs = there ? tileDef(there.tile)?.footprint : undefined;
+  if (theirs !== undefined && mine !== theirs) return theirs ? MASSIF_SWAP : SINGLE_SWAP;
+  if (code) {
+    const said = refusalWord(code);
+    if (said) return said;
+  }
+  return "An edge doesn't match its neighbour.";
+}
