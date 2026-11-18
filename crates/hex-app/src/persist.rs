@@ -1280,6 +1280,10 @@ mod tests {
     /// back at the save's pose with its FOV, exposure and lens, and agents run again.
     #[test]
     fn loading_a_world_exits_photo_mode_at_the_saved_camera() {
+        // Its Save and queued Load touch SAVED, PENDING_LOADS and the decode counter: without
+        // this lock the extra decode landed inside locked tests' absolute-count assertions (the
+        // 2026-11-18 ubuntu CI red on load_after_inspect_of_other_bytes_decodes_again).
+        let _outbox = outbox();
         use bevy::camera::Exposure;
         use bevy::ecs::system::RunSystemOnce;
         use hex_render::{AgentsPaused, tilt_shift::TiltOverride};
