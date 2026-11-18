@@ -760,10 +760,20 @@ impl World {
     /// least-clashing rotation's first clashing edge meets (ENH-002: the sheet mirror's
     /// classification, kept in step when the mirror retired). `None` when every edge meets, which
     /// [`World::placement_refusal`] calls only for a tile with no legal orientation.
-    pub fn socket_refusal(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef) -> Option<Refusal> {
+    pub fn socket_refusal(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+    ) -> Option<Refusal> {
         // The least-clashing rotation at level 0, the first on ties.
         let best = (0..6)
-            .map(|k| (self.clash_count(catalog, cell, def, Orientation::new(k, 0)), k))
+            .map(|k| {
+                (
+                    self.clash_count(catalog, cell, def, Orientation::new(k, 0)),
+                    k,
+                )
+            })
             .min()
             .unwrap_or((0, 0))
             .1;

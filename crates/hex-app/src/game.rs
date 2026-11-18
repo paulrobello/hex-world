@@ -1017,8 +1017,13 @@ impl GameState {
                 let reason = e.to_string();
                 let code = matches!(e, ReplaceError::Incompatible(_))
                     .then(|| {
-                        self.world
-                            .socket_refusal(&self.catalog, cell, self.catalog.get(&tile).expect("the event names a catalog tile"))
+                        self.world.socket_refusal(
+                            &self.catalog,
+                            cell,
+                            self.catalog
+                                .get(&tile)
+                                .expect("the event names a catalog tile"),
+                        )
                     })
                     .flatten();
                 self.result("replace", Some(cell), Some(reason.clone()));
@@ -1066,7 +1071,9 @@ impl GameState {
                         self.world.socket_refusal(
                             &self.catalog,
                             cell,
-                            self.catalog.get(&tile).expect("the event names a catalog tile"),
+                            self.catalog
+                                .get(&tile)
+                                .expect("the event names a catalog tile"),
                         )
                     })
                     .flatten();
@@ -1448,43 +1455,49 @@ pub fn fits_at(world: &World, catalog: &TileCatalog, slot: Axial) -> Fits {
                     .map(|(d, o)| (d.id.clone(), o.rotation, o.level))
                     .collect()
             };
-            let (refusal, best): (Option<Refusal>, Option<(String, u8)>) = if orientations.is_empty() {
-                if members[0].is_mega() {
-                    // Room beside the world, but the outer edges clash at every free centre.
-                    let room = std::iter::once(slot)
-                        .chain((0..6u8).map(|e| slot.neighbor(e)))
-                        .any(|a| world.is_slot_for(a, members[0]));
-                    let refusal = Some(if room {
-                        Refusal::FootprintEdges
+            let (refusal, best): (Option<Refusal>, Option<(String, u8)>) =
+                if orientations.is_empty() {
+                    if members[0].is_mega() {
+                        // Room beside the world, but the outer edges clash at every free centre.
+                        let room = std::iter::once(slot)
+                            .chain((0..6u8).map(|e| slot.neighbor(e)))
+                            .any(|a| world.is_slot_for(a, members[0]));
+                        let refusal = Some(if room {
+                            Refusal::FootprintEdges
+                        } else {
+                            Refusal::NoFootprintRoom
+                        });
+                        (refusal, Some((members[0].id.clone(), 0)))
+                    } else if !world.is_slot(slot) {
+                        // The sheet's FOOTPRINT_INNER: only a massif, over a covering centre.
+                        (Some(Refusal::InnerSlot), Some((members[0].id.clone(), 0)))
                     } else {
-                        Refusal::NoFootprintRoom
-                    });
-                    (refusal, Some((members[0].id.clone(), 0)))
-                } else if !world.is_slot(slot) {
-                    // The sheet's FOOTPRINT_INNER: only a massif, over a covering centre.
-                    (Some(Refusal::InnerSlot), Some((members[0].id.clone(), 0)))
-                } else {
-                    // The member with the fewest clashing edges at its best rotation, first on
-                    // ties (the sheet's `worst`), words the refusal for a whole group and shows
-                    // its least-clashing rotation (the sheet's `best`).
-                    let mut worst: Option<(&TileDef, u8, usize)> = None;
-                    for m in &members {
-                        let (count, best_k) = (0..6u8)
-                            .map(|k| (world.clash_count(catalog, slot, m, Orientation::new(k, 0)), k))
-                            .min()
-                            .unwrap_or((0, 0));
-                        if worst.is_none_or(|(_, _, c)| count < c) {
-                            worst = Some((m, best_k, count));
+                        // The member with the fewest clashing edges at its best rotation, first on
+                        // ties (the sheet's `worst`), words the refusal for a whole group and shows
+                        // its least-clashing rotation (the sheet's `best`).
+                        let mut worst: Option<(&TileDef, u8, usize)> = None;
+                        for m in &members {
+                            let (count, best_k) = (0..6u8)
+                                .map(|k| {
+                                    (
+                                        world.clash_count(catalog, slot, m, Orientation::new(k, 0)),
+                                        k,
+                                    )
+                                })
+                                .min()
+                                .unwrap_or((0, 0));
+                            if worst.is_none_or(|(_, _, c)| count < c) {
+                                worst = Some((m, best_k, count));
+                            }
                         }
+                        let worst = worst.expect("the entry has members");
+                        let refusal = world.placement_refusal(catalog, slot, worst.0);
+                        let best = refusal.is_some().then(|| (worst.0.id.clone(), worst.1));
+                        (refusal, best)
                     }
-                    let worst = worst.expect("the entry has members");
-                    let refusal = world.placement_refusal(catalog, slot, worst.0);
-                    let best = refusal.is_some().then(|| (worst.0.id.clone(), worst.1));
-                    (refusal, best)
-                }
-            } else {
-                (None, None)
-            };
+                } else {
+                    (None, None)
+                };
             FitsEntry {
                 id: entry.id.clone(),
                 orientations,
@@ -1539,7 +1552,14 @@ fn nearest_slot(world: &World, catalog: &TileCatalog, slot: Axial) -> Option<Nea
             })
             .count();
         if tiles > 0 {
-            best = Some((d, NearestSlot { q: cell.q, r: cell.r, tiles: tiles as u32 }));
+            best = Some((
+                d,
+                NearestSlot {
+                    q: cell.q,
+                    r: cell.r,
+                    tiles: tiles as u32,
+                },
+            ));
         }
     }
     best.map(|(_, n)| n)
