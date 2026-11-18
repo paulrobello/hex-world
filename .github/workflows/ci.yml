@@ -3,6 +3,8 @@ name: CI
 # One job per gate concern, composing the same targets as `make checkall` / `make checkall-ci`.
 # Platform-independent checks run once on ubuntu; only `test` carries the OS matrix, which
 # `workflow_dispatch` can scope to one OS (os-scope) to verify a platform-specific fix.
+# The OS matrix runs on the repo's self-hosted runners (ubuntu leg: lenny6, macos leg: minimac,
+# the same label pattern as par-term-emu-core-rust); those jobs wait if the runner is offline.
 on:
   push:
     branches: [main]
@@ -135,7 +137,7 @@ jobs:
 
   test:
     needs: [scope]
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && fromJSON('["self-hosted", "Linux", "X64", "lenny6"]') || matrix.os == 'macos-latest' && fromJSON('["self-hosted", "macOS", "ARM64", "minimac"]') || matrix.os }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
