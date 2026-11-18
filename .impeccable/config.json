@@ -1,0 +1,530 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:01.797Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:01.851Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:01.893Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:01.976Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.065Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.115Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.207Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-water-options.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.304Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.343Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.377Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.472Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.556Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.642Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.673Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.702Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-21-rich3-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.776Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.817Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.904Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.931Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:02.964Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.033Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.060Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.086Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-20-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.121Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.190Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.265Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.294Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.322Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.353Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.431Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.457Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-19-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.482Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.567Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.602Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.673Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.755Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.787Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.820Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.850Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-walkthrough.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.916Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:03.962Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.047Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.105Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.156Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.188Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.217Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.250Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-grade-compare.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.345Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.433Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.522Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.567Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.604Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.639Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "design-system-radius",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.715Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "aphoristic-cadence",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.747Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          "docs/review/2026-10-14-colour-recheck.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.834Z",
+        "reason": "Orchestrator 2026-11-15: dated owner-review evidence archive, frozen record of a past approval round (generated with sibling .py); not maintained UI"
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "docs/review/approvals.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.869Z",
+        "reason": "Orchestrator 2026-11-15: generated approvals dashboard; empty img slots are pieces without approved renders yet, by design"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "sfmono-regular",
+        "files": [
+          "docs/review/approvals.html"
+        ],
+        "createdAt": "2026-11-15T20:40:04.944Z",
+        "reason": "Orchestrator 2026-11-15: monospace for kit piece ids is domain-appropriate in the approvals dashboard"
+      }
+    ]
+  }
+}
