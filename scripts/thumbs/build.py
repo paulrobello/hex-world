@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pillow==12.2.0"]
+# dependencies = ["pillow==13.0.0"]
 # ///
 """Turns the raw `hex-world --thumbs` frames into the Legend inventory's tile thumbnails (PRD §5.3).
 
