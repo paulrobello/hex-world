@@ -183,8 +183,15 @@ try {
     await page.locator(".sheet--settings .switch[aria-label='Mute everything']").click();
     await setRange("Master volume", 80);
     await page.locator("#settings-tab-graphics").click();
+    // Auto resolves to the live detection (the probe's tier when the startup probe stepped it
+    // down), instead of the first boot's resolved snapshot: detection re-runs per boot and shifts
+    // under load, so the boot-1 `detected` above can legitimately differ from this boot's answer.
+    const live = (await st()).tier;
+    const expectedAuto = live.probe && live.probe.tier !== live.detected?.tier
+      ? { tier: live.probe.tier, source: "probe" }
+      : { tier: live.detected?.tier, source: "detected" };
     await page.locator(".tier[data-tier=auto]").click();
-    await until(async () => { const t = (await st()).tier; return t.tier === detected.tier && t.source === detected.source; }, "Auto returns to the detected tier");
+    await until(async () => { const t = (await st()).tier; return t.tier === expectedAuto.tier && t.source === expectedAuto.source; }, "Auto returns to the detected tier");
     await drawn("Auto");
     await page.locator(".sheet--settings .switch[aria-label='Tilt-shift']").click();
     await until(async () => !(await st()).tilt.enabled, "tilt-shift off");
