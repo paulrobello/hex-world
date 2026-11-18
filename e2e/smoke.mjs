@@ -1021,12 +1021,19 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
     const before = (await canvas.screenshot()).toString("base64");
     // Queue the whole sample window in one browser task: round trips between these commands can
     // exhaust the 250 ms fade before the pause arrives. During must include the excess fading
-    // cars (at least 3 total); after resuming, only the cap's single survivor may remain.
+    // cars (at least 3 total); after resuming, only the cap's single survivor may remain. The
+    // pause lands by elapsed time about a third of the way into the 250 ms fade, not after a
+    // frame count: the fade runs on the wall-scheduled 20 Hz tick, so a frame-count wait drained
+    // the whole batch before the pause whenever presentation slowed (measured 2026-11-17: the
+    // fits-driven sheet's drive pushed a frame past 125 ms and the check then saw only the
+    // survivor; the census offers no mid-fade signal, so elapsed time is the deterministic freeze).
     await page.evaluate(() => {
       const h = window.hexWorld;
       h.cmd({ cmd: "set_car_cap", cap: 1 });
-      h.cmd({ cmd: "wait", frames: 2 });
-      h.cmd({ cmd: "photo", pause_agents: true });
+      return new Promise((ok) => setTimeout(() => {
+        h.cmd({ cmd: "photo", pause_agents: true });
+        ok();
+      }, 90));
     });
     // Elapsed time is the thing measured: the cars fade out over their fade duration, not a frame count.
     await page.waitForTimeout(1_000);
