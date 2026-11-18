@@ -48,7 +48,11 @@ const WORLD = [
 const CAMERA = { cmd: "camera", pos: [70, 95, 125], look_at: [-12, 0, -4] };
 
 async function boot(query) {
-  await page.goto(base + `?scenario=play&tilt=off&fps=off${query}`, { waitUntil: "commit" });
+  // These cases' expectations are written for High: without a `tier` key the tier is auto-detected,
+  // and the web warm-up probe may step it down on a loaded host — Medium draws no grass near the
+  // camera, so the perf-corner case would time out (smoke.mjs pins its High cases the same way).
+  const pin = /[?&]tier=/.test(query) ? "" : "&tier=high";
+  await page.goto(base + `?scenario=play&tilt=off&fps=off${pin}${query}`, { waitUntil: "commit" });
   await page.waitForFunction(() => window.hexWorld?.ready(), null, { timeout: 90_000 });
   await waitFor(async () => !(await page.locator(".load").count()), "loading layer removed after ready", 10_000);
 }
