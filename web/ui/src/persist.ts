@@ -415,11 +415,22 @@ export class Persistence {
    * nothing.
    */
   private skipEmptyAutosave(): boolean {
-    if (this.tiles.length > 0 || !this.observed) return false;
+    if (!this.emptyWorld()) return false;
     this.debounce.cancel();
     this.unhold();
     this.setState("saved");
     return true;
+  }
+
+  /**
+   * True once `observe` has counted a world with no tiles (`observed` gates it the same way the
+   * autosave's skip does: before the first frame, `tiles` says nothing). `SaveData::encode` is
+   * infallible, but the decoder refuses an empty tile map, so export, the Replace snapshot and
+   * Duplicate read the same guard the autosave reads: a written slot or a downloaded file could
+   * not open again.
+   */
+  private emptyWorld(): boolean {
+    return this.tiles.length === 0 && this.observed;
   }
 
   private requestSave(world: CurrentWorld, purpose: PendingSave["purpose"]): void {
@@ -430,6 +441,15 @@ export class Persistence {
   }
 
   exportCurrent(): void {
+    if (this.emptyWorld()) {
+      this.ux.notify({
+        text: "Nothing to export",
+        sub: "The world has no tiles to save.",
+        icon: "alert",
+        tone: "bad",
+      });
+      return;
+    }
     this.requestSave(this.current, "export");
   }
 
@@ -604,6 +624,15 @@ export class Persistence {
     );
     const world = { id: newId(this.now()), name, stored: false };
     if (id === this.current.id) {
+      if (this.emptyWorld()) {
+        this.ux.notify({
+          text: "Couldn't duplicate that world",
+          sub: "The world has no tiles to save.",
+          icon: "alert",
+          tone: "bad",
+        });
+        return;
+      }
       this.requestSave(world, "copy");
     } else {
       const meta = this.slots.find((s) => s.id === id);
@@ -721,7 +750,8 @@ export class Persistence {
     this.opts.switching?.();
     this.flushNow();
     const { id, name } = this.current;
-    const bytes = this.slotBytes.get(id) ?? this.host.saveNow(this.opts.volumes?.() ?? null);
+    const bytes =
+      this.slotBytes.get(id) ?? (this.emptyWorld() ? null : this.host.saveNow(this.opts.volumes?.() ?? null));
     return bytes ? { id, name, bytes: bytes.slice(), tiles: this.tiles } : null;
   }
 

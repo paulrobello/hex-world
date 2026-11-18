@@ -261,6 +261,33 @@ test("autosave skips an empty world: the slot keeps its last openable bytes", as
   assert.equal(after?.tiles, 3, "the repopulated world autosaves again");
 });
 
+test("export, Replace's snapshot and Duplicate refuse an empty world", async () => {
+  const store = new MemoryBackend();
+  const { host, notes, p } = setup(store);
+  await p.start();
+  p.observe([]);
+
+  // Export: no save command, the toast says why (the downloaded file could not open again).
+  p.exportCurrent();
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "no save command for the export");
+  assert.equal(notes.at(-1)?.text, "Nothing to export");
+
+  // Replace's snapshot of the same world without slot bytes: saveNow never encodes it, so no Undo
+  // rides the toast (undoReplace would load bytes the decoder refuses).
+  assert.equal(host.nowCalls, 0);
+  p.importFile("a.hexworld", new Uint8Array([72, 69, 88, 1]), "replace");
+  assert.equal(host.nowCalls, 0, "the Replace snapshot never encoded the empty world");
+  assert.equal(host.loads.length, 1, "the imported file itself loads");
+  const note = notes.at(-1);
+  assert.equal(note?.text, "Replaced World 1");
+  assert.ok(!("action" in (note ?? {})), "no Undo for a snapshot that holds nothing");
+
+  // Duplicate of the empty world: refused with the toast the missing-bytes branch uses.
+  await p.duplicate(p.current.id);
+  assert.equal(host.sent.filter((c) => c.cmd === "save").length, 0, "no copy save for the empty world");
+  assert.equal(notes.at(-1)?.text, "Couldn't duplicate that world");
+});
+
 test("page hide with an empty world writes nothing: the pending autosave is dropped", async () => {
   const store = new MemoryBackend();
   const { host, p } = setup(store);
