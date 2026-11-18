@@ -115,6 +115,9 @@ struct Live {
     before: usize,
     from: QualityTier,
     tiers: Vec<QualityTier>,
+    /// The run started with a water sample to copy. False when the water pack was still streaming
+    /// at start: its cameras never drew the water variant, and the run cannot cover it.
+    had_sample: bool,
 }
 
 #[derive(Default)]
@@ -217,7 +220,22 @@ pub(super) fn warm(
     let warmed = |done: Option<(usize, QualityTier)>| {
         done.is_some_and(|(n, tier)| n >= cached && tier == config.tier)
     };
-    if let Some(live) = &mut state.live {
+    // A live run that started with no water to copy never drew the water variant: its copy could
+    // not spawn, and on the web the water pack streams the surfaces in mid-run. Water has arrived:
+    // restart the run with a copy instead of ending it claiming a coverage it lacks.
+    let mut restarting = false;
+    if state
+        .live
+        .as_ref()
+        .is_some_and(|live| !live.had_sample && !water.is_empty())
+    {
+        let live = state.live.take().expect("checked above");
+        for e in live.entities {
+            commands.entity(e).try_despawn();
+        }
+        info!("tier: warm-up restarted: water arrived after the run started without a copy");
+        restarting = true;
+    } else if let Some(live) = &mut state.live {
         live.frames += 1;
         live.quiet = if waiting == 0 { live.quiet + 1 } else { 0 };
         if (live.frames >= MIN_FRAMES && live.quiet >= WARM_SETTLE_FRAMES)
@@ -244,22 +262,24 @@ pub(super) fn warm(
         }
         return;
     }
-    report(&mut choice, false, warmed(state.done));
-    if cached != state.last || waiting > 0 {
-        state.last = cached;
-        state.stable = 0;
-    } else {
-        state.stable = state.stable.saturating_add(1);
-    }
-    let idle = config.tier_warm
-        && active.0 == hex_render::Scenario::Play
-        && frame.0 > WARM_AFTER_FRAME
-        && matches!(kit.as_deref(), Some(PlayKit::Ready(_)))
-        && !choice.rebuilding()
-        && !paused.is_some_and(|p| p.0)
-        && state.stable >= STABLE_FRAMES;
-    if !idle || warmed(state.done) {
-        return;
+    if !restarting {
+        report(&mut choice, false, warmed(state.done));
+        if cached != state.last || waiting > 0 {
+            state.last = cached;
+            state.stable = 0;
+        } else {
+            state.stable = state.stable.saturating_add(1);
+        }
+        let idle = config.tier_warm
+            && active.0 == hex_render::Scenario::Play
+            && frame.0 > WARM_AFTER_FRAME
+            && matches!(kit.as_deref(), Some(PlayKit::Ready(_)))
+            && !choice.rebuilding()
+            && !paused.is_some_and(|p| p.0)
+            && state.stable >= STABLE_FRAMES;
+        if !idle || warmed(state.done) {
+            return;
+        }
     }
     let Some((game, camera, at)) = cameras.iter().find(|(_, c, _)| c.is_active) else {
         return;
@@ -331,6 +351,7 @@ pub(super) fn warm(
         before: cached,
         from: config.tier,
         tiers,
+        had_sample: sample.is_some(),
     });
     report(&mut choice, true, false);
 }
