@@ -3,10 +3,13 @@
 fmt:
 	cargo fmt --all
 
+# Generated output and regenerable caches only: the cargo cache (target), node_modules,
+# tools/ and assets-source/ survive clean on purpose.
 clean:
-	rm -rf dist target/kit-stage
+	rm -rf dist target/kit-stage web/ui/dist e2e/test-results .pytest_cache .ruff_cache
 	@for dir in web/ui scripts/assets e2e target; do \
 	  if test -d "$$dir"; then find "$$dir" -type f -name '*.stamp' -delete; fi; done
+	@if test -d "scripts"; then find scripts -type d -name '__pycache__' -prune -exec rm -rf {} +; fi
 
 fmt-check:
 	cargo fmt --all -- --check
@@ -380,7 +383,7 @@ shots-kit:
 	mkdir -p target/shots
 	rm -f target/shots/kit-*.png
 	bash scripts/shots/run.sh cargo run -p hex-app --release -- --script scripts/shots/kit.json --size 1600x1000 --seed 1 --fps off --tilt off $(ARGS)
-	@for n in kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-lod1 kit-lod2; do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
+	@for n in kit-overview kit-seam-closeup kit-tree kit-tree-under kit-tree-game kit-edge-west kit-edge-south kit-edge-east kit-lod1 kit-lod2; do test -s target/shots/$$n.png || { echo "missing $$n.png"; exit 1; }; done
 	@echo "wrote target/shots/kit-*.png"
 
 # Tone-mapping comparison (D4) of the kit shots over the `tony` grade's exposure, grading and
