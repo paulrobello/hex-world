@@ -1,0 +1,106 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/grass/grass.json",
+    "--size",
+    "1280x800",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed",
+    "--tier",
+    "high",
+    "--grade",
+    "rich-3"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        7.65,
+        5.81,
+        5.71
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 70.5,
+      "load_after": [
+        7.61,
+        6.3,
+        5.91
+      ],
+      "frames": {
+        "grass-01-meadow": {
+          "mean": 0.3182,
+          "problem": null
+        },
+        "grass-02-forest": {
+          "mean": 0.1031,
+          "problem": null
+        },
+        "grass-03-road-verge": {
+          "mean": 0.2693,
+          "problem": null
+        },
+        "grass-04-river-bank": {
+          "mean": 0.2692,
+          "problem": null
+        },
+        "grass-11-border-meadow": {
+          "mean": 0.3404,
+          "problem": null
+        },
+        "grass-12-border-forest": {
+          "mean": 0.122,
+          "problem": null
+        },
+        "grass-05-eye": {
+          "mean": 0.2274,
+          "problem": null
+        },
+        "grass-07-midzoom": {
+          "mean": 0.27,
+          "problem": null
+        },
+        "grass-08-gust-1": {
+          "mean": 0.2681,
+          "problem": null
+        },
+        "grass-08-gust-2": {
+          "mean": 0.2705,
+          "problem": null
+        },
+        "grass-08-gust-3": {
+          "mean": 0.2692,
+          "problem": null
+        },
+        "grass-08-gust-4": {
+          "mean": 0.2682,
+          "problem": null
+        },
+        "grass-10-eye-sparse": {
+          "mean": 0.2209,
+          "problem": null
+        },
+        "grass-10-eye-lush": {
+          "mean": 0.2304,
+          "problem": null
+        },
+        "grass-09-low": {
+          "mean": 0.2258,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/grass/grass-off.json",
+    "--size",
+    "1280x800",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed",
+    "--tier",
+    "high",
+    "--grade",
+    "rich-3",
+    "--grass",
+    "off"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        7.61,
+        6.3,
+        5.91
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 14.9,
+      "load_after": [
+        8.33,
+        6.51,
+        5.99
+      ],
+      "frames": {
+        "grass-06-eye-off": {
+          "mean": 0.2185,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

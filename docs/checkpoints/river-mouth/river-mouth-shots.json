@@ -1,0 +1,106 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/river-mouth/river-mouth.json",
+    "--size",
+    "1600x1000",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        4.68,
+        5.1,
+        5.48
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 50.9,
+      "load_after": [
+        7.65,
+        5.81,
+        5.71
+      ],
+      "frames": {
+        "river-mouth-01-chain-right": {
+          "mean": 0.1413,
+          "problem": null
+        },
+        "river-mouth-02-chain-mirrored": {
+          "mean": 0.1108,
+          "problem": null
+        },
+        "river-mouth-03-fan-right": {
+          "mean": 0.4224,
+          "problem": null
+        },
+        "river-mouth-04-fan-foam-topdown": {
+          "mean": 0.4755,
+          "problem": null
+        },
+        "river-mouth-05-fan-mirrored": {
+          "mean": 0.2789,
+          "problem": null
+        },
+        "river-mouth-06-spring-pool": {
+          "mean": 0.2648,
+          "problem": null
+        },
+        "river-mouth-07-seam-river-edge": {
+          "mean": 0.3339,
+          "problem": null
+        },
+        "river-mouth-08-seam-river-edge-bend": {
+          "mean": 0.3745,
+          "problem": null
+        },
+        "river-mouth-09-seam-beach-edge5": {
+          "mean": 0.5169,
+          "problem": null
+        },
+        "river-mouth-10-seam-beach-edge2": {
+          "mean": 0.508,
+          "problem": null
+        },
+        "river-mouth-11-fish-at-mouth": {
+          "mean": 0.559,
+          "problem": null
+        },
+        "river-mouth-12-fan-sand-oblique": {
+          "mean": 0.4354,
+          "problem": null
+        },
+        "river-mouth-13-grass-line-right-long": {
+          "mean": 0.3964,
+          "problem": null
+        },
+        "river-mouth-14-grass-line-right-short": {
+          "mean": 0.4061,
+          "problem": null
+        },
+        "river-mouth-15-grass-line-mirrored-long": {
+          "mean": 0.3616,
+          "problem": null
+        },
+        "river-mouth-16-grass-line-mirrored-short": {
+          "mean": 0.3945,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}

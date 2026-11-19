@@ -1,0 +1,54 @@
+{
+  "command": [
+    "target/release/hex-world",
+    "--script",
+    "docs/checkpoints/windmill/windmill-play.json",
+    "--size",
+    "1280x800",
+    "--seed",
+    "1",
+    "--fps",
+    "off",
+    "--tilt",
+    "off",
+    "--scenario",
+    "play",
+    "--clock",
+    "fixed",
+    "--water_clock",
+    "fixed"
+  ],
+  "env": {},
+  "attempts": [
+    {
+      "load_before": [
+        4.54,
+        5.1,
+        5.49
+      ],
+      "exit": 0,
+      "timed_out": false,
+      "seconds": 32.3,
+      "load_after": [
+        4.68,
+        5.1,
+        5.48
+      ],
+      "frames": {
+        "windmill-play": {
+          "mean": 0.1997,
+          "problem": null
+        },
+        "windmill-play-1s": {
+          "mean": 0.2,
+          "problem": null
+        },
+        "windmill-walk-blocked": {
+          "mean": 0.4498,
+          "problem": null
+        }
+      },
+      "problems": []
+    }
+  ]
+}
