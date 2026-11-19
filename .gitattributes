@@ -1,0 +1,5 @@
+docs/perf/**/*.png filter=lfs diff=lfs merge=lfs -text
+docs/checkpoints/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+docs/checkpoints/**/*.png filter=lfs diff=lfs merge=lfs -text
+docs/checkpoints/**/*.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/perf/**/*.jpg filter=lfs diff=lfs merge=lfs -text
