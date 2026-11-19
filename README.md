@@ -50,6 +50,7 @@ From a fresh checkout:
 ```sh
 git clone https://github.com/paulrobello/hex-world.git
 cd hex-world
+git lfs install
 rustup toolchain install stable --component rustfmt --component clippy
 rustup target add wasm32-unknown-unknown
 cargo install trunk --version 0.21.14 --locked

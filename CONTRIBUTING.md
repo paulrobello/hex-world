@@ -11,7 +11,7 @@ git worktree add -b my-change ../hex-world-my-change main
 cd ../hex-world-my-change
 ```
 
-Gitignored dependencies, local configuration and build artifacts do not follow the worktree. Restore any required local configuration without committing secrets. The UI targets install their npm dependencies automatically. Browser tests have a separate `e2e/package-lock.json`: install with `npm ci --prefix e2e` and `npx --prefix e2e playwright install chromium` before running them.
+Gitignored dependencies, local configuration and build artifacts do not follow the worktree. Restore any required local configuration without committing secrets. The UI targets install their npm dependencies automatically. Browser tests have a separate `e2e/package-lock.json`: install with `npm ci --prefix e2e` and `npx --prefix e2e playwright install chromium` before running them. Worktrees share the parent checkout's `.git`, so LFS media (the evidence frames under `docs/checkpoints/` and `docs/perf/`) smudges from the shared store with no refetch; `git lfs install` once per machine is enough.
 
 ## Change both sides of the bridge
 

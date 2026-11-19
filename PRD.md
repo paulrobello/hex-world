@@ -609,6 +609,7 @@ Following `~/.claude/guides/agent-operability.md`, both the native and web build
 - Browser e2e and perf tests run locally with Playwright on GPU Chromium (`channel: 'chromium'`, Metal ANGLE flags) and are never run in CI. They cover a placement scenario, an undo/bulldoze scenario, a save/load round trip, a photo-mode export, and a 2,000-tile perf scenario.
 - Visual regression: `?shot=` scenarios compared against approved baselines with a perceptual tolerance. Not built yet: the `make shots-*` targets capture checkpoint evidence under `docs/checkpoints/` but compare nothing.
 - Unit-tested core rules: socket compatibility, rotation, legal-slot computation, bulldoze connectivity, undo/redo, save migration, and network stitching.
+- 2026-11-18 decision: evidence media under `docs/checkpoints/**` and `docs/perf/**` (`.jpg`/`.png`/`.mp4`) is Git LFS-tracked going forward, without a history rewrite; CI and skip-smudge clones receive pointers and read none of the media's bytes.
 
 ## 15. Phases
 
