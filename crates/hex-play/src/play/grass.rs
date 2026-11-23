@@ -16,7 +16,7 @@
 //!   rectangular building's collider box turned by its yaw plus [`WALL_GAP`], so blades grow
 //!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals;
 //!   a disc over each post of a fence, [`scatter::fence`], so blades grow under its rails) or
-//!   a scatter instance's (a box over a rock's base outline, [`ROCK_BASES`], so blades come right
+//!   a scatter instance's (a box over a rock's base outline, [`rock_bases`], so blades come right
 //!   up to the stone; spruce trunks; every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
 //!   clear, [`GROWS_THROUGH`], so grass grows in among them), nor below the water level
@@ -127,166 +127,14 @@ pub const GROWS_THROUGH: &[(&str, f32)] = &[
     ("wildflower_single_e", 0.0),
 ];
 /// A rock's base outline where it meets the ground (owner 2026-10-19: grass stopped short of the
-/// stone, held off by its spacing footprint): a convex 12-gon, counter-clockwise in the piece's
-/// own (x, z) before its yaw and scale, around the y = 0 slice of its LOD0 and collider.
-pub type RockBase = [[f32; 2]; 12];
+/// stone, held off by its spacing footprint): its `data/pieces.ron` `rock_base`.
+pub use hex_core::piece::RockBase;
 
-/// `rock_bases_match_the_kit` checks these against the GLBs (to 2 cm).
-pub const ROCK_BASES: &[(&str, RockBase)] = &[
-    (
-        "rock_small",
-        [
-            [-0.487, 0.151],
-            [-0.465, -0.051],
-            [-0.413, -0.188],
-            [-0.333, -0.291],
-            [-0.127, -0.469],
-            [0.282, -0.359],
-            [0.341, -0.31],
-            [0.529, 0.058],
-            [0.378, 0.308],
-            [0.263, 0.429],
-            [-0.33, 0.351],
-            [-0.449, 0.237],
-        ],
-    ),
-    (
-        "rock_small_b",
-        [
-            [-0.959, 0.139],
-            [-0.77, -0.237],
-            [-0.543, -0.533],
-            [0.016, -0.79],
-            [0.16, -0.751],
-            [0.666, -0.419],
-            [0.846, -0.137],
-            [0.605, 0.42],
-            [0.405, 0.731],
-            [0.269, 0.76],
-            [0.095, 0.743],
-            [-0.894, 0.344],
-        ],
-    ),
-    (
-        "rock_small_c",
-        [
-            [-0.86, -0.244],
-            [-0.84, -0.443],
-            [-0.574, -0.538],
-            [-0.14, -0.445],
-            [0.249, -0.328],
-            [0.461, -0.143],
-            [0.563, 0.208],
-            [0.63, 0.597],
-            [0.569, 0.775],
-            [-0.315, 0.7],
-            [-0.392, 0.671],
-            [-0.829, -0.138],
-        ],
-    ),
-    (
-        "boulder_granite",
-        [
-            [1.023, 0.265],
-            [0.850, 0.566],
-            [0.336, 0.863],
-            [-0.321, 0.863],
-            [-0.939, 0.505],
-            [-1.090, 0.244],
-            [-1.090, -0.244],
-            [-0.882, -0.604],
-            [-0.418, -0.873],
-            [0.293, -0.873],
-            [0.778, -0.593],
-            [1.023, -0.168],
-        ],
-    ),
-    (
-        "boulder_granite_b",
-        [
-            [1.222, 0.202],
-            [1.006, 0.577],
-            [0.260, 1.007],
-            [-0.444, 1.007],
-            [-1.079, 0.641],
-            [-1.295, 0.267],
-            [-1.295, -0.199],
-            [-1.022, -0.671],
-            [-0.345, -1.062],
-            [0.178, -1.062],
-            [0.903, -0.643],
-            [1.222, -0.091],
-        ],
-    ),
-    (
-        "boulder_granite_c",
-        [
-            [0.897, 0.234],
-            [0.490, 0.941],
-            [-0.008, 1.228],
-            [-0.616, 1.228],
-            [-1.562, 0.682],
-            [-1.771, 0.320],
-            [-1.771, -0.272],
-            [-1.477, -0.781],
-            [-0.934, -1.095],
-            [0.004, -1.095],
-            [0.664, -0.714],
-            [0.897, -0.309],
-        ],
-    ),
-    (
-        "boulder_granite_d",
-        [
-            [2.189, 0.360],
-            [1.816, 1.005],
-            [0.699, 1.651],
-            [-0.793, 1.651],
-            [-1.768, 1.087],
-            [-2.171, 0.389],
-            [-2.171, -0.431],
-            [-1.811, -1.055],
-            [-0.680, -1.708],
-            [0.353, -1.708],
-            [1.708, -0.926],
-            [2.189, -0.093],
-        ],
-    ),
-    (
-        "outcrop_granite",
-        [
-            [3.952, 0.364],
-            [2.795, 1.899],
-            [1.006, 2.659],
-            [-1.733, 2.322],
-            [-3.669, 0.863],
-            [-4.084, -0.113],
-            [-4.030, -0.552],
-            [-3.375, -1.421],
-            [-0.573, -2.611],
-            [1.999, -2.295],
-            [3.613, -1.079],
-            [4.013, -0.137],
-        ],
-    ),
-    (
-        "outcrop_granite_b",
-        [
-            [3.895, 0.579],
-            [3.102, 1.953],
-            [1.626, 2.806],
-            [-0.846, 2.806],
-            [-2.729, 1.718],
-            [-3.589, 0.230],
-            [-3.589, -0.603],
-            [-3.155, -1.354],
-            [-1.036, -2.578],
-            [1.808, -2.578],
-            [2.675, -2.077],
-            [3.895, 0.037],
-        ],
-    ),
-];
+/// The rock pieces and their base outlines, in `data/pieces.ron` order
+/// (`rock_bases_match_the_kit` checks them against the GLBs, to 2 cm).
+pub fn rock_bases() -> impl Iterator<Item = (&'static str, &'static RockBase)> {
+    hex_core::piece::PieceTable::builtin().rock_bases()
+}
 const SALT: u64 = 0x6A55_B1AD_E5C0_FFEE;
 /// The shared blade mesh: two crossed planes (an X from above, so the blade holds a silhouette from
 /// any side), each two corners at the root, two at mid height (the 1 - t² taper) and one at the tip,
@@ -523,7 +371,7 @@ pub enum Clear {
         half: Vec2,
         axis: Vec2,
     },
-    /// A rock's base ([`ROCK_BASES`]) at `centre`, its own +x along `axis`, scaled by `scale`,
+    /// A rock's base ([`rock_bases`]) at `centre`, its own +x along `axis`, scaled by `scale`,
     /// grown outward by [`PROP_GAP`].
     Rock {
         centre: Vec2,
@@ -623,7 +471,7 @@ pub fn cos_sin_deg(deg: f32) -> Vec2 {
 /// Where no blade may root: hero props other than the paddock's wandering animals
 /// (`farm::herd_slots`) (a box over a rectangular building's collider,
 /// [`scatter::ground_box`], else a disc of its ground reach) and every scatter instance (a box
-/// over a rock's base, [`ROCK_BASES`], else a disc). Each hero is the piece its slot draws at
+/// over a rock's base, [`rock_bases`], else a disc). Each hero is the piece its slot draws at
 /// `cell` (`hex_core::hero_piece`).
 pub fn exclusions(
     def: &TileDef,
@@ -688,7 +536,7 @@ pub fn exclusions(
     }
     out.extend(instances.iter().filter_map(|i| {
         let piece = i.piece(pieces.get(i.rule as usize)?);
-        if let Some((_, outline)) = ROCK_BASES.iter().find(|(id, _)| *id == piece) {
+        if let Some(outline) = hex_core::piece::PieceTable::builtin().rock_base(piece) {
             // `Instance::rotation` (`Quat::from_rotation_y(yaw)`) takes +x to (cos, -sin) in (x, z).
             return Some(Clear::Rock {
                 centre: i.pos.xz(),
@@ -1994,12 +1842,12 @@ mod tests {
             .fold(f32::MAX, f32::min)
     }
 
-    /// Each [`ROCK_BASES`] outline is convex and counter-clockwise, holds its rock's ground slice
+    /// Each [`rock_bases`] outline is convex and counter-clockwise, holds its rock's ground slice
     /// (to 1 mm), and every side lies within 2 cm of the slice's hull, so it clears no more than
     /// the stone's base.
     #[test]
     fn rock_bases_match_the_kit() {
-        for (id, outline) in ROCK_BASES {
+        for (id, outline) in rock_bases() {
             let poly: Vec<Vec2> = outline.iter().map(|p| Vec2::from(*p)).collect();
             let slice = ground_slice(id);
             let hull = crate::walk::hull(&slice);
@@ -2129,7 +1977,7 @@ mod tests {
                 half: Vec2::new(2.5, 0.4),
                 axis,
             });
-            for (_, outline) in ROCK_BASES {
+            for (_, outline) in rock_bases() {
                 for scale in [0.3, 0.8, 1.0, 1.6] {
                     clears.push(Clear::Rock {
                         centre: Vec2::new(5.0, 2.0),

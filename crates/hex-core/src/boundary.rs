@@ -9,7 +9,7 @@
 //!   edge (a wall, its middle run the gateway), preferring an edge whose ground inside the gate is
 //!   clear of heroes ([`GATE_APPROACH`]: the paddock fence encloses the farm's local edges 1 and 2,
 //!   so the gate opens onto the yard); a hedge edge takes a hedgerow oak in one run about
-//!   one time in three ([`HEDGEROW_OAK`] stands at that run's centre).
+//!   one time in three ([`hedgerow_oak`] stands at that run's centre).
 //! - **Corners.** At a hex corner the boundary edges meeting there are joined by one corner piece
 //!   per kind: an end (one arm), a 120 degree bend (two) or a three-way junction (three). A wall
 //!   edge and a hedge edge meeting at a corner each end there. Under the field/land rule at most
@@ -35,8 +35,10 @@ pub const FIELD_TILES: [&str; 2] = ["farm", "wheat_field"];
 pub const LAND_TILES: [&str; 4] = ["meadow", "forest", "oak", "windmill"];
 /// The tile that takes one gate edge.
 pub const GATE_TILE: &str = "farm";
-/// The hedgerow oak a `hedge_oak` run carries at its centre.
-pub const HEDGEROW_OAK: &str = "tree_oak_b";
+/// The hedgerow oak a `hedge_oak` run carries at its centre (`data/pieces.ron` `hedgerow_oak`).
+pub fn hedgerow_oak() -> &'static str {
+    crate::piece::builtin_hedgerow_oak()
+}
 /// How far (m) inside the farm the ground before its gate must be clear of heroes.
 pub const GATE_APPROACH: f32 = 3.5;
 /// Run and corner-arm lengths along an edge (m).
@@ -352,7 +354,7 @@ where
                 world.push((piece, mid, along, vec![seg], cells.clone()));
                 if piece == "hedge_oak" {
                     let yaw = (edge_hash(self.world_seed, owner, e, 4) % 360) as f32;
-                    world.push((HEDGEROW_OAK, mid, yaw, vec![], cells));
+                    world.push((hedgerow_oak(), mid, yaw, vec![], cells));
                 }
             }
         }

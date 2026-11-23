@@ -592,7 +592,7 @@ fn block_field_boundaries(v: &mut Vec<Placement>) {
         }
     }
     v.push(hero(
-        hex_core::boundary::HEDGEROW_OAK,
+        hex_core::boundary::hedgerow_oak(),
         3,
         5,
         [10.0, 0.0],

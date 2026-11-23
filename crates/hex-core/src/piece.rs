@@ -110,7 +110,36 @@ pub struct PieceDef {
     pub declared_parts: Option<Vec<[f32; 5]>>,
     /// Whether the kit scenario's look-dev layout (`hex_render::kit_scene::kit_layout`) shows it.
     pub showcase: Showcase,
+    /// Whether birds roost on it (it has canopy or roof perches).
+    pub perches: bool,
+    /// Its body when it is a farm animal that walks its paddock.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub herd: Option<HerdDef>,
+    /// Its base outline where it meets the ground, for a rock the grass clears up to.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub rock_base: Option<RockBase>,
+    /// The slots it may stand on as the piece a scatter rule names (its variants take the
+    /// family's list).
+    pub floor_slots: Vec<String>,
 }
+
+/// A farm animal's body: a capsule along +z from `back` to `front` (`radius` its half width),
+/// the hooves under its hips (x, z), its walking speed and whether it is a grazing pose.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HerdDef {
+    pub back: f32,
+    pub front: f32,
+    pub radius: f32,
+    pub hooves: [[f32; 2]; 4],
+    /// Walking speed (m/s).
+    pub speed: f32,
+    pub grazer: bool,
+}
+
+/// A rock's base outline where it meets the ground: a convex 12-gon, counter-clockwise in the
+/// piece's own (x, z) before its yaw and scale, around the y = 0 slice of its LOD0 and collider.
+pub type RockBase = [[f32; 2]; 12];
 
 /// A piece's place in the kit scenario's look-dev layout.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -198,6 +227,8 @@ pub struct PieceTable {
     pub car_ground: Vec<String>,
     pub centre_obstacles: Vec<CentreObstacle>,
     pub footprint_obstacles: Vec<FootprintObstacle>,
+    /// The tree a `hedge_oak` run of a field boundary carries at its centre.
+    pub hedgerow_oak: String,
     #[serde(skip)]
     index: HashMap<String, usize>,
 }
@@ -261,6 +292,43 @@ impl PieceTable {
             .unwrap_or(Footprint::DEFAULT)
     }
 
+    /// Whether piece `id` has perches.
+    pub fn perches(&self, id: &str) -> bool {
+        self.get(id).is_some_and(|p| p.perches)
+    }
+
+    /// The pieces with perches, in table order.
+    pub fn with_perches(&self) -> impl Iterator<Item = &str> {
+        self.pieces
+            .iter()
+            .filter(|p| p.perches)
+            .map(|p| p.id.as_str())
+    }
+
+    /// The herd body of piece `id`, if it walks.
+    pub fn herd(&self, id: &str) -> Option<&HerdDef> {
+        self.get(id).and_then(|p| p.herd.as_ref())
+    }
+
+    /// The pieces with a herd body and their bodies, in table order.
+    pub fn herds(&self) -> impl Iterator<Item = (&str, &HerdDef)> {
+        self.pieces
+            .iter()
+            .filter_map(|p| Some((p.id.as_str(), p.herd.as_ref()?)))
+    }
+
+    /// The base outline of rock piece `id`, if it has one.
+    pub fn rock_base(&self, id: &str) -> Option<&RockBase> {
+        self.get(id).and_then(|p| p.rock_base.as_ref())
+    }
+
+    /// The pieces with a rock base and their outlines, in table order.
+    pub fn rock_bases(&self) -> impl Iterator<Item = (&str, &RockBase)> {
+        self.pieces
+            .iter()
+            .filter_map(|p| Some((p.id.as_str(), p.rock_base.as_ref()?)))
+    }
+
     /// Whether slot `slot` is one of [`PieceTable::car_ground`].
     pub fn is_car_ground(&self, slot: &str) -> bool {
         self.car_ground.iter().any(|s| s == slot)
@@ -276,6 +344,7 @@ impl PieceTable {
 struct Views {
     variants: HashMap<&'static str, Vec<&'static str>>,
     hero_variants: HashMap<&'static str, Vec<&'static str>>,
+    floor_slots: HashMap<&'static str, Vec<&'static str>>,
 }
 
 fn views() -> &'static Views {
@@ -294,6 +363,7 @@ fn views() -> &'static Views {
         Views {
             variants: view(|p| &p.variants),
             hero_variants: view(|p| &p.hero_variants),
+            floor_slots: view(|p| &p.floor_slots),
         }
     });
     &VIEWS
@@ -309,15 +379,26 @@ pub fn builtin_hero_variants(piece: &str) -> &'static [&'static str] {
     views().hero_variants.get(piece).map_or(&[], |v| v)
 }
 
+/// The builtin floor slots of `piece` (its `floor_slots`), empty for a piece without any. A
+/// variant's list is empty: callers resolve the scatter family first.
+pub fn builtin_floor_slots(piece: &str) -> &'static [&'static str] {
+    views().floor_slots.get(piece).map_or(&[], |v| v)
+}
+
+/// The builtin table's `hedgerow_oak`.
+pub fn builtin_hedgerow_oak() -> &'static str {
+    PieceTable::builtin().hedgerow_oak.as_str()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None, showcase: Placed)"#;
+    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None, showcase: Placed, perches: false, herd: None, rock_base: None, floor_slots: [])"#;
 
     fn table(entry: &str) -> Result<PieceTable, ron::error::SpannedError> {
         PieceTable::parse(&format!(
-            "(pieces: [{entry}], parts: [], not_ground: [], car_ground: [], centre_obstacles: [], footprint_obstacles: [])"
+            "(pieces: [{entry}], parts: [], not_ground: [], car_ground: [], centre_obstacles: [], footprint_obstacles: [], hedgerow_oak: \"x\")"
         ))
     }
 
@@ -335,6 +416,10 @@ mod tests {
             "label: Some(Rock), ",
             "walk: Some(Obstacle)",
             "rise: Tree, ",
+            ", perches: false",
+            ", herd: None",
+            ", rock_base: None",
+            ", floor_slots: []",
         ] {
             let entry = ENTRY.replace(field, "");
             assert!(table(&entry).is_err(), "parsed without {field}: {entry}");

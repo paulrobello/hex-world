@@ -1005,7 +1005,7 @@ pub fn sync(
     // field tile redraws its boundaries.
     let bounds_arrived = hex_core::boundary::PIECES
         .iter()
-        .chain([&hex_core::boundary::HEDGEROW_OAK])
+        .chain([&hex_core::boundary::hedgerow_oak()])
         .any(|p| spawned.refresh.contains(*p));
     let bounds = no_bounds.is_none().then_some(view.world_seed);
     let waits = |t: &PlayTile| {
@@ -1493,71 +1493,6 @@ pub(crate) mod tests {
             rise_kind("pending_hero_not_in_the_kit"),
             PropKind::Building { floors: 2 }
         );
-    }
-
-    /// `rise_kind` reads each piece's `data/pieces.ron` entry. This pins the kind of every hero
-    /// piece in the catalog, variants included: a new piece fails here and its row is a
-    /// reviewable decision.
-    #[test]
-    fn every_hero_piece_has_a_pinned_rise_kind() {
-        const PINNED_RISES: &[&str] = &[
-            "animal_cow=2",
-            "animal_cow_b=2",
-            "animal_cow_c=2",
-            "animal_sheep=2",
-            "animal_sheep_b=2",
-            "animal_sheep_c=2",
-            "bakery_shop=2",
-            "bakery_shop_b=2",
-            "barn_red=2",
-            "barn_red_b=2",
-            "fence_paddock=1",
-            "hay_bale_round=2",
-            "hay_bale_round_b=2",
-            "hay_bale_stack=2",
-            "hay_bale_stack_b=2",
-            "house_cottage=2",
-            "house_cottage_b=2",
-            "house_longhouse=1",
-            "house_twostorey=3",
-            "house_twostorey_b=3",
-            "house_twostorey_c=3",
-            "rail_station_platform=2",
-            "rail_station_shelter=2",
-            "rail_tunnel_portal=2",
-            "road_tunnel_portal=2",
-            "tree_hero_oak=tree",
-            "tree_hero_oak_b=tree",
-            "tree_hero_oak_c=tree",
-            "well_stone=2",
-            "well_stone_b=2",
-            "windmill=2",
-            "windmill_b=2",
-        ];
-        let catalog = TileCatalog::builtin().unwrap();
-        let mut seen = std::collections::BTreeSet::new();
-        for def in catalog.tiles() {
-            for h in &def.props.hero {
-                let piece = h.piece.as_str();
-                seen.insert(piece.to_owned());
-                seen.extend(
-                    hex_core::hero_variants(piece)
-                        .iter()
-                        .map(|v| (*v).to_owned()),
-                );
-            }
-        }
-        let rises: Vec<String> = seen
-            .iter()
-            .map(|p| {
-                let rise = match rise_kind(p) {
-                    PropKind::Tree => "tree".to_owned(),
-                    PropKind::Building { floors } => format!("{floors}"),
-                };
-                format!("{p}={rise}")
-            })
-            .collect();
-        assert_eq!(rises, PINNED_RISES, "{rises:#?}");
     }
 
     /// A hero's rotor (the windmill's sails) spawns under its LOD's body at its node transform with

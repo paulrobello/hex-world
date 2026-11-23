@@ -1219,7 +1219,7 @@ mod tests {
         let pieces: Vec<&str> = hex_core::boundary::PIECES
             .iter()
             .copied()
-            .chain([hex_core::boundary::HEDGEROW_OAK])
+            .chain([hex_core::boundary::hedgerow_oak()])
             .collect();
         let catalog = hex_core::TileCatalog::builtin().unwrap();
         let fresh = |with_meadow: bool| {

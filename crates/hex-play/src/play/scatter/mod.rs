@@ -77,8 +77,8 @@ mod tests;
 
 pub use bands::{
     BANK_FLOORS, BANK_REACH, BEACH_BORDER, BEACH_FLOOR, BEACH_MAX, BeachBand, DAMP_TOP_S,
-    DRIFT_YAW_JITTER, FLOOR_EXEMPT, HILL_CAP, LILY_Y, MASSIF_CAP, PEAK_CAP, PEAK_PINE_BAND,
-    PINE_BAND, REED_BED_BAND, RIVER_MAX, SEABED_ALLOWANCE, SEABED_BORDER, SEABED_FLOOR, SEABED_Y,
+    DRIFT_YAW_JITTER, FLOOR_EXEMPT, LILY_Y, MASSIF_CAP, PEAK_CAP, PEAK_PINE_BAND, PINE_BAND,
+    REED_BED_BAND, RIVER_MAX, SEABED_ALLOWANCE, SEABED_BORDER, SEABED_FLOOR, SEABED_Y,
     SPRING_REACH, VERGE_BAND, WATER_BORDER, WATER_FLOOR, WATER_MAX, WATER_REST, bank_band,
     beach_band, beach_count, beach_family, coast_band, dressing_cap, excluded_slot, floor_ok,
     floor_slots, ring_band, river_count, river_family, seabed, spring_nodes, verge_band,

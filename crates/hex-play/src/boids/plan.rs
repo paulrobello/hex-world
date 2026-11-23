@@ -427,18 +427,6 @@ pub struct Roost {
     pub face: Vec3,
 }
 
-/// Pieces with perches ([`canopy_perches`]): what [`BoidPlan::set_world`] watches arrive in the kit.
-pub const PERCH_PIECES: &[&str] = &[
-    "barn_red_b",
-    "well_stone",
-    "tree_hero_oak",
-    "tree_hero_oak_b",
-    "tree_hero_oak_c",
-    "tree_forest",
-    "tree_forest_b",
-    "tree_forest_c",
-];
-
 /// Bird roosts of the placed tiles from their hero trees alone ([`roosts_with`], no scatter).
 pub fn roosts(
     tiles: &[PlayTile],
@@ -1116,7 +1104,8 @@ pub struct BoidPlan {
     pub peaks: Vec<Vec4>,
     cursor: usize,
     tiles: Option<Vec<PlayTile>>,
-    /// Which of [`PERCH_PIECES`] the kit draws, as of the last `set_world`.
+    /// Which of the pieces with perches (`data/pieces.ron` `perches`) the kit draws, in table
+    /// order, as of the last `set_world`.
     drawn: Vec<bool>,
     /// Drawn scattered trees by cell ([`Self::set_scatter`]), their revision, and whether they
     /// changed since the last `set_world`.
@@ -1277,7 +1266,10 @@ impl BoidPlan {
         drawn: &dyn Fn(&str) -> bool,
         t: f32,
     ) -> bool {
-        let now: Vec<bool> = PERCH_PIECES.iter().map(|p| drawn(p)).collect();
+        let now: Vec<bool> = hex_core::piece::PieceTable::builtin()
+            .with_perches()
+            .map(drawn)
+            .collect();
         if !self.play
             || (self.tiles.as_deref() == Some(tiles) && self.drawn == now && !self.scatter_dirty)
         {
@@ -1625,6 +1617,21 @@ impl BoidPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A piece's `data/pieces.ron` `perches` is set exactly when [`canopy_perches`] has perch
+    /// points for it, so [`BoidPlan::set_world`] watches every piece birds roost on arrive.
+    #[test]
+    fn perches_match_the_canopy_perches() {
+        for p in &hex_core::piece::PieceTable::builtin().pieces {
+            assert_eq!(
+                p.perches,
+                !canopy_perches(&p.id).is_empty(),
+                "{}: perches is {} in data/pieces.ron",
+                p.id,
+                p.perches
+            );
+        }
+    }
 
     fn tile(q: i32, r: i32, id: &str, rotation: u8) -> PlayTile {
         PlayTile {

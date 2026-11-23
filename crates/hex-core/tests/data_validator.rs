@@ -653,6 +653,49 @@ fn piece_ids_are_unique() {
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 
+/// The hedgerow oak a `hedge_oak` run carries (`data/pieces.ron` `hedgerow_oak`) is a tree
+/// piece of the table.
+#[test]
+fn the_hedgerow_oak_is_a_tree_piece() {
+    let table = hex_core::piece::PieceTable::builtin();
+    let oak = table.hedgerow_oak.as_str();
+    assert!(
+        table.get(oak).is_some(),
+        "hedgerow_oak {oak} has no pieces entry"
+    );
+    assert_eq!(
+        table.label(oak),
+        Some(hex_core::piece::PropLabel::Tree),
+        "hedgerow_oak {oak}"
+    );
+}
+
+/// Every piece a tile's scatter rule names stands somewhere: its `data/pieces.ron`
+/// `floor_slots` list at least one slot. A variant takes its family's list, so its own stays empty.
+#[test]
+fn every_scatter_piece_has_floor_slots() {
+    let table = hex_core::piece::PieceTable::builtin();
+    let mut problems = vec![];
+    for def in catalog().tiles() {
+        for r in &def.props.scatter {
+            let piece = r.piece.as_str();
+            let family = table.family(piece).unwrap_or(piece);
+            if hex_core::piece::builtin_floor_slots(family).is_empty() {
+                problems.push(format!(
+                    "{}: scatter piece {piece} has no floor_slots",
+                    def.id
+                ));
+            }
+        }
+    }
+    for def in &table.pieces {
+        if table.family(&def.id).is_some() && !def.floor_slots.is_empty() {
+            problems.push(format!("{}: a scatter variant lists floor_slots", def.id));
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}
+
 /// A hero variant is still its piece's family (`data/pieces.ron` `hero_variants`): a house
 /// variant is still a house, so parking (`house_` heroes) and walk's `building` label hold for
 /// every pick, and a hay variant is still `hay_`.

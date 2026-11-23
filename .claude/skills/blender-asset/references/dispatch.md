@@ -62,5 +62,6 @@ that built it instead of starting a fresh one.
     item before the piece is called done (owner, 2026-10-19: the crossing deck sat 0.35 m above
     the fixed car height and was found only after the build). Hand back the piece's
     `data/pieces.ron` entry (every field, its header comment documents them; the kit gate fails
-    without it), plus any per-piece Rust it needs outside that file (boid perches, farm bodies,
-    grass rock bases, scatter floor slots, `PINNED_RISES`), for the orchestrator to land.
+    without it), plus any per-piece Rust it needs outside that file (perch geometry in
+    `canopy_perches`, an animal's `hex_render::animal::RIGS` row, a soft scatter piece's
+    `grass::GROWS_THROUGH` row, a scatter band in `scatter/bands.rs`), for the orchestrator to land.

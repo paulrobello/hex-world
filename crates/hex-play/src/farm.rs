@@ -5,7 +5,7 @@
 //! pauses there, a grazing piece (`animal_cow_b`, `animal_sheep_c`) mostly grazing, a standing
 //! piece idling. Each keeps its piece, so the grazers' lowered heads are the grazing pauses.
 //!
-//! - **Bodies.** An animal is a capsule over its kit LOD0 mesh and collider ([`BODIES`]): a segment
+//! - **Bodies.** An animal is a capsule over its kit LOD0 mesh and collider ([`body`], `data/pieces.ron` `herd`): a segment
 //!   along its +z with a radius of its half width. It turns about the segment's middle at
 //!   [`TURN_STEP`] a tick and walks only while it faces within [`WALK_CONE`] of its goal.
 //! - **Room.** A move or turn is taken only when the new capsule stays [`FENCE_CLEAR`] inside the
@@ -88,21 +88,22 @@ pub const NIBBLE: f32 = 0.15;
 pub const NIBBLE_TICKS: u64 = 100;
 const NIBBLE_LIFT_TICKS: u64 = 40;
 
-/// One animal piece: its capsule (along +z from `back` to `front`, `radius` its half width), the
-/// hooves under its hips (x, z), its walking speed and whether it is a grazing pose.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Body {
-    pub back: f32,
-    pub front: f32,
-    pub radius: f32,
-    pub hooves: [[f32; 2]; 4],
-    /// Walking speed (m/s).
-    pub speed: f32,
-    pub grazer: bool,
+/// One animal piece's body (`data/pieces.ron` `herd`): its capsule (along +z from `back` to
+/// `front`, `radius` its half width), the hooves under its hips (x, z), its walking speed and
+/// whether it is a grazing pose.
+pub type Body = hex_core::piece::HerdDef;
+
+/// What a herd animal's motion reads off its [`Body`].
+trait Gait {
+    /// The capsule segment's half length and its middle's offset along +z from the pivot.
+    fn half(&self) -> f32;
+    fn mid(&self) -> f32;
+    /// Ticks of a pause and the metres of a walk leg, as (min, max).
+    fn pause(&self) -> (u32, u32);
+    fn leg(&self) -> (f32, f32);
 }
 
-impl Body {
-    /// The capsule segment's half length and its middle's offset along +z from the pivot.
+impl Gait for Body {
     fn half(&self) -> f32 {
         (self.front - self.back) / 2.0
     }
@@ -111,7 +112,6 @@ impl Body {
         (self.front + self.back) / 2.0
     }
 
-    /// Ticks of a pause and the metres of a walk leg, as (min, max).
     fn pause(&self) -> (u32, u32) {
         if self.grazer { (300, 700) } else { (120, 400) }
     }
@@ -121,74 +121,16 @@ impl Body {
     }
 }
 
-/// The herd pieces (`bodies_cover_the_kit_meshes` checks the capsules against every LOD0 and
-/// collider vertex, `hooves_match_the_bake_reports` the hooves against `animal.hips`).
-pub const BODIES: &[(&str, Body)] = &[
-    (
-        "animal_cow",
-        Body {
-            back: -1.045,
-            front: 1.461,
-            radius: 0.34,
-            hooves: [[0.18, 0.55], [-0.18, 0.55], [0.17, -0.58], [-0.17, -0.58]],
-            speed: 0.35,
-            grazer: false,
-        },
-    ),
-    (
-        "animal_cow_b",
-        Body {
-            back: -1.045,
-            front: 1.311,
-            radius: 0.34,
-            hooves: [[0.18, 0.55], [-0.18, 0.55], [0.17, -0.58], [-0.17, -0.58]],
-            speed: 0.3,
-            grazer: true,
-        },
-    ),
-    (
-        "animal_sheep",
-        Body {
-            back: -0.582,
-            front: 0.72,
-            radius: 0.33,
-            hooves: [[0.13, 0.25], [-0.13, 0.25], [0.13, -0.27], [-0.13, -0.27]],
-            speed: 0.32,
-            grazer: false,
-        },
-    ),
-    (
-        "animal_sheep_b",
-        Body {
-            back: -0.338,
-            front: 0.429,
-            radius: 0.191,
-            hooves: [
-                [0.078, 0.15],
-                [-0.078, 0.15],
-                [0.078, -0.162],
-                [-0.078, -0.162],
-            ],
-            speed: 0.4,
-            grazer: false,
-        },
-    ),
-    (
-        "animal_sheep_c",
-        Body {
-            back: -0.582,
-            front: 0.806,
-            radius: 0.33,
-            hooves: [[0.13, 0.25], [-0.13, 0.25], [0.13, -0.27], [-0.13, -0.27]],
-            speed: 0.3,
-            grazer: true,
-        },
-    ),
-];
+/// The herd pieces and their bodies, in `data/pieces.ron` order (`bodies_cover_the_kit_meshes`
+/// checks the capsules against every LOD0 and collider vertex, `hooves_match_the_bake_reports`
+/// the hooves against `animal.hips`).
+pub fn bodies() -> impl Iterator<Item = (&'static str, &'static Body)> {
+    hex_core::piece::PieceTable::builtin().herds()
+}
 
 /// The body of herd piece `piece`.
 pub fn body(piece: &str) -> Option<&'static Body> {
-    BODIES.iter().find(|(id, _)| *id == piece).map(|(_, b)| b)
+    hex_core::piece::PieceTable::builtin().herd(piece)
 }
 
 pub use hex_core::meadow_relief;
@@ -407,10 +349,9 @@ impl Herd {
             .into_iter()
             .map(|slot| {
                 let h = &def.props.hero[slot];
-                let piece: &'static str = BODIES
-                    .iter()
+                let piece: &'static str = bodies()
                     .find(|(id, _)| *id == h.piece.as_str())
-                    .map(|(id, _)| *id)
+                    .map(|(id, _)| id)
                     .expect("herd_slots keeps bodies");
                 let body = body(piece).expect("herd_slots keeps bodies");
                 // `Quat::from_rotation_y(-yaw)` takes +z to (-sin, cos) in (x, z).
@@ -1081,7 +1022,7 @@ mod tests {
 
     #[test]
     fn bodies_cover_the_kit_meshes() {
-        for (piece, b) in BODIES {
+        for (piece, b) in bodies() {
             for p in outline(piece) {
                 let z = p.y.clamp(b.back, b.front);
                 let d = Vec2::new(p.x, p.y - z).length();
@@ -1092,29 +1033,10 @@ mod tests {
 
     #[test]
     fn hooves_match_the_bake_reports() {
-        let reports = [
-            (
-                "animal_cow",
-                include_str!("../../../assets-source/kit/animal_cow/bake-report.json"),
-            ),
-            (
-                "animal_cow_b",
-                include_str!("../../../assets-source/kit/animal_cow_b/bake-report.json"),
-            ),
-            (
-                "animal_sheep",
-                include_str!("../../../assets-source/kit/animal_sheep/bake-report.json"),
-            ),
-            (
-                "animal_sheep_b",
-                include_str!("../../../assets-source/kit/animal_sheep_b/bake-report.json"),
-            ),
-            (
-                "animal_sheep_c",
-                include_str!("../../../assets-source/kit/animal_sheep_c/bake-report.json"),
-            ),
-        ];
-        for (piece, text) in reports {
+        let kit = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../assets-source/kit");
+        for (piece, _) in bodies() {
+            let text = std::fs::read_to_string(kit.join(piece).join("bake-report.json")).unwrap();
+            let text = text.as_str();
             let v: serde_json::Value = serde_json::from_str(text).unwrap();
             let hips = v["animal"]["hips"].as_object().unwrap();
             let want: BTreeSet<[i32; 2]> = hips
@@ -1226,15 +1148,14 @@ mod tests {
     fn animals_stay_inside_apart_and_on_the_ground_over_a_long_run() {
         let def = farm();
         let pen = paddock(&def).unwrap();
-        let hulls: BTreeMap<&str, Vec<Vec2>> = BODIES
-            .iter()
+        let hulls: BTreeMap<&str, Vec<Vec2>> = bodies()
             .map(|(p, _)| {
                 let pts: Vec<Vec2> = walk_tests::mesh_tris(p, "collider")
                     .unwrap()
                     .iter()
                     .flat_map(|(t, _)| t.map(|q| Vec2::new(q[0], q[2])))
                     .collect();
-                (*p, hull(&pts))
+                (p, hull(&pts))
             })
             .collect();
         for rotation in 0..6u8 {

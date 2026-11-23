@@ -11,48 +11,16 @@ use super::layout::{Instance, Layout, Rng, hex_reach, ring16};
 use super::surface::Surface;
 use super::tables::family;
 
-/// The slots a scatter piece may stand on (the topmost LOD0 surface under its whole footprint).
-/// A piece not listed has none, so it is never placed.
+/// The slots a scatter piece may stand on (the topmost LOD0 surface under its whole footprint):
+/// its family's `data/pieces.ron` `floor_slots`. A piece without any is never placed.
 pub fn floor_slots(piece: &str) -> &'static [&'static str] {
-    match family(piece) {
-        // The massif's and the peak's lower-slope pines (owner A54 Q2 O1; spec 2026-11-13 D9) stand
-        // on their caps in [`ring_band`].
-        "tree_forest" | "sapling_spruce" => &["forest_base_floor", MASSIF_CAP, PEAK_CAP],
-        "tree_oak" | "fern_clump" | "log_fallen" | "shrub_forest" => &["forest_base_floor"],
-        "rock_small" | "wildflower_clump" => &[
-            "forest_base_floor",
-            "meadow_base_cap",
-            MASSIF_CAP,
-            HILL_CAP,
-            PEAK_CAP,
-        ],
-        // The granite boulders and outcrop (owner A25): the meadow, the forest and oak litter, and
-        // on a coast the grass-to-sand band ([`coast_band`]).
-        "boulder_granite" | "outcrop_granite" => &[
-            "forest_base_floor",
-            "meadow_base_cap",
-            MASSIF_CAP,
-            HILL_CAP,
-            PEAK_CAP,
-            "beach_grass",
-            BEACH_FLOOR,
-        ],
-        "wildflower_single" | "bush_verge" => &["meadow_base_cap", MASSIF_CAP, HILL_CAP, PEAK_CAP],
-        "beach_dunegrass" | "beach_driftwood" | "beach_pebbles" => &[BEACH_FLOOR],
-        "river_stones" | "river_reeds" => &BANK_FLOORS,
-        "lily_cluster" => &[WATER_FLOOR],
-        "reed_bed" => &[WATER_FLOOR, "river_grass"],
-        "seabed_rock" | "seabed_pebbles" => &[SEABED_FLOOR],
-        _ => &[],
-    }
+    hex_core::piece::builtin_floor_slots(family(piece))
 }
 
 /// The massif's Meadow-matched grass cap: the meadow pieces stand on it as on `meadow_base_cap`.
 pub const MASSIF_CAP: &str = "massif_granite_cap";
 
-/// The single-tile hill's and peak's Meadow-matched grass caps (spec 2026-11-13 D9), likewise.
-pub const HILL_CAP: &str = "hill_meadow_cap";
-
+/// The single-tile peak's Meadow-matched grass cap (spec 2026-11-13 D9), likewise.
 pub const PEAK_CAP: &str = "peak_granite_cap";
 
 /// The massif's lower slopes (m from its centre): the grass between the rock foot and the ring's
