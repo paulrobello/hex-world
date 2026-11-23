@@ -63,6 +63,10 @@
 //   footprint), on the piece a scatter rule names (its variants take the same list: keep theirs
 //   empty). Empty for a piece scatter never places, and a scatter rule's piece needs at least one
 //   (`every_scatter_piece_has_floor_slots`).
+// - grows_through: for a soft scatter piece grass grows in among (owner 2026-10-14: wildflowers had
+//   a bare ring around them), the radius (m, before the instance's scale) of the dense centre the
+//   grass keeps clear, `Some(0.0)` for a single stem grass grows right up to; `None` clears the
+//   footprint disc (or the `rock_base`).
 //
 // parts: collider parts that are not kit pieces of their own, with their label: the junction's
 // point lever, a rail viaduct's abutments and piers, and the single-tile landforms' rock feet.
@@ -109,6 +113,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "road_tunnel_bore",
@@ -129,6 +134,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_hero_oak",
@@ -149,6 +155,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_hero_oak_b",
@@ -169,6 +176,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_hero_oak_c",
@@ -189,6 +197,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_forest",
@@ -209,6 +218,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor", "massif_granite_cap", "peak_granite_cap"],
+            grows_through: None,
         ),
         (
             id: "tree_forest_b",
@@ -229,6 +239,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_forest_c",
@@ -249,6 +260,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "sapling_spruce",
@@ -269,6 +281,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor", "massif_granite_cap", "peak_granite_cap"],
+            grows_through: None,
         ),
         (
             id: "sapling_spruce_b",
@@ -289,6 +302,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "sapling_spruce_c",
@@ -309,6 +323,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_oak",
@@ -329,6 +344,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor"],
+            grows_through: None,
         ),
         (
             id: "tree_oak_b",
@@ -349,6 +365,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "tree_oak_c",
@@ -369,6 +386,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "house_cottage",
@@ -389,6 +407,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "house_twostorey",
@@ -409,6 +428,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "house_longhouse",
@@ -429,6 +449,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "house_twostorey_b",
@@ -449,6 +470,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "house_twostorey_c",
@@ -469,6 +491,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // Its box collider is its walls' (LOD2), so its porch posts get their own squares
         // (`_house_slate.py` `porch`: 0.12 m oak posts whose outer face is 0.75 m out from the front wall at
@@ -496,6 +519,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The wells: their footprint is their LOD2 hull collider's reach, the flagstone apron's rim
         // (1.385 m), so grass and scatter keep off the whole apron (`_house_well.py`, measured on LOD0). Their
@@ -523,6 +547,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // No roof: a stepped disc over its wall and capstones (radius 0.79), its posts (0.17 m, centres
         // on z +-0.8, to 2.16 m) and the crank on the +z post (x -0.03..0.09, out to z 1.09, to 1.62 m).
@@ -553,6 +578,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The footprint is the tower trunk only: the sails turn overhead, from 3.7 m up.
         (
@@ -574,6 +600,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The smock mill: its octagonal brick base's foot corners (the stage and sails are overhead, from
         // 2.66 m and 4.48 m up).
@@ -596,6 +623,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The farm tile's heroes: the barn (10 x 7 m, so its reach is its corner) and the static bales
         // and animals.
@@ -618,6 +646,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The catslide barn: the same 10.6 x 7.7 m collider box as barn_red. Its GLB collider is its LOD2
         // roof box, which walled off its open lean-to shed; its declared parts follow the closed walls
@@ -654,6 +683,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "fence_paddock",
@@ -713,6 +743,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wheat_field",
@@ -733,6 +764,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_run",
@@ -753,6 +785,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_run_b",
@@ -773,6 +806,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_end",
@@ -793,6 +827,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_bend",
@@ -813,6 +848,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_junction",
@@ -833,6 +869,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wall_gate",
@@ -853,6 +890,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_run",
@@ -873,6 +911,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_run_b",
@@ -893,6 +932,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_end",
@@ -913,6 +953,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_bend",
@@ -933,6 +974,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_junction",
@@ -953,6 +995,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hedge_oak",
@@ -973,6 +1016,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The bakeries: each a building whose collider reach is its corner (`footprints_match_the_kit`
         // measures 4.68 and 4.91 m), and the station shelter (4.77 m).
@@ -995,6 +1039,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "bakery_shop_b",
@@ -1015,6 +1060,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // Its ground box is its LOD2 box collider, ramps included (friction.md item 6): grass keeps clear
         // of its whole footprint, the ramp toes too.
@@ -1037,6 +1083,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rail_station_shelter",
@@ -1057,6 +1104,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rail_buffer_stop",
@@ -1077,6 +1125,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rail_tunnel_portal",
@@ -1097,6 +1146,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rail_tunnel_bore",
@@ -1117,6 +1167,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "seabed_rock",
@@ -1137,6 +1188,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["coast_seabed"],
+            grows_through: None,
         ),
         (
             id: "seabed_pebbles",
@@ -1157,6 +1209,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["coast_seabed"],
+            grows_through: None,
         ),
         (
             id: "boat_rowing",
@@ -1177,6 +1230,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "boat_sail",
@@ -1197,6 +1251,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "landing_stage",
@@ -1217,6 +1272,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "beach_driftwood",
@@ -1237,6 +1293,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["beach_sand"],
+            grows_through: None,
         ),
         (
             id: "beach_driftwood_b",
@@ -1257,6 +1314,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "beach_driftwood_c",
@@ -1277,6 +1335,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "beach_dunegrass",
@@ -1297,6 +1356,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["beach_sand"],
+            grows_through: None,
         ),
         (
             id: "beach_dunegrass_b",
@@ -1317,6 +1377,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "beach_dunegrass_c",
@@ -1337,6 +1398,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // Stone clusters: their footprint is their LOD0 convex hull collider's reach (`_stones.py`).
         (
@@ -1358,6 +1420,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["beach_sand"],
+            grows_through: None,
         ),
         (
             id: "beach_pebbles_b",
@@ -1378,6 +1441,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "beach_pebbles_c",
@@ -1398,6 +1462,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rock_small",
@@ -1431,6 +1496,7 @@
                 (-0.449, 0.237),
             )),
             floor_slots: ["forest_base_floor", "meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap"],
+            grows_through: None,
         ),
         (
             id: "rock_small_b",
@@ -1464,6 +1530,7 @@
                 (-0.894, 0.344),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "rock_small_c",
@@ -1497,6 +1564,7 @@
                 (-0.829, -0.138),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         // Owner A25: the two small boulders most, the big rounded one rarest.
         (
@@ -1531,6 +1599,7 @@
                 (1.023, -0.168),
             )),
             floor_slots: ["forest_base_floor", "meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap", "beach_grass", "beach_sand"],
+            grows_through: None,
         ),
         (
             id: "boulder_granite_b",
@@ -1564,6 +1633,7 @@
                 (1.222, -0.091),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "boulder_granite_c",
@@ -1597,6 +1667,7 @@
                 (0.897, -0.309),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "boulder_granite_d",
@@ -1630,6 +1701,7 @@
                 (2.189, -0.093),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         // A second outcrop, so two in one view differ (outcrop redo Q2): half the picks each.
         (
@@ -1664,6 +1736,7 @@
                 (4.013, -0.137),
             )),
             floor_slots: ["forest_base_floor", "meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap", "beach_grass", "beach_sand"],
+            grows_through: None,
         ),
         (
             id: "outcrop_granite_b",
@@ -1697,6 +1770,7 @@
                 (3.895, 0.037),
             )),
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hay_bale_round",
@@ -1717,6 +1791,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hay_bale_stack",
@@ -1737,6 +1812,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // The upright bale's reach is its loose straw's outer edge, which the grass must leave clear.
         (
@@ -1758,6 +1834,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "hay_bale_stack_b",
@@ -1778,6 +1855,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wildflower_clump",
@@ -1798,6 +1876,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor", "meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap"],
+            grows_through: Some(0.2),
         ),
         (
             id: "wildflower_clump_b",
@@ -1818,6 +1897,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.2),
         ),
         (
             id: "wildflower_clump_c",
@@ -1838,6 +1918,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.2),
         ),
         // The scarlet poppy _e is an accent, 1 pick in 10 (about 4 of a meadow's 40): its red is the most
         // saturated colour in the meadow. On the verges 1 in 4 (owner A9-Q4, 2026-10-20).
@@ -1860,6 +1941,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap"],
+            grows_through: Some(0.0),
         ),
         // The most common verge bush (owner, 2026-10-20): half the picks, a quarter each for _b and _c.
         (
@@ -1881,6 +1963,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["meadow_base_cap", "massif_granite_cap", "hill_meadow_cap", "peak_granite_cap"],
+            grows_through: None,
         ),
         (
             id: "bush_verge_b",
@@ -1901,6 +1984,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "bush_verge_c",
@@ -1921,6 +2005,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "wildflower_single_b",
@@ -1941,6 +2026,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.0),
         ),
         (
             id: "wildflower_single_c",
@@ -1961,6 +2047,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.0),
         ),
         (
             id: "wildflower_single_d",
@@ -1981,6 +2068,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.0),
         ),
         (
             id: "wildflower_single_e",
@@ -2001,6 +2089,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: Some(0.0),
         ),
         (
             id: "river_stones",
@@ -2021,6 +2110,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["river_bed", "river_grass", "beach_grass"],
+            grows_through: None,
         ),
         (
             id: "river_stones_b",
@@ -2041,6 +2131,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "river_stones_c",
@@ -2061,6 +2152,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "river_reeds",
@@ -2081,6 +2173,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["river_bed", "river_grass", "beach_grass"],
+            grows_through: None,
         ),
         (
             id: "river_reeds_b",
@@ -2101,6 +2194,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "lily_cluster",
@@ -2121,6 +2215,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["river_bed"],
+            grows_through: None,
         ),
         (
             id: "lily_cluster_b",
@@ -2141,6 +2236,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "lily_cluster_c",
@@ -2161,6 +2257,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "reed_bed",
@@ -2181,6 +2278,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["river_bed", "river_grass"],
+            grows_through: None,
         ),
         (
             id: "river_spring_center",
@@ -2201,6 +2299,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "car_sedan",
@@ -2221,6 +2320,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "car_van",
@@ -2241,6 +2341,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "car_pickup",
@@ -2261,6 +2362,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "train_engine",
@@ -2281,6 +2383,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "train_carriage",
@@ -2301,6 +2404,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "train_carriage_b",
@@ -2321,6 +2425,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "bird_starling",
@@ -2341,6 +2446,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "bird_goldfinch",
@@ -2361,6 +2467,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "fish_trout",
@@ -2381,6 +2488,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "fish_mackerel",
@@ -2401,6 +2509,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "animal_cow",
@@ -2421,6 +2530,7 @@
             herd: Some((back: -1.045, front: 1.461, radius: 0.34, hooves: ((0.18, 0.55), (-0.18, 0.55), (0.17, -0.58), (-0.17, -0.58)), speed: 0.35, grazer: false)),
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "animal_sheep",
@@ -2441,6 +2551,7 @@
             herd: Some((back: -0.582, front: 0.72, radius: 0.33, hooves: ((0.13, 0.25), (-0.13, 0.25), (0.13, -0.27), (-0.13, -0.27)), speed: 0.32, grazer: false)),
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "animal_cow_b",
@@ -2461,6 +2572,7 @@
             herd: Some((back: -1.045, front: 1.311, radius: 0.34, hooves: ((0.18, 0.55), (-0.18, 0.55), (0.17, -0.58), (-0.17, -0.58)), speed: 0.3, grazer: true)),
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         // animal_cow's body in another coat; its LOD2 head (the collider box) reaches 1.4 cm further.
         (
@@ -2482,6 +2594,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "animal_sheep_b",
@@ -2502,6 +2615,7 @@
             herd: Some((back: -0.338, front: 0.429, radius: 0.191, hooves: ((0.078, 0.15), (-0.078, 0.15), (0.078, -0.162), (-0.078, -0.162)), speed: 0.4, grazer: false)),
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "animal_sheep_c",
@@ -2522,6 +2636,7 @@
             herd: Some((back: -0.582, front: 0.806, radius: 0.33, hooves: ((0.13, 0.25), (-0.13, 0.25), (0.13, -0.27), (-0.13, -0.27)), speed: 0.3, grazer: true)),
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "fern_clump",
@@ -2542,6 +2657,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor"],
+            grows_through: None,
         ),
         (
             id: "shrub_forest",
@@ -2562,6 +2678,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor"],
+            grows_through: None,
         ),
         (
             id: "shrub_forest_b",
@@ -2582,6 +2699,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "shrub_forest_c",
@@ -2602,6 +2720,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "log_fallen",
@@ -2622,6 +2741,7 @@
             herd: None,
             rock_base: None,
             floor_slots: ["forest_base_floor"],
+            grows_through: None,
         ),
         (
             id: "fern_clump_b",
@@ -2642,6 +2762,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "fern_clump_c",
@@ -2662,6 +2783,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "log_fallen_b",
@@ -2682,6 +2804,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "log_fallen_c",
@@ -2702,6 +2825,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
         (
             id: "massif_granite",
@@ -2722,6 +2846,7 @@
             herd: None,
             rock_base: None,
             floor_slots: [],
+            grows_through: None,
         ),
     ],
     parts: [

@@ -19,7 +19,7 @@
 //!   a scatter instance's (a box over a rock's base outline, [`rock_bases`], so blades come right
 //!   up to the stone; spruce trunks; every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
-//!   clear, [`GROWS_THROUGH`], so grass grows in among them), nor below the water level
+//!   clear, their `data/pieces.ron` `grows_through`, so grass grows in among them), nor below the water level
 //!   ([`WATER_MARGIN`]). The hex border is not an exclusion (scatter's border gap keeps crowns and
 //!   footprints inside the hex, which would thin grass into a seam): the border has no width, each
 //!   tile owns the blades on its side of it, and its jittered grid keeps the density up to the edge,
@@ -113,19 +113,6 @@ pub const PROP_GAP: f32 = 0.05;
 /// Gap (m) between a blade's root and a rectangular building's wall ([`Clear::Box`]): a blade
 /// is up to 0.11 m wide at the root and leans, so it keeps clear of the wall's face.
 pub const WALL_GAP: f32 = 0.15;
-/// Soft scatter pieces grass grows in among (owner 2026-10-14: wildflowers had a bare ring around
-/// them), with the radius (m, before the instance's scale) of the dense centre it keeps clear.
-/// Single-stem wildflowers keep no centre: grass grows right up to the stem.
-pub const GROWS_THROUGH: &[(&str, f32)] = &[
-    ("wildflower_clump", 0.2),
-    ("wildflower_clump_b", 0.2),
-    ("wildflower_clump_c", 0.2),
-    ("wildflower_single", 0.0),
-    ("wildflower_single_b", 0.0),
-    ("wildflower_single_c", 0.0),
-    ("wildflower_single_d", 0.0),
-    ("wildflower_single_e", 0.0),
-];
 /// A rock's base outline where it meets the ground (owner 2026-10-19: grass stopped short of the
 /// stone, held off by its spacing footprint): its `data/pieces.ron` `rock_base`.
 pub use hex_core::piece::RockBase;
@@ -545,10 +532,9 @@ pub fn exclusions(
                 outline,
             });
         }
-        let radius = GROWS_THROUGH
-            .iter()
-            .find(|(id, _)| *id == piece)
-            .map_or_else(|| scatter::footprint(piece).ground, |(_, core)| *core);
+        let radius = hex_core::piece::PieceTable::builtin()
+            .grows_through(piece)
+            .unwrap_or_else(|| scatter::footprint(piece).ground);
         Some(Clear::Disc {
             centre: i.pos.xz(),
             radius: radius * i.scale + PROP_GAP,

@@ -121,6 +121,9 @@ pub struct PieceDef {
     /// The slots it may stand on as the piece a scatter rule names (its variants take the
     /// family's list).
     pub floor_slots: Vec<String>,
+    /// The dense centre (m) grass keeps clear, for a soft scatter piece grass grows in among.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub grows_through: Option<f32>,
 }
 
 /// A farm animal's body: a capsule along +z from `back` to `front` (`radius` its half width),
@@ -297,6 +300,11 @@ impl PieceTable {
         self.get(id).is_some_and(|p| p.perches)
     }
 
+    /// The dense centre (m) grass keeps clear around piece `id`, when grass grows in among it.
+    pub fn grows_through(&self, id: &str) -> Option<f32> {
+        self.get(id).and_then(|p| p.grows_through)
+    }
+
     /// The pieces with perches, in table order.
     pub fn with_perches(&self) -> impl Iterator<Item = &str> {
         self.pieces
@@ -394,12 +402,34 @@ pub fn builtin_hedgerow_oak() -> &'static str {
 mod tests {
     use super::*;
 
-    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None, showcase: Placed, perches: false, herd: None, rock_base: None, floor_slots: [])"#;
+    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None, showcase: Placed, perches: false, herd: None, rock_base: None, floor_slots: [], grows_through: None)"#;
 
     fn table(entry: &str) -> Result<PieceTable, ron::error::SpannedError> {
         PieceTable::parse(&format!(
             "(pieces: [{entry}], parts: [], not_ground: [], car_ground: [], centre_obstacles: [], footprint_obstacles: [], hedgerow_oak: \"x\")"
         ))
+    }
+
+    /// A grass-through centre is a clearance inside the piece's own footprint, and a rock clears its
+    /// base outline instead.
+    #[test]
+    fn grows_through_sits_inside_the_footprint() {
+        for p in &PieceTable::builtin().pieces {
+            let Some(core) = p.grows_through else {
+                continue;
+            };
+            let ground = p.footprint.as_ref().map_or(0.0, |f| f.ground);
+            assert!(
+                (0.0..=ground).contains(&core),
+                "{}: grows_through {core} outside footprint {ground}",
+                p.id
+            );
+            assert!(
+                p.rock_base.is_none(),
+                "{}: grows_through and rock_base both set",
+                p.id
+            );
+        }
     }
 
     #[test]
@@ -420,6 +450,7 @@ mod tests {
             ", herd: None",
             ", rock_base: None",
             ", floor_slots: []",
+            ", grows_through: None",
         ] {
             let entry = ENTRY.replace(field, "");
             assert!(table(&entry).is_err(), "parsed without {field}: {entry}");

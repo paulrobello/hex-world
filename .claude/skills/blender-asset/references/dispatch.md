@@ -63,5 +63,5 @@ that built it instead of starting a fresh one.
     the fixed car height and was found only after the build). Hand back the piece's
     `data/pieces.ron` entry (every field, its header comment documents them; the kit gate fails
     without it), plus any per-piece Rust it needs outside that file (perch geometry in
-    `canopy_perches`, an animal's `hex_render::animal::RIGS` row, a soft scatter piece's
-    `grass::GROWS_THROUGH` row, a scatter band in `scatter/bands.rs`), for the orchestrator to land.
+    `canopy_perches`, an animal's `hex_render::animal::RIGS` row, a scatter band in
+    `scatter/bands.rs`), for the orchestrator to land.
