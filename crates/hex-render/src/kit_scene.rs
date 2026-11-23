@@ -64,40 +64,6 @@ const fn hero(piece: &'static str, q: i32, r: i32, at: [f32; 2], yaw_deg: f32) -
     }
 }
 
-/// Manifest props, trees and heroes [`kit_layout`] does not place, each with the reason
-/// (`every_showcase_piece_is_placed_or_listed`).
-pub const NOT_SHOWCASED: &[(&str, &str)] = &[
-    (
-        "road_tunnel_portal",
-        "a ground hero on a straight-road tile that needs its cutting and the tunnel around it: reviewed in the elevation shots (docs/checkpoints/elevation/)",
-    ),
-    (
-        "rail_tunnel_portal",
-        "a ground hero on a rail tile that needs its cutting and the tunnel around it: reviewed in the open-tunnels shots (docs/checkpoints/open_tunnels/)",
-    ),
-    (
-        "car_van",
-        "traffic spawned by hex_play::cars; the layout shows car_sedan for scale",
-    ),
-    (
-        "car_pickup",
-        "traffic spawned by hex_play::cars; the layout shows car_sedan for scale",
-    ),
-    (
-        "bird_starling",
-        "an animated agent spawned by hex_play::boids",
-    ),
-    (
-        "bird_goldfinch",
-        "an animated agent spawned by hex_play::boids",
-    ),
-    ("fish_trout", "an animated agent spawned by hex_play::boids"),
-    (
-        "fish_mackerel",
-        "an animated agent spawned by hex_play::boids",
-    ),
-];
-
 /// Two road-straight tiles meeting at (0,0) edge 0 / (1,0) edge 3, ringed by meadow at every
 /// rotation (Review Focus 1), and the hero tree on (0,1). `road_tunnel_portal` has no cell here: it
 /// is a ground hero on a straight-road tile that needs its cutting and the tunnel around it, so it
@@ -666,7 +632,7 @@ fn block_tunnel_bore(v: &mut Vec<Placement>) {
     // the ocean corner: the tube at the meadow's level with its ends open, so the lining, the lamps'
     // always-on glow and the road on its floor show in kit light. The rail bore beside it at (5, 1),
     // same treatment, so the two compare one to one; the portals are reviewed in the elevation and
-    // open-tunnels shots instead (NOT_SHOWCASED).
+    // open-tunnels shots instead (their `data/pieces.ron` `showcase`).
     v.push(place("meadow_base", 4, 1, 0));
     v.push(place("road_tunnel_bore", 4, 1, 0));
     v.push(place("meadow_base", 5, 1, 0));
@@ -1250,16 +1216,23 @@ mod tests {
     const PINNED_LEN: usize = 273;
     const PINNED_HASH: u64 = 0x472f_65fd_985f_20f4;
 
-    /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or listed in
-    /// [`NOT_SHOWCASED`] with its reason, and no listed piece is placed or missing from the manifest,
-    /// so a new piece cannot be left out of the look-dev layout unnoticed.
+    /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or has a
+    /// `data/pieces.ron` `showcase: NotShowcased(reason)`, and no such piece is placed, so a new
+    /// piece cannot be left out of the look-dev layout unnoticed (the kit gate checks every one has
+    /// an entry).
     #[test]
     fn every_showcase_piece_is_placed_or_listed() {
         use hex_assets::PieceKind;
+        use hex_core::piece::{PieceTable, Showcase};
         let manifest = parse_manifest(MANIFEST).unwrap();
+        let table = PieceTable::builtin();
         let placed: std::collections::BTreeSet<&str> =
             kit_layout().iter().map(|p| p.piece).collect();
-        let listed = |id: &str| NOT_SHOWCASED.iter().any(|(piece, _)| *piece == id);
+        let listed = |id: &str| {
+            table
+                .get(id)
+                .is_some_and(|p| matches!(p.showcase, Showcase::NotShowcased(_)))
+        };
         let unaccounted: Vec<&str> = manifest
             .pieces
             .iter()
@@ -1269,18 +1242,18 @@ mod tests {
             .collect();
         assert!(
             unaccounted.is_empty(),
-            "placed by no block of kit_layout and not in NOT_SHOWCASED: {unaccounted:?}"
+            "placed by no block of kit_layout and not NotShowcased in data/pieces.ron: {unaccounted:?}"
         );
-        for (piece, reason) in NOT_SHOWCASED {
+        for def in &table.pieces {
+            let Showcase::NotShowcased(reason) = &def.showcase else {
+                continue;
+            };
+            let piece = def.id.as_str();
             assert!(
                 !reason.trim().is_empty() && !reason.contains("not yet placed"),
                 "{piece} needs a concrete disposition: {reason}"
             );
-            assert!(!placed.contains(piece), "{piece} is placed: drop its row");
-            assert!(
-                manifest.pieces.iter().any(|e| e.id == *piece),
-                "{piece} is not in the manifest: drop its row"
-            );
+            assert!(!placed.contains(piece), "{piece} is placed: make it Placed");
         }
     }
 

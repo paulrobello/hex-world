@@ -628,6 +628,28 @@ fn piece_ids_are_unique() {
             problems.push(format!("duplicate not_ground slot {slot}"));
         }
     }
+    let mut cars = BTreeSet::new();
+    for slot in &table.car_ground {
+        if !cars.insert(slot.as_str()) {
+            problems.push(format!("duplicate car_ground slot {slot}"));
+        }
+    }
+    let mut centres = BTreeSet::new();
+    for o in &table.centre_obstacles {
+        let corners = o.corners.map(|c| c.map(f32::to_bits));
+        if !centres.insert((o.centre.as_str(), o.part.as_str(), corners)) {
+            problems.push(format!(
+                "duplicate centre_obstacles row {} {}",
+                o.centre, o.part
+            ));
+        }
+    }
+    let mut tiles = BTreeSet::new();
+    for o in &table.footprint_obstacles {
+        if !tiles.insert(o.tile.as_str()) {
+            problems.push(format!("duplicate footprint_obstacles tile {}", o.tile));
+        }
+    }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
 

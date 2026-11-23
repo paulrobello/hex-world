@@ -108,6 +108,17 @@ pub struct PieceDef {
     /// collider's one hull for the walker.
     #[serde(deserialize_with = "Option::deserialize")]
     pub declared_parts: Option<Vec<[f32; 5]>>,
+    /// Whether the kit scenario's look-dev layout (`hex_render::kit_scene::kit_layout`) shows it.
+    pub showcase: Showcase,
+}
+
+/// A piece's place in the kit scenario's look-dev layout.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+pub enum Showcase {
+    /// A block of the layout places it.
+    Placed,
+    /// The layout leaves it out, for this reason (where it is reviewed instead).
+    NotShowcased(String),
 }
 
 /// Horizontal reach of a piece in metres: `ground` is its collider's (what it stands on and what
@@ -269,11 +280,15 @@ struct Views {
 
 fn views() -> &'static Views {
     static VIEWS: LazyLock<Views> = LazyLock::new(|| {
+        // Built from the lookup index, so a duplicate id resolves to the same entry as `get`.
         let view = |list: fn(&'static PieceDef) -> &'static Vec<String>| {
-            PieceTable::builtin()
-                .pieces
+            let t = PieceTable::builtin();
+            t.index
                 .iter()
-                .map(|p| (p.id.as_str(), list(p).iter().map(String::as_str).collect()))
+                .map(|(id, &i)| {
+                    let v = list(&t.pieces[i]).iter().map(String::as_str).collect();
+                    (id.as_str(), v)
+                })
                 .collect()
         };
         Views {
@@ -298,7 +313,7 @@ pub fn builtin_hero_variants(piece: &str) -> &'static [&'static str] {
 mod tests {
     use super::*;
 
-    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None)"#;
+    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None, showcase: Placed)"#;
 
     fn table(entry: &str) -> Result<PieceTable, ron::error::SpannedError> {
         PieceTable::parse(&format!(

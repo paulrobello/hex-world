@@ -45,6 +45,9 @@
 // - declared_parts: the walker collider as convex parts in the piece frame, `(x min, x max,
 //   z min, z max, top)`, each standing from the GLB collider's foot to its top, in place of the
 //   GLB collider's one hull.
+// - showcase: `Placed` when a block of the kit scenario's look-dev layout (`kit_scene::kit_layout`)
+//   places the piece, else `NotShowcased(reason)` with where it is reviewed instead
+//   (`every_showcase_piece_is_placed_or_listed`). The layout positions stay in kit_scene.rs.
 //
 // parts: collider parts that are not kit pieces of their own, with their label: the junction's
 // point lever, a rail viaduct's abutments and piers, and the single-tile landforms' rock feet.
@@ -84,6 +87,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("a ground hero on a straight-road tile that needs its cutting and the tunnel around it: reviewed in the elevation shots (docs/checkpoints/elevation/)"),
         ),
         (
             id: "road_tunnel_bore",
@@ -99,6 +103,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_hero_oak",
@@ -114,6 +119,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_hero_oak_b",
@@ -129,6 +135,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_hero_oak_c",
@@ -144,6 +151,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_forest",
@@ -159,6 +167,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_forest_b",
@@ -174,6 +183,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_forest_c",
@@ -189,6 +199,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "sapling_spruce",
@@ -204,6 +215,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "sapling_spruce_b",
@@ -219,6 +231,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "sapling_spruce_c",
@@ -234,6 +247,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_oak",
@@ -249,6 +263,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_oak_b",
@@ -264,6 +279,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "tree_oak_c",
@@ -279,6 +295,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "house_cottage",
@@ -294,6 +311,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "house_twostorey",
@@ -309,6 +327,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "house_longhouse",
@@ -324,6 +343,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "house_twostorey_b",
@@ -339,6 +359,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "house_twostorey_c",
@@ -354,6 +375,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // Its box collider is its walls' (LOD2), so its porch posts get their own squares
         // (`_house_slate.py` `porch`: 0.12 m oak posts whose outer face is 0.75 m out from the front wall at
@@ -376,6 +398,7 @@
                 ((2.83, -0.6), (2.95, -0.6), (2.95, -0.48), (2.83, -0.48)),
             ],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The wells: their footprint is their LOD2 hull collider's reach, the flagstone apron's rim
         // (1.385 m), so grass and scatter keep off the whole apron (`_house_well.py`, measured on LOD0). Their
@@ -398,6 +421,7 @@
             declared_parts: Some([
                 (-0.9, 0.9, -1.09, 1.09, 2.46),
             ]),
+            showcase: Placed,
         ),
         // No roof: a stepped disc over its wall and capstones (radius 0.79), its posts (0.17 m, centres
         // on z +-0.8, to 2.16 m) and the crank on the +z post (x -0.03..0.09, out to z 1.09, to 1.62 m).
@@ -423,6 +447,7 @@
                 (-0.085, 0.085, -0.885, 0.885, 2.16),
                 (-0.03, 0.09, 0.885, 1.09, 1.62),
             ]),
+            showcase: Placed,
         ),
         // The footprint is the tower trunk only: the sails turn overhead, from 3.7 m up.
         (
@@ -439,6 +464,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The smock mill: its octagonal brick base's foot corners (the stage and sails are overhead, from
         // 2.66 m and 4.48 m up).
@@ -456,6 +482,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The farm tile's heroes: the barn (10 x 7 m, so its reach is its corner) and the static bales
         // and animals.
@@ -473,6 +500,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The catslide barn: the same 10.6 x 7.7 m collider box as barn_red. Its GLB collider is its LOD2
         // roof box, which walled off its open lean-to shed; its declared parts follow the closed walls
@@ -504,6 +532,7 @@
                 (-1.733, -1.533, 3.35, 3.55, 2.65),
                 (-5.0, -4.8, 3.35, 3.55, 2.65),
             ]),
+            showcase: Placed,
         ),
         (
             id: "fence_paddock",
@@ -558,6 +587,7 @@
             )),
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wheat_field",
@@ -573,6 +603,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_run",
@@ -588,6 +619,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_run_b",
@@ -603,6 +635,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_end",
@@ -618,6 +651,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_bend",
@@ -633,6 +667,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_junction",
@@ -648,6 +683,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wall_gate",
@@ -663,6 +699,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_run",
@@ -678,6 +715,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_run_b",
@@ -693,6 +731,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_end",
@@ -708,6 +747,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_bend",
@@ -723,6 +763,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_junction",
@@ -738,6 +779,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hedge_oak",
@@ -753,6 +795,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The bakeries: each a building whose collider reach is its corner (`footprints_match_the_kit`
         // measures 4.68 and 4.91 m), and the station shelter (4.77 m).
@@ -770,6 +813,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "bakery_shop_b",
@@ -785,6 +829,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // Its ground box is its LOD2 box collider, ramps included (friction.md item 6): grass keeps clear
         // of its whole footprint, the ramp toes too.
@@ -802,6 +847,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rail_station_shelter",
@@ -817,6 +863,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rail_buffer_stop",
@@ -832,6 +879,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rail_tunnel_portal",
@@ -847,6 +895,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("a ground hero on a rail tile that needs its cutting and the tunnel around it: reviewed in the open-tunnels shots (docs/checkpoints/open_tunnels/)"),
         ),
         (
             id: "rail_tunnel_bore",
@@ -862,6 +911,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "seabed_rock",
@@ -877,6 +927,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "seabed_pebbles",
@@ -892,6 +943,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "boat_rowing",
@@ -907,6 +959,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "boat_sail",
@@ -922,6 +975,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "landing_stage",
@@ -937,6 +991,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_driftwood",
@@ -952,6 +1007,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_driftwood_b",
@@ -967,6 +1023,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_driftwood_c",
@@ -982,6 +1039,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_dunegrass",
@@ -997,6 +1055,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_dunegrass_b",
@@ -1012,6 +1071,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_dunegrass_c",
@@ -1027,6 +1087,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // Stone clusters: their footprint is their LOD0 convex hull collider's reach (`_stones.py`).
         (
@@ -1043,6 +1104,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_pebbles_b",
@@ -1058,6 +1120,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "beach_pebbles_c",
@@ -1073,6 +1136,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rock_small",
@@ -1088,6 +1152,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rock_small_b",
@@ -1103,6 +1168,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "rock_small_c",
@@ -1118,6 +1184,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // Owner A25: the two small boulders most, the big rounded one rarest.
         (
@@ -1134,6 +1201,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "boulder_granite_b",
@@ -1149,6 +1217,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "boulder_granite_c",
@@ -1164,6 +1233,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "boulder_granite_d",
@@ -1179,6 +1249,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // A second outcrop, so two in one view differ (outcrop redo Q2): half the picks each.
         (
@@ -1195,6 +1266,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "outcrop_granite_b",
@@ -1210,6 +1282,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hay_bale_round",
@@ -1225,6 +1298,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hay_bale_stack",
@@ -1240,6 +1314,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The upright bale's reach is its loose straw's outer edge, which the grass must leave clear.
         (
@@ -1256,6 +1331,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "hay_bale_stack_b",
@@ -1271,6 +1347,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_clump",
@@ -1286,6 +1363,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_clump_b",
@@ -1301,6 +1379,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_clump_c",
@@ -1316,6 +1395,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The scarlet poppy _e is an accent, 1 pick in 10 (about 4 of a meadow's 40): its red is the most
         // saturated colour in the meadow. On the verges 1 in 4 (owner A9-Q4, 2026-10-20).
@@ -1333,6 +1413,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // The most common verge bush (owner, 2026-10-20): half the picks, a quarter each for _b and _c.
         (
@@ -1349,6 +1430,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "bush_verge_b",
@@ -1364,6 +1446,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "bush_verge_c",
@@ -1379,6 +1462,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_single_b",
@@ -1394,6 +1478,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_single_c",
@@ -1409,6 +1494,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_single_d",
@@ -1424,6 +1510,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "wildflower_single_e",
@@ -1439,6 +1526,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_stones",
@@ -1454,6 +1542,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_stones_b",
@@ -1469,6 +1558,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_stones_c",
@@ -1484,6 +1574,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_reeds",
@@ -1499,6 +1590,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_reeds_b",
@@ -1514,6 +1606,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "lily_cluster",
@@ -1529,6 +1622,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "lily_cluster_b",
@@ -1544,6 +1638,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "lily_cluster_c",
@@ -1559,6 +1654,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "reed_bed",
@@ -1574,6 +1670,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "river_spring_center",
@@ -1589,6 +1686,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "car_sedan",
@@ -1604,6 +1702,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "car_van",
@@ -1619,6 +1718,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("traffic spawned by hex_play::cars; the layout shows car_sedan for scale"),
         ),
         (
             id: "car_pickup",
@@ -1634,6 +1734,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("traffic spawned by hex_play::cars; the layout shows car_sedan for scale"),
         ),
         (
             id: "train_engine",
@@ -1649,6 +1750,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "train_carriage",
@@ -1664,6 +1766,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "train_carriage_b",
@@ -1679,6 +1782,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "bird_starling",
@@ -1694,6 +1798,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("an animated agent spawned by hex_play::boids"),
         ),
         (
             id: "bird_goldfinch",
@@ -1709,6 +1814,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("an animated agent spawned by hex_play::boids"),
         ),
         (
             id: "fish_trout",
@@ -1724,6 +1830,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("an animated agent spawned by hex_play::boids"),
         ),
         (
             id: "fish_mackerel",
@@ -1739,6 +1846,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: NotShowcased("an animated agent spawned by hex_play::boids"),
         ),
         (
             id: "animal_cow",
@@ -1754,6 +1862,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "animal_sheep",
@@ -1769,6 +1878,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "animal_cow_b",
@@ -1784,6 +1894,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         // animal_cow's body in another coat; its LOD2 head (the collider box) reaches 1.4 cm further.
         (
@@ -1800,6 +1911,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "animal_sheep_b",
@@ -1815,6 +1927,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "animal_sheep_c",
@@ -1830,6 +1943,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "fern_clump",
@@ -1845,6 +1959,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "shrub_forest",
@@ -1860,6 +1975,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "shrub_forest_b",
@@ -1875,6 +1991,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "shrub_forest_c",
@@ -1890,6 +2007,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "log_fallen",
@@ -1905,6 +2023,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "fern_clump_b",
@@ -1920,6 +2039,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "fern_clump_c",
@@ -1935,6 +2055,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "log_fallen_b",
@@ -1950,6 +2071,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "log_fallen_c",
@@ -1965,6 +2087,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
         (
             id: "massif_granite",
@@ -1980,6 +2103,7 @@
             fence: None,
             posts: [],
             declared_parts: None,
+            showcase: Placed,
         ),
     ],
     parts: [

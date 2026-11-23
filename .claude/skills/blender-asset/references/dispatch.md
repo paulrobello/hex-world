@@ -55,9 +55,12 @@ that built it instead of starting a fresh one.
     tail; review-sheet paths; friction entries and proposed skill text; open owner questions.
 11. **Integration.** What the piece changes at runtime, each marked handled, not applicable, or
     needs work: car height and path (`ROAD_SURFACE_Y` is a constant 0.11 m), walker collider and
-    `walk::prop_kind`, grass clear zones (`scatter::GROUND_BOXES`), boid perches, sim nodes and
+    its `data/pieces.ron` entry (`label`, `walk`, grass clear zones in `ground_box`), boid perches, sim nodes and
     clearances, thumbnails, the draw budget, and sound (does the item want an occasional
     one-shot pool or an event cue? The orchestrator generates it under the owner's standing
     approval of 2026-10-19, following `assets-source/audio/README.md`). The orchestrator fixes or files every "needs work"
     item before the piece is called done (owner, 2026-10-19: the crossing deck sat 0.35 m above
-    the fixed car height and was found only after the build).
+    the fixed car height and was found only after the build). Hand back the piece's
+    `data/pieces.ron` entry (every field, its header comment documents them; the kit gate fails
+    without it), plus any per-piece Rust it needs outside that file (boid perches, farm bodies,
+    grass rock bases, scatter floor slots, `PINNED_RISES`), for the orchestrator to land.

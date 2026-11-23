@@ -732,14 +732,16 @@ fn spawn_column(
 }
 
 /// A hero prop's growth (`data/pieces.ron` `rise`): trees scale up, buildings rise a floor at a
-/// time (roof included).
+/// time (roof included). A hero with no entry (a tile may name a `data/pending-pieces.ron` piece
+/// the manifest does not ship yet) rises as a two-floor building.
 fn rise_kind(piece: &str) -> PropKind {
-    let def = hex_core::piece::PieceTable::builtin()
+    match hex_core::piece::PieceTable::builtin()
         .get(piece)
-        .unwrap_or_else(|| panic!("{piece} has no data/pieces.ron entry"));
-    match def.rise {
-        hex_core::piece::Rise::Tree => PropKind::Tree,
-        hex_core::piece::Rise::Building { floors } => PropKind::Building { floors },
+        .map(|d| d.rise)
+    {
+        Some(hex_core::piece::Rise::Tree) => PropKind::Tree,
+        Some(hex_core::piece::Rise::Building { floors }) => PropKind::Building { floors },
+        None => PropKind::Building { floors: 2 },
     }
 }
 
@@ -1481,6 +1483,16 @@ pub(crate) mod tests {
         assert_eq!(floors("house_longhouse"), 1);
         assert_eq!(floors("fence_paddock"), 1, "a low fence rises in one step");
         assert_eq!(rise_kind("tree_hero_oak"), PropKind::Tree);
+    }
+
+    /// A hero with no `data/pieces.ron` entry (a pending piece) rises as a two-floor building
+    /// instead of panicking.
+    #[test]
+    fn a_hero_without_an_entry_rises_as_a_two_floor_building() {
+        assert_eq!(
+            rise_kind("pending_hero_not_in_the_kit"),
+            PropKind::Building { floors: 2 }
+        );
     }
 
     /// `rise_kind` reads each piece's `data/pieces.ron` entry. This pins the kind of every hero
