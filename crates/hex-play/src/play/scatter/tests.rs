@@ -950,11 +950,12 @@ fn instances_draw_every_variant_of_their_rule() {
         let want: std::collections::BTreeSet<String> = group(piece).map(str::to_owned).collect();
         assert_eq!(seen, want, "{id} {piece}");
     }
-    for &(id, variants) in VARIANTS {
-        for v in variants {
+    for def in &hex_core::piece::PieceTable::builtin().pieces {
+        let id = def.id.as_str();
+        for v in &def.variants {
             assert_eq!(family(v), id);
             assert!(
-                FOOTPRINTS.iter().any(|(f, _)| f == v),
+                FOOTPRINTS.iter().any(|(f, _)| *f == v.as_str()),
                 "{v} has no footprint"
             );
             assert_eq!(floor_slots(v), floor_slots(id));
@@ -962,12 +963,21 @@ fn instances_draw_every_variant_of_their_rule() {
     }
 }
 
-/// Weighted groups: every [`VARIANT_WEIGHTS`] entry names a group and weighs each of its
+/// Weighted groups: every `data/pieces.ron` `variant_weights` and `verge_variant_weights` list names a group and weighs each of its
 /// pieces above 0 (a new variant without a weight would never be drawn), and `bush_verge` is
 /// the most common verge bush, about half the picks (owner, 2026-10-20).
 #[test]
 fn weighted_groups_draw_by_their_weights() {
-    for &(id, weights) in VARIANT_WEIGHTS.iter().chain(VERGE_VARIANT_WEIGHTS) {
+    let lists = hex_core::piece::PieceTable::builtin()
+        .pieces
+        .iter()
+        .flat_map(|p| {
+            [&p.variant_weights, &p.verge_variant_weights]
+                .into_iter()
+                .flatten()
+                .map(move |w| (p.id.as_str(), w))
+        });
+    for (id, weights) in lists {
         assert_eq!(weights.len(), group(id).count(), "{id}: a weight per piece");
         assert!(weights.iter().all(|&w| w > 0), "{id}: {weights:?}");
     }
@@ -1001,7 +1011,7 @@ fn weighted_groups_draw_by_their_weights() {
 }
 
 /// More poppies on the road and rail verges (owner A9-Q4, 2026-10-20): every tile with a road
-/// or rail lane and single wildflowers draws them by [`VERGE_VARIANT_WEIGHTS`], 1 poppy in 4;
+/// or rail lane and single wildflowers draws them by its `verge_variant_weights`, 1 poppy in 4;
 /// every other tile keeps the meadow's 1 in 10, and the meadow draws exactly the picks it drew
 /// before per-tile weights (a digest of 4096 picks under the old weights `[9, 9, 9, 9, 4]`).
 #[test]
@@ -1187,8 +1197,10 @@ const WIDER_THAN_AUTHORED: &[&str] = &["bakery_shop_b"];
 /// round piece (a tree, no ground box) keeps inside its ground and crown reach.
 #[test]
 fn hero_variants_fit_inside_the_authored_piece() {
-    for &(piece, variants) in hex_core::HERO_VARIANTS {
-        for v in variants {
+    for def in &hex_core::piece::PieceTable::builtin().pieces {
+        let piece = def.id.as_str();
+        for v in &def.hero_variants {
+            let v = v.as_str();
             // A building's ground box nests in the authored one's; a disc piece (the oak, the
             // hay) has no box, only its reach.
             assert_eq!(ground_box(piece).is_some(), ground_box(v).is_some(), "{v}");
@@ -1201,7 +1213,7 @@ fn hero_variants_fit_inside_the_authored_piece() {
                     "{v} {vb:?} outside {piece} {b:?}"
                 );
             }
-            if WIDER_THAN_AUTHORED.contains(v) {
+            if WIDER_THAN_AUTHORED.contains(&v) {
                 continue;
             }
             assert!(footprint(v).ground <= footprint(piece).ground, "{v}");

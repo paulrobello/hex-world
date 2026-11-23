@@ -5,24 +5,6 @@
 
 use crate::{Axial, HeroProp, TileDef};
 
-/// Each authored hero piece with the variants a slot of it may draw instead. A new variant is one
-/// more id in its row; a new family is one more row.
-pub const HERO_VARIANTS: &[(&str, &[&str])] = &[
-    ("house_cottage", &["house_longhouse", "house_cottage_b"]),
-    (
-        "house_twostorey",
-        &["house_twostorey_b", "house_twostorey_c"],
-    ),
-    ("tree_hero_oak", &["tree_hero_oak_b", "tree_hero_oak_c"]),
-    ("hay_bale_round", &["hay_bale_round_b"]),
-    ("hay_bale_stack", &["hay_bale_stack_b"]),
-    ("barn_red", &["barn_red_b"]),
-    ("bakery_shop", &["bakery_shop_b"]),
-    ("windmill", &["windmill_b"]),
-    ("animal_cow", &["animal_cow_c"]),
-    ("well_stone", &["well_stone_b"]),
-];
-
 /// One slot in this many draws a variant (the rest keep the authored piece).
 pub const VARIANT_ONE_IN: u64 = 3;
 
@@ -42,12 +24,10 @@ pub enum VariantPick {
 /// The pick play uses.
 pub const VARIANT_PICK: VariantPick = VariantPick::PerSlot;
 
-/// The variants of authored hero piece `piece`, empty for a piece without any.
+/// The variants of authored hero piece `piece` (its `data/pieces.ron` `hero_variants`, in order),
+/// empty for a piece without any. A new variant is one more id at the end of its list.
 pub fn hero_variants(piece: &str) -> &'static [&'static str] {
-    HERO_VARIANTS
-        .iter()
-        .find(|(id, _)| *id == piece)
-        .map_or(&[], |(_, v)| v)
+    crate::piece::builtin_hero_variants(piece)
 }
 
 /// SplitMix64 of the packed cell and the slot (explicit integer mixing, so native and wasm agree).
@@ -489,18 +469,6 @@ mod tests {
                 pick_piece("house_cottage", cell, 0, VariantPick::PerCluster),
                 pick_piece("house_cottage", cell, 1, VariantPick::PerCluster)
             );
-        }
-    }
-
-    /// A house variant is still a house, so parking (`house_` heroes) and walk's `building` kind
-    /// hold for every pick; a hay variant is still `hay_`, so walk reports it as hay.
-    #[test]
-    fn variants_keep_their_family() {
-        for &(piece, variants) in HERO_VARIANTS {
-            let family = piece.split('_').next().unwrap();
-            for v in variants {
-                assert!(v.starts_with(&format!("{family}_")), "{v} of {piece}");
-            }
         }
     }
 }

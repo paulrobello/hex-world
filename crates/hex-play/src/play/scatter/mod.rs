@@ -15,12 +15,12 @@
 //!   of its ground where the tile's seeded value noise ([`drift_noise`]) is highest, so its
 //!   instances gather in a few clustered drifts. The noise is tile-local and seeded from the tile
 //!   alone, so a tile needs no neighbour to scatter and redraws identically.
-//! - **Variants.** A rule names a piece; each instance draws one piece of its group ([`VARIANTS`]:
-//!   the piece and its `_b`, `_c`, … variants, PRD §6 Variety), picked by [`pick_variant`] from a
+//! - **Variants.** A rule names a piece; each instance draws one piece of its group (its `data/pieces.ron`
+//!   `variants`: the piece and its `_b`, `_c`, … variants, PRD §6 Variety), picked by [`pick_variant`] from a
 //!   hash of the tile seed, the rule and the instance's place in it, so the dart stream is
 //!   untouched and the same seed draws the same mix. A group draws its pieces equally unless
-//!   [`VARIANT_WEIGHTS`] weighs them (the verge bushes favour `bush_verge`), or on a road or rail
-//!   tile [`VERGE_VARIANT_WEIGHTS`] (more poppies on the verges). The rule's ground
+//!   its `variant_weights` weigh them (the verge bushes favour `bush_verge`), or on a road or rail
+//!   tile its `verge_variant_weights` (more poppies on the verges, [`variant_weights`]). The rule's ground
 //!   mask and spacing keep the group's largest footprint clear ([`group_footprint`]); each
 //!   instance stands and clears others by its own. A rule draws once every piece of its group is in the kit.
 //! - **Vary.** A rule with `vary` (the meadow's single wildflowers) spreads evenly but keeps a dart
@@ -95,8 +95,7 @@ pub use surface::{Surface, Tri, ground_pieces, member_tris};
 pub(crate) use surface::{ground_tris, kit_tris};
 pub use sync::{PlayScatter, ScatterGroup, ScatterLayouts, ScatterReport, TileScatter, sync};
 pub use tables::{
-    FENCE_HALF, FENCES, FOOTPRINTS, Fence, Footprint, GROUND_BOXES, GroundBox, LANDFORMS,
-    VARIANT_WEIGHTS, VARIANTS, VERGE_VARIANT_WEIGHTS, family, fence, fence_lines, footprint,
-    ground_box, ground_props, group, group_footprint, is_ground_prop, is_not_ground, pick_variant,
-    variant_piece, variant_weights, verge_tile,
+    FENCE_HALF, FENCES, FOOTPRINTS, Fence, Footprint, GROUND_BOXES, GroundBox, LANDFORMS, family,
+    fence, fence_lines, footprint, ground_box, ground_props, group, group_footprint,
+    is_ground_prop, is_not_ground, pick_variant, variant_piece, variant_weights, verge_tile,
 };

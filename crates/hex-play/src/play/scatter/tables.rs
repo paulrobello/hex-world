@@ -1,5 +1,6 @@
-//! The per-piece tables scatter, walking and the grass read: variants and their weights, footprints,
-//! ground boxes, fences, ground props and landforms. A piece missing from a table silently takes its
+//! The per-piece lookups scatter, walking and the grass read (from `data/pieces.ron`: variants and
+//! their weights, ground props) and the tables still here: footprints, ground boxes, fences and
+//! landforms. A piece missing from a table silently takes its
 //! default, so `every_prop_piece_has_a_footprint_row` iterates the catalog instead of the table.
 
 use bevy::prelude::*;
@@ -8,72 +9,6 @@ use hex_core::{NetworkKind, TileDef};
 
 use super::layout::Rng;
 
-/// Variants of a scatter piece (PRD §6 Variety), after the piece itself: a rule names the first
-/// and each of its instances draws one of the group, picked by [`pick_variant`].
-pub const VARIANTS: &[(&str, &[&str])] = &[
-    (
-        "beach_driftwood",
-        &["beach_driftwood_b", "beach_driftwood_c"],
-    ),
-    (
-        "beach_dunegrass",
-        &["beach_dunegrass_b", "beach_dunegrass_c"],
-    ),
-    ("beach_pebbles", &["beach_pebbles_b", "beach_pebbles_c"]),
-    ("tree_forest", &["tree_forest_b", "tree_forest_c"]),
-    ("tree_oak", &["tree_oak_b", "tree_oak_c"]),
-    ("fern_clump", &["fern_clump_b", "fern_clump_c"]),
-    ("log_fallen", &["log_fallen_b", "log_fallen_c"]),
-    ("rock_small", &["rock_small_b", "rock_small_c"]),
-    (
-        "boulder_granite",
-        &[
-            "boulder_granite_b",
-            "boulder_granite_c",
-            "boulder_granite_d",
-        ],
-    ),
-    // A second outcrop, so two in one view differ (outcrop redo Q2): half the picks each.
-    ("outcrop_granite", &["outcrop_granite_b"]),
-    (
-        "wildflower_clump",
-        &["wildflower_clump_b", "wildflower_clump_c"],
-    ),
-    (
-        "wildflower_single",
-        &[
-            "wildflower_single_b",
-            "wildflower_single_c",
-            "wildflower_single_d",
-            "wildflower_single_e",
-        ],
-    ),
-    ("bush_verge", &["bush_verge_b", "bush_verge_c"]),
-    ("river_stones", &["river_stones_b", "river_stones_c"]),
-    ("river_reeds", &["river_reeds_b"]),
-    ("lily_cluster", &["lily_cluster_b", "lily_cluster_c"]),
-    ("shrub_forest", &["shrub_forest_b", "shrub_forest_c"]),
-    ("sapling_spruce", &["sapling_spruce_b", "sapling_spruce_c"]),
-];
-
-/// Pick weights of a [`VARIANTS`] group, the piece first then its variants in order. A group not
-/// listed draws each piece equally. `bush_verge` stays the most common verge bush (owner,
-/// 2026-10-20): half the picks, a quarter each for `_b` and `_c`. The scarlet poppy
-/// `wildflower_single_e` is an accent among the single wildflowers, 1 pick in 10 (about 4 of a
-/// meadow's 40), because its red is the most saturated colour in the meadow.
-pub const VARIANT_WEIGHTS: &[(&str, &[u32])] = &[
-    ("bush_verge", &[2, 1, 1]),
-    ("wildflower_single", &[9, 9, 9, 9, 4]),
-    // Owner A25: the two small boulders most, the big rounded one rarest.
-    ("boulder_granite", &[3, 3, 2, 1]),
-];
-
-/// Pick weights that replace [`VARIANT_WEIGHTS`] on a verge tile ([`verge_tile`]): the poppy is 1
-/// pick in 4 of a road or rail verge's single wildflowers (owner A9-Q4, 2026-10-20: more poppies
-/// on the verges, the meadow kept at 1 in 10). Every other tile and group keeps its weights, so
-/// it draws exactly as before.
-pub const VERGE_VARIANT_WEIGHTS: &[(&str, &[u32])] = &[("wildflower_single", &[3, 3, 3, 3, 4])];
-
 /// Whether `def` is a verge tile: it carries a road or rail lane, so its cap is the verge along it.
 pub fn verge_tile(def: &TileDef) -> bool {
     def.networks
@@ -81,23 +16,20 @@ pub fn verge_tile(def: &TileDef) -> bool {
         .any(|n| matches!(n.kind, NetworkKind::Road | NetworkKind::Rail))
 }
 
-/// The pick weights of `piece`'s group on `def`: [`VERGE_VARIANT_WEIGHTS`] on a verge tile where it
-/// lists the group, else [`VARIANT_WEIGHTS`]; `None` draws each piece equally.
+/// The pick weights of `piece`'s group on `def` (PRD §6 Variety, `data/pieces.ron`): its
+/// `verge_variant_weights` on a verge tile where it has them, else its `variant_weights`; `None`
+/// draws each piece equally.
 pub fn variant_weights(def: &TileDef, piece: &str) -> Option<&'static [u32]> {
-    let find = |table: &'static [(&str, &[u32])]| {
-        table.iter().find(|(id, _)| *id == piece).map(|(_, w)| *w)
-    };
+    let entry = PieceTable::builtin().get(piece)?;
     verge_tile(def)
-        .then(|| find(VERGE_VARIANT_WEIGHTS))
+        .then_some(entry.verge_variant_weights.as_deref())
         .flatten()
-        .or_else(|| find(VARIANT_WEIGHTS))
+        .or(entry.variant_weights.as_deref())
 }
 
+/// The scatter variants of `piece` after the piece itself (`data/pieces.ron` `variants`).
 fn extra_variants(piece: &str) -> &'static [&'static str] {
-    VARIANTS
-        .iter()
-        .find(|(id, _)| *id == piece)
-        .map_or(&[], |(_, v)| *v)
+    hex_core::piece::scatter_variants(piece)
 }
 
 /// The piece a rule naming `piece` draws as variant `v` (0 is `piece` itself).
@@ -118,10 +50,7 @@ pub fn group(piece: &str) -> impl Iterator<Item = &str> {
 
 /// The piece a variant belongs to (itself when it is not a variant).
 pub fn family(piece: &str) -> &str {
-    VARIANTS
-        .iter()
-        .find(|(_, v)| v.contains(&piece))
-        .map_or(piece, |(id, _)| *id)
+    PieceTable::builtin().family(piece).unwrap_or(piece)
 }
 
 /// The largest ground and crown reach over `piece`'s group: what a rule's ground mask and spacing

@@ -630,3 +630,17 @@ fn piece_ids_are_unique() {
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+/// A hero variant is still its piece's family (`data/pieces.ron` `hero_variants`): a house
+/// variant is still a house, so parking (`house_` heroes) and walk's `building` label hold for
+/// every pick, and a hay variant is still `hay_`.
+#[test]
+fn variants_keep_their_family() {
+    let table = hex_core::piece::PieceTable::builtin();
+    for def in &table.pieces {
+        let family = def.id.split('_').next().unwrap();
+        for v in &def.hero_variants {
+            assert!(v.starts_with(&format!("{family}_")), "{v} of {}", def.id);
+        }
+    }
+}

@@ -82,6 +82,16 @@ pub struct PieceDef {
     /// `None` for a piece the catalog never places as a static prop (traffic, agents, bores).
     #[serde(deserialize_with = "Option::deserialize")]
     pub walk: Option<WalkClass>,
+    /// The scatter variants a rule naming this piece draws among, after the piece itself.
+    pub variants: Vec<String>,
+    /// Pick weights of the piece then its `variants` in order; `None` draws each equally.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub variant_weights: Option<Vec<u32>>,
+    /// Pick weights that replace `variant_weights` on a road or rail verge tile.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub verge_variant_weights: Option<Vec<u32>>,
+    /// The variants a hero slot authored as this piece may draw instead (`crate::variant`).
+    pub hero_variants: Vec<String>,
 }
 
 /// A collider part that is not a kit piece of its own (a centre's lever, a viaduct pier, a
@@ -150,17 +160,58 @@ impl PieceTable {
             .map(|p| p.id.as_str())
     }
 
+    /// The piece whose scatter `variants` list `piece`, if any.
+    pub fn family(&self, piece: &str) -> Option<&str> {
+        self.pieces
+            .iter()
+            .find(|p| p.variants.iter().any(|v| v == piece))
+            .map(|p| p.id.as_str())
+    }
+
     /// Whether slot `slot` is one of [`PieceTable::not_ground`].
     pub fn is_not_ground(&self, slot: &str) -> bool {
         self.not_ground.iter().any(|s| s == slot)
     }
 }
 
+/// `&'static` views of the builtin table's id lists, so lookups can return slices of `&str`.
+struct Views {
+    variants: HashMap<&'static str, Vec<&'static str>>,
+    hero_variants: HashMap<&'static str, Vec<&'static str>>,
+}
+
+fn views() -> &'static Views {
+    static VIEWS: LazyLock<Views> = LazyLock::new(|| {
+        let view = |list: fn(&'static PieceDef) -> &'static Vec<String>| {
+            PieceTable::builtin()
+                .pieces
+                .iter()
+                .map(|p| (p.id.as_str(), list(p).iter().map(String::as_str).collect()))
+                .collect()
+        };
+        Views {
+            variants: view(|p| &p.variants),
+            hero_variants: view(|p| &p.hero_variants),
+        }
+    });
+    &VIEWS
+}
+
+/// The builtin scatter variants of `piece` (its `variants`), empty for a piece without any.
+pub fn scatter_variants(piece: &str) -> &'static [&'static str] {
+    views().variants.get(piece).map_or(&[], |v| v)
+}
+
+/// The builtin hero variants of `piece` (its `hero_variants`), empty for a piece without any.
+pub fn builtin_hero_variants(piece: &str) -> &'static [&'static str] {
+    views().hero_variants.get(piece).map_or(&[], |v| v)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle))"#;
+    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [])"#;
 
     fn table(entry: &str) -> Result<PieceTable, ron::error::SpannedError> {
         PieceTable::parse(&format!("(pieces: [{entry}], parts: [], not_ground: [])"))
