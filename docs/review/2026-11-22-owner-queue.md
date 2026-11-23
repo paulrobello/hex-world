@@ -16,3 +16,7 @@ The questions from the draft spec `docs/superpowers/specs/2026-11-22-rivers-at-l
 - **RQ11. Showing flow to the player.** O1: no flow indicator in play (the water's motion shows it), arrows only in the debug overlay. O2: the ghost shows the flow its placement would give. **Recommended: O2**, since the new refusal depends on a direction the player cannot otherwise predict.
 - **RQ12. A chain that reverses.** O1: a flat chain with no spring or mouth may reverse when a waterfall is placed at one end, and boats and foam re-derive. O2: once a chain has a direction it never reverses, and placing against it is refused. **Recommended: O1.**
 
+
+## Answers (owner, 2026-11-22)
+
+"Go with the recommendations": RQ1 O1, RQ2 O1 for the 4 m drop and O2 for 8 and 12 m, RQ3 O1, RQ4 O1 (sea-cliff tile is a later card), RQ5 O2 at High/Ultra and O1 at Low/Medium (picked from in-engine options), RQ6 O1, RQ7 O2, RQ8 O1, RQ9 O1, RQ10 O1 (auditioned, O2 fallback), RQ11 O2, RQ12 O1.

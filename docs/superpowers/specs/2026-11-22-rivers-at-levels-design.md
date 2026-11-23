@@ -2,7 +2,7 @@
 
 Date: 2026-11-22. P4, deferral lifted by the owner 2026-11-22.
 
-Status: **draft for owner review.** Not approved. Items marked *(recommendation)* are my proposals. The owner questions at the end (RQ1 to RQ12) need answers before the plan is written. A41 O1 (PRD §15 P4 decisions) is already decided and is not reopened.
+Status: **approved 2026-11-22.** The owner answered "go with the recommendations" for every item marked *(recommendation)* and for RQ1 to RQ12: RQ1 O1, RQ2 O1 for the 4 m drop and O2 for 8 and 12 m, RQ3 O1, RQ4 O1 (sea-cliff tile is a later card), RQ5 O2 at High/Ultra and O1 at Low/Medium (picked from in-engine options), RQ6 O1, RQ7 O2, RQ8 O1, RQ9 O1, RQ10 O1 (auditioned, O2 fallback), RQ11 O2, RQ12 O1. A41 O1 (PRD §15 P4 decisions) is already decided and is not reopened.
 
 ## Intent
 
