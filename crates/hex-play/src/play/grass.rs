@@ -15,7 +15,7 @@
 //! - **Exclusions.** Scatter's footprints: no blade within a hero prop's ground footprint (a
 //!   rectangular building's collider box turned by its yaw plus [`WALL_GAP`], so blades grow
 //!   along its long walls; a disc for the windmill's tower, the oak's trunk, bales and animals;
-//!   a disc over each post of a fence, [`scatter::FENCES`], so blades grow under its rails) or
+//!   a disc over each post of a fence, [`scatter::fence`], so blades grow under its rails) or
 //!   a scatter instance's (a box over a rock's base outline, [`ROCK_BASES`], so blades come right
 //!   up to the stone; spruce trunks; every planned instance of the
 //!   tile's layout, so a late pack never moves the grass; flower clumps keep only their centre
@@ -622,7 +622,7 @@ pub fn cos_sin_deg(deg: f32) -> Vec2 {
 
 /// Where no blade may root: hero props other than the paddock's wandering animals
 /// (`farm::herd_slots`) (a box over a rectangular building's collider,
-/// [`scatter::GROUND_BOXES`], else a disc of its ground reach) and every scatter instance (a box
+/// [`scatter::ground_box`], else a disc of its ground reach) and every scatter instance (a box
 /// over a rock's base, [`ROCK_BASES`], else a disc). Each hero is the piece its slot draws at
 /// `cell` (`hex_core::hero_piece`).
 pub fn exclusions(
@@ -674,11 +674,11 @@ pub fn exclusions(
     }
     // A viaduct's abutments and piers stand on the meadow (its stone and deck are not ground,
     // `data/pieces.ron` `not_ground`): no blade roots in the stone, and blades grow under the arches.
-    for (centre, part, corners) in crate::walk::CENTRE_OBSTACLES {
-        if *part == crate::walk::VIADUCT_PIER
-            && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
+    for o in crate::walk::centre_obstacles() {
+        if o.part == crate::walk::VIADUCT_PIER
+            && def.center.as_ref().is_some_and(|c| *c.as_str() == o.centre)
         {
-            let (lo, hi) = (Vec2::from(corners[0]), Vec2::from(corners[2]));
+            let (lo, hi) = (Vec2::from(o.corners[0]), Vec2::from(o.corners[2]));
             out.push(Clear::Box {
                 centre: (lo + hi) / 2.0,
                 half: (hi - lo) / 2.0 + WALL_GAP,
@@ -2343,7 +2343,7 @@ mod tests {
         assert!(walls.iter().all(|&n| n >= 50), "barn_red_b walls {walls:?}");
     }
 
-    /// Station criterion 3: on a meadow cap everywhere, the platform's `GROUND_BOXES` box keeps
+    /// Station criterion 3: on a meadow cap everywhere, the platform's `ground_box` keeps
     /// every blade off its whole footprint, ramps included (no blade within 0.1 m of its
     /// collider), and so off the shelter standing on it; grass still grows along its back wall.
     #[test]
@@ -2367,7 +2367,7 @@ mod tests {
         assert!(walls[0] >= 50, "back wall {walls:?}");
     }
 
-    /// A viaduct clears a box over each abutment and pier (`walk::CENTRE_OBSTACLES`), so no
+    /// A viaduct clears a box over each abutment and pier (`walk::centre_obstacles`), so no
     /// blade roots in the stone, and keeps the meadow under its three arches.
     #[test]
     fn grass_clears_the_viaduct_piers_not_the_arches() {
@@ -2375,15 +2375,15 @@ mod tests {
         for n in 1..=3 {
             let def = c.get(&format!("rail_viaduct_l{n}")).unwrap().clone();
             let ex = exclusions(&def, Axial::ORIGIN, &[], &[]);
-            let piers: Vec<_> = crate::walk::CENTRE_OBSTACLES
+            let piers: Vec<_> = crate::walk::centre_obstacles()
                 .iter()
-                .filter(|(centre, part, _)| {
-                    *part == crate::walk::VIADUCT_PIER
-                        && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)
+                .filter(|o| {
+                    o.part == crate::walk::VIADUCT_PIER
+                        && def.center.as_ref().is_some_and(|c| *c.as_str() == o.centre)
                 })
                 .collect();
             assert_eq!(piers.len(), 4, "l{n}: two abutments, two piers");
-            for (_, _, corners) in piers {
+            for corners in piers.iter().map(|o| o.corners) {
                 let mid = (Vec2::from(corners[0]) + Vec2::from(corners[2])) / 2.0;
                 assert!(ex.iter().any(|e| e.contains(mid)), "l{n}: pier at {mid}");
             }

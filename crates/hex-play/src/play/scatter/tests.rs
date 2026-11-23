@@ -16,6 +16,7 @@ fn portable_atan2_matches_atan2() {
 use std::sync::{Mutex, OnceLock};
 
 use hex_assets::parse_manifest;
+use hex_core::piece::PieceTable;
 use hex_core::{AgentKind, SocketKind, World};
 
 use std::{
@@ -955,7 +956,9 @@ fn instances_draw_every_variant_of_their_rule() {
         for v in &def.variants {
             assert_eq!(family(v), id);
             assert!(
-                FOOTPRINTS.iter().any(|(f, _)| *f == v.as_str()),
+                PieceTable::builtin()
+                    .get(v)
+                    .is_some_and(|p| p.footprint.is_some()),
                 "{v} has no footprint"
             );
             assert_eq!(floor_slots(v), floor_slots(id));
@@ -1225,20 +1228,21 @@ fn hero_variants_fit_inside_the_authored_piece() {
 /// Every table lookup (`footprint`, `ground_box`, `fence`) falls back silently for a piece
 /// without a row, and every table test iterates the table, so a missing row is invisible.
 /// This iterates the catalog instead: each hero and scatter piece, with its scatter group and
-/// hero variants, is in [`FOOTPRINTS`], [`FENCES`] or [`is_ground_prop`].
+/// hero variants, has a `footprint` or a `fence` in `data/pieces.ron` or is an [`is_ground_prop`].
 #[test]
 fn every_prop_piece_has_a_footprint_row() {
     let missing: Vec<String> = crate::walk::tests::catalog_props()
         .into_iter()
         .filter(|p| {
-            !FOOTPRINTS.iter().any(|(id, _)| id == p)
-                && !FENCES.iter().any(|(id, _)| id == p)
+            !PieceTable::builtin()
+                .get(p)
+                .is_some_and(|d| d.footprint.is_some() || d.fence.is_some())
                 && !is_ground_prop(p)
         })
         .collect();
     assert!(
         missing.is_empty(),
-        "pieces the catalog places with no FOOTPRINTS or FENCES row and not a ground prop: {missing:?}"
+        "pieces the catalog places with no footprint or fence and not a ground prop: {missing:?}"
     );
 }
 
@@ -1951,6 +1955,30 @@ fn seabed_stones_stay_within_the_ocean_floor_allowance() {
     assert!(per_rule.iter().all(|&n| n > 0), "{per_rule:?}");
 }
 
+/// The pieces with a `data/pieces.ron` footprint, in table order.
+fn footprint_rows() -> impl Iterator<Item = (&'static str, Footprint)> {
+    PieceTable::builtin()
+        .pieces
+        .iter()
+        .filter_map(|p| Some((p.id.as_str(), p.footprint?)))
+}
+
+/// The pieces with a `data/pieces.ron` fence, in table order.
+fn fence_rows() -> impl Iterator<Item = (&'static str, Fence)> {
+    PieceTable::builtin()
+        .pieces
+        .iter()
+        .filter_map(|p| Some((p.id.as_str(), fence(&p.id)?)))
+}
+
+/// The pieces with a `data/pieces.ron` ground box, in table order.
+fn ground_box_rows() -> impl Iterator<Item = (&'static str, GroundBox)> {
+    PieceTable::builtin()
+        .pieces
+        .iter()
+        .filter_map(|p| Some((p.id.as_str(), p.ground_box?)))
+}
+
 #[test]
 fn footprints_match_the_kit() {
     let reach = |tris: &[(Tri, String)]| {
@@ -1959,7 +1987,7 @@ fn footprints_match_the_kit() {
             .map(|p| Vec2::new(p[0], p[2]).length())
             .fold(0.0, f32::max)
     };
-    for &(id, f) in FOOTPRINTS {
+    for (id, f) in footprint_rows() {
         let ground = reach(&glb_mesh_tris(id, "collider").unwrap());
         assert!(
             f.ground >= ground && f.ground <= ground + 0.1,
@@ -1977,16 +2005,16 @@ fn footprints_match_the_kit() {
     }
 }
 
-/// Each [`FENCES`] entry is its GLB: the collider has one disjoint box per run, each centred
+/// Each `data/pieces.ron` `fence` is its GLB: the collider has one disjoint box per run, each centred
 /// on its run, and LOD0 has one post per entry, a square of that half width (its foot, buried
-/// below y -0.3, leaning at most 0.022 rad) centred on the entry. A fence has no [`FOOTPRINTS`]
+/// below y -0.3, leaning at most 0.022 rad) centred on the entry. A fence has no `footprint`
 /// entry.
 #[test]
 fn fences_match_the_kit() {
-    for &(id, f) in FENCES {
+    for (id, f) in fence_rows() {
         assert!(
-            FOOTPRINTS.iter().all(|(p, _)| *p != id),
-            "{id} in FOOTPRINTS"
+            footprint_rows().all(|(p, _)| p != id),
+            "{id} has a footprint"
         );
         let runs = f.line.len() - 1;
         let walk = crate::walk::PieceShape::from_meshes(
@@ -2099,11 +2127,11 @@ fn the_farm_fence_moves_no_scatter_off_its_line() {
     assert!(dropped > 0, "no seed put a flower or rock on the line");
 }
 
-/// Each [`GROUND_BOXES`] entry is its collider's bounds (to 1 cm) and the collider fills
+/// Each `data/pieces.ron` `ground_box` is its collider's bounds (to 1 cm) and the collider fills
 /// them (a rectangle with at most chamfered corners), so a box clears no more than the piece.
 #[test]
 fn ground_boxes_match_the_kit() {
-    for &(id, b) in GROUND_BOXES {
+    for (id, b) in ground_box_rows() {
         let pts: Vec<Vec2> = glb_mesh_tris(id, "collider")
             .unwrap()
             .iter()
@@ -2147,7 +2175,7 @@ fn ground_props_stand_at_the_origin_on_a_hex_turn() {
 }
 
 /// Station criterion 3 (scatter): the platform is the station tile's ground, so its
-/// wildflowers keep off its whole footprint (its `GROUND_BOXES` box, ramps included) for
+/// wildflowers keep off its whole footprint (its `ground_box`, ramps included) for
 /// any seed: the paving is not their floor.
 #[test]
 fn station_scatter_keeps_off_the_platform() {

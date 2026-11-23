@@ -3,7 +3,7 @@
 //!
 //! - **Heroes.** A run or corner arm whose footprint (its half width plus [`HERO_GAP`]) overlaps a
 //!   hero prop of either tile it touches is left out: a rectangular building by its collider box
-//!   ([`scatter::GROUND_BOXES`]), a fence by its run lines, anything else by its ground disc. Each
+//!   ([`scatter::ground_box`]), a fence by its run lines, anything else by its ground disc. Each
 //!   hero is the piece its slot draws at that cell, so a variant clears its own footprint.
 //! - **Scatter and grass.** A tile's scatter drops the instances whose ground reach lands within a
 //!   boundary's footprint ([`clear_of`]); grass clears the wall footprints and the core of the hedge

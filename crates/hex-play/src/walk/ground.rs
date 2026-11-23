@@ -21,7 +21,7 @@ use hex_render::kit_runtime::piece_rotation;
 
 use super::shape::{Obstacle, PickProp, PieceShape, hull};
 use super::tables::{
-    CAR_GROUND, CENTRE_OBSTACLES, FOOTPRINT_OBSTACLES, PIECE_POSTS, is_obstacle, prop_kind,
+    centre_obstacles, footprint_obstacles, is_car_ground, is_obstacle, piece_posts, prop_kind,
 };
 
 /// The walker's body radius (m): how close its centre comes to a wall, a trunk or an edge.
@@ -146,7 +146,7 @@ pub const RIDE_FLAT: f32 = 0.01;
 /// Spacing (m) of the samples [`ride_max`] takes.
 const RIDE_STEP: f32 = 0.25;
 
-/// The highest [`CAR_GROUND`] on `def`'s car paths, tile frame: within [`ROAD_CORRIDOR`] of each
+/// The highest [`is_car_ground`] slot on `def`'s car paths, tile frame: within [`ROAD_CORRIDOR`] of each
 /// road lane's centreline and [`PARKING_CORRIDOR`] of each parking path, sampled every 0.25 m.
 /// Built once per tile id (a few thousand surface samples); [`WalkGround::ride`] skips every tile
 /// whose paths stay flat.
@@ -185,7 +185,7 @@ pub fn ride_max(def: &TileDef, surface: &Surface) -> f32 {
                 let p = lo + Vec2::new(i as f32, j as f32) * RIDE_STEP;
                 if scatter::polyline_distance(p, line) <= *r
                     && let Some((h, slot)) = surface.at(p.x, p.y)
-                    && CAR_GROUND.contains(&slot)
+                    && is_car_ground(slot)
                 {
                     top = top.max(h);
                 }
@@ -410,7 +410,7 @@ impl WalkGround {
                             Some(i) => PickProp::new_part(piece, sh, t, i),
                         });
                     }
-                    for (_, corners) in PIECE_POSTS.iter().filter(|(p, _)| *p == piece) {
+                    for corners in piece_posts(piece) {
                         let poly = hull(&corners.map(Vec2::from));
                         obs.push(Obstacle {
                             piece: piece.to_owned(),
@@ -473,21 +473,21 @@ impl WalkGround {
                     place(&mut obs, f.piece, &shape(f.piece), &(root * local));
                 }
             }
-            for (centre, part, corners) in CENTRE_OBSTACLES {
-                if def.center.as_ref().is_some_and(|c| c.as_str() == *centre) {
-                    let poly: Vec<Vec2> = corners.iter().map(|c| Vec2::from(*c)).collect();
+            for o in centre_obstacles() {
+                if def.center.as_ref().is_some_and(|c| c.as_str() == o.centre) {
+                    let poly: Vec<Vec2> = o.corners.iter().map(|c| Vec2::from(*c)).collect();
                     obs.push(Obstacle {
-                        piece: (*part).to_owned(),
+                        piece: o.part.clone(),
                         poly: place_hull(&poly, &root),
                     });
                 }
             }
-            for (tile, part, parts) in FOOTPRINT_OBSTACLES {
-                if def.id == *tile {
-                    for corners in *parts {
+            for o in footprint_obstacles() {
+                if def.id == o.tile {
+                    for corners in &o.parts {
                         let poly: Vec<Vec2> = corners.iter().map(|c| Vec2::from(*c)).collect();
                         obs.push(Obstacle {
-                            piece: (*part).to_owned(),
+                            piece: o.part.clone(),
                             poly: place_hull(&poly, &root),
                         });
                     }
@@ -551,7 +551,7 @@ impl WalkGround {
     }
 
     /// Where a wheel rests at `p` when it never sinks below `floor` (cars: the road crown): the
-    /// higher of `floor` and the ground there when that is [`CAR_GROUND`]. A tile whose car paths never rise more than
+    /// higher of `floor` and the ground there when that is [`is_car_ground`]. A tile whose car paths never rise more than
     /// [`RIDE_FLAT`] above `floor` ([`ride_max`], cached per tile id) answers `floor` after one
     /// cell lookup: every flat road tile and the river road bridge. Only a tile with a ramp or a
     /// raised deck searches its surface. `floor` is over the tile's level (P4): the answer adds
@@ -613,7 +613,7 @@ impl WalkGround {
         let d = p - g.centre;
         let l = turn((6 - g.rotation % 6) % 6, [d.x, 0.0, d.y]);
         match s.at(l[0], l[2]) {
-            Some((h, slot)) if CAR_GROUND.contains(&slot) => h.max(floor),
+            Some((h, slot)) if is_car_ground(slot) => h.max(floor),
             _ => floor,
         }
     }

@@ -239,7 +239,7 @@ pub struct PieceShape {
     /// crosses, or on the volume where it slips through a gap in the leaves.
     pub tris: Vec<Tri>,
     /// A collider of several disjoint parts (the paddock fence's six run boxes) or of parts
-    /// declared for the piece ([`DECLARED_PARTS`](super::tables::DECLARED_PARTS): `barn_red_b`'s closed walls and posts): each
+    /// declared for the piece (`data/pieces.ron` `declared_parts`: `barn_red_b`'s closed walls and posts): each
     /// part's own footprint and body, which block and are clicked in place of `hull` and `body`.
     /// Empty for a one-part collider.
     pub parts: Vec<ColliderPart>,

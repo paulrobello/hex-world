@@ -26,8 +26,8 @@
 //!   ([`WalkGround::pose_herd`]). A collider of disjoint parts (the paddock fence's six run
 //!   boxes, [`PieceShape::parts`]) blocks and is clicked part by part, so the walker enters the
 //!   paddock through its gate and stands inside it. A part that stands outside its piece's
-//!   collider blocks by its own footprint ([`PIECE_POSTS`]: house_cottage_b's porch posts).
-//!   `barn_red_b`'s parts are declared ([`DECLARED_PARTS`]): its closed walls and shed posts, so
+//!   collider blocks by its own footprint ([`piece_posts`]: house_cottage_b's porch posts).
+//!   `barn_red_b`'s parts are declared (`data/pieces.ron` `declared_parts`): its closed walls and shed posts, so
 //!   the walker enters its open lean-to (the shed's roof is not clicked; a ray must enter a
 //!   part's prism). Wildflowers do not block, and the wheat
 //!   field's wheat is neither ground nor obstacle (`data/pieces.ron` `not_ground`): the walker walks
@@ -58,6 +58,6 @@ pub use shape::{
 };
 pub use sync::{WalkCache, sync};
 pub use tables::{
-    CAR_GROUND, CENTRE_OBSTACLES, DECLARED_PARTS, FOOTPRINT_OBSTACLES, PIECE_POSTS, PropLabel,
-    VIADUCT_PIER, is_obstacle, obstacles, prop_kind, walk_through,
+    PropLabel, VIADUCT_PIER, centre_obstacles, footprint_obstacles, is_car_ground, is_obstacle,
+    obstacles, piece_posts, prop_kind, walk_through,
 };

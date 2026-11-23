@@ -48,7 +48,7 @@
 //!   ([`excluded_slot`]), except the beach dressing on the dry sand ([`BEACH_FLOOR`],
 //!   [`beach_band`]), the bank props on a river's bank ([`BANK_FLOORS`], [`bank_band`]) and the
 //!   seabed dressing on the ocean floor ([`FLOOR_EXEMPT`]). It keeps clear of hero props (a tree
-//!   clears the oak's canopy; a fence, [`FENCES`], by its line, dropped after the darts so nothing
+//!   clears the oak's canopy; a fence, [`fence`], by its line, dropped after the darts so nothing
 //!   else moves), of road and
 //!   river centrelines (`lane_clearance`, at least the lane's half width plus [`LANE_GAP`]) and of
 //!   the hex border (a crown overhangs it by at most [`CROWN_OVERHANG`]), and stands upright at the
@@ -95,7 +95,7 @@ pub use surface::{Surface, Tri, ground_pieces, member_tris};
 pub(crate) use surface::{ground_tris, kit_tris};
 pub use sync::{PlayScatter, ScatterGroup, ScatterLayouts, ScatterReport, TileScatter, sync};
 pub use tables::{
-    FENCE_HALF, FENCES, FOOTPRINTS, Fence, Footprint, GROUND_BOXES, GroundBox, LANDFORMS, family,
-    fence, fence_lines, footprint, ground_box, ground_props, group, group_footprint,
-    is_ground_prop, is_not_ground, pick_variant, variant_piece, variant_weights, verge_tile,
+    FENCE_HALF, Fence, Footprint, GroundBox, LANDFORMS, family, fence, fence_lines, footprint,
+    ground_box, ground_props, group, group_footprint, is_ground_prop, is_not_ground, pick_variant,
+    variant_piece, variant_weights, verge_tile,
 };

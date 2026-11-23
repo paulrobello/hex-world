@@ -166,10 +166,10 @@ fn every_obstacle_reports_its_own_kind() {
 /// boats and the landing stage. Only rocks report `rock`.
 #[test]
 fn every_collider_piece_has_a_label() {
-    let parts = CENTRE_OBSTACLES
+    let parts = centre_obstacles()
         .iter()
-        .map(|(_, part, _)| *part)
-        .chain(FOOTPRINT_OBSTACLES.iter().map(|(_, part, _)| *part));
+        .map(|o| o.part.as_str())
+        .chain(footprint_obstacles().iter().map(|o| o.part.as_str()));
     let pieces: Vec<&str> = obstacles()
         .chain(parts)
         .chain(["boat_rowing", "boat_sail", "landing_stage"])
@@ -181,16 +181,14 @@ fn every_collider_piece_has_a_label() {
             || piece.starts_with("boulder_granite")
             || piece.starts_with("outcrop_granite")
             || piece == VIADUCT_PIER
-            || FOOTPRINT_OBSTACLES
-                .iter()
-                .any(|(_, part, _)| *part == piece);
+            || footprint_obstacles().iter().any(|o| o.part == piece);
         assert_eq!(label == PropLabel::Rock, is_rock, "{piece} is {label:?}");
     }
     assert_eq!(prop_kind("rail_lever"), PropLabel::Lever);
 }
 
 /// Only the paddock fence's collider has disjoint parts (one box per run) and only
-/// `barn_red_b` declares its own ([`DECLARED_PARTS`], seven), as do the wells (one roof
+/// `barn_red_b` declares its own (`data/pieces.ron` `declared_parts`, seven), as do the wells (one roof
 /// footprint for `well_stone`, seven for `well_stone_b`); every other obstacle is one part, so
 /// it keeps the whole collider's hull and body exactly as before.
 #[test]
@@ -485,7 +483,7 @@ fn a_placed_farm_tile_blocks_at_the_barn() {
 }
 
 /// A farm at (0, 1) draws barn_red_b in the barn slot (`hex_core::hero_piece`). Its collider
-/// follows the closed walls (owner A1-Q1, 2026-10-20, [`DECLARED_PARTS`]): from the yard the
+/// follows the closed walls (owner A1-Q1, 2026-10-20, `data/pieces.ron` `declared_parts`): from the yard the
 /// walker passes the post line into the open shed and stops at its back wall (1.0 m out from
 /// the barn's centre, plus the body radius), a walk at a post stops at the post (3.55 m out),
 /// and inside the shed the end walls stop it (inner faces 4.9 m from the centre), each as
@@ -547,7 +545,7 @@ fn a_farm_drawing_barn_red_b_lets_the_walker_into_its_shed() {
     assert!(tested >= 6, "only {tested} approaches reached the barn");
 }
 
-/// [`DECLARED_PARTS`] are `barn_red_b`'s own walls and posts: every part inside its GLB
+/// The `declared_parts` are `barn_red_b`'s own walls and posts: every part inside its GLB
 /// collider box, the closed barn's yard face on the LOD0 wall at z 1.0, the shed end walls on
 /// the LOD0 inner faces at x +-4.9, and each post's corners on its LOD0 trim box.
 #[test]
@@ -601,7 +599,7 @@ fn barn_red_b_parts_match_its_glb() {
     }
 }
 
-/// The wells' [`DECLARED_PARTS`] sit inside their GLB collider (the apron's hull, which grass
+/// The wells' `declared_parts` sit inside their GLB collider (the apron's hull, which grass
 /// and scatter keep clear) and hold, within 2 cm, every LOD0 vertex above the apron: the wall,
 /// the capstones, posts, windlass, crank, bucket and (`well_stone`) the roof. A rebuild that
 /// moves any of them out fails here.
@@ -995,7 +993,7 @@ fn walk_obstacles_are_the_drawn_hero_variant() {
         pieces(0, 0),
         ["house_cottage", "house_cottage", "house_twostorey_c"]
     );
-    // house_cottage_b's collider and its two porch posts (`PIECE_POSTS`).
+    // house_cottage_b's collider and its two porch posts (`piece_posts`).
     assert_eq!(
         pieces(1, 0),
         [
@@ -1029,13 +1027,18 @@ fn walk_obstacles_are_the_drawn_hero_variant() {
     }
 }
 
-/// Each `PIECE_POSTS` square stands outside its piece's collider and holds the LOD0 timber
+/// Each `piece_posts` square stands outside its piece's collider and holds the LOD0 timber
 /// posts there: every timber vertex outside the collider below the porch's tie beam (the posts'
 /// buried feet) lies in a square, and every square holds some. A rebuild that moves the posts
 /// fails here.
 #[test]
 fn piece_posts_cover_the_posts_outside_the_collider() {
-    let pieces: Vec<&str> = PIECE_POSTS.iter().map(|(p, _)| *p).collect();
+    let pieces: Vec<&str> = PieceTable::builtin()
+        .pieces
+        .iter()
+        .filter(|p| !p.posts.is_empty())
+        .map(|p| p.id.as_str())
+        .collect();
     for &piece in &pieces {
         assert!(is_obstacle(piece), "{piece}");
         let s = shape(piece);
@@ -1043,10 +1046,9 @@ fn piece_posts_cover_the_posts_outside_the_collider() {
             piece: piece.into(),
             poly: s.hull.clone(),
         };
-        let squares: Vec<Obstacle> = PIECE_POSTS
+        let squares: Vec<Obstacle> = piece_posts(piece)
             .iter()
-            .filter(|(p, _)| *p == piece)
-            .map(|(_, c)| Obstacle {
+            .map(|c| Obstacle {
                 piece: piece.into(),
                 poly: hull(&c.map(Vec2::from)),
             })
@@ -1737,7 +1739,7 @@ fn the_lever_footprint_covers_the_lever_geometry() {
         .flat_map(|(t, _)| t.iter().map(|p| Vec2::new(p[0], p[2])))
         .collect();
     assert!(!lever.is_empty(), "the junction draws a rail_lever slot");
-    let (_, _, corners) = CENTRE_OBSTACLES[0];
+    let corners = centre_obstacles()[0].corners;
     let (lo, hi) = (Vec2::from(corners[0]), Vec2::from(corners[2]));
     for p in &lever {
         assert!(
@@ -1762,10 +1764,10 @@ fn the_viaduct_piers_block_and_the_arches_pass() {
                 .unwrap_or_else(|b| panic!("{id}: blocked under the arch at x {x}: {b:?}"));
             assert!(h.abs() < 0.3, "{id}: stands at {h} under the arch at x {x}");
         }
-        let rows: Vec<[[f32; 2]; 4]> = CENTRE_OBSTACLES
+        let rows: Vec<[[f32; 2]; 4]> = centre_obstacles()
             .iter()
-            .filter(|(centre, part, _)| *centre == id && *part == VIADUCT_PIER)
-            .map(|(_, _, corners)| *corners)
+            .filter(|o| o.centre == id && o.part == VIADUCT_PIER)
+            .map(|o| o.corners)
             .collect();
         assert_eq!(rows.len(), 4, "{id}: two abutments and two piers");
         for r in &rows {
@@ -2094,7 +2096,10 @@ fn walker_walks_around_a_massif() {
     let tris = massif_tris(&c);
     let rock: Vec<Obstacle> = {
         let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
-        assert_eq!(g.obstacles[&Axial::ORIGIN].len(), MASSIF_ROCK_FOOT.len());
+        let foot = footprint_obstacles()
+            .iter()
+            .find(|o| o.tile == "massif_granite");
+        assert_eq!(g.obstacles[&Axial::ORIGIN].len(), foot.unwrap().parts.len());
         g.obstacles[&Axial::ORIGIN].clone()
     };
     for k in [0u8, 1, 2, 5] {
@@ -2119,7 +2124,7 @@ fn walker_walks_around_a_massif() {
     let g = world_at(&c, &[(0, 0, "massif_granite", 0, 1)]);
     let ring = centre(-1, 0);
     let start = ring + ring.normalize() * 4.0;
-    // West of the anchor the foot between two spines (`MASSIF_ROCK_FOOT`) faces a walk aimed
+    // West of the anchor the foot between two spines (its `footprint_obstacles` row) faces a walk aimed
     // a little north of the centre obliquely, so it slides north along that face until the
     // next spine's notch stops it; one aimed at the centre stops where it meets the foot.
     for (bias, slides) in [(Vec2::new(0.0, 0.2), true), (Vec2::ZERO, false)] {
@@ -2255,7 +2260,7 @@ fn every_single_tile_landform_is_listed() {
 /// Spec 2026-11-13 D13: a landform at level 1 ringed by level-1 meadows is ground across its hex
 /// at the piece's own LOD0 height, turned with the tile, and at the meadows' level along its
 /// border, rising under 0.3 m within 0.6 m of it (the massif's rim bar: the grass is flat there and
-/// the LOD0 triangles ease it in). Its rock (`FOOTPRINT_OBSTACLES`) blocks the walker. The
+/// the LOD0 triangles ease it in). Its rock (`footprint_obstacles`) blocks the walker. The
 /// steepest grass or scree triangle stays under gradient 2, half the walker's limit (measured 1.26
 /// on the hill, 1.53 on the peak), and walks in from the meadows on twelve bearings climb without
 /// a refused step to the rock: a slab more than 4 m up on the hill (the lowest measures 4.6 m), the
@@ -2285,11 +2290,11 @@ fn walker_climbs_the_landforms_to_their_rock() {
             "{id}: steepest ground {steepest} (the walker's limit is {})",
             MAX_STEP / SUBSTEP
         );
-        let parts = FOOTPRINT_OBSTACLES
+        let parts = &footprint_obstacles()
             .iter()
-            .find(|(t, _, _)| *t == id)
-            .map(|(_, _, p)| *p)
-            .unwrap();
+            .find(|o| o.tile == id)
+            .unwrap()
+            .parts;
         let mut tiles: Vec<(i32, i32, &str, u8, u8)> = vec![(0, 0, id, 0, 1)];
         for d in 0..6u8 {
             let m = Axial::ORIGIN.neighbor(d);

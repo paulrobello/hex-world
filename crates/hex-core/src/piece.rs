@@ -92,6 +92,77 @@ pub struct PieceDef {
     pub verge_variant_weights: Option<Vec<u32>>,
     /// The variants a hero slot authored as this piece may draw instead (`crate::variant`).
     pub hero_variants: Vec<String>,
+    /// Its horizontal reach; `None` takes [`Footprint::DEFAULT`].
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub footprint: Option<Footprint>,
+    /// Its collider's bounds when the collider is a rectangle.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub ground_box: Option<GroundBox>,
+    /// Its fence line and posts, for a fence piece.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub fence: Option<FenceDef>,
+    /// Parts standing outside its collider that block the walker as the piece, each a square's
+    /// corners in the piece frame (x, z).
+    pub posts: Vec<[[f32; 2]; 4]>,
+    /// Convex parts in the piece frame (`[x min, x max, z min, z max, top]`) that replace the GLB
+    /// collider's one hull for the walker.
+    #[serde(deserialize_with = "Option::deserialize")]
+    pub declared_parts: Option<Vec<[f32; 5]>>,
+}
+
+/// Horizontal reach of a piece in metres: `ground` is its collider's (what it stands on and what
+/// others must not overlap) and `crown` its LOD0 canopy's (0 for low props).
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Footprint {
+    pub ground: f32,
+    pub crown: f32,
+}
+
+impl Footprint {
+    /// The reach of a piece with `footprint: None` (and of any id without an entry).
+    pub const DEFAULT: Footprint = Footprint {
+        ground: 1.0,
+        crown: 0.0,
+    };
+}
+
+/// A rectangular piece's collider bounds in its own frame (x, z), before its yaw.
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct GroundBox {
+    pub min: [f32; 2],
+    pub max: [f32; 2],
+}
+
+/// A fence's layout in its own frame (x, z): the fence line (runs between consecutive points; the
+/// gap between the last and first point is the gate opening) and every post's centre and half
+/// width.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FenceDef {
+    pub line: Vec<[f32; 2]>,
+    pub posts: Vec<([f32; 2], f32)>,
+}
+
+/// A centre piece's part that blocks the walker: the centre, the part's name and its footprint
+/// corners in the tile frame (x, z).
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CentreObstacle {
+    pub centre: String,
+    pub part: String,
+    pub corners: [[f32; 2]; 4],
+}
+
+/// A tile's standing rock that blocks the walker: the tile, the part's name and the convex parts
+/// of its footprint in the tile frame (x, z).
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FootprintObstacle {
+    pub tile: String,
+    pub part: String,
+    pub parts: Vec<Vec<[f32; 2]>>,
 }
 
 /// A collider part that is not a kit piece of its own (a centre's lever, a viaduct pier, a
@@ -112,6 +183,10 @@ pub struct PieceTable {
     /// Slots of ground pieces that stand on the ground rather than being it: nothing stands on
     /// them and the walker walks through, or under, them.
     pub not_ground: Vec<String>,
+    /// Ground slots a car's wheels rest on: the road, and a level crossing's deck and rails.
+    pub car_ground: Vec<String>,
+    pub centre_obstacles: Vec<CentreObstacle>,
+    pub footprint_obstacles: Vec<FootprintObstacle>,
     #[serde(skip)]
     index: HashMap<String, usize>,
 }
@@ -168,6 +243,18 @@ impl PieceTable {
             .map(|p| p.id.as_str())
     }
 
+    /// The reach of piece `id`: its `footprint`, else [`Footprint::DEFAULT`].
+    pub fn footprint(&self, id: &str) -> Footprint {
+        self.get(id)
+            .and_then(|p| p.footprint)
+            .unwrap_or(Footprint::DEFAULT)
+    }
+
+    /// Whether slot `slot` is one of [`PieceTable::car_ground`].
+    pub fn is_car_ground(&self, slot: &str) -> bool {
+        self.car_ground.iter().any(|s| s == slot)
+    }
+
     /// Whether slot `slot` is one of [`PieceTable::not_ground`].
     pub fn is_not_ground(&self, slot: &str) -> bool {
         self.not_ground.iter().any(|s| s == slot)
@@ -211,10 +298,12 @@ pub fn builtin_hero_variants(piece: &str) -> &'static [&'static str] {
 mod tests {
     use super::*;
 
-    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [])"#;
+    const ENTRY: &str = r#"(id: "x", label: Some(Rock), rise: Tree, walk: Some(Obstacle), variants: [], variant_weights: None, verge_variant_weights: None, hero_variants: [], footprint: Some((ground: 1.5, crown: 0.0)), ground_box: None, fence: None, posts: [], declared_parts: None)"#;
 
     fn table(entry: &str) -> Result<PieceTable, ron::error::SpannedError> {
-        PieceTable::parse(&format!("(pieces: [{entry}], parts: [], not_ground: [])"))
+        PieceTable::parse(&format!(
+            "(pieces: [{entry}], parts: [], not_ground: [], car_ground: [], centre_obstacles: [], footprint_obstacles: [])"
+        ))
     }
 
     #[test]

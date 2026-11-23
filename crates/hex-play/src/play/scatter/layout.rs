@@ -18,8 +18,8 @@ use super::bands::{
 };
 use super::surface::{Surface, Tri, member_tris};
 use super::tables::{
-    DEFAULT_FOOTPRINT, FENCE_HALF, Footprint, LANDFORMS, fence, fence_lines, footprint,
-    group_footprint, pick_variant, variant_piece,
+    FENCE_HALF, Footprint, LANDFORMS, fence, fence_lines, footprint, group_footprint, pick_variant,
+    variant_piece,
 };
 
 /// Area of the hex cap in m² (pointy-top, circumradius [`HEX_RADIUS`]): what density counts per.
@@ -267,7 +267,7 @@ pub fn hero_footprint(def: &TileDef, slot: usize) -> Footprint {
             ground: a.ground.max(b.ground),
             crown: a.crown.max(b.crown),
         })
-        .unwrap_or(DEFAULT_FOOTPRINT)
+        .unwrap_or(Footprint::DEFAULT)
 }
 
 /// Least distance between a hero prop's centre and an instance's.
