@@ -571,8 +571,7 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         },
     ),
     // The bakeries: each a building whose collider reach is its corner
-    // (`footprints_match_the_kit` measures 4.68 and 4.91 m). `rail_station_shelter` has no row on
-    // purpose, see `DEFAULT_FOOTPRINT_KEPT` in the tests.
+    // (`footprints_match_the_kit` measures 4.68 and 4.91 m), and the station shelter (4.77 m).
     (
         "bakery_shop",
         Footprint {
@@ -584,6 +583,13 @@ pub const FOOTPRINTS: &[(&str, Footprint)] = &[
         "bakery_shop_b",
         Footprint {
             ground: 4.92,
+            crown: 0.0,
+        },
+    ),
+    (
+        "rail_station_shelter",
+        Footprint {
+            ground: 4.8,
             crown: 0.0,
         },
     ),
