@@ -5529,3 +5529,76 @@ fn print_foliage_roughness() {
         println!("error: {err}");
     }
 }
+
+/// The kinds of manifest piece that carry a `data/pieces.ron` entry (ENH-001).
+fn has_piece_entry(kind: PieceKind) -> bool {
+    matches!(kind, PieceKind::Prop | PieceKind::Tree | PieceKind::Hero)
+}
+
+/// Every prop, tree and hero piece of `manifest` has an entry in `table`, and every entry names
+/// one of them.
+fn piece_table_errors(manifest: &KitManifest, table: &hex_core::piece::PieceTable) -> Vec<String> {
+    let mut e = vec![];
+    for p in manifest.pieces.iter().filter(|p| has_piece_entry(p.kind)) {
+        if table.get(&p.id).is_none() {
+            e.push(format!("{}: no data/pieces.ron entry", p.id));
+        }
+    }
+    for def in &table.pieces {
+        if !manifest
+            .pieces
+            .iter()
+            .any(|p| p.id == def.id && has_piece_entry(p.kind))
+        {
+            e.push(format!(
+                "{}: data/pieces.ron entry for no manifest prop, tree or hero",
+                def.id
+            ));
+        }
+    }
+    e
+}
+
+/// The real kit's props, trees and heroes and `data/pieces.ron` list the same pieces (the
+/// fixture kit has no runtime metadata).
+#[test]
+fn every_kit_piece_has_a_pieces_entry() {
+    let kit = kits().into_iter().find(|k| k.requires_refs).unwrap();
+    fail(piece_table_errors(
+        &kit.manifest,
+        hex_core::piece::PieceTable::builtin(),
+    ));
+}
+
+/// A manifest piece without an entry fails the gate, and so does an entry without its piece.
+#[test]
+fn gate_catches_a_piece_without_a_pieces_entry() {
+    let kit = kits().into_iter().find(|k| k.requires_refs).unwrap();
+    let table = hex_core::piece::PieceTable::builtin();
+    let mut manifest = kit.manifest.clone();
+    let mut fake = manifest
+        .pieces
+        .iter()
+        .find(|p| p.kind == PieceKind::Prop)
+        .unwrap()
+        .clone();
+    fake.id = "fake_prop".into();
+    manifest.pieces.push(fake);
+    assert_eq!(
+        piece_table_errors(&manifest, table),
+        ["fake_prop: no data/pieces.ron entry"]
+    );
+    let first = manifest
+        .pieces
+        .iter()
+        .position(|p| has_piece_entry(p.kind))
+        .unwrap();
+    let gone = manifest.pieces.remove(first).id;
+    let errors = piece_table_errors(&manifest, table);
+    assert!(
+        errors.contains(&format!(
+            "{gone}: data/pieces.ron entry for no manifest prop, tree or hero"
+        )),
+        "{errors:?}"
+    );
+}

@@ -3,6 +3,7 @@
 //! default, so `every_prop_piece_has_a_footprint_row` iterates the catalog instead of the table.
 
 use bevy::prelude::*;
+use hex_core::piece::{PieceTable, WalkClass};
 use hex_core::{NetworkKind, TileDef};
 
 use super::layout::Rng;
@@ -990,36 +991,25 @@ pub fn fence_lines(def: &TileDef) -> Vec<Vec<Vec2>> {
         .collect()
 }
 
-/// Slots of ground pieces that stand on the ground rather than being it: a crop's leaning row cards
-/// on a centre piece, the tunnel portals' fern cards over their coping, and a rail viaduct's stone
-/// and deck track (owner RL-Q3: no walking on the deck; the meadow under its arches is the ground
-/// and its piers are walker obstacles, `walk::CENTRE_OBSTACLES`). Nothing stands on them and the
-/// walker walks through, or under, them.
-pub const NOT_GROUND: &[&str] = &[
-    "wheat_field_wheat",
-    "road_tunnel_portal_fern",
-    "rail_tunnel_portal_fern",
-    "rail_viaduct_l1_stone",
-    "rail_viaduct_l2_stone",
-    "rail_viaduct_l3_stone",
-    "viaduct_ballast",
-    "viaduct_sleeper",
-    "viaduct_steel",
-    "viaduct_head",
-];
+/// Whether `slot` is a slot of a ground piece that stands on the ground rather than being it
+/// (`data/pieces.ron` `not_ground`: a crop's row cards, the portals' fern cards, a viaduct's stone
+/// and deck track). Nothing stands on it and the walker walks through, or under, it.
+pub fn is_not_ground(slot: &str) -> bool {
+    PieceTable::builtin().is_not_ground(slot)
+}
 
-/// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
-/// walker stands on and scatter keeps off, and the tunnel portals, whose wall tops (coping and
-/// turf, where grass blades grow; the road's 4 m, the rail's 5.85 m under its turf mound) the walker
-/// crosses from the cover meadow and whose faces are steps it cannot climb into the arch. Each
-/// stands at the tile origin at a whole hex turn
-/// (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the ground in the tile frame
-/// as a centre piece does.
-pub const GROUND_PROPS: &[&str] = &[
-    "rail_station_platform",
-    "road_tunnel_portal",
-    "rail_tunnel_portal",
-];
+/// Whether `piece` is a hero prop that is ground, not an obstacle (`data/pieces.ron`
+/// `walk: Some(Ground)`: the station platform and the tunnel portals). Each stands at the tile
+/// origin at a whole hex turn (`ground_props_stand_at_the_origin_on_a_hex_turn`), so it joins the
+/// ground in the tile frame as a centre piece does.
+pub fn is_ground_prop(piece: &str) -> bool {
+    PieceTable::builtin().is_walk(piece, WalkClass::Ground)
+}
+
+/// The [`is_ground_prop`] pieces, in `data/pieces.ron` order.
+pub fn ground_props() -> impl Iterator<Item = &'static str> {
+    PieceTable::builtin().with_walk(WalkClass::Ground)
+}
 
 /// The single-tile landforms (spec 2026-11-13 D9): like a footprint tile's ring cells, they
 /// scatter their Meadow rules at a Meadow's density per m² of free ground (`layout::meadow_share`).

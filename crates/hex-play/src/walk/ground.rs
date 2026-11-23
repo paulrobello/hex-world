@@ -21,7 +21,7 @@ use hex_render::kit_runtime::piece_rotation;
 
 use super::shape::{Obstacle, PickProp, PieceShape, hull};
 use super::tables::{
-    CAR_GROUND, CENTRE_OBSTACLES, FOOTPRINT_OBSTACLES, OBSTACLES, PIECE_POSTS, prop_kind,
+    CAR_GROUND, CENTRE_OBSTACLES, FOOTPRINT_OBSTACLES, PIECE_POSTS, is_obstacle, prop_kind,
 };
 
 /// The walker's body radius (m): how close its centre comes to a wall, a trunk or an edge.
@@ -420,7 +420,7 @@ impl WalkGround {
                 };
             let herd = crate::farm::herd_slots(def);
             for (slot, (h, piece)) in def.hero_pieces(t.cell).enumerate() {
-                if OBSTACLES.contains(&piece) {
+                if is_obstacle(piece) {
                     let local = Transform::from_xyz(h.at[0], h.y, h.at[1])
                         .with_rotation(Quat::from_rotation_y(-h.yaw_deg.to_radians()));
                     if herd.contains(&slot) {
@@ -447,7 +447,7 @@ impl WalkGround {
                 for inst in &s.layout.instances {
                     let rule = inst.rule as usize;
                     let piece = s.piece_of(inst);
-                    if s.drawn[rule] && OBSTACLES.contains(&piece) {
+                    if s.drawn[rule] && is_obstacle(piece) {
                         let placed = root * inst.transform();
                         let into = if def.is_mega() {
                             ring_obs
@@ -468,7 +468,7 @@ impl WalkGround {
             // The field boundaries this tile owns (`play::respawn_pairs` draws them), and the
             // hedgerow oaks they carry.
             for f in crate::play::boundaries::placements(world_seed, t.cell, &at, &level) {
-                if OBSTACLES.contains(&f.piece) {
+                if is_obstacle(f.piece) {
                     let local = crate::play::boundaries::transform(&f);
                     place(&mut obs, f.piece, &shape(f.piece), &(root * local));
                 }

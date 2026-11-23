@@ -5,7 +5,7 @@
 //!
 //! - **Ground.** A tile's ground is [`crate::play::scatter::Surface`] built from its base, centre and lane edge
 //!   pieces (`scatter::ground_pieces`), sampled in the tile frame: meadow cap, road, beach slope,
-//!   river banks and bed, the bridge deck, and hero props that are ground (`scatter::GROUND_PROPS`:
+//!   river banks and bed, the bridge deck, and hero props that are ground (`scatter::ground_props`:
 //!   the station platform's paving and ramps). A tile whose ground pieces are outside the kit (a
 //!   placeholder) stands at y = 0, the placeholder cap. Tiles hidden until their pack arrives
 //!   ([`crate::play::PlayWaiting`]) are not ground at all.
@@ -30,7 +30,7 @@
 //!   `barn_red_b`'s parts are declared ([`DECLARED_PARTS`]): its closed walls and shed posts, so
 //!   the walker enters its open lean-to (the shed's roof is not clicked; a ray must enter a
 //!   part's prism). Wildflowers do not block, and the wheat
-//!   field's wheat is neither ground nor obstacle (`scatter::NOT_GROUND`): the walker walks
+//!   field's wheat is neither ground nor obstacle (`data/pieces.ron` `not_ground`): the walker walks
 //!   through it.
 //! - **Props to look at.** Photo mode's click to focus ([`WalkGround::pick_prop`]) hits the same
 //!   drawn obstacle instances as volumes: the collider footprint extruded from the collider's foot
@@ -58,6 +58,6 @@ pub use shape::{
 };
 pub use sync::{WalkCache, sync};
 pub use tables::{
-    CAR_GROUND, CENTRE_OBSTACLES, DECLARED_PARTS, FOOTPRINT_OBSTACLES, OBSTACLES, PIECE_POSTS,
-    PropLabel, VIADUCT_PIER, WALK_THROUGH, prop_kind,
+    CAR_GROUND, CENTRE_OBSTACLES, DECLARED_PARTS, FOOTPRINT_OBSTACLES, PIECE_POSTS, PropLabel,
+    VIADUCT_PIER, is_obstacle, obstacles, prop_kind, walk_through,
 };

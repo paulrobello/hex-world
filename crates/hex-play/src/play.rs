@@ -731,18 +731,15 @@ fn spawn_column(
     };
 }
 
-/// A hero prop's growth: trees scale up, buildings rise a floor at a time (roof included). The
-/// single-storey longhouse and the low paddock fence rise in one step. The fence is not a tree:
-/// its origin is the tile centre, so a uniform scale would slide its runs in from the border.
+/// A hero prop's growth (`data/pieces.ron` `rise`): trees scale up, buildings rise a floor at a
+/// time (roof included).
 fn rise_kind(piece: &str) -> PropKind {
-    if piece.contains("tree") {
-        PropKind::Tree
-    } else if piece.contains("twostorey") {
-        PropKind::Building { floors: 3 }
-    } else if piece == "house_longhouse" || piece.starts_with("fence") {
-        PropKind::Building { floors: 1 }
-    } else {
-        PropKind::Building { floors: 2 }
+    let def = hex_core::piece::PieceTable::builtin()
+        .get(piece)
+        .unwrap_or_else(|| panic!("{piece} has no data/pieces.ron entry"));
+    match def.rise {
+        hex_core::piece::Rise::Tree => PropKind::Tree,
+        hex_core::piece::Rise::Building { floors } => PropKind::Building { floors },
     }
 }
 
@@ -1486,8 +1483,7 @@ pub(crate) mod tests {
         assert_eq!(rise_kind("tree_hero_oak"), PropKind::Tree);
     }
 
-    /// `rise_kind` defaults to a two-floor building for every piece that is not a tree, so a new
-    /// hero piece rises as one unless its name says otherwise. This pins the kind of every hero
+    /// `rise_kind` reads each piece's `data/pieces.ron` entry. This pins the kind of every hero
     /// piece in the catalog, variants included: a new piece fails here and its row is a
     /// reviewable decision.
     #[test]

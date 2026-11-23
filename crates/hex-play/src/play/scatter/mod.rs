@@ -95,8 +95,8 @@ pub use surface::{Surface, Tri, ground_pieces, member_tris};
 pub(crate) use surface::{ground_tris, kit_tris};
 pub use sync::{PlayScatter, ScatterGroup, ScatterLayouts, ScatterReport, TileScatter, sync};
 pub use tables::{
-    FENCE_HALF, FENCES, FOOTPRINTS, Fence, Footprint, GROUND_BOXES, GROUND_PROPS, GroundBox,
-    LANDFORMS, NOT_GROUND, VARIANT_WEIGHTS, VARIANTS, VERGE_VARIANT_WEIGHTS, family, fence,
-    fence_lines, footprint, ground_box, group, group_footprint, pick_variant, variant_piece,
-    variant_weights, verge_tile,
+    FENCE_HALF, FENCES, FOOTPRINTS, Fence, Footprint, GROUND_BOXES, GroundBox, LANDFORMS,
+    VARIANT_WEIGHTS, VARIANTS, VERGE_VARIANT_WEIGHTS, family, fence, fence_lines, footprint,
+    ground_box, ground_props, group, group_footprint, is_ground_prop, is_not_ground, pick_variant,
+    variant_piece, variant_weights, verge_tile,
 };

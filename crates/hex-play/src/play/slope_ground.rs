@@ -22,7 +22,7 @@ use hex_core::{
 
 use super::{
     KitMaterial, KitPart,
-    scatter::{GROUND_PROPS, Tri, ground_pieces, turn},
+    scatter::{Tri, ground_pieces, is_ground_prop, turn},
 };
 
 /// Cap rings of the runtime ground (1.33 m between rings), shared by the drawn cap and the
@@ -49,7 +49,7 @@ pub fn drapes(def: &TileDef) -> bool {
 
 /// The ids `def` drapes: its centre and its road and river lane-edge pieces, none on a def that
 /// does not drape ([`drapes`]). The tunnel portal is a `Cutting`, so none of its pieces (its hero
-/// included) is draped; a [`GROUND_PROPS`] hero is kept out of the list on any def.
+/// included) is draped; a [`is_ground_prop`] hero is kept out of the list on any def.
 pub fn draped_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<&'a str> {
     if !drapes(def) {
         return vec![];
@@ -64,7 +64,7 @@ pub fn draped_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<&'a 
             out.push(p.as_str());
         }
     }
-    out.retain(|p| !GROUND_PROPS.contains(p));
+    out.retain(|p| !is_ground_prop(p));
     out
 }
 

@@ -673,7 +673,7 @@ pub fn exclusions(
         }
     }
     // A viaduct's abutments and piers stand on the meadow (its stone and deck are not ground,
-    // `scatter::NOT_GROUND`): no blade roots in the stone, and blades grow under the arches.
+    // `data/pieces.ron` `not_ground`): no blade roots in the stone, and blades grow under the arches.
     for (centre, part, corners) in crate::walk::CENTRE_OBSTACLES {
         if *part == crate::walk::VIADUCT_PIER
             && def.center.as_ref().is_some_and(|c| c.as_str() == *centre)

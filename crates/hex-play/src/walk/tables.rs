@@ -1,120 +1,21 @@
-use hex_core::rail_end::BUFFER_STOP;
+use hex_core::piece::{PieceTable, WalkClass};
 
-/// Pieces whose collider blocks the walker. Wildflowers (clumps and single stems) and the ground
-/// pieces do not. A sapling stops the walker at its stem, a shrub at its dense lower dome, a verge
-/// bush at its clipped mass; ferns are walk-through.
-pub const OBSTACLES: &[&str] = &[
-    "house_cottage",
-    "house_twostorey",
-    "house_longhouse",
-    "house_twostorey_b",
-    "house_twostorey_c",
-    "house_cottage_b",
-    "windmill",
-    "windmill_b",
-    "barn_red",
-    "barn_red_b",
-    "bakery_shop",
-    "bakery_shop_b",
-    "hay_bale_round",
-    "hay_bale_stack",
-    "hay_bale_round_b",
-    "hay_bale_stack_b",
-    "animal_cow",
-    "animal_sheep",
-    "animal_cow_b",
-    "animal_cow_c",
-    "animal_sheep_b",
-    "animal_sheep_c",
-    "tree_hero_oak",
-    "tree_hero_oak_b",
-    "tree_hero_oak_c",
-    "tree_forest",
-    "tree_forest_b",
-    "tree_forest_c",
-    "rock_small",
-    "rock_small_b",
-    "rock_small_c",
-    // The granite boulders and outcrop (owner A25): the outcrop's top is not walkable either.
-    "boulder_granite",
-    "boulder_granite_b",
-    "boulder_granite_c",
-    "boulder_granite_d",
-    "outcrop_granite",
-    "outcrop_granite_b",
-    "river_stones",
-    "river_stones_b",
-    "river_stones_c",
-    "log_fallen",
-    "log_fallen_b",
-    "log_fallen_c",
-    "beach_driftwood",
-    "beach_driftwood_b",
-    "beach_driftwood_c",
-    "tree_oak",
-    "tree_oak_b",
-    "tree_oak_c",
-    "fence_paddock",
-    "sapling_spruce",
-    "sapling_spruce_b",
-    "sapling_spruce_c",
-    "shrub_forest",
-    "shrub_forest_b",
-    "shrub_forest_c",
-    "bush_verge",
-    "bush_verge_b",
-    "bush_verge_c",
-    "rail_station_shelter",
-    "rail_buffer_stop",
-    "well_stone",
-    "well_stone_b",
-    // The field boundaries (B2, `hex_core::boundary`): a wall or hedge blocks by its per-arm boxes,
-    // a gap between pieces lets the walker through, and the gateway's box covers its shut gate.
-    "wall_run",
-    "wall_run_b",
-    "wall_end",
-    "wall_bend",
-    "wall_junction",
-    "wall_gate",
-    "hedge_run",
-    "hedge_run_b",
-    "hedge_end",
-    "hedge_bend",
-    "hedge_junction",
-    "hedge_oak",
-];
+/// Whether `piece`'s collider blocks the walker (`data/pieces.ron` `walk: Some(Obstacle)`).
+pub fn is_obstacle(piece: &str) -> bool {
+    PieceTable::builtin().is_walk(piece, WalkClass::Obstacle)
+}
 
-/// Props the walker deliberately passes through: low flora, reeds, lilies, pebbles and the seabed
-/// pieces have no collider worth stopping at. With [`OBSTACLES`] and `scatter::GROUND_PROPS` it
-/// accounts for every prop piece the catalog places (`every_prop_piece_is_classified`), so a new
-/// piece must be listed in one of the three.
-pub const WALK_THROUGH: &[&str] = &[
-    "beach_dunegrass",
-    "beach_dunegrass_b",
-    "beach_dunegrass_c",
-    "beach_pebbles",
-    "beach_pebbles_b",
-    "beach_pebbles_c",
-    "fern_clump",
-    "fern_clump_b",
-    "fern_clump_c",
-    "lily_cluster",
-    "lily_cluster_b",
-    "lily_cluster_c",
-    "reed_bed",
-    "river_reeds",
-    "river_reeds_b",
-    "seabed_pebbles",
-    "seabed_rock",
-    "wildflower_clump",
-    "wildflower_clump_b",
-    "wildflower_clump_c",
-    "wildflower_single",
-    "wildflower_single_b",
-    "wildflower_single_c",
-    "wildflower_single_d",
-    "wildflower_single_e",
-];
+/// The pieces whose collider blocks the walker, in `data/pieces.ron` order.
+pub fn obstacles() -> impl Iterator<Item = &'static str> {
+    PieceTable::builtin().with_walk(WalkClass::Obstacle)
+}
+
+/// The props the walker deliberately passes through (`walk: Some(WalkThrough)`). With
+/// [`obstacles`] and `scatter::ground_props` it accounts for every prop piece the catalog places
+/// (`every_prop_piece_is_classified`).
+pub fn walk_through() -> impl Iterator<Item = &'static str> {
+    PieceTable::builtin().with_walk(WalkClass::WalkThrough)
+}
 
 /// Parts of centre pieces that block the walker, as (centre piece, part, footprint corners in the
 /// tile frame). A centre's own collider is its whole bed, so a part that stands up from it gets a
@@ -124,7 +25,7 @@ pub const WALK_THROUGH: &[&str] = &[
 /// two piers ([`VIADUCT_PIER`]) are the stone's widest extent below head height (1.8 m), its faces
 /// at z ±3.0: the battered foot on decks 2 and 3 (the bake report's `pierFootprintsRuntimeXZ`),
 /// the arch ring at 1.8 m on deck 1, whose arches spring at 0.5 m. Its deck is not ground
-/// (`scatter::NOT_GROUND`), so the walker walks the meadow under the arches.
+/// (`data/pieces.ron` `not_ground`), so the walker walks the meadow under the arches.
 pub const CENTRE_OBSTACLES: &[(&str, &str, [[f32; 2]; 4])] = &[
     (
         "rail_junction_center",
@@ -577,84 +478,15 @@ pub const CAR_GROUND: &[&str] = &[
     "rail_steel",
 ];
 
-/// What a prop is to the player. [`PropLabel::as_str`] is the string walk mode's
-/// [`Blocked::reason`](super::ground::Blocked::reason) and photo mode's click to focus report, which the bridge and
-/// `docs/agent-operability.md` publish.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum PropLabel {
-    Building,
-    Tree,
-    Hay,
-    Animal,
-    Log,
-    Fence,
-    Lever,
-    BufferStop,
-    Boat,
-    Stage,
-    Well,
-    Rock,
-}
+/// What a prop is to the player (`data/pieces.ron` `label`).
+pub use hex_core::piece::PropLabel;
 
-impl PropLabel {
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            PropLabel::Building => "building",
-            PropLabel::Tree => "tree",
-            PropLabel::Hay => "hay",
-            PropLabel::Animal => "animal",
-            PropLabel::Log => "log",
-            PropLabel::Fence => "fence",
-            PropLabel::Lever => "lever",
-            PropLabel::BufferStop => "buffer_stop",
-            PropLabel::Boat => "boat",
-            PropLabel::Stage => "stage",
-            PropLabel::Well => "well",
-            PropLabel::Rock => "rock",
-        }
-    }
-}
-
-/// What `piece` is to the player. Every piece that can block the walker or be clicked has an arm;
-/// an unlisted one panics, and `every_collider_piece_has_a_label` fails first for any piece in
-/// [`OBSTACLES`], the [`CENTRE_OBSTACLES`] and [`FOOTPRINT_OBSTACLES`] parts, and the boats.
+/// What `piece` is to the player: the `data/pieces.ron` label of the piece or collider part. Every
+/// piece that can block the walker or be clicked has one; an unlabelled one panics, and
+/// `every_collider_piece_has_a_label` fails first for any obstacle, the [`CENTRE_OBSTACLES`] and
+/// [`FOOTPRINT_OBSTACLES`] parts, and the boats.
 pub fn prop_kind(piece: &str) -> PropLabel {
-    match piece {
-        p if p.starts_with("house")
-            || p.starts_with("barn")
-            || p.starts_with("windmill")
-            || p == "bakery_shop"
-            || p == "bakery_shop_b"
-            || p == "rail_station_shelter" =>
-        {
-            PropLabel::Building
-        }
-        p if p.starts_with("tree")
-            || p.starts_with("sapling_")
-            || p.starts_with("shrub_")
-            || p.starts_with("bush_")
-            || p.starts_with("hedge_") =>
-        {
-            PropLabel::Tree
-        }
-        p if p.starts_with("hay_") => PropLabel::Hay,
-        p if p.starts_with("animal_") => PropLabel::Animal,
-        p if p.starts_with("log_") || p.starts_with("beach_driftwood") => PropLabel::Log,
-        p if p.starts_with("fence") || p.starts_with("wall_") => PropLabel::Fence,
-        "rail_lever" => PropLabel::Lever,
-        BUFFER_STOP => PropLabel::BufferStop,
-        p if p.starts_with("boat_") => PropLabel::Boat,
-        "landing_stage" => PropLabel::Stage,
-        p if p.starts_with("well_") => PropLabel::Well,
-        p if p.starts_with("rock_")
-            || p.starts_with("river_stones")
-            || p.starts_with("boulder_granite")
-            || p.starts_with("outcrop_granite")
-            || p == VIADUCT_PIER
-            || FOOTPRINT_OBSTACLES.iter().any(|(_, part, _)| *part == p) =>
-        {
-            PropLabel::Rock
-        }
-        _ => unreachable!("{piece} has no PropLabel: add an arm to walk::prop_kind"),
-    }
+    PieceTable::builtin()
+        .label(piece)
+        .unwrap_or_else(|| panic!("{piece} has no label: give it one in data/pieces.ron"))
 }

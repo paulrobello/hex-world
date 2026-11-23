@@ -9,6 +9,7 @@ use std::{
 };
 
 use bevy::prelude::*;
+use hex_core::piece::{PieceTable, WalkClass};
 use hex_core::{Axial, HEX_RADIUS, LEVEL_STEP, TileCatalog, TileDef, rail_end::BUFFER_STOP};
 
 use super::{ground::*, shape::*, tables::*};
@@ -56,10 +57,11 @@ pub(crate) fn catalog_props() -> std::collections::BTreeSet<String> {
 /// and the rail layout place at run time, which are obstacles.
 #[test]
 fn every_prop_piece_is_classified() {
-    let lists: [(&str, &[&str]); 3] = [
-        ("OBSTACLES", OBSTACLES),
-        ("WALK_THROUGH", WALK_THROUGH),
-        ("GROUND_PROPS", scatter::GROUND_PROPS),
+    let list = |w| PieceTable::builtin().with_walk(w).collect::<Vec<&str>>();
+    let lists: [(&str, Vec<&str>); 3] = [
+        ("Obstacle", list(WalkClass::Obstacle)),
+        ("WalkThrough", list(WalkClass::WalkThrough)),
+        ("Ground", list(WalkClass::Ground)),
     ];
     for (i, (name_a, a)) in lists.iter().enumerate() {
         for (name_b, b) in &lists[i + 1..] {
@@ -86,7 +88,7 @@ fn every_prop_piece_is_classified() {
         "placed but in no list: {unclassified:?}; listed but never placed: {stale:?}"
     );
     for piece in placed_at_run_time {
-        assert!(OBSTACLES.contains(&piece), "{piece} blocks the walker");
+        assert!(is_obstacle(piece), "{piece} blocks the walker");
     }
 }
 
@@ -145,15 +147,14 @@ fn every_obstacle_reports_its_own_kind() {
             hit.then_some(kind)
         })
     };
-    let unlisted: Vec<_> = OBSTACLES
-        .iter()
+    let unlisted: Vec<_> = obstacles()
         .filter(|piece| kind_of(piece).is_none())
         .collect();
     assert!(
         unlisted.is_empty(),
         "obstacles no KINDS row covers: {unlisted:?}"
     );
-    for &piece in OBSTACLES {
+    for piece in obstacles() {
         let kind = kind_of(piece).unwrap();
         assert_eq!(prop_kind(piece).as_str(), kind, "{piece}");
         assert_eq!(Blocked::Obstacle(piece.into()).reason(), kind, "{piece}");
@@ -169,9 +170,7 @@ fn every_collider_piece_has_a_label() {
         .iter()
         .map(|(_, part, _)| *part)
         .chain(FOOTPRINT_OBSTACLES.iter().map(|(_, part, _)| *part));
-    let pieces: Vec<&str> = OBSTACLES
-        .iter()
-        .copied()
+    let pieces: Vec<&str> = obstacles()
         .chain(parts)
         .chain(["boat_rowing", "boat_sail", "landing_stage"])
         .collect();
@@ -196,7 +195,7 @@ fn every_collider_piece_has_a_label() {
 /// it keeps the whole collider's hull and body exactly as before.
 #[test]
 fn only_the_fence_collider_splits_into_parts() {
-    for &piece in OBSTACLES {
+    for piece in obstacles() {
         let s = shape(piece);
         if piece.starts_with("well_") {
             let n = if piece == "well_stone" { 1 } else { 7 };
@@ -1038,7 +1037,7 @@ fn walk_obstacles_are_the_drawn_hero_variant() {
 fn piece_posts_cover_the_posts_outside_the_collider() {
     let pieces: Vec<&str> = PIECE_POSTS.iter().map(|(p, _)| *p).collect();
     for &piece in &pieces {
-        assert!(OBSTACLES.contains(&piece), "{piece}");
+        assert!(is_obstacle(piece), "{piece}");
         let s = shape(piece);
         let collider = Obstacle {
             piece: piece.into(),
@@ -2000,7 +1999,7 @@ fn the_station_shelter_blocks_as_a_building_and_is_picked() {
 fn brute_top(tris: &[(Tri, String)], x: f32, z: f32) -> Option<f32> {
     let mut best: Option<f32> = None;
     for ([a, b, c], name) in tris {
-        if scatter::NOT_GROUND.contains(&name.as_str()) {
+        if scatter::is_not_ground(name) {
             continue;
         }
         let d = (b[0] - a[0]) * (c[2] - a[2]) - (c[0] - a[0]) * (b[2] - a[2]);

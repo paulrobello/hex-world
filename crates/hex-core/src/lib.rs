@@ -5,6 +5,7 @@ pub mod boundary;
 pub mod catalog;
 pub mod footprint;
 pub mod path;
+pub mod piece;
 pub mod prism;
 pub mod rail_end;
 pub mod save;

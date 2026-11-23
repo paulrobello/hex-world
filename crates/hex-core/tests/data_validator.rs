@@ -597,3 +597,36 @@ fn parking_spots_match_the_centre_piece_anchors() {
     assert!(checked > 0, "no parking spot was checked");
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+/// `data/pieces.ron` (ENH-001) parses, and its piece and part ids and its slot lists are unique, so
+/// no lookup silently takes the first of two rows.
+#[test]
+fn piece_ids_are_unique() {
+    let path = repo_root().join("data/pieces.ron");
+    let text = std::fs::read_to_string(&path).unwrap();
+    assert_eq!(
+        text,
+        hex_core::piece::BUILTIN_PIECES,
+        "data/pieces.ron is the embedded copy"
+    );
+    let table = hex_core::piece::PieceTable::parse(&text).unwrap_or_else(|e| panic!("{e}"));
+    let mut problems = vec![];
+    let mut seen = BTreeSet::new();
+    let ids = table
+        .pieces
+        .iter()
+        .map(|p| p.id.as_str())
+        .chain(table.parts.iter().map(|p| p.id.as_str()));
+    for id in ids {
+        if !seen.insert(id) {
+            problems.push(format!("duplicate piece or part id {id}"));
+        }
+    }
+    let mut slots = BTreeSet::new();
+    for slot in &table.not_ground {
+        if !slots.insert(slot.as_str()) {
+            problems.push(format!("duplicate not_ground slot {slot}"));
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

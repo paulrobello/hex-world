@@ -1123,7 +1123,7 @@ fn single_flowers_thin_by_their_seeded_noise() {
 /// LOD's (within 0.1 m, never under).
 /// The wheat field's ground (scatter, grass and the walker all stand on it) is its ploughed
 /// earth inside the field and the meadow cap on the grass margin; the wheat cards are never
-/// ground (`NOT_GROUND`), and the meadow cap never pokes through the earth.
+/// ground (`data/pieces.ron` `not_ground`), and the meadow cap never pokes through the earth.
 #[test]
 fn the_wheat_field_ground_is_its_earth_not_its_wheat() {
     let def = catalog().get("wheat_field").unwrap().clone();
@@ -1213,7 +1213,7 @@ fn hero_variants_fit_inside_the_authored_piece() {
 /// Every table lookup (`footprint`, `ground_box`, `fence`) falls back silently for a piece
 /// without a row, and every table test iterates the table, so a missing row is invisible.
 /// This iterates the catalog instead: each hero and scatter piece, with its scatter group and
-/// hero variants, is in [`FOOTPRINTS`], [`FENCES`] or [`GROUND_PROPS`].
+/// hero variants, is in [`FOOTPRINTS`], [`FENCES`] or [`is_ground_prop`].
 #[test]
 fn every_prop_piece_has_a_footprint_row() {
     let missing: Vec<String> = crate::walk::tests::catalog_props()
@@ -1221,12 +1221,12 @@ fn every_prop_piece_has_a_footprint_row() {
         .filter(|p| {
             !FOOTPRINTS.iter().any(|(id, _)| id == p)
                 && !FENCES.iter().any(|(id, _)| id == p)
-                && !GROUND_PROPS.contains(&p.as_str())
+                && !is_ground_prop(p)
         })
         .collect();
     assert!(
         missing.is_empty(),
-        "pieces the catalog places with no FOOTPRINTS, FENCES or GROUND_PROPS row: {missing:?}"
+        "pieces the catalog places with no FOOTPRINTS or FENCES row and not a ground prop: {missing:?}"
     );
 }
 
@@ -2116,7 +2116,7 @@ fn ground_boxes_match_the_kit() {
     }
 }
 
-/// A [`GROUND_PROPS`] hero joins the ground in the tile frame, so every one in the catalog
+/// An [`is_ground_prop`] hero joins the ground in the tile frame, so every one in the catalog
 /// stands at the origin at a whole hex turn, unlifted.
 #[test]
 fn ground_props_stand_at_the_origin_on_a_hex_turn() {
@@ -2124,7 +2124,7 @@ fn ground_props_stand_at_the_origin_on_a_hex_turn() {
     let mut seen = 0;
     for def in c.tiles() {
         for h in &def.props.hero {
-            if GROUND_PROPS.contains(&h.piece.as_str()) {
+            if is_ground_prop(h.piece.as_str()) {
                 seen += 1;
                 assert_eq!((h.at, h.y), ([0.0, 0.0], 0.0), "{}", def.id);
                 assert_eq!(h.yaw_deg.rem_euclid(60.0), 0.0, "{}", def.id);

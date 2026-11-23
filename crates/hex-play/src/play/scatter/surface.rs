@@ -9,7 +9,7 @@ use hex_core::{TileCatalog, TileDef};
 use super::super::packs::PlayPacks;
 
 use super::layout::EXTENT;
-use super::tables::{GROUND_PROPS, NOT_GROUND};
+use super::tables::{is_ground_prop, is_not_ground};
 
 /// Bucket size (m) of the surface's triangle grid.
 const BUCKET: f32 = 1.0;
@@ -34,13 +34,13 @@ pub(super) fn bucket(v: f32) -> usize {
 
 impl Surface {
     /// Vertical (skirt) and degenerate triangles carry no ground and are dropped, as are the
-    /// [`NOT_GROUND`] slots.
+    /// [`is_not_ground`] slots.
     pub fn new(parts: impl IntoIterator<Item = (Tri, String)>) -> Self {
         let mut slots: Vec<String> = vec![];
         let mut tris = vec![];
         let mut buckets = vec![vec![]; BUCKETS * BUCKETS];
         for (t, name) in parts {
-            if NOT_GROUND.contains(&name.as_str()) {
+            if is_not_ground(&name) {
                 continue;
             }
             let [a, b, c] = t;
@@ -126,12 +126,12 @@ impl Surface {
 
 /// The ground pieces of a tile and their turn about +Y in the tile frame ([`turn`](super::layout::turn) steps, as
 /// `tile_children` draws them with `piece_rotation`): the base, the centre piece if it has one, its
-/// drawn edge pieces ([`TileDef::draws_edge_piece`]), and its [`GROUND_PROPS`] heroes (a yaw of
+/// drawn edge pieces ([`TileDef::draws_edge_piece`]), and its [`is_ground_prop`] heroes (a yaw of
 /// 60 k degrees is turn k).
 pub fn ground_pieces<'a>(def: &'a TileDef, catalog: &'a TileCatalog) -> Vec<(&'a str, u8)> {
     let mut v = vec![(def.base.as_str(), 0)];
     for h in &def.props.hero {
-        if GROUND_PROPS.contains(&h.piece.as_str()) {
+        if is_ground_prop(h.piece.as_str()) {
             v.push((
                 h.piece.as_str(),
                 (h.yaw_deg / 60.0).round().rem_euclid(6.0) as u8,

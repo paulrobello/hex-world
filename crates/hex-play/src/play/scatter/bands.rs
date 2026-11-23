@@ -97,7 +97,7 @@ pub const VERGE_BAND: f32 = 6.7;
 /// house pads and driveways, beaches and the coast, bridges, every base's rim, mossy edge band
 /// and skirt, and the massif's rock and scree (exact names: a `_rock` suffix would catch other
 /// pieces' slots), and the single-tile hill's and peak's (spec 2026-11-13 D9). They stay ground for
-/// the walker, so they are not [`NOT_GROUND`](super::tables::NOT_GROUND).
+/// the walker, so they are not [`is_not_ground`](super::tables::is_not_ground).
 pub fn excluded_slot(slot: &str) -> bool {
     const EXACT: [&str; 6] = [
         "massif_granite_rock",

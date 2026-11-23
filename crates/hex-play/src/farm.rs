@@ -51,7 +51,7 @@ use crate::{
         rise::PlayRises,
         scatter::{self, Layout, ScatterLayouts, footprint, turn},
     },
-    walk::{BODY_RADIUS, OBSTACLES, WalkGround},
+    walk::{BODY_RADIUS, WalkGround, is_obstacle},
 };
 use hex_render::{ActiveScenario, AgentsPaused, Scenario};
 
@@ -232,9 +232,7 @@ pub fn obstacles_of(def: &TileDef, layout: &Layout) -> Vec<(Vec2, f32)> {
         .iter()
         .filter_map(|i| {
             let piece = i.piece(def.props.scatter.get(i.rule as usize)?.piece.as_str());
-            OBSTACLES
-                .contains(&piece)
-                .then(|| (i.pos.xz(), footprint(piece).ground * i.scale))
+            is_obstacle(piece).then(|| (i.pos.xz(), footprint(piece).ground * i.scale))
         })
         .collect()
 }
