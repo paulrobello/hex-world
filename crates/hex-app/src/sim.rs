@@ -924,7 +924,7 @@ mod tests {
         let mut dark = false;
         for _ in 0..(600 * hex_sim::TICK_HZ) {
             sim.tick();
-            dark = sim.stats.car_list.iter().any(|c| c.3 == 0.0);
+            dark = sim.stats.car_list.iter().any(|c| c.3 == 1.0);
             if dark {
                 break;
             }

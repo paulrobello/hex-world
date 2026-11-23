@@ -27,7 +27,7 @@
   {
     "name": "elevation",
     "about": "Elevation review shots (P4): overview, ramp low and a car burst into the east tunnel portal",
-    "doc": "Elevation review shots (P4): runs `docs/checkpoints/elevation/elevation-shots.json` (the world of `elevation.json`, then a house at each end of the tunnel road) natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed`: `elevation-overview`, `elevation-ramp-low` and a burst `elevation-car-portal-0..7` with a state dump each (`car_list[].opacity`). Booked load-sensitive window only. The cliff-edge frame reuses `docs/checkpoints/elevation/visual-parity/`; the HUD \"Level N\" frame (`hud-level.jpg`) comes from `e2e/elevation.mjs`, because native shots draw no HUD",
+    "doc": "Elevation review shots (P4): runs `docs/checkpoints/elevation/elevation-shots.json` (the world of `elevation.json`, then a house at each end of the tunnel road) natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed`: `elevation-overview`, `elevation-ramp-low` and a burst `elevation-car-portal-0..7` with a state dump each (`car_list[].lamps`). Booked load-sensitive window only. The cliff-edge frame reuses `docs/checkpoints/elevation/visual-parity/`; the HUD \"Level N\" frame (`hud-level.jpg`) comes from `ELEVATION_OUT=docs/checkpoints/elevation node e2e/elevation.mjs dist`, because native shots draw no HUD",
     "runs": [
       {
         "script": "docs/checkpoints/elevation/elevation-shots.json",

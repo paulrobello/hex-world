@@ -4,9 +4,12 @@
 // `window.hexWorld.state().play`, within 60 s of the build settling, that
 //   1. the levels are present: ground tiles and tiles on level 1 (the plateau and the tunnel cover),
 //   2. a complete tunnel exists: a road_tunnel_portal at each end and a level-1 cover between them,
-//   3. a car with opacity 0 (`car_list[].opacity`) is inside it, near the cover.
+//   3. a car with its headlights fully up (`car_list[].lamps` 1, the level a car reports only
+//      inside a tunnel) is near the cover.
 // Exits 0 only when all three hold and the page logged no error. Not a timing run, so it takes no
-// load guard. Run after `make build-web`: node e2e/elevation.mjs dist
+// load guard. Run after `make build-web`: node e2e/elevation.mjs dist (also run by `make ui-e2e`).
+// ELEVATION_OUT (default e2e/test-results/elevation) is where the HUD frame goes:
+// ELEVATION_OUT=docs/checkpoints/elevation refreshes the committed evidence.
 // DEBUG_GHOST (any value) logs the ghost state of each probed cell while it looks for a level tag.
 import { readFileSync } from "node:fs";
 import { BAD_TEXT } from "./console-errors.mjs";
@@ -14,6 +17,7 @@ import { serveDist } from "./lib/harness.mjs";
 import { launch } from "./lib/browser.mjs";
 
 const dist = process.argv[2] ?? "dist";
+const out = process.env.ELEVATION_OUT ?? "e2e/test-results/elevation";
 const HEX_RADIUS = 16;
 const PORTALS = [{ q: 2, r: 2 }, { q: 4, r: 2 }];
 const COVER = { q: 3, r: 2 };
@@ -62,13 +66,13 @@ try {
   if (!complete) fail(`tunnel incomplete: portals ${JSON.stringify(portals)} cover ${JSON.stringify(cover)}`);
   else console.log("tunnel complete: portals", PORTALS.map((p) => `${p.q},${p.r}`).join(" and "), "cover level", cover.level);
 
-  // A car inside the tunnel is faded out (opacity 0) within reach of the cover.
+  // A car inside the tunnel has its headlights fully up (lamps 1) within reach of the cover.
   const [cx, cz] = centre(COVER);
   const found = async () => (await page.evaluate(() => window.hexWorld.state().play?.car_list ?? []))
-    .find((c) => c.opacity === 0 && Math.hypot(c.x - cx, c.z - cz) <= 2 * HEX_RADIUS);
+    .find((c) => c.lamps === 1 && Math.hypot(c.x - cx, c.z - cz) <= 2 * HEX_RADIUS);
   let car;
   for (const d = Date.now() + ASSERT_MS; !(car = await found()) && Date.now() < d;) await page.waitForTimeout(250);
-  if (!car) fail(`no car with opacity 0 inside the tunnel within ${ASSERT_MS / 1000} s`);
+  if (!car) fail(`no car with lamps 1 inside the tunnel within ${ASSERT_MS / 1000} s`);
   else console.log("car in the tunnel", JSON.stringify(car));
 
   // The HUD "Level N" readout (web only: the native shots draw no HUD). A hillside ghost on a free
@@ -89,8 +93,8 @@ try {
     if (tagged) break;
   }
   if (tagged) {
-    await page.screenshot({ path: "docs/checkpoints/elevation/hud-level.jpg", type: "jpeg", quality: 88 });
-    console.log("HUD Level readout captured: docs/checkpoints/elevation/hud-level.jpg");
+    await page.screenshot({ path: `${out}/hud-level.jpg`, type: "jpeg", quality: 88 });
+    console.log(`HUD Level readout captured: ${out}/hud-level.jpg`);
   } else {
     console.warn("WARN: no ghost stood on a level above the ground, so no HUD Level frame was captured");
   }

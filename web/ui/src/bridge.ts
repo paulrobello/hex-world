@@ -360,15 +360,15 @@ export interface RisingTile {
 }
 
 /**
- * A driving car in `play.car_list`: its sim id, trip phase, world XZ position in metres and body
- * opacity (0 inside a tunnel, fading in over the metres before the arch).
+ * A driving car in `play.car_list`: its sim id, trip phase, world XZ position in metres and headlight
+ * level (1 inside a tunnel, ramping up over the metres before an arch and down after the far one).
  */
 export interface CarInfo {
   id: number;
   phase: "pulling_out" | "leaving" | "road" | "parking";
   x: number;
   z: number;
-  opacity: number;
+  lamps: number;
 }
 
 /**

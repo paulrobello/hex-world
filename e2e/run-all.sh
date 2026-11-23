@@ -5,7 +5,7 @@
 set -u
 DIST="${1:-dist}"
 cd "$(dirname "$0")/.." || exit 1
-scripts="ui ui-motion photo-fx persist saves-ui audio debug version"
+scripts="ui ui-motion photo-fx persist saves-ui audio debug elevation version"
 fail=0
 for s in $scripts; do
   echo "=== e2e/$s.mjs START"
