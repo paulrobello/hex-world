@@ -9,8 +9,9 @@ use proptest::prelude::*;
 use hex_core::{Axial, PlacedTile, TileCatalog, World};
 
 /// The tile ids the generator places: the ground, tree, road and beach set the history-replay
-/// oracle in `save.rs` plays with, plus a windmill and the granite massif (the mega tile).
-pub const IDS: [&str; 7] = [
+/// oracle in `save.rs` plays with, a windmill, the granite massif (the mega tile), and river
+/// tiles, which stand at levels and form waterfalls.
+pub const IDS: [&str; 12] = [
     "meadow",
     "forest",
     "oak",
@@ -18,6 +19,11 @@ pub const IDS: [&str; 7] = [
     "beach",
     "windmill",
     "massif_granite",
+    "river_straight",
+    "river_bend",
+    "river_fork",
+    "river_spring",
+    "river_mouth",
 ];
 
 /// One played action: the op kind, the pick of a frontier or occupied cell, the pick of a tile id

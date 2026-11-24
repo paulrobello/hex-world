@@ -2,6 +2,8 @@
 // each emitter is for the current camera, the biome mix in view that drives the global bed and the
 // music, and the equal-power crossfade between music cues. No DOM or Web Audio here (node --test).
 
+import type { PlayFall } from "./bridge.ts";
+
 export type Biome = "meadow" | "forest" | "river" | "coast" | "town";
 export const BIOMES: readonly Biome[] = ["meadow", "forest", "river", "coast", "town"];
 export type Mix = Record<Biome, number>;
@@ -146,6 +148,30 @@ export function pickEmitters(cands: readonly Candidate[], voiced: ReadonlySet<st
     out.add(c.key);
   }
   return out;
+}
+
+// ---------- Waterfalls ----------
+
+/** At most this many waterfall loops sound at once (RQ10 O1: a quiet positional loop per fall). */
+export const MAX_FALL_VOICES = 2;
+/** A fall's level by its drop of 1, 2 or 3 levels, times the focus mix. */
+export const FALL_GAIN: readonly [number, number, number] = [0.6, 0.8, 1.0];
+
+/** The loudest audible falls, at their pools, louder first, at most `MAX_FALL_VOICES`. */
+export function fallEmitters(
+  falls: readonly PlayFall[],
+  v: View,
+): { cue: "waterfall"; x: number; z: number; gain: number }[] {
+  return falls
+    .map((f) => ({
+      cue: "waterfall" as const,
+      x: f.x,
+      z: f.z,
+      gain: FALL_GAIN[Math.min(Math.max(f.drop, 1), 3) - 1]! * emitterGain(f.x, f.z, v),
+    }))
+    .filter((e) => e.gain >= MIN_EMITTER_GAIN)
+    .sort((a, b) => b.gain - a.gain)
+    .slice(0, MAX_FALL_VOICES);
 }
 
 // ---------- Occasional one-shots (meadow bees, forest birds and leaves) ----------

@@ -20,3 +20,13 @@ The questions from the draft spec `docs/superpowers/specs/2026-11-22-rivers-at-l
 ## Answers (owner, 2026-11-22)
 
 "Go with the recommendations": RQ1 O1, RQ2 O1 for the 4 m drop and O2 for 8 and 12 m, RQ3 O1, RQ4 O1 (sea-cliff tile is a later card), RQ5 O2 at High/Ultra and O1 at Low/Medium (picked from in-engine options), RQ6 O1, RQ7 O2, RQ8 O1, RQ9 O1, RQ10 O1 (auditioned, O2 fallback), RQ11 O2, RQ12 O1.
+
+## Waterfall references (2026-11-22)
+
+WF-Q1 to WF-Q4, the fall-face reference picks (answered 2026-11-22: the recommendations): `docs/review/2026-11-22-waterfall-refs.md`, sheet `docs/checkpoints/waterfall/refs-sheet.jpg`.
+
+## Waterfall pieces (2026-11-23)
+
+Textured renders against the approved refs: `docs/checkpoints/waterfall/pieces-vs-refs.jpg` (asset branch `worktree-agent-aa0e20c68ab7cf6f8`, lands with Task 19). The piece is approved from in-engine shots after Task 19, not from these renders.
+
+- **WF-Q5. Texel density floor.** The jointed block relief adds surface area, so at the 1.5 MB per-piece budget LOD0 measures 106, 71 and 60 px/m (l1, l2, l3), against the kit default of 256. O1: accept scoped floors of 100, 70 and 55 for the three faces, seen at play distance. O2: raise the budget for these three pieces to reach about 128 px/m. **Recommended: O1**, decided on the in-engine close-ups.

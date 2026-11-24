@@ -242,6 +242,12 @@ pub fn water_sample(x: f32, z: f32) -> WaterSample {
 pub trait WaterField {
     /// Rest height of the water surface (m).
     fn level(&self) -> f32;
+    /// How far (m) this field's water stands above the material's `sea_level`: a raised tile's
+    /// `level * LEVEL_STEP`. Every water and placeholder-terrain mesh carries it in UV_1.x, so one
+    /// material serves every level (`water.wesl`, `water_terrain.wesl`). 0 at level 0.
+    fn water_lift(&self) -> f32 {
+        0.0
+    }
     /// Terrain (bed) height (m).
     fn height(&self, x: f32, z: f32) -> f32;
     /// Per-vertex water inputs.
@@ -258,11 +264,23 @@ pub trait WaterField {
     fn churn(&self, _x: f32, _z: f32) -> f32 {
         0.0
     }
+    /// Plunge pool proximity in [0, 1]: 1 at a waterfall seam's midpoint on its lower tile, falling
+    /// linearly to 0 at the pool's radius, 0 off every pool. Surface vertices carry it in UV_1.y
+    /// for the pool's foam rings and mist (`water.wesl`).
+    fn plunge(&self, _x: f32, _z: f32) -> f32 {
+        0.0
+    }
 }
 
 /// UV_0.y of a surface vertex: the [`WaterField::meet`] foam weight times this, under the 0.5
 /// that marks a cut-face vertex (`water.wesl` reads it back).
 pub const MEET_TAG: f32 = 0.4;
+
+/// UV_0.y offset marking a waterfall sheet vertex (`hex_play::water::tiles::sheet_mesh`): it
+/// carries this plus the metres below its tier's lip. Far above every cut-face tag
+/// ([`SKIRT_TAG`] plus a bed height, at most about 22 at level 3), so `water.wesl` tells the
+/// three apart by range.
+pub const SHEET_TAG: f32 = 100.0;
 
 /// UV_0.y of a surface vertex: the mouth foam weight times [`MEET_TAG`] where it is set, else minus
 /// the [`WaterField::churn`] (`water.wesl` splits them by sign).
@@ -349,7 +367,8 @@ pub fn cell_transform(cell: Axial, rot: u8) -> Transform {
 
 /// One cell's water surface in cell-local space at the field's level: COLOR carries (flow.x,
 /// flow.z, river, depth) and UV_0 carries (shore distance, mouth foam weight * [`MEET_TAG`]),
-/// sampled at the vertex's world position.
+/// sampled at the vertex's world position, and UV_1 ([`WaterField::water_lift`],
+/// [`WaterField::plunge`]).
 pub fn surface_mesh(field: &impl WaterField, cell: Axial, rot: u8) -> Mesh {
     surface_mesh_where(field, cell, rot, |_| true)
 }
@@ -367,11 +386,13 @@ pub fn surface_mesh_where(
     let mut colors = Vec::with_capacity(local.len());
     let mut uvs = Vec::with_capacity(local.len());
     let mut kept = Vec::with_capacity(local.len());
+    let mut uv1 = Vec::with_capacity(local.len());
     for p in &local {
         let w = t.transform_point(*p);
         let s = field.water(w.x, w.z);
         colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
         uvs.push([s.shore, foam_tag(field, w.x, w.z)]);
+        uv1.push([field.water_lift(), field.plunge(w.x, w.z)]);
         kept.push(keep(w.xz()));
     }
     if kept.iter().any(|k| !k) {
@@ -396,8 +417,14 @@ pub fn surface_mesh_where(
     )
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 1.0, 0.0]; n])
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, uv1)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     .with_inserted_indices(Indices::U32(idx))
+}
+
+/// UV_1 of every vertex of a mesh of `field`: ([`WaterField::water_lift`], 0).
+fn lift_uvs(field: &impl WaterField, n: usize) -> Vec<[f32; 2]> {
+    vec![[field.water_lift(), 0.0]; n]
 }
 
 /// The look-dev patch's surface for one cell.
@@ -418,6 +445,7 @@ pub fn ribbon_mesh(
 ) -> Mesh {
     let level = field.level();
     let (mut pos, mut colors, mut uvs, mut idx) = (vec![], vec![], vec![], vec![]);
+    let mut uv1 = vec![];
     for &(c, lat) in rows {
         for j in 0..=cols {
             let w = c + lat * (half * (2.0 * j as f32 / cols as f32 - 1.0));
@@ -425,6 +453,7 @@ pub fn ribbon_mesh(
             pos.push([w.x - origin.x, level, w.y - origin.y]);
             colors.push([s.flow.x, s.flow.y, s.river, s.depth]);
             uvs.push([s.shore, foam_tag(field, w.x, w.y)]);
+            uv1.push([field.water_lift(), field.plunge(w.x, w.y)]);
         }
     }
     let stride = cols + 1;
@@ -449,6 +478,7 @@ pub fn ribbon_mesh(
     .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, vec![[0.0, 1.0, 0.0]; n])
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, uv1)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     .with_inserted_indices(Indices::U32(idx))
 }
@@ -518,6 +548,7 @@ pub fn skirt_mesh_for(field: &impl WaterField, cell: Axial, edges: &[u8]) -> Opt
             }
         }
     }
+    let n = pos.len();
     Some(
         Mesh::new(
             PrimitiveTopology::TriangleList,
@@ -526,6 +557,7 @@ pub fn skirt_mesh_for(field: &impl WaterField, cell: Axial, edges: &[u8]) -> Opt
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, pos)
         .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, nrm)
         .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uvs)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, lift_uvs(field, n))
         .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, col)
         .with_inserted_indices(Indices::U32(idx)),
     )
@@ -548,7 +580,8 @@ const SKIRT_FLOOR: f32 = -7.0;
 
 /// One cell's terrain in cell-local space, heights and normals from the field, plus a vertical
 /// skirt on every edge down to `floor` (hidden where a neighbour exists). COLOR carries
-/// [`WaterField::terrain`] with w = 1 on the cap and 0 on the skirt.
+/// [`WaterField::terrain`] with w = 1 on the cap and 0 on the skirt, UV_1
+/// ([`WaterField::water_lift`], 0).
 pub fn terrain_mesh_for(field: &impl WaterField, cell: Axial, rot: u8, floor: f32) -> Mesh {
     let (mut local, mut idx) = hex_grid(GRID, HEX_RADIUS);
     let t = cell_transform(cell, rot);
@@ -601,6 +634,7 @@ pub fn terrain_mesh_for(field: &impl WaterField, cell: Axial, rot: u8, floor: f3
             idx.extend(tri.map(|i| base + i));
         }
     }
+    let n = local.len();
     Mesh::new(
         PrimitiveTopology::TriangleList,
         RenderAssetUsages::default(),
@@ -610,6 +644,7 @@ pub fn terrain_mesh_for(field: &impl WaterField, cell: Axial, rot: u8, floor: f3
         local.iter().map(|p| p.to_array()).collect::<Vec<_>>(),
     )
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, lift_uvs(field, n))
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
     .with_inserted_indices(Indices::U32(idx))
 }
@@ -1457,13 +1492,14 @@ mod tests {
                 eat(&s);
             }
         }
-        // Recorded on macOS from the meshes the old bit-exact hash (0x8d2d_d2e1_d1c7_899f) pinned.
+        // Recorded on macOS from the meshes the old bit-exact hash (0x8d2d_d2e1_d1c7_899f) pinned,
+        // plus the UV_1 water lift (0 on the look-dev patch).
         assert_eq!(
             shape.finish(),
-            0xfeb3_2c27_f462_f763,
+            0x4558_2556_a8a6_e623,
             "mesh structure changed"
         );
-        let want: [(&str, [f64; 4]); 4] = [
+        let want: [(&str, [f64; 4]); 5] = [
             (
                 "Vertex_Color",
                 [
@@ -1500,6 +1536,7 @@ mod tests {
                     -1089507.5775465965,
                 ],
             ),
+            ("Vertex_Uv_1", [0.0; 4]),
         ];
         assert_eq!(
             sums.keys().copied().collect::<Vec<_>>(),

@@ -25,6 +25,13 @@ test("the game keys map to their actions, with Shift and repeat carried through"
   assert.deepEqual(act("r"), { kind: "rotate", back: false, repeat: false });
   assert.deepEqual(act("R", { shiftKey: true }), { kind: "rotate", back: true, repeat: false });
   assert.deepEqual(act("r", { repeat: true }), { kind: "rotate", back: false, repeat: true });
+  assert.deepEqual(act("e"), { kind: "level", up: true, repeat: false });
+  assert.deepEqual(act("Q"), { kind: "level", up: false, repeat: false }, "Q lowers whatever the case");
+  assert.deepEqual(act("e", { repeat: true }), { kind: "level", up: true, repeat: true });
+  assert.deepEqual(act("e", {}, OPEN, st(), true), { kind: "ignore" }, "a chord is not a level key");
+  assert.deepEqual(act("t"), { kind: "shape", back: false, repeat: false });
+  assert.deepEqual(act("T", { shiftKey: true }), { kind: "shape", back: true, repeat: false });
+  assert.deepEqual(act("t", { repeat: true }), { kind: "shape", back: false, repeat: true });
   assert.deepEqual(act("b"), { kind: "toggle_bulldoze", repeat: false });
   assert.deepEqual(act("p", { repeat: true }), { kind: "toggle_photo", repeat: true });
   assert.deepEqual(act("h"), { kind: "toggle_hidden", repeat: false });

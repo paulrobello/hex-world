@@ -1104,6 +1104,20 @@ fn ghost_parts(view: &PlayView, catalog: &TileCatalog, meshes: bool) -> Vec<Part
             }
         }
     }
+    // The flow this placement gives the river (RQ11 O2): an ink chevron on each River lane.
+    let chevrons: Vec<_> = super::ghost::flow_chevrons(c, &g.flow)
+        .into_iter()
+        .flatten()
+        .collect();
+    if !chevrons.is_empty() {
+        out.push(PartSpec {
+            mesh: line_mesh(&chevrons),
+            params: AffordanceParams::line(INK, 0.9, 4.0),
+            layer: 5.0,
+            anim: Anim::Glow,
+            on_top: false,
+        });
+    }
     // The tile's own socket on each edge at this rotation, 11 px inside the rim, and the
     // neighbour's socket key mark facing it 11 px outside: the edge glow between them says fit or
     // clash.
@@ -1407,6 +1421,7 @@ fn wanted(
             Key::Ghost(g.cell),
             sig_of(&(
                 &g.tile, g.rotation, g.level, g.valid, edges, sockets, g.pinned, meshes, &g.tunnel,
+                &g.flow,
             )),
             true,
         ));
@@ -2223,6 +2238,7 @@ mod tests {
                 valid: false,
                 pinned: false,
                 tunnel: vec![],
+                flow: vec![],
             }),
             ..default()
         };
@@ -2287,6 +2303,7 @@ mod tests {
                 valid: false,
                 pinned: false,
                 tunnel: vec![],
+                flow: vec![],
             }),
             ..default()
         };
@@ -2476,6 +2493,46 @@ mod tests {
         }
     }
 
+    /// A river ghost draws its flow chevrons as one ink line part, two segments per River lane, and
+    /// a change of flow alone rebuilds the ghost.
+    #[test]
+    fn a_river_ghost_draws_its_flow_chevrons() {
+        use hex_core::FlowDir;
+        let catalog = TileCatalog::builtin().unwrap();
+        let ghost = |flow: Vec<(u8, FlowDir)>| PlayView {
+            ghost: Some(PlayGhost {
+                cell: Axial::ORIGIN,
+                tile: "river_straight".into(),
+                rotation: 0,
+                level: 0,
+                edges: [EdgeStatus::Neutral; 6],
+                outer: None,
+                valid: true,
+                pinned: false,
+                tunnel: vec![],
+                flow,
+            }),
+            ..default()
+        };
+        let ink = AffordanceParams::line(INK, 0.9, 4.0);
+        let chevrons = |v: &PlayView| -> Vec<usize> {
+            ghost_parts(v, &catalog, true)
+                .iter()
+                .filter(|p| p.params == ink)
+                .map(|p| segments(&p.mesh).unwrap().len())
+                .collect()
+        };
+        let one_way = ghost(vec![(0, FlowDir::Out), (3, FlowDir::In)]);
+        let other_way = ghost(vec![(0, FlowDir::In), (3, FlowDir::Out)]);
+        assert_eq!(chevrons(&one_way), vec![4]);
+        assert!(chevrons(&ghost(vec![])).is_empty());
+        assert_ne!(
+            wanted(&one_way, &catalog, &[], true),
+            wanted(&other_way, &catalog, &[], true),
+            "the ghost's signature hashes its flow"
+        );
+    }
+
     /// A raised portal ghost's tunnel preview (P4): one faint dotted line at the road's height
     /// from the mouth to the far side of the last cover cell; no line without cover cells.
     #[test]
@@ -2492,6 +2549,7 @@ mod tests {
                 valid: true,
                 pinned: false,
                 tunnel,
+                flow: vec![],
             }),
             ..default()
         };
@@ -2640,6 +2698,7 @@ mod tests {
                 valid: true,
                 pinned: false,
                 tunnel: vec![],
+                flow: vec![],
             }),
             ..default()
         };
@@ -2678,6 +2737,7 @@ mod tests {
                 valid: true,
                 pinned: false,
                 tunnel: vec![Axial::new(1, 0)],
+                flow: vec![],
             }),
             frontier: vec![Axial::new(0, 1)],
             ..default()
@@ -2747,6 +2807,7 @@ mod tests {
                 valid: true,
                 pinned: false,
                 tunnel: vec![],
+                flow: vec![],
             }),
             pointer_slot: Some(Axial::new(0, -1)),
             pointer_tile: Some(Axial::new(1, 0)),
@@ -2896,6 +2957,7 @@ mod tests {
                 valid: true,
                 pinned: true,
                 tunnel: vec![],
+                flow: vec![],
             }),
             ..place.clone()
         };
@@ -2944,6 +3006,7 @@ mod tests {
                 valid: true,
                 pinned: false,
                 tunnel: vec![],
+                flow: vec![],
             }),
             ..default()
         };

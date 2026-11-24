@@ -9,7 +9,7 @@
 //!   the station platform's paving and ramps). A tile whose ground pieces are outside the kit (a
 //!   placeholder) stands at y = 0, the placeholder cap. Tiles hidden until their pack arrives
 //!   ([`crate::play::PlayWaiting`]) are not ground at all.
-//! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`crate::water::tiles::WATER_Y`]: the
+//! - **Water.** On a tile with water (`water::tiles::water_kind`) the surface is [`crate::water::tiles::water_y`] of the tile's level: the
 //!   walker wades where the bed is at most [`MAX_WADE`] under it and stops at that contour. Rivers
 //!   and spring streams ([`WaterKind::River`](crate::water::tiles::WaterKind::River), [`WaterKind::Spring`](crate::water::tiles::WaterKind::Spring)) are fords instead (owner,
 //!   2026-10-20: "allow walk mode to cross rivers"): over deeper water the feet hold at

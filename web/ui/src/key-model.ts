@@ -20,6 +20,10 @@ export type KeyAction =
   | { kind: "cycle_focus"; back: boolean }
   /** `repeatThrottled`: a held key inside the repeat window rotates once, not every repeat. */
   | { kind: "rotate"; back: boolean; repeat: boolean }
+  /** E raises the ghost a level, Q lowers it; throttled on repeat like `rotate`. */
+  | { kind: "level"; up: boolean; repeat: boolean }
+  /** T steps the picker-group member (shape) on the ghost's level, Shift+T back; throttled like `rotate`. */
+  | { kind: "shape"; back: boolean; repeat: boolean }
   | { kind: "toggle_bulldoze"; repeat: boolean }
   | { kind: "toggle_photo"; repeat: boolean }
   | { kind: "toggle_hidden"; repeat: boolean }
@@ -68,6 +72,12 @@ export function keyAction(
       return { kind: "cycle_focus", back: e.shiftKey };
     case "r":
       return { kind: "rotate", back: e.shiftKey, repeat: e.repeat };
+    case "e":
+      return { kind: "level", up: true, repeat: e.repeat };
+    case "q":
+      return { kind: "level", up: false, repeat: e.repeat };
+    case "t":
+      return { kind: "shape", back: e.shiftKey, repeat: e.repeat };
     case "b":
       return { kind: "toggle_bulldoze", repeat: e.repeat };
     case "p":

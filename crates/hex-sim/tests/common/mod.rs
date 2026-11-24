@@ -245,13 +245,20 @@ pub fn random_edit(world: &World, cat: &TileCatalog, rng: &mut TestRng) -> Optio
     }
     let frontier = world.frontier();
     let cell = frontier[rng.below(frontier.len())];
-    // These level-0 walks never place the hillside family, the road ramp or the portal; leaving
+    // These level-0 walks never place the hillside family, the road ramp or the portal, nor a tile
+    // that fits only a level up (a slope wholly above level-0 ground, owner 2026-11-24); leaving
     // them out keeps every seeded walk as it was.
     let fits: Vec<&hex_core::TileDef> = world
         .inventory(cat, cell)
         .into_iter()
         .filter(|d| {
             !(d.id.starts_with("hillside_") || d.id == "road_ramp" || d.id == "road_tunnel_portal")
+        })
+        .filter(|d| {
+            world
+                .legal_orientations(cat, cell, d)
+                .iter()
+                .any(|o| o.level == 0)
         })
         .collect();
     let roads: Vec<_> = fits

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use hex_core::SocketKind::{self, *};
 use hex_core::{
     BUILTIN_TILES, EdgeProfile, PendingPieces, SOCKETS_RON, Side, TileCatalog, TileDef,
+    level_allowed,
 };
 
 fn repo_root() -> PathBuf {
@@ -285,6 +286,27 @@ fn footprint_tiles_have_eighteen_plain_outer_edges() {
         assert!(t.networks.is_empty() && t.nodes.is_empty(), "{}", t.id);
         assert_eq!(t.look_period, Some(6), "{}", t.id);
         assert!(t.raisable, "{}", t.id);
+    }
+}
+
+/// Rivers at levels: every river tile but the mouths rises (the rail bridge with the road bridge,
+/// RQ7 O2), and a mouth meets the sea, so it stays on the ground.
+#[test]
+fn river_tiles_rise_and_mouths_stay_on_the_ground() {
+    let c = catalog();
+    for id in [
+        "river_straight",
+        "river_bend",
+        "river_bend_60",
+        "river_fork",
+        "river_spring",
+        "river_road_bridge",
+        "river_rail_bridge",
+    ] {
+        assert!(level_allowed(c.get(id).unwrap(), 3), "{id}");
+    }
+    for id in ["river_mouth", "river_mouth_l"] {
+        assert!(!c.get(id).unwrap().raisable, "{id}");
     }
 }
 

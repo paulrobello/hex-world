@@ -253,6 +253,7 @@ impl Plugin for ThumbsPlugin {
             .insert_resource(AgentsPaused(true))
             .insert_resource(hex_play::play::NoBufferStops)
             .insert_resource(hex_play::play::NoBoundaries)
+            .insert_resource(hex_play::play::NoFalls)
             .insert_resource(hex_play::boats::NoBoats)
             .insert_resource(ThumbRun::new(&catalog))
             .insert_resource(PackRequests {

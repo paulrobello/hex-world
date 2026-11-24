@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import manifestJson from "../../../assets/audio/manifest.json" with { type: "json" };
 import { type Cue, type Manifest, busOf, eventCues, pickFormat, planDecode, playable } from "../src/audio-cues.ts";
+import type { PlayFall } from "../src/bridge.ts";
 import {
   BED_CUE,
   bellIdle,
@@ -29,6 +30,9 @@ import {
   carRate,
   carStep,
   EMITTER_CUE,
+  FALL_GAIN,
+  fallEmitters,
+  MAX_FALL_VOICES,
   type Mix,
   type MusicState,
   MUSIC_OPTS,
@@ -191,6 +195,27 @@ const viewAt = (q: number, r: number, zoom: number): View => {
   const [x, z] = cellWorld(q, r, R);
   return { camera: [x, zoom * 0.8, z + zoom * 0.6], focus: [x, 0, z], zoom, radius: R };
 };
+
+const fall = (drop: number, x: number, z: number): PlayFall => ({ q: 0, r: 0, edge: 0, drop, x, z, mist: drop });
+/** The camera straight over the focus, so falls at equal ground distance sit at equal range. */
+const view = (x: number, z: number): View => ({ camera: [x, 60, z], focus: [x, 0, z], zoom: 60, radius: R });
+
+test("a far fall gets no voice and at most two voices play", () => {
+  const e = fallEmitters([fall(1, 10, 0), fall(3, -10, 0), fall(2, 400, 0)], view(0, 0));
+  assert.equal(e.length, 2);
+  assert.ok(e.every((x) => x.x !== 400));
+  assert.equal(MAX_FALL_VOICES, 2);
+  assert.deepEqual(fallEmitters([fall(2, 400, 0)], view(0, 0)), [], "out of range is silent, not just outvoiced");
+  assert.ok(e.every((x) => x.cue === "waterfall"));
+});
+
+test("at equal distance the gain follows the drop", () => {
+  const [a, b] = fallEmitters([fall(1, 10, 0), fall(3, -10, 0)], view(0, 0));
+  assert.ok(a && b);
+  const ratio = Math.max(a.gain, b.gain) / Math.min(a.gain, b.gain);
+  assert.ok(Math.abs(ratio - FALL_GAIN[2] / FALL_GAIN[0]) < 1e-6);
+  assert.equal(a.x, -10, "the louder (higher) fall first");
+});
 
 test("zooming onto a river tile raises its emitter over a far one", () => {
   const [nx, nz] = cellWorld(-1, -5, R);

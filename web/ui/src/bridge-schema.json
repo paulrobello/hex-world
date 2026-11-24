@@ -3504,7 +3504,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -3584,7 +3584,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds",
@@ -3666,7 +3666,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -3754,7 +3754,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -3842,7 +3842,7 @@
         "outer": null,
         "period": 1,
         "rail": true,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -3918,7 +3918,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds",
@@ -4004,7 +4004,7 @@
         "outer": null,
         "period": 1,
         "rail": false,
-        "raisable": false,
+        "raisable": true,
         "scatter": [
           "river_stones",
           "river_reeds"
@@ -4498,6 +4498,9 @@
       "q",
       "r"
     ],
+    "level": [
+      "dir"
+    ],
     "load": [
       "path"
     ],
@@ -4580,6 +4583,9 @@
     "set_walk_speed": [
       "speed"
     ],
+    "shape": [
+      "dir"
+    ],
     "tilt": [
       "on",
       "strength"
@@ -4624,6 +4630,10 @@
       "Incompatible",
       "Neutral"
     ],
+    "flow_dir": [
+      "in",
+      "out"
+    ],
     "grade": [
       "aces",
       "tony",
@@ -4643,6 +4653,10 @@
       "far",
       "very-far"
     ],
+    "level_step": [
+      "down",
+      "up"
+    ],
     "photo_filter": [
       "mono",
       "normal",
@@ -4653,6 +4667,7 @@
       "deck_end",
       "footprint_edges",
       "no_footprint_room",
+      "river_uphill",
       "missing_grass",
       "missing_forest",
       "missing_road",
@@ -4708,7 +4723,19 @@
       "clash_rail_river",
       "clash_rail_beach",
       "clash_rail_ocean",
-      "clash_rail_rail"
+      "clash_rail_rail",
+      "slope_grass",
+      "slope_forest",
+      "slope_road",
+      "slope_river",
+      "slope_beach",
+      "slope_ocean",
+      "slope_rail",
+      "own_slope"
+    ],
+    "shape_step": [
+      "next",
+      "prev"
     ],
     "spin": [
       "ccw",
@@ -4904,6 +4931,7 @@
     ],
     "ghost": [
       "edges",
+      "flow",
       "footprint",
       "legal_rotations",
       "level",
@@ -4912,7 +4940,8 @@
       "r",
       "rotation",
       "tile",
-      "valid"
+      "valid",
+      "waterfalls"
     ],
     "grade": [
       "default",
@@ -5004,6 +5033,7 @@
       "cars",
       "closed_crossings",
       "connected_destinations",
+      "falls",
       "fits",
       "focus",
       "frontier",

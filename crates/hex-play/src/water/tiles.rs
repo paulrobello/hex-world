@@ -10,24 +10,37 @@ use hex_play_state::{PlayTile, RisePart, RiseRole};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use bevy::{
-    core_pipeline::prepass::DepthPrepass, light::NotShadowCaster, pbr::ScreenSpaceTransmission,
-    post_process::dof::DepthOfField, prelude::*,
+    asset::RenderAssetUsages,
+    core_pipeline::prepass::DepthPrepass,
+    light::NotShadowCaster,
+    mesh::{Indices, PrimitiveTopology},
+    pbr::ScreenSpaceTransmission,
+    post_process::dof::DepthOfField,
+    prelude::*,
 };
 use hex_core::{
-    Axial, Endpoint, HEX_RADIUS, LEVEL_STEP, NetworkKind, SocketKind, TileCatalog, TileDef,
-    opposite_edge, world_edge,
+    Axial, Endpoint, HEX_RADIUS, LEVEL_STEP, NetworkKind, RiverTile, SocketKind, TileCatalog,
+    TileDef, opposite_edge, river,
 };
 
 use super::{
-    LAND, TerrainMaterial, WaterField, WaterKey, WaterMaterial, WaterSample, WaterSurface, carve,
-    cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for, smoothstep,
-    spawn_fixed_mesh, surface_mesh, surface_mesh_where, terrain_color, terrain_mesh_for,
+    LAND, SHEET_TAG, TerrainMaterial, WaterField, WaterKey, WaterMaterial, WaterSample,
+    WaterSurface, carve, cell_transform, materials, ribbon_mesh, river_flow, skirt_mesh_for,
+    smoothstep, spawn_fixed_mesh, surface_mesh, surface_mesh_where, terrain_color,
+    terrain_mesh_for,
 };
 use hex_render::{SceneEntity, post::QualityTier};
 
 /// Water surface (m): [`LAND`] below the meadow cap's border ring at y = 0, the prototype's
 /// plateau-to-water drop, which the terrain shader's grass line and wet band are tuned to.
 pub const WATER_Y: f32 = -LAND;
+/// Water surface at rest (m) on a tile at `level`: [`WATER_Y`] lifted by the level's steps. Every
+/// water input (surface, bed profiles, cut faces, placeholder bed) of a tile is offset by the same
+/// `level * LEVEL_STEP`.
+pub fn water_y(level: u8) -> f32 {
+    f32::from(level) * LEVEL_STEP + WATER_Y
+}
+
 /// Tile base (m): one level step below the border ring, the bottom of every column.
 pub const FLOOR_Y: f32 = -LEVEL_STEP;
 /// Ocean bed (m): the tile base, so the water column fills the cut face down to the base. 2.6 m
@@ -58,8 +71,6 @@ const INLAND: f32 = -40.0;
 const OPEN_SEA: f32 = 2.0 * DROP_END_S;
 /// Distance past the channel reported where no river is near.
 const NO_RIVER: f32 = 1.0e4;
-/// Largest angle one river arc sample spans (2°: under 4 mm off the circle at the 24 m bend).
-const ARC_STEP: f32 = std::f32::consts::PI / 90.0;
 /// River mouth (water contract §3a): the channel's carve half-width grows from the river's
 /// [`RIVER_CUT_W`] at the beach top to this at the waterline, over [`MOUTH_W_RAMP`] in s.
 pub const MOUTH_W_SEA: f32 = 5.41;
@@ -76,6 +87,25 @@ const MOUTH_FOAM_S: f32 = 1.0;
 /// Spring pool (water contract §3b): the bowl's carve half-width (5.5 m of water, the channel's
 /// 4.33 / 4.0 ratio), the surface disc's radius and the run over which the flow picks up.
 pub const POOL_W: f32 = 5.95;
+/// Waterfall plunge pool: its foam and ripple radius (m) from the fall seam's midpoint, on the
+/// lower tile.
+pub const PLUNGE_R: f32 = 6.0;
+/// The plunge pool's churn (m/s², `TileField::churn`) at the seam's midpoint, easing to 0 at
+/// [`PLUNGE_R`]: past the 0.22 at which `water.wesl` turns churn fully white.
+pub const PLUNGE_CHURN: f32 = 0.3;
+/// Waterfall tiers (owner WF-Q3, 2026-11-22): the fall face steps out by this much (m) toward the
+/// lower tile at each level of the drop, and the falling water is one sheet per tier.
+pub const LEDGE_STEP: f32 = 1.5;
+/// The sheet's half-width (m): the 8 m lane, so its edges meet the channel profile at the
+/// waterline.
+const SHEET_HALF: f32 = 4.0;
+/// Lateral steps of the sheet and its rows per tier (each tier falls one level).
+const SHEET_COLS: u32 = 8;
+const SHEET_ROWS: u32 = 10;
+/// Flow speed (m/s) carried on the sheet's vertices, pointing down the sheet (out over the lower
+/// tile in plan), and the water depth they report.
+const SHEET_SPEED: f32 = 6.0;
+const SHEET_DEPTH: f32 = 0.3;
 const POOL_SURFACE: f32 = 6.5;
 const SPRING_RAMP: f32 = 6.5;
 /// River junction (`river_fork`, water contract §2a): how far from an arm's centre line its
@@ -84,6 +114,186 @@ const SPRING_RAMP: f32 = 6.5;
 const JUNCTION_BLEND: f32 = 8.0;
 
 const APOTHEM: f32 = HEX_RADIUS * 0.866_025_4;
+
+/// The tiers of a fall of `drop` levels, top first: tier i's lip stands `lip_drop_m` below the
+/// upper water (`water_y(upper)`) and `setout_m` out from the seam toward the lower tile. Each
+/// tier's sheet falls one [`LEVEL_STEP`], from its lip to the next lip (or to the pool), and steps
+/// out [`LEDGE_STEP`] on the way.
+pub fn fall_tiers(drop: u8) -> Vec<(f32, f32)> {
+    (0..drop)
+        .map(|i| (LEVEL_STEP * f32::from(i), LEDGE_STEP * f32::from(i)))
+        .collect()
+}
+
+/// The falling sheet of `upper`'s waterfall `fall` (water contract §5), cell-centred and
+/// unrotated: one strip per tier ([`fall_tiers`]), [`SHEET_ROWS`] + 1 rows of [`SHEET_COLS`] + 1
+/// vertices each, 8 m wide on the lane. Each tier leaves its lip level and arcs out [`LEDGE_STEP`]
+/// as it falls one level, so the top row is the upper water at the seam and the last row the lower
+/// water. Returns positions, UV_0 (lateral offset along the lip, [`SHEET_TAG`] + metres below the
+/// tier's lip) and COLOR (flow down the sheet in plan, river 1, depth).
+pub fn sheet_mesh(
+    upper: &CellWater,
+    fall: FallEdge,
+) -> (Vec<[f32; 3]>, Vec<[f32; 2]>, Vec<[f32; 4]>) {
+    sheet_at(upper.tile.level, fall.edge, fall.drop)
+}
+
+/// [`sheet_mesh`] of a fall of `drop` levels over `edge` of an upper tile at `level`, centred on
+/// that tile.
+fn sheet_at(level: u8, edge: u8, drop: u8) -> (Vec<[f32; 3]>, Vec<[f32; 2]>, Vec<[f32; 4]>) {
+    let out = edge_dir(edge);
+    let lat = out.perp();
+    let lip = out * APOTHEM;
+    let top = water_y(level);
+    let (mut pos, mut uv, mut col) = (vec![], vec![], vec![]);
+    for (lip_drop, setout) in fall_tiers(drop) {
+        for j in 0..=SHEET_ROWS {
+            let f = j as f32 / SHEET_ROWS as f32;
+            let below = LEVEL_STEP * f * f;
+            let at = lip + out * (setout + LEDGE_STEP * f);
+            for k in 0..=SHEET_COLS {
+                let o = SHEET_HALF * (2.0 * k as f32 / SHEET_COLS as f32 - 1.0);
+                let p = at + lat * o;
+                pos.push([p.x, top - lip_drop - below, p.y]);
+                uv.push([o, SHEET_TAG + below]);
+                col.push([out.x * SHEET_SPEED, out.y * SHEET_SPEED, 1.0, SHEET_DEPTH]);
+            }
+        }
+    }
+    (pos, uv, col)
+}
+
+/// Where each tier of a fall of `drop` levels over `edge` of an upper tile at `level` lands
+/// (cell-centred, unrotated, like `sheet_at`): the midpoint of its sheet's last row, one
+/// [`LEVEL_STEP`] under its lip and [`LEDGE_STEP`] further out. Tier i lands on tier i + 1's lip;
+/// the last tier (`true`) lands in the plunge pool, on the lower tile's water.
+pub fn fall_landings(level: u8, edge: u8, drop: u8) -> Vec<(Vec3, bool)> {
+    let out = edge_dir(edge);
+    let top = water_y(level);
+    fall_tiers(drop)
+        .into_iter()
+        .enumerate()
+        .map(|(i, (lip_drop, setout))| {
+            let p = out * (APOTHEM + setout + LEDGE_STEP);
+            let pool = i + 1 == usize::from(drop);
+            (Vec3::new(p.x, top - lip_drop - LEVEL_STEP, p.y), pool)
+        })
+        .collect()
+}
+
+/// One tier landing of a waterfall in the world, where its spray and mist rise
+/// ([`super::mist`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MistLanding {
+    /// World position of the landing's midpoint, on the water it falls onto.
+    pub pos: Vec3,
+    /// Unit plan direction down the fall, out over the lower tile.
+    pub out: Vec2,
+    /// Unit plan direction along the lip.
+    pub lat: Vec2,
+    /// The bottom tier's landing: the plunge pool.
+    pub pool: bool,
+    /// The fall's drop in levels.
+    pub drop: u8,
+    /// The upper tile, which seeds the landing's puffs.
+    pub upper: Axial,
+    /// The tier this landing ends (0 at the top).
+    pub tier: u8,
+}
+
+/// Every tier landing of the waterfalls in `layout` (each seen from its lower tile), in the
+/// layout's order. A layout without falls (`play::NoFalls`, the thumbnails) has none.
+pub fn mist_landings(layout: &BTreeMap<Axial, CellWater>) -> Vec<MistLanding> {
+    let mut out = vec![];
+    for cw in layout.values() {
+        for fall in cw.falls.iter().filter(|f| !f.upper) {
+            let upper = cw.tile.cell.neighbor(fall.edge);
+            let level = cw.tile.level + fall.drop;
+            let edge = opposite_edge(fall.edge);
+            let c = center(upper);
+            let dir = edge_dir(edge);
+            for (tier, (p, pool)) in fall_landings(level, edge, fall.drop)
+                .into_iter()
+                .enumerate()
+            {
+                out.push(MistLanding {
+                    pos: Vec3::new(p.x + c.x, p.y, p.z + c.y),
+                    out: dir,
+                    lat: dir.perp(),
+                    pool,
+                    drop: fall.drop,
+                    upper,
+                    tier: tier as u8,
+                });
+            }
+        }
+    }
+    out
+}
+
+/// The sheet's normal (world, unrotated) on `edge`'s fall `below` m under a tier's lip: up at the
+/// lip, turning out toward the lower tile as the water falls.
+fn sheet_normal(edge: u8, below: f32) -> Vec3 {
+    let f = (below / LEVEL_STEP).max(0.0).sqrt();
+    let out = edge_dir(edge) * (2.0 * LEVEL_STEP * f);
+    Vec3::new(out.x, LEDGE_STEP, out.y).normalize()
+}
+
+/// The sheet of the fall seen from its lower tile `lower` (`fall.upper` false) as a [`Mesh`] in
+/// the space of the lower tile's surface drawn under `t`, its triangles facing out over the lower
+/// tile, to merge after that surface's triangles: the pool and the sheet are one draw, and the
+/// sheet blends over the pool where Low sorts per draw. Its UV_1.x is the upper tile's lift, which
+/// `water.wesl` measures the fall from.
+fn sheet_for(lower: &CellWater, fall: FallEdge, t: &Transform) -> Mesh {
+    let upper = lower.tile.cell.neighbor(fall.edge);
+    let level = lower.tile.level + fall.drop;
+    let edge = opposite_edge(fall.edge);
+    let (pos, uv, col) = sheet_at(level, edge, fall.drop);
+    let c = center(upper);
+    let inv = t.compute_affine().inverse();
+    let local: Vec<[f32; 3]> = pos
+        .iter()
+        .map(|p| {
+            inv.transform_point3(Vec3::new(p[0] + c.x, p[1], p[2] + c.y))
+                .to_array()
+        })
+        .collect();
+    let normals: Vec<[f32; 3]> = uv
+        .iter()
+        .map(|u| (t.rotation.inverse() * sheet_normal(edge, u[1] - SHEET_TAG)).to_array())
+        .collect();
+    let stride = SHEET_COLS + 1;
+    let mut idx = vec![];
+    for tier in 0..u32::from(fall.drop) {
+        let base = tier * (SHEET_ROWS + 1) * stride;
+        for i in 0..SHEET_ROWS {
+            for j in 0..SHEET_COLS {
+                let a = base + i * stride + j;
+                let (b, c, d) = (a + 1, a + stride, a + stride + 1);
+                for mut tri in [[a, c, b], [b, c, d]] {
+                    let [p0, p1, p2] = tri.map(|k| Vec3::from(local[k as usize]));
+                    let n = Vec3::from(normals[tri[0] as usize]);
+                    if (p1 - p0).cross(p2 - p0).dot(n) < 0.0 {
+                        tri.swap(1, 2);
+                    }
+                    idx.extend(tri);
+                }
+            }
+        }
+    }
+    let n = local.len();
+    let lift = f32::from(level) * LEVEL_STEP;
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, local)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, uv)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, vec![[lift, 0.0]; n])
+    .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, col)
+    .with_inserted_indices(Indices::U32(idx))
+}
 
 /// Bed height (m) at `s` m seaward of a coast tile's [`Coastline`].
 pub fn coast_height(s: f32) -> f32 {
@@ -351,8 +561,9 @@ pub fn water_kind(def: &TileDef, rotation: u8) -> Option<WaterKind> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum EdgeWater {
     Dry,
-    /// A river lane: the channel cross-section is symmetric about the edge midpoint.
-    River,
+    /// A river lane at the tile's level: the channel cross-section is symmetric about the edge
+    /// midpoint.
+    River(u8),
     /// The ocean bed along the whole edge.
     Ocean,
     /// A beach edge: grass at one end, the ocean bed at the other. Holds the seaward corner.
@@ -367,7 +578,8 @@ impl EdgeWater {
     /// Whether the beds (and so the water inputs) on both sides of a shared edge agree.
     fn continues(self, other: EdgeWater) -> bool {
         match (self, other) {
-            (EdgeWater::River, EdgeWater::River) | (EdgeWater::Ocean, EdgeWater::Ocean) => true,
+            (EdgeWater::River(a), EdgeWater::River(b)) => a == b,
+            (EdgeWater::Ocean, EdgeWater::Ocean) => true,
             (EdgeWater::Coast(a), EdgeWater::Coast(b)) => a.distance(b) < 0.01,
             _ => false,
         }
@@ -377,7 +589,7 @@ impl EdgeWater {
 fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
     let socket = def.edge(world, t.rotation);
     match socket.kind {
-        SocketKind::River if socket.lane.is_some() => EdgeWater::River,
+        SocketKind::River if socket.lane.is_some() => EdgeWater::River(t.level),
         SocketKind::Ocean => EdgeWater::Ocean,
         SocketKind::Beach => {
             let Some(WaterKind::Coast(coast) | WaterKind::RiverMouth(coast)) =
@@ -402,35 +614,7 @@ fn edge_water(def: &TileDef, t: &PlayTile, world: u8) -> EdgeWater {
     }
 }
 
-/// Where a river segment ends: a world edge's lane, a spring (a node on a tile without a
-/// coastline), a mouth (a node on a coast tile) or a junction (a node where two or more of the
-/// tile's River segments meet, `river_junction`; the tile's arms continue each other there).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum RiverEnd {
-    Edge(u8),
-    Spring,
-    Mouth,
-    Junction,
-}
-
-impl RiverEnd {
-    pub fn edge(self) -> Option<u8> {
-        match self {
-            RiverEnd::Edge(e) => Some(e),
-            _ => None,
-        }
-    }
-
-    /// Which end a chain's flow starts from: a spring, else an open edge, else a mouth (water
-    /// contract §6). Chains that reach a junction are oriented by [`junction_sources`] instead.
-    fn source_rank(self) -> u8 {
-        match self {
-            RiverEnd::Spring => 0,
-            RiverEnd::Edge(_) | RiverEnd::Junction => 1,
-            RiverEnd::Mouth => 2,
-        }
-    }
-}
+pub use hex_core::RiverEnd;
 
 /// A river centre line in world XZ, sampled densely, upstream first.
 #[derive(Clone, Debug, PartialEq)]
@@ -448,368 +632,92 @@ impl RiverPath {
     }
 }
 
-/// The circle through `a`, `m` and `b`, sampled from `a` to `b` at most [`ARC_STEP`] apart (one
-/// control point is the arc midpoint, as in `hex_sim::geom::segment_shape`); straight if collinear.
-fn arc_through(a: Vec2, m: Vec2, b: Vec2) -> Vec<Vec2> {
-    let turn = (m - a).perp_dot(b - m);
-    let d = 2.0 * (m - a).perp_dot(b - a);
-    if turn.abs() <= 1e-6 * a.distance_squared(b) || d == 0.0 {
-        return vec![a, m, b];
-    }
-    let (u, v) = (m - a, b - a);
-    let (uu, vv) = (u.dot(u), v.dot(v));
-    let c = a + Vec2::new(v.y * uu - u.y * vv, u.x * vv - v.x * uu) / d;
-    let radius = a.distance(c);
-    let angle = |p: Vec2| (p.y - c.y).atan2(p.x - c.x);
-    let start = angle(a);
-    let tau = std::f32::consts::TAU;
-    let mut sweep = (angle(b) - start).rem_euclid(tau);
-    if turn < 0.0 {
-        sweep -= tau;
-    }
-    let steps = ((sweep.abs() / ARC_STEP).ceil() as usize).max(2);
-    let mut out = vec![a];
-    for i in 1..steps {
-        let t = start + sweep * i as f32 / steps as f32;
-        out.push(c + Vec2::new(t.cos(), t.sin()) * radius);
-    }
-    out.push(b);
-    out
-}
-
-/// River segments of a placed tile as (from end, to end, centre line from -> to). A mouth's
-/// centre line carries on past its node by an apothem, out to sea: the fan's bed follows it.
-fn river_segments(def: &TileDef, t: &PlayTile) -> Vec<(RiverEnd, RiverEnd, Vec<Vec2>)> {
-    let node_end = if Coastline::of(def, t.rotation).is_some() {
-        RiverEnd::Mouth
-    } else {
-        RiverEnd::Spring
-    };
-    let end = |e: &Endpoint| match e {
-        Endpoint::Edge(k) => Some((
-            RiverEnd::Edge(world_edge(*k, t.rotation)),
-            lane_point(def, *k),
-        )),
-        Endpoint::Node(id) => def.nodes.iter().find(|n| &n.id == id).map(|n| {
-            let kind = if river_junction(def, id) {
-                RiverEnd::Junction
-            } else {
-                node_end
-            };
-            (kind, Vec2::from(n.at))
-        }),
-    };
-    def.networks
-        .iter()
-        .filter(|n| n.kind == NetworkKind::River)
-        .filter_map(|n| {
-            let ((a, pa), (b, pb)) = (end(&n.from)?, end(&n.to)?);
-            let pts: Vec<Vec2> = n.points.iter().map(|p| Vec2::from(*p)).collect();
-            let mut local = match pts.as_slice() {
-                [] => vec![pa, pb],
-                [m] => arc_through(pa, *m, pb),
-                _ => [vec![pa], pts.clone(), vec![pb]].concat(),
-            };
-            let k = local.len();
-            if b == RiverEnd::Mouth {
-                let dir = (local[k - 1] - local[k - 2]).normalize();
-                local.push(pb + dir * APOTHEM);
-            } else if a == RiverEnd::Mouth {
-                let dir = (local[0] - local[1]).normalize();
-                local.insert(0, pa + dir * APOTHEM);
-            }
-            let world = local
-                .into_iter()
-                .map(|p| to_world(t.cell, t.rotation, p))
-                .collect();
-            Some((a, b, world))
-        })
-        .collect()
-}
-
-/// One river segment of a placed tile: (from end, to end, world centre line from -> to).
-type Segment = (RiverEnd, RiverEnd, Vec<Vec2>);
-/// A chain end: (cell, the end, segment index on that cell).
-type ChainEnd = (Axial, RiverEnd, usize);
-
-/// Every placed river segment, oriented so the flow runs one way along each connected chain (water
-/// contract §6): each chain starts at its spring, else at its open end with the lowest
-/// (cell, edge), else at its mouth; among several of the same kind, at the lowest cell. A loop
-/// starts at its lowest cell. Chains that meet at a junction (`river_fork`) are oriented together
-/// by `junction_sources`. Keyed by (cell, segment index among the tile's river segments).
+/// Every placed river segment as a world centre line, upstream first, oriented by
+/// [`hex_core::river::orient`] (water contract §6). Keyed by (cell, segment index among the
+/// tile's river segments). Tiles missing from `catalog` carry no river.
 pub fn oriented_rivers(
     tiles: &[PlayTile],
     catalog: &TileCatalog,
 ) -> BTreeMap<(Axial, usize), RiverPath> {
-    let mut segs: BTreeMap<(Axial, usize), Segment> = BTreeMap::new();
-    let mut rotations: HashMap<Axial, u8> = HashMap::new();
-    for t in tiles {
-        if let Some(def) = catalog.get(&t.tile) {
-            for (i, s) in river_segments(def, t).into_iter().enumerate() {
-                segs.insert((t.cell, i), s);
-            }
-            rotations.insert(t.cell, t.rotation);
-        }
-    }
-    // The segment across `end` of `cell`, if it is an edge with a segment ending across it.
-    let across = |cell: Axial, end: RiverEnd| -> Option<(Axial, usize)> {
-        let e = end.edge()?;
-        let n = cell.neighbor(e);
-        let back = RiverEnd::Edge(opposite_edge(e));
-        segs.range((n, 0)..=(n, usize::MAX))
-            .find(|(_, (a, b, _))| *a == back || *b == back)
-            .map(|(k, _)| *k)
-    };
-    // The connected chains, each with its open ends.
-    let mut chains: Vec<(Vec<(Axial, usize)>, Vec<ChainEnd>)> = vec![];
-    let mut seen: BTreeSet<(Axial, usize)> = BTreeSet::new();
-    for &key in segs.keys() {
-        if !seen.insert(key) {
-            continue;
-        }
-        let mut chain = vec![key];
-        let mut i = 0;
-        while i < chain.len() {
-            let (a, b, _) = segs[&chain[i]];
-            for e in [a, b] {
-                if let Some(k) = across(chain[i].0, e)
-                    && seen.insert(k)
-                {
-                    chain.push(k);
-                }
-            }
-            i += 1;
-        }
-        let ends: Vec<ChainEnd> = chain
-            .iter()
-            .flat_map(|k| {
-                let (a, b, _) = segs[k];
-                [a, b]
-                    .into_iter()
-                    .filter(|&e| across(k.0, e).is_none())
-                    .map(move |e| (k.0, e, k.1))
-            })
-            .collect();
-        chains.push((chain, ends));
-    }
-    let picked = junction_sources(&chains, &segs, &rotations);
-    let mut out = BTreeMap::new();
-    let mut walked: BTreeSet<(Axial, usize)> = BTreeSet::new();
-    for (ci, (chain, ends)) in chains.iter().enumerate() {
-        let start = picked.get(&ci).copied().or_else(|| {
-            ends.iter()
-                .map(|&(cell, e, i)| (e.source_rank(), cell, e, i))
-                .min()
-                .map(|(_, cell, e, i)| (cell, e, i))
-        });
-        let (mut cur, mut up) = match start {
-            Some((cell, e, i)) => ((cell, i), e),
-            None => {
-                let k = *chain.iter().min().expect("non-empty chain");
-                let (a, b, _) = segs[&k];
-                (k, a.min(b))
-            }
-        };
-        loop {
-            walked.insert(cur);
-            let (a, b, pts) = &segs[&cur];
-            let (down, points) = if *a == up {
-                (*b, pts.clone())
-            } else {
-                (*a, pts.iter().rev().copied().collect())
-            };
-            out.insert(cur, RiverPath { points, up, down });
-            match (across(cur.0, down), down) {
-                (Some(next), RiverEnd::Edge(e)) if !walked.contains(&next) => {
-                    up = RiverEnd::Edge(opposite_edge(e));
-                    cur = next;
-                }
-                _ => break,
-            }
-        }
-    }
-    out
-}
-
-/// A node of the river network that chains join at: a junction (one per tile, keyed by its cell)
-/// or a chain's open end.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-enum NetVertex {
-    Junction(Axial),
-    End(Axial, RiverEnd, usize),
-}
-
-impl NetVertex {
-    fn of(&(cell, e, i): &ChainEnd) -> Self {
-        if e == RiverEnd::Junction {
-            NetVertex::Junction(cell)
-        } else {
-            NetVertex::End(cell, e, i)
-        }
-    }
-}
-
-/// The upstream end of every chain that reaches a junction (`river_fork`), by chain index (water
-/// contract §6, junctions). Chains joined at junctions form one network, and every chain in it runs
-/// downhill, measured in metres along the centre lines:
-/// - toward the nearest mouth when the network reaches one, so a fork with one arm toward the sea
-///   is a confluence and a fork with two arms that each reach the sea first is a split;
-/// - else away from the nearest spring, so one spring through a fork splits and two springs join;
-/// - else out through the lowest junction's local edge 0 arm, as if the sea lay past that arm's
-///   open end (the lowest open end when that arm meets another junction): a lone fork is a
-///   confluence whose rotation picks the outlet.
-///
-/// A chain whose two ends are equally far keeps the plain chain rule of [`oriented_rivers`].
-fn junction_sources(
-    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
-    segs: &BTreeMap<(Axial, usize), Segment>,
-    rotations: &HashMap<Axial, u8>,
-) -> BTreeMap<usize, ChainEnd> {
-    let length = |chain: &[(Axial, usize)]| -> f32 {
-        chain
-            .iter()
-            .map(|k| {
-                let pts = &segs[k].2;
-                pts.windows(2).map(|w| w[0].distance(w[1])).sum::<f32>()
-            })
-            .sum()
-    };
-    // Linear chains with a junction end: (chain index, end a, end b, length).
-    let links: Vec<(usize, ChainEnd, ChainEnd, f32)> = chains
+    let placed: Vec<(&PlayTile, &TileDef)> = tiles
         .iter()
-        .enumerate()
-        .filter_map(|(ci, (chain, ends))| {
-            let [a, b] = ends[..] else {
-                return None;
-            };
-            (a.1 == RiverEnd::Junction || b.1 == RiverEnd::Junction)
-                .then(|| (ci, a, b, length(chain)))
+        .filter_map(|t| catalog.get(&t.tile).map(|def| (t, def)))
+        .collect();
+    let river_tiles: Vec<RiverTile> = placed
+        .iter()
+        .map(|&(t, def)| RiverTile {
+            cell: t.cell,
+            def,
+            rotation: t.rotation,
+            level: t.level,
         })
         .collect();
-    let mut out = BTreeMap::new();
-    let mut done = vec![false; links.len()];
-    for first in 0..links.len() {
-        if done[first] {
-            continue;
-        }
-        // The network: links joined at their junctions.
-        done[first] = true;
-        let mut net = vec![first];
-        let mut i = 0;
-        while i < net.len() {
-            let (_, a, b, _) = links[net[i]];
-            for v in [NetVertex::of(&a), NetVertex::of(&b)] {
-                if !matches!(v, NetVertex::Junction(_)) {
-                    continue;
-                }
-                for (j, l) in links.iter().enumerate() {
-                    if !done[j] && (NetVertex::of(&l.1) == v || NetVertex::of(&l.2) == v) {
-                        done[j] = true;
-                        net.push(j);
-                    }
-                }
-            }
-            i += 1;
-        }
-        let ends: Vec<ChainEnd> = net
+    // Placement (`World::fits`) and decode (`WorldIssue::RiverUphill`) never build an uphill
+    // network; should one arrive, flow as if flat.
+    let rivers = river::orient(&river_tiles).unwrap_or_else(|_| {
+        let flat: Vec<RiverTile> = river_tiles
             .iter()
-            .flat_map(|&j| [links[j].1, links[j].2])
-            .filter(|e| e.1 != RiverEnd::Junction)
+            .map(|t| RiverTile { level: 0, ..*t })
             .collect();
-        let leaves = |kind: fn(&RiverEnd) -> bool| -> Vec<NetVertex> {
-            ends.iter()
-                .filter(|e| kind(&e.1))
-                .map(NetVertex::of)
-                .collect()
-        };
-        let mouths = leaves(|e| *e == RiverEnd::Mouth);
-        let springs = leaves(|e| *e == RiverEnd::Spring);
-        // The distance seeds, and whether the flow runs toward them or away from them.
-        let (seeds, toward) = if !mouths.is_empty() {
-            (mouths, true)
-        } else if !springs.is_empty() {
-            (springs, false)
-        } else {
-            let Some(outlet) = open_outlet(&net, &links, chains, segs, rotations) else {
+        river::orient(&flat).expect("a network without waterfalls is always legal")
+    });
+    let mut out = BTreeMap::new();
+    for &(t, def) in &placed {
+        for (i, (_, _, local)) in river::river_segment_points(def, t.rotation)
+            .into_iter()
+            .enumerate()
+        {
+            let Some(seg) = rivers.segs.get(&(t.cell, i)) else {
                 continue;
             };
-            (vec![outlet], true)
-        };
-        let mut dist: BTreeMap<NetVertex, f32> = seeds.iter().map(|&v| (v, 0.0)).collect();
-        loop {
-            let mut changed = false;
-            for &j in &net {
-                let (_, a, b, len) = links[j];
-                let (va, vb) = (NetVertex::of(&a), NetVertex::of(&b));
-                for (x, y) in [(va, vb), (vb, va)] {
-                    let Some(&dx) = dist.get(&x) else {
-                        continue;
-                    };
-                    if dist.get(&y).is_none_or(|&dy| dx + len < dy - 1e-4) {
-                        dist.insert(y, dx + len);
-                        changed = true;
-                    }
-                }
+            let mut points: Vec<Vec2> = local
+                .into_iter()
+                .map(|p| to_world(t.cell, t.rotation, Vec2::from(p)))
+                .collect();
+            if seg.reversed {
+                points.reverse();
             }
-            if !changed {
-                break;
-            }
-        }
-        for &j in &net {
-            let (ci, a, b, _) = links[j];
-            let (Some(&da), Some(&db)) =
-                (dist.get(&NetVertex::of(&a)), dist.get(&NetVertex::of(&b)))
-            else {
-                continue;
-            };
-            if (da - db).abs() < 1e-3 {
-                continue;
-            }
-            out.insert(ci, if (da > db) == toward { a } else { b });
+            out.insert(
+                (t.cell, i),
+                RiverPath {
+                    points,
+                    up: seg.up,
+                    down: seg.down,
+                },
+            );
         }
     }
     out
 }
 
-/// The outlet of a junction network with neither a mouth nor a spring: the open end of the chain
-/// that leaves the lowest junction through its local edge 0, else the network's lowest open end.
-fn open_outlet(
-    net: &[usize],
-    links: &[(usize, ChainEnd, ChainEnd, f32)],
-    chains: &[(Vec<(Axial, usize)>, Vec<ChainEnd>)],
-    segs: &BTreeMap<(Axial, usize), Segment>,
-    rotations: &HashMap<Axial, u8>,
-) -> Option<NetVertex> {
-    let junction = net
+/// The waterfalls of the placed `tiles` (`hex_core::river::orient`'s `Rivers::falls`, the seams
+/// [`CellWater::falls`] names from both sides). An uphill network, which placement never builds,
+/// has none.
+pub fn waterfalls(tiles: &[PlayTile], catalog: &TileCatalog) -> Vec<river::Waterfall> {
+    let river_tiles: Vec<RiverTile> = tiles
         .iter()
-        .flat_map(|&j| [links[j].1, links[j].2])
-        .filter(|e| e.1 == RiverEnd::Junction)
-        .map(|e| e.0)
-        .min()?;
-    let out_edge = RiverEnd::Edge(world_edge(
-        0,
-        rotations.get(&junction).copied().unwrap_or(0),
-    ));
-    let arm = segs
-        .range((junction, 0)..=(junction, usize::MAX))
-        .find(|(_, (a, b, _))| *a == out_edge || *b == out_edge)
-        .map(|(k, _)| *k);
-    let far = arm.and_then(|arm| {
-        let &(_, a, b, _) = links.iter().find(|l| chains[l.0].0.contains(&arm))?;
-        let far = if a == (junction, RiverEnd::Junction, arm.1) {
-            b
-        } else {
-            a
-        };
-        matches!(far.1, RiverEnd::Edge(_)).then(|| NetVertex::of(&far))
-    });
-    far.or_else(|| {
-        net.iter()
-            .flat_map(|&j| [links[j].1, links[j].2])
-            .filter(|e| matches!(e.1, RiverEnd::Edge(_)))
-            .min()
-            .map(|e| NetVertex::of(&e))
-    })
+        .filter_map(|t| {
+            Some(RiverTile {
+                cell: t.cell,
+                def: catalog.get(&t.tile)?,
+                rotation: t.rotation,
+                level: t.level,
+            })
+        })
+        .collect();
+    river::orient(&river_tiles).map_or_else(|_| vec![], |r| r.falls)
+}
+
+/// A waterfall seam on a water tile: a River edge facing River at another level. It draws no cut
+/// face on either side.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FallEdge {
+    /// The tile's world edge.
+    pub edge: u8,
+    /// Levels between the two sides.
+    pub drop: u8,
+    /// Whether this tile is the upper side (the lip) rather than the lower (the pool).
+    pub upper: bool,
 }
 
 /// One water tile as the meshes see it. Rebuilt when any field changes.
@@ -819,6 +727,8 @@ pub struct CellWater {
     pub kind: WaterKind,
     /// World edges whose cut face is drawn: water there and none across it.
     pub exposed: Vec<u8>,
+    /// Waterfall seams: River edges facing River at another level (never in `exposed`).
+    pub falls: Vec<FallEdge>,
     /// The tile's own river paths, then its connected neighbours' (river tiles only).
     pub paths: Vec<RiverPath>,
     pub own_paths: usize,
@@ -848,20 +758,29 @@ pub fn layout(
         let Some(kind) = water_kind(def, t.rotation) else {
             continue;
         };
-        let exposed = (0..6u8)
-            .filter(|&e| {
-                let mine = edge_water(def, t, e);
-                if !mine.wet() {
-                    return false;
+        let (mut exposed, mut falls) = (vec![], vec![]);
+        for e in 0..6u8 {
+            let mine = edge_water(def, t, e);
+            if !mine.wet() {
+                continue;
+            }
+            let theirs = placed.get(&t.cell.neighbor(e)).and_then(|n| {
+                catalog
+                    .get(&n.tile)
+                    .map(|d| edge_water(d, n, opposite_edge(e)))
+            });
+            match (mine, theirs) {
+                (EdgeWater::River(a), Some(EdgeWater::River(b))) if a != b => {
+                    falls.push(FallEdge {
+                        edge: e,
+                        drop: a.abs_diff(b),
+                        upper: a > b,
+                    });
                 }
-                let theirs = placed.get(&t.cell.neighbor(e)).and_then(|n| {
-                    catalog
-                        .get(&n.tile)
-                        .map(|d| edge_water(d, n, opposite_edge(e)))
-                });
-                !theirs.is_some_and(|w| mine.continues(w))
-            })
-            .collect();
+                _ if theirs.is_some_and(|w| mine.continues(w)) => {}
+                _ => exposed.push(e),
+            }
+        }
         let own: Vec<RiverPath> = rivers
             .range((t.cell, 0)..=(t.cell, usize::MAX))
             .map(|(_, p)| p.clone())
@@ -887,6 +806,7 @@ pub fn layout(
                 tile: t.clone(),
                 kind,
                 exposed,
+                falls,
                 paths,
                 own_paths,
                 bed,
@@ -966,29 +886,61 @@ impl TileField<'_> {
     fn node_distance(&self, p: Vec2, node: Vec2) -> f32 {
         p.distance(center(self.cell.tile.cell) + node)
     }
+
+    /// Distance (m) from `p` to the midpoint of the nearest fall seam this tile is the lower side
+    /// of (its plunge pool), if it has one.
+    fn pool_distance(&self, p: Vec2) -> Option<f32> {
+        let c = center(self.cell.tile.cell);
+        self.cell
+            .falls
+            .iter()
+            .filter(|f| !f.upper)
+            .map(|f| p.distance(c + edge_dir(f.edge) * APOTHEM))
+            .min_by(f32::total_cmp)
+    }
+
+    /// The plunge pool's churn at `p`: [`PLUNGE_CHURN`] at the seam's midpoint, easing to 0 at
+    /// [`PLUNGE_R`]. A fall seam is not a continuous seam, so it is exempt from the churn's edge
+    /// fade.
+    fn pool_churn(&self, p: Vec2) -> f32 {
+        self.pool_distance(p)
+            .map_or(0.0, |d| PLUNGE_CHURN * (1.0 - smoothstep(0.0, PLUNGE_R, d)))
+    }
+
+    /// The tile's level offset (m), added to every bed and water height.
+    fn lift(&self) -> f32 {
+        f32::from(self.cell.tile.level) * LEVEL_STEP
+    }
 }
 
 impl WaterField for TileField<'_> {
     fn level(&self) -> f32 {
-        WATER_Y
+        water_y(self.cell.tile.level)
+    }
+
+    fn water_lift(&self) -> f32 {
+        self.lift()
     }
 
     fn height(&self, x: f32, z: f32) -> f32 {
         let p = Vec2::new(x, z);
-        match self.cell.kind {
-            WaterKind::River => river_height(self.river(p).0),
-            WaterKind::Spring(node) => {
-                river_height(self.river(p).0).min(pool_height(self.node_distance(p, node)))
+        self.lift()
+            + match self.cell.kind {
+                WaterKind::River => river_height(self.river(p).0),
+                WaterKind::Spring(node) => {
+                    river_height(self.river(p).0).min(pool_height(self.node_distance(p, node)))
+                }
+                WaterKind::RiverMouth(coast) => {
+                    mouth_height(self.seaward(p, coast), self.river(p).0)
+                }
+                WaterKind::Coast(coast) => coast_height(self.seaward(p, coast)),
+                WaterKind::Ocean => OCEAN_BED_Y,
             }
-            WaterKind::RiverMouth(coast) => mouth_height(self.seaward(p, coast), self.river(p).0),
-            WaterKind::Coast(coast) => coast_height(self.seaward(p, coast)),
-            WaterKind::Ocean => OCEAN_BED_Y,
-        }
     }
 
     fn water(&self, x: f32, z: f32) -> WaterSample {
         let p = Vec2::new(x, z);
-        let depth = (WATER_Y - self.height(x, z)).max(0.0);
+        let depth = (self.level() - self.height(x, z)).max(0.0);
         match self.cell.kind {
             WaterKind::River => {
                 let (d, tangent) = self.river(p);
@@ -1071,16 +1023,19 @@ impl WaterField for TileField<'_> {
     /// The flow's advective acceleration on a river tile, `speed * |d flow / d s|` along the flow
     /// (central difference over `CHURN_STEP`): 0 on a straight, `speed² / R` round a bend of
     /// radius R, and where the fork's arms turn into each other and slow. Faded to 0 over
-    /// `CHURN_EDGE_FADE` inside the hex border, so every river edge reads 0 on both sides.
+    /// `CHURN_EDGE_FADE` inside the hex border, so every continuous river edge reads 0 on both
+    /// sides. A plunge pool's churn ([`TileField::pool_churn`]) is added at its waterfall seam, on
+    /// any river or mouth tile below a fall.
     fn churn(&self, x: f32, z: f32) -> f32 {
-        if self.cell.kind != WaterKind::River {
-            return 0.0;
-        }
         let p = Vec2::new(x, z);
+        let pool = self.pool_churn(p);
+        if self.cell.kind != WaterKind::River {
+            return pool;
+        }
         let u = self.water(x, z).flow;
         let speed = u.length();
         if speed < 1e-3 {
-            return 0.0;
+            return pool;
         }
         let step = u / speed * CHURN_STEP;
         let ahead = self.water(p.x + step.x, p.y + step.y).flow;
@@ -1088,7 +1043,12 @@ impl WaterField for TileField<'_> {
         let accel = speed * (ahead - behind).length() / (2.0 * CHURN_STEP);
         let d = p - center(self.cell.tile.cell);
         let inside = APOTHEM - (0..6).map(|e| d.dot(edge_dir(e))).fold(f32::MIN, f32::max);
-        accel * smoothstep(0.0, CHURN_EDGE_FADE, inside)
+        (accel * smoothstep(0.0, CHURN_EDGE_FADE, inside)).max(pool)
+    }
+
+    fn plunge(&self, x: f32, z: f32) -> f32 {
+        self.pool_distance(Vec2::new(x, z))
+            .map_or(0.0, |d| (1.0 - d / PLUNGE_R).max(0.0))
     }
 }
 
@@ -1142,6 +1102,14 @@ pub fn ribbon_rows(path: &RiverPath) -> Vec<(Vec2, Vec2)> {
 pub struct PlayWater {
     cells: HashMap<Axial, (CellWater, Vec<Entity>)>,
     materials: Option<(Handle<WaterMaterial>, Handle<TerrainMaterial>)>,
+    landings: Vec<MistLanding>,
+}
+
+impl PlayWater {
+    /// The drawn waterfalls' tier landings ([`mist_landings`] of the last [`sync`]).
+    pub fn landings(&self) -> &[MistLanding] {
+        &self.landings
+    }
 }
 
 /// Marks the play camera once it carries the water components.
@@ -1180,7 +1148,8 @@ pub struct WaterAssets<'a> {
 ///
 /// Rise hooks: every spawned entity carries a [`RisePart`] (the bed moves with the column, the
 /// surfaces and cut faces also fill), and the entities of a cell whose tile left the world are
-/// returned instead of despawned, so the tile's sink can take them down with it.
+/// returned instead of despawned, so the tile's sink can take them down with it. With `falls`
+/// false (`play::NoFalls`) the layout keeps no waterfall ([`without_falls`]).
 #[must_use]
 pub fn sync(
     commands: &mut Commands,
@@ -1191,6 +1160,7 @@ pub fn sync(
     catalog: &TileCatalog,
     kit_has: impl Fn(&str) -> bool,
     rebuild: bool,
+    falls: bool,
 ) -> Vec<(Axial, Vec<Entity>)> {
     if rebuild {
         for (_, (_, es)) in water.cells.drain() {
@@ -1199,7 +1169,14 @@ pub fn sync(
             }
         }
     }
-    let want = layout(tiles, catalog, kit_has);
+    let mut want = layout(tiles, catalog, kit_has);
+    if !falls {
+        without_falls(&mut want);
+    }
+    let landings = mist_landings(&want);
+    if water.landings != landings {
+        water.landings = landings;
+    }
     let placed: BTreeSet<Axial> = tiles.iter().map(|t| t.cell).collect();
     let mut released = vec![];
     water.cells.retain(|cell, (cw, es)| {
@@ -1253,35 +1230,22 @@ pub fn sync(
     released
 }
 
-fn spawn_cell(
-    commands: &mut Commands,
-    meshes: &mut Assets<Mesh>,
-    water: &Handle<WaterMaterial>,
-    terrain: &Handle<TerrainMaterial>,
-    cw: &CellWater,
-) -> Vec<Entity> {
+/// Drops every waterfall from `layout` (`play::NoFalls`: the thumbnails): no sheet, no plunge
+/// pool. A fall edge stays out of `exposed`, so no cut face appears in its place.
+pub fn without_falls(layout: &mut BTreeMap<Axial, CellWater>) {
+    for cw in layout.values_mut() {
+        cw.falls.clear();
+    }
+}
+
+/// A water tile's meshes, each with the transform it is drawn under: its surfaces (with the
+/// falling sheet of every waterfall it is the lower side of merged into the first after the pool's
+/// triangles, so the sheet costs no draw and draws over its pool), then its cut faces.
+fn water_meshes(cw: &CellWater) -> Vec<(Mesh, Transform)> {
     let field = cw.field();
     let (cell, rot) = (cw.tile.cell, cw.tile.rotation);
     let c = center(cell);
     let at_cell = Transform::from_xyz(c.x, 0.0, c.y);
-    let mut out = vec![];
-    if cw.bed {
-        let t = cell_transform(cell, rot);
-        out.push(
-            spawn_fixed_mesh(
-                commands,
-                meshes,
-                terrain_mesh_for(&field, cell, rot, FLOOR_Y),
-                (
-                    MeshMaterial3d(terrain.clone()),
-                    t,
-                    RisePart::new(cell, RiseRole::Bed, t),
-                    SceneEntity,
-                ),
-            )
-            .id(),
-        );
-    }
     let mut surfaces = vec![];
     match cw.kind {
         WaterKind::River if cw.paths[..cw.own_paths].iter().any(RiverPath::at_junction) => {
@@ -1318,10 +1282,47 @@ fn spawn_cell(
             surfaces.push((surface_mesh(&field, cell, rot), cell_transform(cell, rot)));
         }
     }
+    if let Some((surface, t)) = surfaces.first_mut() {
+        for fall in cw.falls.iter().filter(|f| !f.upper) {
+            surface
+                .merge(&sheet_for(cw, *fall, t))
+                .expect("water meshes share one attribute layout");
+        }
+    }
     if let Some(skirt) = skirt_mesh_for(&field, cell, &cw.exposed) {
         surfaces.push((skirt, at_cell));
     }
-    for (mesh, t) in surfaces {
+    surfaces
+}
+
+fn spawn_cell(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    water: &Handle<WaterMaterial>,
+    terrain: &Handle<TerrainMaterial>,
+    cw: &CellWater,
+) -> Vec<Entity> {
+    let field = cw.field();
+    let (cell, rot) = (cw.tile.cell, cw.tile.rotation);
+    let mut out = vec![];
+    if cw.bed {
+        let t = cell_transform(cell, rot);
+        out.push(
+            spawn_fixed_mesh(
+                commands,
+                meshes,
+                terrain_mesh_for(&field, cell, rot, FLOOR_Y + field.lift()),
+                (
+                    MeshMaterial3d(terrain.clone()),
+                    t,
+                    RisePart::new(cell, RiseRole::Bed, t),
+                    SceneEntity,
+                ),
+            )
+            .id(),
+        );
+    }
+    for (mesh, t) in water_meshes(cw) {
         out.push(
             spawn_fixed_mesh(
                 commands,
@@ -1345,7 +1346,7 @@ fn spawn_cell(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hex_core::{Side, World, opposite_edge};
+    use hex_core::{Side, World, opposite_edge, world_edge};
 
     fn tile(q: i32, r: i32, id: &str, rotation: u8) -> PlayTile {
         PlayTile {
@@ -1438,7 +1439,11 @@ mod tests {
             ("river_road_bridge", 4),
         ] {
             let t = tile(0, 0, id, rot);
-            for (a, b, pts) in river_segments(cat.get(id).unwrap(), &t) {
+            for (a, b, local) in river::river_segment_points(cat.get(id).unwrap(), rot) {
+                let pts: Vec<Vec2> = local
+                    .into_iter()
+                    .map(|p| to_world(t.cell, rot, Vec2::from(p)))
+                    .collect();
                 let (a, b) = (edge(a), edge(b));
                 let n = pts.len();
                 let start = (pts[1] - pts[0]).normalize();
@@ -1623,6 +1628,626 @@ mod tests {
         );
         assert!(side[&Axial::new(0, 0)].exposed.contains(&2));
         assert!(side[&Axial::new(-1, 1)].exposed.contains(&5));
+    }
+
+    fn river(id: &str, (q, r): (i32, i32), rotation: u8, level: u8) -> PlayTile {
+        PlayTile {
+            level,
+            ..tile(q, r, id, rotation)
+        }
+    }
+
+    fn cat() -> TileCatalog {
+        catalog()
+    }
+
+    fn ax(q: i32, r: i32) -> Axial {
+        Axial::new(q, r)
+    }
+
+    #[test]
+    fn a_raised_river_surface_and_bed_stand_at_its_level() {
+        for level in 1..=3u8 {
+            let lay = layout(&[river("river_straight", (0, 0), 0, level)], &cat(), |_| {
+                true
+            });
+            let f = lay[&ax(0, 0)].field();
+            assert_eq!(f.level(), water_y(level));
+            assert!((f.height(0.0, 0.0) - (-2.95 + 4.0 * f32::from(level))).abs() < 1e-3);
+            // The water column over the bed is as deep as at level 0.
+            assert!(
+                (f.water(0.0, 0.0).depth - 1.55).abs() < 1e-3,
+                "level {level}"
+            );
+        }
+    }
+
+    /// Every water and placeholder-bed mesh of a tile carries its lift over `WATER_Y` (the
+    /// materials' `sea_level`) in UV_1.x for the shaders: exactly 0 at level 0, `level *
+    /// LEVEL_STEP` raised, and the surface (and each cut face's rim) stands at `WATER_Y` plus it.
+    #[test]
+    fn water_meshes_carry_their_lift_over_the_sea_level() {
+        use bevy::mesh::VertexAttributeValues;
+        let uv1 = |m: &Mesh| match m.attribute(Mesh::ATTRIBUTE_UV_1) {
+            Some(VertexAttributeValues::Float32x2(v)) => v.clone(),
+            other => panic!("no UV_1: {other:?}"),
+        };
+        let ys = |m: &Mesh| match m.attribute(Mesh::ATTRIBUTE_POSITION) {
+            Some(VertexAttributeValues::Float32x3(v)) => v.iter().map(|p| p[1]).collect::<Vec<_>>(),
+            _ => unreachable!(),
+        };
+        for level in [0u8, 1, 3] {
+            let lay = layout(&[river("river_straight", (0, 0), 0, level)], &cat(), |_| {
+                true
+            });
+            let cw = &lay[&ax(0, 0)];
+            let f = cw.field();
+            let (cell, rot) = (cw.tile.cell, cw.tile.rotation);
+            let lift = f32::from(level) * LEVEL_STEP;
+            assert_eq!(f.water_lift(), lift);
+            let rows = ribbon_rows(&cw.paths[0]);
+            let ribbon = ribbon_mesh(&f, center(cell), &rows, RIBBON_HALF, RIBBON_COLS);
+            let surface = surface_mesh(&f, cell, rot);
+            let skirt = skirt_mesh_for(&f, cell, &cw.exposed).expect("open ends");
+            let bed = terrain_mesh_for(&f, cell, rot, FLOOR_Y + f.lift());
+            for (name, m) in [
+                ("ribbon", &ribbon),
+                ("surface", &surface),
+                ("skirt", &skirt),
+                ("bed", &bed),
+            ] {
+                let uv = uv1(m);
+                assert!(!uv.is_empty());
+                assert!(
+                    uv.iter()
+                        .all(|u| u[0].to_bits() == lift.to_bits() && u[1] == 0.0),
+                    "{name} at level {level}"
+                );
+            }
+            for m in [&ribbon, &surface] {
+                assert!(ys(m).iter().all(|&y| (y - (WATER_Y + lift)).abs() < 1e-5));
+            }
+            let rim = ys(&skirt).into_iter().step_by(2).collect::<Vec<_>>();
+            assert!(
+                rim.iter().all(|&y| (y - (WATER_Y + lift)).abs() < 1e-5),
+                "{rim:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn river_at_different_levels_is_a_fall_not_a_cut_face() {
+        let lay = layout(
+            &[
+                river("river_straight", (0, 0), 0, 2),
+                river("river_straight", (1, 0), 0, 0),
+            ],
+            &cat(),
+            |_| true,
+        );
+        assert_eq!(
+            lay[&ax(0, 0)].falls,
+            vec![FallEdge {
+                edge: 0,
+                drop: 2,
+                upper: true
+            }]
+        );
+        assert_eq!(
+            lay[&ax(1, 0)].falls,
+            vec![FallEdge {
+                edge: 3,
+                drop: 2,
+                upper: false
+            }]
+        );
+        assert!(!lay[&ax(0, 0)].exposed.contains(&0) && !lay[&ax(1, 0)].exposed.contains(&3));
+    }
+
+    /// A waterfall of `drop` levels: a raised `river_straight` at (0, 0) falling over its edge 0
+    /// onto one at (1, 0), level 0, or onto `lower` there.
+    fn fall_pair(drop: u8, lower: &str) -> BTreeMap<Axial, CellWater> {
+        let lower_rot = (0..6u8)
+            .find(|&k| {
+                let d = cat().get(lower).cloned().unwrap();
+                d.edge(3, k).kind == SocketKind::River
+            })
+            .unwrap();
+        layout(
+            &[
+                river("river_straight", (0, 0), 0, drop),
+                river(lower, (1, 0), lower_rot, 0),
+            ],
+            &cat(),
+            |_| true,
+        )
+    }
+
+    fn upper_fall(lay: &BTreeMap<Axial, CellWater>) -> (&CellWater, FallEdge) {
+        let cw = &lay[&ax(0, 0)];
+        (cw, cw.falls[0])
+    }
+
+    fn min_max_y(p: &[[f32; 3]]) -> (f32, f32) {
+        p.iter().fold((f32::MIN, f32::MAX), |(hi, lo), q| {
+            (hi.max(q[1]), lo.min(q[1]))
+        })
+    }
+
+    #[test]
+    fn sheet_vertices_are_tagged_and_drop_from_lip_to_pool() {
+        for drop in 1..=3u8 {
+            let lay = fall_pair(drop, "river_straight");
+            let (cw, fall) = upper_fall(&lay);
+            assert_eq!((fall.edge, fall.drop, fall.upper), (0, drop, true));
+            let (p, uv, flow) = sheet_mesh(cw, fall);
+            assert!(uv.iter().all(|u| u[1] >= SHEET_TAG), "drop {drop}");
+            let (top, bot) = min_max_y(&p);
+            assert!((top - water_y(drop)).abs() < 1e-3, "drop {drop}: top {top}");
+            assert!((bot - water_y(0)).abs() < 1e-3, "drop {drop}: bottom {bot}");
+            let lip: Vec<Vec2> = p
+                .iter()
+                .filter(|q| (q[1] - top).abs() < 1e-4)
+                .map(|q| Vec2::new(q[0], q[2]))
+                .collect();
+            let width = lip
+                .iter()
+                .flat_map(|a| lip.iter().map(move |b| a.distance(*b)))
+                .fold(0.0, f32::max);
+            assert!((width - 8.0).abs() < 0.05, "drop {drop}: width {width}");
+            // The lip row lies on the seam, its edges on the channel's waterline.
+            let f = cw.field();
+            let c = center(cw.tile.cell);
+            for q in &lip {
+                assert!(((*q).dot(edge_dir(0)) - APOTHEM).abs() < 1e-3);
+                let w = c + *q;
+                assert!(f.height(w.x, w.y) <= water_y(drop) + 1e-3);
+            }
+            // Its two edge points (±4 m on the lane) meet the bank at the waterline.
+            for q in [lip[0], lip[lip.len() - 1]] {
+                assert!(((q.dot(edge_dir(0).perp())).abs() - 4.0).abs() < 1e-4);
+                let w = c + q;
+                let bed = f.height(w.x, w.y);
+                assert!(
+                    (bed - water_y(drop)).abs() < 0.02,
+                    "drop {drop}: bank {bed} at {q}"
+                );
+            }
+            // At least 8 rows per level of drop, and the flow points down the sheet (out over the
+            // lower tile in plan).
+            let rows = p.len() / (SHEET_COLS as usize + 1);
+            assert!(rows >= 8 * usize::from(drop), "{rows} rows");
+            assert!(
+                flow.iter()
+                    .all(|c| Vec2::new(c[0], c[1]).dot(edge_dir(0)) > 1.0)
+            );
+        }
+    }
+
+    /// WF-Q3: one sheet per tier. Tier i's lip stands `lip_drop` below the upper water and
+    /// `setout` out from the seam ([`fall_tiers`]), and it falls one level to the next lip.
+    #[test]
+    fn the_tiers_lips_follow_fall_tiers() {
+        assert_eq!(fall_tiers(1), vec![(0.0, 0.0)]);
+        assert_eq!(fall_tiers(3), vec![(0.0, 0.0), (4.0, 1.5), (8.0, 3.0)]);
+        assert_eq!(LEDGE_STEP, 1.5);
+        for drop in 1..=3u8 {
+            let lay = fall_pair(drop, "river_straight");
+            let (cw, fall) = upper_fall(&lay);
+            let (p, uv, _) = sheet_mesh(cw, fall);
+            let tier_len = ((SHEET_ROWS + 1) * (SHEET_COLS + 1)) as usize;
+            assert_eq!(p.len(), tier_len * usize::from(drop));
+            let tiers = fall_tiers(drop);
+            for (i, (lip_drop, setout)) in tiers.iter().enumerate() {
+                let tier = &p[i * tier_len..(i + 1) * tier_len];
+                let out = |q: &[f32; 3]| Vec2::new(q[0], q[2]).dot(edge_dir(0)) - APOTHEM;
+                let lip_y = water_y(drop) - lip_drop;
+                for q in &tier[..=SHEET_COLS as usize] {
+                    assert!((q[1] - lip_y).abs() < 1e-4, "tier {i}: lip y {}", q[1]);
+                    assert!(
+                        (out(q) - setout).abs() < 1e-4,
+                        "tier {i}: setout {}",
+                        out(q)
+                    );
+                }
+                for q in &tier[tier_len - SHEET_COLS as usize - 1..] {
+                    assert!((q[1] - (lip_y - LEVEL_STEP)).abs() < 1e-4, "tier {i}: foot");
+                    assert!((out(q) - (setout + LEDGE_STEP)).abs() < 1e-4);
+                }
+                let below = &uv[i * tier_len..(i + 1) * tier_len];
+                assert!(
+                    below
+                        .iter()
+                        .all(|u| (0.0..=LEVEL_STEP + 1e-4).contains(&(u[1] - SHEET_TAG)))
+                );
+            }
+        }
+    }
+
+    /// Checks the sheet of the fall over `edge` of `upper` (`drop` levels): the upper tile's water
+    /// carries no sheet vertex, and the lower tile's first surface carries the whole sheet after its
+    /// own (pool) triangles, so within that one draw the sheet blends over the pool. In world space
+    /// the lip row stands at the upper water on the seam, 8 m wide, and every sheet triangle faces
+    /// out over the lower tile and up. Returns the lower surface's transform.
+    fn sheet_on_seam(
+        lay: &BTreeMap<Axial, CellWater>,
+        upper: Axial,
+        edge: u8,
+        drop: u8,
+    ) -> Transform {
+        use bevy::mesh::VertexAttributeValues;
+        let uv0 = |m: &Mesh| match m.attribute(Mesh::ATTRIBUTE_UV_0) {
+            Some(VertexAttributeValues::Float32x2(v)) => v.clone(),
+            other => panic!("{other:?}"),
+        };
+        for (m, _) in water_meshes(&lay[&upper]) {
+            assert!(
+                uv0(&m).iter().all(|u| u[1] < SHEET_TAG - 1.0),
+                "the upper side draws no sheet"
+            );
+        }
+        let (mesh, t) = water_meshes(&lay[&upper.neighbor(edge)]).swap_remove(0);
+        let Some(VertexAttributeValues::Float32x3(pos)) = mesh.attribute(Mesh::ATTRIBUTE_POSITION)
+        else {
+            panic!("positions");
+        };
+        let uv = uv0(&mesh);
+        let Some(Indices::U32(idx)) = mesh.indices() else {
+            panic!("indices");
+        };
+        let world = |i: usize| t.transform_point(Vec3::from(pos[i]));
+        let is_sheet = |i: u32| uv[i as usize][1] >= SHEET_TAG;
+        let tris: Vec<&[u32]> = idx.chunks(3).collect();
+        let first = tris
+            .iter()
+            .position(|tri| tri.iter().any(|&i| is_sheet(i)))
+            .expect("the lower surface carries the sheet");
+        assert!(first > 0, "the pool's own triangles come first");
+        assert!(
+            tris[..first]
+                .iter()
+                .all(|tri| tri.iter().all(|&i| !is_sheet(i)))
+        );
+        assert!(
+            tris[first..]
+                .iter()
+                .all(|tri| tri.iter().all(|&i| is_sheet(i)))
+        );
+        assert_eq!(
+            (tris.len() - first) as u32,
+            2 * u32::from(drop) * SHEET_ROWS * SHEET_COLS
+        );
+        let level = lay[&upper].tile.level;
+        let (c, out) = (center(upper), edge_dir(edge));
+        let lip: Vec<Vec3> = (0..pos.len())
+            .filter(|&i| uv[i][1] == SHEET_TAG && world(i).y > water_y(level) - 1e-3)
+            .map(world)
+            .collect();
+        assert_eq!(lip.len(), SHEET_COLS as usize + 1);
+        for p in &lip {
+            assert!((p.y - water_y(level)).abs() < 1e-4, "{p}");
+            assert!(
+                ((p.xz() - c).dot(out) - APOTHEM).abs() < 1e-3,
+                "{p} is off the seam"
+            );
+        }
+        let width = lip
+            .iter()
+            .flat_map(|a| lip.iter().map(move |b| a.distance(*b)))
+            .fold(0.0, f32::max);
+        assert!((width - 8.0).abs() < 0.05, "{width}");
+        let out3 = Vec3::new(out.x, 0.0, out.y);
+        for tri in &tris[first..] {
+            let [a, b, c] = [0, 1, 2].map(|k| world(tri[k] as usize));
+            let n = (b - a).cross(c - a);
+            assert!(n.dot(out3) > 0.0 && n.y > 0.0, "{n}");
+        }
+        t
+    }
+
+    /// I1 (fix round 1): the sheet rides the lower tile's water after the pool, so at Low (one
+    /// blended draw per cell) it draws over its pool from every side; the upper tile carries none.
+    /// Cut-face tags stay far below [`SHEET_TAG`] at the top level.
+    #[test]
+    fn the_sheet_draws_after_its_pool_in_the_lower_tile() {
+        use bevy::mesh::VertexAttributeValues;
+        for drop in 1..=3u8 {
+            sheet_on_seam(&fall_pair(drop, "river_straight"), ax(0, 0), 0, drop);
+        }
+        let raised = layout(&[river("river_straight", (0, 0), 0, 3)], &cat(), |_| true);
+        let cw = &raised[&ax(0, 0)];
+        let skirt = skirt_mesh_for(&cw.field(), cw.tile.cell, &cw.exposed).unwrap();
+        let Some(VertexAttributeValues::Float32x2(uv)) = skirt.attribute(Mesh::ATTRIBUTE_UV_0)
+        else {
+            panic!("uv");
+        };
+        let top = uv.iter().map(|u| u[1]).fold(f32::MIN, f32::max);
+        assert!(
+            top > super::super::SKIRT_TAG && top < SHEET_TAG - 50.0,
+            "{top}"
+        );
+        let src = include_str!("../../../../assets/shaders/water.wesl");
+        for (name, v) in [("SHEET_TAG", SHEET_TAG), ("PLUNGE_R", PLUNGE_R)] {
+            let line = format!("const {name}: f32 = {v:?};");
+            assert!(src.contains(&line), "water.wesl lacks `{line}`");
+        }
+    }
+
+    /// The sheet lands on the seam in world space whatever the rotations: a raised spring at
+    /// rotation 2 over a straight, a straight at rotation 1 falling over edge 1 onto a straight, and
+    /// onto a mouth whose surface is the hex grid under a rotated `cell_transform`.
+    #[test]
+    fn rotated_tiles_carry_the_sheet_onto_the_seam() {
+        let o = Axial::ORIGIN;
+        let rot_for = |id: &str, e: u8| {
+            let d = cat().get(id).cloned().unwrap();
+            (0..6u8)
+                .find(|&k| d.edge(e, k).kind == SocketKind::River)
+                .unwrap()
+        };
+        let pair = |up: (&str, u8, u8), edge: u8, down: &str| {
+            let n = o.neighbor(edge);
+            let mut lower = river(down, (n.q, n.r), rot_for(down, opposite_edge(edge)), 0);
+            if down == "river_straight" {
+                lower.rotation = up.1 % 3;
+            }
+            layout(&[river(up.0, (0, 0), up.1, up.2), lower], &cat(), |_| true)
+        };
+        let lay = pair(("river_spring", 2, 1), 2, "river_straight");
+        assert!(matches!(lay[&o].kind, WaterKind::Spring(_)));
+        sheet_on_seam(&lay, o, 2, 1);
+        let lay = pair(("river_straight", 1, 2), 1, "river_straight");
+        assert_eq!(
+            lay[&o].falls,
+            vec![FallEdge {
+                edge: 1,
+                drop: 2,
+                upper: true
+            }]
+        );
+        sheet_on_seam(&lay, o, 1, 2);
+        let lay = pair(("river_straight", 1, 1), 1, "river_mouth");
+        assert!(matches!(lay[&o.neighbor(1)].kind, WaterKind::RiverMouth(_)));
+        let t = sheet_on_seam(&lay, o, 1, 1);
+        assert!(
+            t.rotation != Quat::IDENTITY,
+            "the mouth's surface is rotated"
+        );
+    }
+
+    #[test]
+    fn plunge_churn_is_full_at_the_seam_and_zero_past_plunge_r() {
+        for lower in ["river_straight", "river_mouth", "river_mouth_l"] {
+            let lay = fall_pair(1, lower);
+            let cw = &lay[&ax(1, 0)];
+            assert_eq!(
+                cw.falls,
+                vec![FallEdge {
+                    edge: 3,
+                    drop: 1,
+                    upper: false
+                }],
+                "{lower}"
+            );
+            let f = cw.field();
+            let c = center(cw.tile.cell);
+            let seam = c + edge_dir(3) * APOTHEM;
+            assert!(f.churn(seam.x, seam.y) >= 0.22, "{lower}");
+            assert_eq!(f.meet(seam.x, seam.y), 0.0, "{lower}");
+            assert!(
+                super::super::foam_tag(&f, seam.x, seam.y) <= -0.22,
+                "{lower}"
+            );
+            assert_eq!(f.plunge(seam.x, seam.y), 1.0);
+            let past = seam - edge_dir(3) * (PLUNGE_R + 0.01);
+            assert_eq!(f.plunge(past.x, past.y), 0.0, "{lower}");
+            if lower == "river_straight" {
+                assert_eq!(f.churn(past.x, past.y), 0.0);
+            }
+            // The upper side's water keeps no pool.
+            let up = lay[&ax(0, 0)].field();
+            assert_eq!(up.plunge(seam.x, seam.y), 0.0);
+            assert_eq!(up.churn(seam.x, seam.y), 0.0);
+        }
+    }
+
+    #[test]
+    fn churn_still_fades_at_continuous_seams() {
+        let tiles = [
+            river("river_straight", (0, 0), 0, 1),
+            river("river_straight", (1, 0), 0, 0),
+            river("river_straight", (2, 0), 0, 0),
+        ];
+        let lay = layout(&tiles, &cat(), |_| true);
+        let mut flat = lay.clone();
+        without_falls(&mut flat);
+        let (f, plain) = (lay[&ax(1, 0)].field(), flat[&ax(1, 0)].field());
+        // The continuous seam to (2, 0) reads 0 on both sides.
+        for p in along_edge(ax(1, 0), 0, 32) {
+            assert!(f.churn(p.x, p.y) < 1e-6);
+            assert!(lay[&ax(2, 0)].field().churn(p.x, p.y) < 1e-6);
+        }
+        // Past the pool the churn is the fall-free field's.
+        let c = center(ax(1, 0));
+        for i in -24..=24 {
+            for j in -24..=24 {
+                let p = c + Vec2::new(i as f32, j as f32) * 0.5;
+                if p.distance(c + edge_dir(3) * APOTHEM) > PLUNGE_R {
+                    assert_eq!(f.churn(p.x, p.y), plain.churn(p.x, p.y), "{p}");
+                }
+            }
+        }
+    }
+
+    /// Each tier's mist landing is the midpoint of its sheet strip's last row, so the spray stands
+    /// where the water lands; a fall of `drop` levels has `drop` landings, the last in the pool.
+    #[test]
+    fn mist_landings_are_the_sheet_strips_bottom_midpoints() {
+        let stride = (SHEET_COLS + 1) as usize;
+        for drop in 1..=3u8 {
+            let lay = fall_pair(drop, "river_straight");
+            let (cw, fall) = upper_fall(&lay);
+            let (p, _, _) = sheet_mesh(cw, fall);
+            let c = center(cw.tile.cell);
+            let ls = mist_landings(&lay);
+            assert_eq!(ls.len(), usize::from(drop));
+            for (i, l) in ls.iter().enumerate() {
+                let k = i * (SHEET_ROWS as usize + 1) * stride
+                    + SHEET_ROWS as usize * stride
+                    + SHEET_COLS as usize / 2;
+                let want = Vec3::new(p[k][0] + c.x, p[k][1], p[k][2] + c.y);
+                assert!(
+                    l.pos.distance(want) < 1e-4,
+                    "drop {drop} tier {i}: {l:?} vs {want}"
+                );
+                assert_eq!(
+                    (l.pool, l.drop, l.tier),
+                    (i + 1 == usize::from(drop), drop, i as u8)
+                );
+                assert_eq!(l.upper, cw.tile.cell);
+                assert!(l.out.distance(edge_dir(fall.edge)) < 1e-5);
+            }
+        }
+    }
+
+    /// The thumbnails' layout (`play::NoFalls`) has no landings, so it draws no mist.
+    #[test]
+    fn thumbs_world_has_no_mist_landings() {
+        let mut lay = fall_pair(3, "river_straight");
+        assert_eq!(mist_landings(&lay).len(), 3);
+        without_falls(&mut lay);
+        assert!(mist_landings(&lay).is_empty());
+        assert!(mist_landings(&fall_pair(0, "river_straight")).is_empty());
+    }
+
+    /// `play::NoFalls` (the thumbnails): with the falls dropped the upper tile's water carries no
+    /// sheet vertex and the lower tile's no pool.
+    #[test]
+    fn thumbs_world_draws_no_falls() {
+        use bevy::mesh::VertexAttributeValues;
+        let attr = |m: &Mesh, a| match m.attribute(a) {
+            Some(VertexAttributeValues::Float32x2(v)) => v.clone(),
+            other => panic!("{other:?}"),
+        };
+        let sheet = |cw: &CellWater| {
+            water_meshes(cw)
+                .iter()
+                .flat_map(|(m, _)| attr(m, Mesh::ATTRIBUTE_UV_0))
+                .filter(|u| u[1] >= SHEET_TAG - 1.0)
+                .count()
+        };
+        let pool = |cw: &CellWater| {
+            water_meshes(cw)
+                .iter()
+                .flat_map(|(m, _)| attr(m, Mesh::ATTRIBUTE_UV_1))
+                .filter(|u| u[1] > 0.0)
+                .count()
+        };
+        let mut lay = fall_pair(2, "river_straight");
+        assert!(sheet(&lay[&ax(1, 0)]) > 0, "the pool side draws the sheet");
+        assert!(pool(&lay[&ax(1, 0)]) > 0);
+        assert_eq!(sheet(&lay[&ax(0, 0)]), 0, "the lip side draws none");
+        without_falls(&mut lay);
+        for cw in lay.values() {
+            assert_eq!((sheet(cw), pool(cw)), (0, 0), "{:?}", cw.tile);
+        }
+        assert!(!lay[&ax(0, 0)].exposed.contains(&0) && !lay[&ax(1, 0)].exposed.contains(&3));
+    }
+
+    /// `CellWater::falls` and `hex_core::river::orient`'s `Rivers::falls` describe the same seams.
+    #[test]
+    fn cell_falls_match_the_core_waterfalls() {
+        let tiles = [
+            river("river_straight", (0, 0), 0, 3),
+            river("river_straight", (1, 0), 0, 1),
+            river("river_straight", (2, 0), 0, 1),
+            river("river_straight", (3, 0), 0, 0),
+        ];
+        let cat = cat();
+        let lay = layout(&tiles, &cat, |_| true);
+        let from_cells: BTreeSet<(Axial, u8, u8, bool)> = lay
+            .iter()
+            .flat_map(|(c, cw)| cw.falls.iter().map(move |f| (*c, f.edge, f.drop, f.upper)))
+            .collect();
+        let river_tiles: Vec<RiverTile> = tiles
+            .iter()
+            .map(|t| RiverTile {
+                cell: t.cell,
+                def: cat.get(&t.tile).unwrap(),
+                rotation: t.rotation,
+                level: t.level,
+            })
+            .collect();
+        let core = river::orient(&river_tiles).expect("downhill");
+        assert_eq!(core.falls.len(), 2);
+        let from_core: BTreeSet<(Axial, u8, u8, bool)> = core
+            .falls
+            .iter()
+            .flat_map(|w| {
+                [
+                    (w.upper, w.edge, w.drop, true),
+                    (w.lower, opposite_edge(w.edge), w.drop, false),
+                ]
+            })
+            .collect();
+        assert_eq!(from_cells, from_core);
+    }
+
+    /// An uphill network (falls facing both ways) flows as the same tiles would at level 0.
+    #[test]
+    fn an_uphill_network_flows_as_if_flat() {
+        let at = |levels: [u8; 3]| -> Vec<PlayTile> {
+            (0..3)
+                .map(|q| river("river_straight", (q, 0), 0, levels[q as usize]))
+                .collect()
+        };
+        assert_eq!(
+            oriented_rivers(&at([0, 1, 0]), &cat()),
+            oriented_rivers(&at([0, 0, 0]), &cat())
+        );
+    }
+
+    /// The proof world (rivers, a bridge, coasts and ocean, all at level 0) keeps its cut faces
+    /// and has no falls.
+    #[test]
+    fn a_level_zero_world_lays_out_exactly_as_before() {
+        let cat = cat();
+        let mut world = World::new(1);
+        for (q, r, id, steps) in PROOF {
+            let def = cat.get(id).unwrap();
+            let cell = ax(q, r);
+            let legal = world.legal_orientations(&cat, cell, def);
+            world.place(&cat, cell, id, legal[steps]).unwrap();
+        }
+        let tiles: Vec<PlayTile> = world
+            .tiles()
+            .iter()
+            .map(|(c, t)| PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+                level: t.level,
+            })
+            .collect();
+        let lay = layout(&tiles, &cat, |_| false);
+        let want: [((i32, i32), Vec<u8>); 9] = [
+            ((-3, 3), vec![2]),
+            ((-2, 2), vec![]),
+            ((-1, 0), vec![4]),
+            ((-1, 1), vec![]),
+            ((1, 0), vec![2]),
+            ((1, 1), vec![0, 1, 2, 3]),
+            ((2, -1), vec![5]),
+            ((2, 0), vec![0, 1]),
+            ((3, -1), vec![0, 1, 4, 5]),
+        ];
+        assert_eq!(lay.len(), want.len());
+        for ((q, r), exposed) in want {
+            let cw = &lay[&ax(q, r)];
+            assert_eq!(cw.exposed, exposed, "({q}, {r})");
+            assert!(cw.falls.is_empty(), "({q}, {r}): {:?}", cw.falls);
+            assert_eq!(cw.field().level(), WATER_Y);
+        }
     }
 
     /// The proof layout (docs/checkpoints/water-play/water-play.json) is legal in placement order.
@@ -3028,6 +3653,194 @@ mod tests {
             );
             assert!(tight > 0.12, "r{rot}: bend_60 {tight}");
             assert!(fork > 0.08, "r{rot}: fork {fork}");
+        }
+    }
+
+    /// Every committed save fixture, as play tiles.
+    fn fixture_worlds() -> impl Iterator<Item = Vec<PlayTile>> {
+        let cat = catalog();
+        [
+            &include_bytes!("../../../hex-core/tests/fixtures/save/v1-small-world.hexworld")[..],
+            include_bytes!("../../../hex-core/tests/fixtures/save/v2-tilt-chosen.hexworld"),
+            include_bytes!("../../../hex-core/tests/fixtures/save/v3-massif.hexworld"),
+            include_bytes!("../../../hex-core/tests/fixtures/save/v3-replaced.hexworld"),
+        ]
+        .into_iter()
+        .map(move |bytes| {
+            let save = hex_core::SaveData::decode(bytes, &cat).expect("fixture decodes");
+            play_tiles(&save.world)
+        })
+    }
+
+    fn play_tiles(world: &World) -> Vec<PlayTile> {
+        world
+            .tiles()
+            .iter()
+            .map(|(c, t)| PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+                level: t.level,
+            })
+            .collect()
+    }
+
+    /// splitmix64: a seeded stream with no dependency.
+    fn next(state: &mut u64) -> u64 {
+        *state = state.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = *state;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    }
+
+    const RIVER_TILES: [&str; 9] = [
+        "river_straight",
+        "river_bend",
+        "river_bend_60",
+        "river_fork",
+        "river_spring",
+        "river_mouth",
+        "river_mouth_l",
+        "river_road_bridge",
+        "river_rail_bridge",
+    ];
+
+    /// `n` worlds grown by legal level-0 placement of river tiles around the start tile, each up
+    /// to 24 river tiles, seeded from `seed`.
+    fn random_flat_river_worlds(n: usize, seed: u64) -> impl Iterator<Item = Vec<PlayTile>> {
+        let cat = catalog();
+        let mut state = seed;
+        (0..n).map(move |_| {
+            let mut world = World::new(next(&mut state));
+            for _ in 0..120 {
+                if world.tiles().len() > 24 {
+                    break;
+                }
+                let frontier = world.frontier();
+                let cell = frontier[(next(&mut state) % frontier.len() as u64) as usize];
+                let id = RIVER_TILES[(next(&mut state) % 9) as usize];
+                let def = cat.get(id).unwrap();
+                let legal: Vec<_> = world
+                    .legal_orientations(&cat, cell, def)
+                    .into_iter()
+                    .filter(|o| o.level == 0)
+                    .collect();
+                if legal.is_empty() {
+                    continue;
+                }
+                let o = legal[(next(&mut state) % legal.len() as u64) as usize];
+                world.place(&cat, cell, id, o).unwrap();
+            }
+            play_tiles(&world)
+        })
+    }
+
+    /// A fork at rotation `k` with an equal straight on each arm, then the same with a spring past
+    /// the straights on two arms, and with springs in place of the straights on two arms. Built as
+    /// tile lists, away from the start tile, with each arm piece turned to meet its arm.
+    fn symmetric_fork_worlds(k: u8) -> Vec<Vec<PlayTile>> {
+        let cat = catalog();
+        let fork = cat.get("river_fork").unwrap();
+        let origin = Axial::new(0, 0);
+        let arms: Vec<u8> = (0..6)
+            .filter(|&e| fork.edge(e, k).kind == SocketKind::River)
+            .collect();
+        assert_eq!(arms.len(), 3);
+        // `id` at `cell`, turned so its River edge faces back along arm `e`.
+        let piece = |cell: Axial, id: &str, e: u8| {
+            let def = cat.get(id).unwrap();
+            let rotation = (0..6)
+                .find(|&r| def.edge(opposite_edge(e), r).kind == SocketKind::River)
+                .unwrap();
+            PlayTile {
+                cell,
+                tile: id.into(),
+                rotation,
+                level: 0,
+            }
+        };
+        let fork_tile = tile(0, 0, "river_fork", k);
+        let straights: Vec<PlayTile> = std::iter::once(fork_tile.clone())
+            .chain(
+                arms.iter()
+                    .map(|&e| piece(origin.neighbor(e), "river_straight", e)),
+            )
+            .collect();
+        let mut out = vec![straights.clone()];
+        for skip in 0..3 {
+            let mut far = straights.clone();
+            let mut near = vec![fork_tile.clone()];
+            for (i, &e) in arms.iter().enumerate() {
+                if i == skip {
+                    near.push(piece(origin.neighbor(e), "river_straight", e));
+                } else {
+                    far.push(piece(origin.neighbor(e).neighbor(e), "river_spring", e));
+                    near.push(piece(origin.neighbor(e), "river_spring", e));
+                }
+            }
+            out.push(far);
+            out.push(near);
+        }
+        out
+    }
+
+    /// Same keys and ends, the same point counts, and every point within 1e-4 m.
+    fn assert_same_paths(
+        got: &BTreeMap<(Axial, usize), RiverPath>,
+        want: &BTreeMap<(Axial, usize), RiverPath>,
+    ) {
+        assert_eq!(
+            got.keys().collect::<Vec<_>>(),
+            want.keys().collect::<Vec<_>>()
+        );
+        for (k, g) in got {
+            let w = &want[k];
+            assert_eq!((g.up, g.down), (w.up, w.down), "{k:?}");
+            assert_eq!(g.points.len(), w.points.len(), "{k:?}");
+            for (a, b) in g.points.iter().zip(&w.points) {
+                assert!(a.distance(*b) <= 1e-4, "{k:?}: {a} vs {b}");
+            }
+        }
+    }
+
+    #[test]
+    fn orientation_matches_legacy_on_fixtures_and_random_flat_worlds() {
+        let cat = catalog();
+        let (mut junctions, mut springs, mut mouths, mut bridges, mut reversed) = (0, 0, 0, 0, 0);
+        for world in fixture_worlds().chain(random_flat_river_worlds(512, 0xA41)) {
+            let got = oriented_rivers(&world, &cat);
+            let want = crate::water::legacy::oriented_rivers(&world, &cat);
+            assert_same_paths(&got, &want);
+            assert_eq!(got, want, "bit-equal world points");
+            for ((cell, i), p) in &got {
+                junctions += usize::from(p.at_junction());
+                springs += usize::from(p.up == RiverEnd::Spring || p.down == RiverEnd::Spring);
+                mouths += usize::from(p.up == RiverEnd::Mouth || p.down == RiverEnd::Mouth);
+                let t = world.iter().find(|t| t.cell == *cell).unwrap();
+                bridges += usize::from(t.tile.contains("bridge"));
+                let def = cat.get(&t.tile).unwrap();
+                let (a, _, _) = hex_core::river::river_segment_ends(def, t.rotation)[*i];
+                reversed += usize::from(a != p.up);
+            }
+        }
+        assert!(
+            junctions > 0 && springs > 0 && mouths > 0 && bridges > 0 && reversed > 0,
+            "coverage: {junctions} junction arms, {springs} springs, {mouths} mouths, \
+             {bridges} bridges, {reversed} reversed"
+        );
+    }
+
+    #[test]
+    fn junction_ties_match_legacy_on_symmetric_forks() {
+        let cat = catalog();
+        for k in 0..6 {
+            for w in symmetric_fork_worlds(k) {
+                let got = oriented_rivers(&w, &cat);
+                let want = crate::water::legacy::oriented_rivers(&w, &cat);
+                assert_same_paths(&got, &want);
+                assert_eq!(got, want, "bit-equal world points");
+            }
         }
     }
 }

@@ -169,11 +169,17 @@ const REFUSAL_WORDS: Record<string, string> = {
   deck_end: DECK_END_REFUSAL,
   footprint_edges: FOOTPRINT_EDGES,
   no_footprint_room: FOOTPRINT_REFUSAL,
+  river_uphill: "Rivers can't run uphill.",
+  own_slope: "Its slope can't meet the flat edge here. Place it beside another hillside.",
 };
 for (const k of KINDS) REFUSAL_WORDS[`missing_${k.toLowerCase()}`] = missingWord(k);
 for (const mine of KINDS)
   for (const theirs of KINDS)
     REFUSAL_WORDS[`clash_${mine.toLowerCase()}_${theirs.toLowerCase()}`] = clashWord(mine, theirs);
+// A seam whose kinds meet but whose heights do not, beside a hillside's sloped edge (owner 2026-11-24).
+for (const k of KINDS)
+  REFUSAL_WORDS[`slope_${k.toLowerCase()}`] =
+    `${k} can't meet a slope. Turn the hillside, or place another hillside here.`;
 
 /** The wording for an engine refusal code, empty for one the sheet does not word yet. */
 export const refusalWord = (code: string): string => REFUSAL_WORDS[code] ?? "";

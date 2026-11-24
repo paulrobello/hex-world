@@ -26,4 +26,5 @@
             (piece: "river_reeds", density: 0.75),
         ],
     ),
+    raisable: true,
 )

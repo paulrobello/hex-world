@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 
 use bevy::input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll, MouseScrollUnit};
 use bevy::prelude::*;
-use hex_core::{Axial, RotateDir};
+use hex_core::{Axial, LevelDir, RotateDir};
 use serde::{Deserialize, Serialize};
 
 /// The player's tool: place tiles or bulldoze them.
@@ -59,6 +59,11 @@ pub enum Action {
     Hover(Option<Axial>),
     /// Cycle the ghost rotation: `Forward` is clockwise viewed from above (R), `Back` is Shift+R.
     Rotate(RotateDir),
+    /// Step the ghost one level: `Up` is E, `Down` is Q (owner 2026-11-24).
+    Level(LevelDir),
+    /// Step the ghost's picker-group member (shape) on its level: `Forward` is T, `Back` is
+    /// Shift+T (owner 2026-11-24).
+    Shape(RotateDir),
     Undo,
     Redo,
     ToggleBulldoze,
@@ -271,6 +276,19 @@ pub fn map_input(f: &InputFrame, rotate_wheel: &mut f32) -> Vec<Action> {
                 RotateDir::Forward
             }));
         }
+        if f.pressed(KeyCode::KeyE) {
+            out.push(Action::Level(LevelDir::Up));
+        }
+        if f.pressed(KeyCode::KeyQ) {
+            out.push(Action::Level(LevelDir::Down));
+        }
+        if f.pressed(KeyCode::KeyT) {
+            out.push(Action::Shape(if shift {
+                RotateDir::Back
+            } else {
+                RotateDir::Forward
+            }));
+        }
         if f.pressed(KeyCode::KeyB) {
             out.push(Action::ToggleBulldoze);
         }
@@ -368,6 +386,26 @@ pub fn drop_live_input(
     *scroll = default();
 }
 
+/// Holds T as the shape key while the play scenario places tiles (not in photo or walk mode), so
+/// `hex-render`'s tilt-shift T toggle stands aside there ([`TiltKeyBlocked`]).
+///
+/// [`TiltKeyBlocked`]: hex_render::tilt_shift::TiltKeyBlocked
+pub fn claim_t_key(
+    game: Res<crate::game::GameState>,
+    scenario: Option<Res<hex_render::ActiveScenario>>,
+    blocked: Option<ResMut<hex_render::tilt_shift::TiltKeyBlocked>>,
+) {
+    let Some(mut blocked) = blocked else {
+        return;
+    };
+    let claimed = scenario.is_some_and(|s| s.0 == hex_render::Scenario::Play)
+        && !game.photo_mode
+        && !game.walk_mode;
+    if blocked.0 != claimed {
+        blocked.0 = claimed;
+    }
+}
+
 /// Reads this frame's keyboard and mouse into the action queue.
 #[allow(clippy::too_many_arguments)]
 pub fn read_input(
@@ -430,6 +468,19 @@ mod tests {
             press(&[KeyCode::KeyR], &[]),
             [Action::Rotate(RotateDir::Forward)]
         );
+        assert_eq!(press(&[KeyCode::KeyE], &[]), [Action::Level(LevelDir::Up)]);
+        assert_eq!(
+            press(&[KeyCode::KeyQ], &[]),
+            [Action::Level(LevelDir::Down)]
+        );
+        assert_eq!(
+            press(&[KeyCode::KeyT], &[]),
+            [Action::Shape(RotateDir::Forward)]
+        );
+        assert_eq!(
+            press(&[KeyCode::KeyT], &[KeyCode::ShiftLeft]),
+            [Action::Shape(RotateDir::Back)]
+        );
         assert_eq!(press(&[KeyCode::KeyB], &[]), [Action::ToggleBulldoze]);
         assert_eq!(press(&[KeyCode::Tab], &[]), [Action::ToggleInventory]);
         assert_eq!(press(&[KeyCode::Escape], &[]), [Action::Escape]);
@@ -491,6 +542,7 @@ mod tests {
         );
         for k in [
             KeyCode::KeyR,
+            KeyCode::KeyT,
             KeyCode::KeyB,
             KeyCode::Tab,
             KeyCode::KeyP,
@@ -713,7 +765,13 @@ mod tests {
             map_photo_input(&press(KeyCode::Escape)),
             [Action::ExitPhoto]
         );
-        for k in [KeyCode::KeyR, KeyCode::KeyB, KeyCode::Tab, KeyCode::Digit1] {
+        for k in [
+            KeyCode::KeyR,
+            KeyCode::KeyT,
+            KeyCode::KeyB,
+            KeyCode::Tab,
+            KeyCode::Digit1,
+        ] {
             assert!(
                 map_photo_input(&press(k)).is_empty(),
                 "{k:?} is inert in photo mode"
@@ -762,6 +820,29 @@ mod tests {
         // Once the script has run out, the window's input acts again.
         assert!(!CommandQueue::scripted([]).owns_input());
         assert_eq!(read_f_key(CommandQueue::scripted([])), [Action::ToggleWalk]);
+    }
+
+    /// T is the shape key while the play scenario places tiles, so tilt-shift's T stands aside;
+    /// in photo mode, walk mode and the other scenarios T toggles tilt-shift.
+    #[test]
+    fn play_placing_claims_t_from_tilt_shift() {
+        use bevy::ecs::system::RunSystemOnce;
+        use hex_render::{ActiveScenario, Scenario, tilt_shift::TiltKeyBlocked};
+        let claimed = |scenario: Scenario, photo: bool, walk: bool| {
+            let mut world = World::new();
+            let mut game = crate::game::GameState::new(1);
+            game.photo_mode = photo;
+            game.walk_mode = walk;
+            world.insert_resource(game);
+            world.insert_resource(ActiveScenario(scenario));
+            world.init_resource::<TiltKeyBlocked>();
+            world.run_system_once(claim_t_key).unwrap();
+            world.resource::<TiltKeyBlocked>().0
+        };
+        assert!(claimed(Scenario::Play, false, false));
+        assert!(!claimed(Scenario::Play, true, false), "photo mode");
+        assert!(!claimed(Scenario::Play, false, true), "walk mode");
+        assert!(!claimed(Scenario::Kit, false, false), "outside play");
     }
 
     /// Whether T (tilt-shift, read in `hex-render`) and F3 (FPS counter, read in `hex-play`) still

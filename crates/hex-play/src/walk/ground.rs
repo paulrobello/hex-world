@@ -15,7 +15,7 @@ use crate::{
         PlayTile,
         scatter::{self, Surface, TileScatter, Tri, turn},
     },
-    water::tiles::{WATER_Y, WaterKind, water_kind},
+    water::tiles::{WATER_Y, WaterKind, water_kind, water_y},
 };
 use hex_render::kit_runtime::piece_rotation;
 
@@ -124,6 +124,8 @@ struct CellGround {
     /// cover past the arch) rides the car's own tile ([`WalkGround::ride_car`]).
     car_paths: bool,
     water: bool,
+    /// The water surface at rest on the tile, [`water_y`] of its level.
+    water_y: f32,
     /// River or spring water: deeper than [`MAX_WADE`] is crossed at that depth, not refused.
     ford: bool,
     /// [`ride_max`] of the tile; `f32::MIN` for a placeholder.
@@ -269,9 +271,9 @@ pub struct WalkGround {
     pub revision: u64,
 }
 
-/// A landing stage deck in its frame: x and z ranges and the top's world height (the runtime notes:
-/// 0.45 m over the water at rest).
-pub const STAGE_DECK: ([f32; 2], [f32; 2], f32) = ([-0.75, 1.40], [-1.4, 1.4], WATER_Y + 0.45);
+/// A landing stage deck in its frame: x and z ranges and the top's height over the stage's origin,
+/// which `boats::draw` puts on the water at rest (the runtime notes: 0.45 m over it).
+pub const STAGE_DECK: ([f32; 2], [f32; 2], f32) = ([-0.75, 1.40], [-1.4, 1.4], 0.45);
 
 /// The stage's bollards (outer posts, 0.55 m over the deck: taller than [`MAX_STEP`]), stage frame.
 pub const STAGE_BOLLARDS: [[f32; 2]; 3] = [[1.3, -1.25], [1.3, 0.0], [1.3, 1.25]];
@@ -334,6 +336,13 @@ impl WalkGround {
         let at = crate::play::covering(|c: Axial| tile_at.get(&c).copied());
         let levels: HashMap<Axial, u8> = tiles.iter().map(|t| (t.cell, t.level)).collect();
         let level = |c: Axial| levels.get(&c).copied().unwrap_or(0);
+        // The fall faces (`play::respawn_fall_faces` draws them) of the drawn waterfalls.
+        let shown: Vec<PlayTile> = tiles
+            .iter()
+            .filter(|t| !hidden.contains(&t.cell))
+            .cloned()
+            .collect();
+        let falls = crate::water::tiles::waterfalls(&shown, catalog);
         for piece in ["boat_rowing", "boat_sail", "landing_stage"] {
             out.boat_shapes
                 .insert(piece.to_owned(), Arc::new(shape_of(piece)));
@@ -363,6 +372,7 @@ impl WalkGround {
                     || def.networks.iter().any(|n| n.kind == NetworkKind::Road),
                 ride_max: ride_max.unwrap_or(f32::MIN),
                 water: water_kind(def, t.rotation).is_some(),
+                water_y: water_y(t.level),
                 ford: matches!(
                     water_kind(def, t.rotation),
                     Some(WaterKind::River | WaterKind::Spring(_))
@@ -473,6 +483,13 @@ impl WalkGround {
                     place(&mut obs, f.piece, &shape(f.piece), &(root * local));
                 }
             }
+            for w in falls.iter().filter(|w| w.upper == t.cell) {
+                let piece = crate::play::fall_face_piece(w.drop);
+                if is_obstacle(piece) {
+                    let local = crate::play::fall_face_local(t.rotation, w.edge);
+                    place(&mut obs, piece, &shape(piece), &(root * local));
+                }
+            }
             for o in centre_obstacles() {
                 if def.center.as_ref().is_some_and(|c| c.as_str() == o.centre) {
                     let poly: Vec<Vec2> = o.corners.iter().map(|c| Vec2::from(*c)).collect();
@@ -515,8 +532,8 @@ impl WalkGround {
         let Some(g) = self.cells.get(&cell_at(p)) else {
             return Err(Blocked::Edge);
         };
-        if self.on_deck(p) {
-            return Ok((STAGE_DECK.2, 0.0, false));
+        if let Some(deck) = self.deck_y(p) {
+            return Ok((deck, 0.0, false));
         }
         if let Some(floor) = self.bore_floor(p) {
             return Ok((floor, 0.0, false));
@@ -528,7 +545,11 @@ impl WalkGround {
                 Some(s) => s.at(l[0], l[2]).ok_or(Blocked::Edge)?.0,
                 None => 0.0,
             };
-        let depth = if g.water { (WATER_Y - h).max(0.0) } else { 0.0 };
+        let depth = if g.water {
+            (g.water_y - h).max(0.0)
+        } else {
+            0.0
+        };
         Ok((h, depth, g.ford))
     }
 
@@ -543,7 +564,7 @@ impl WalkGround {
         let (h, depth, ford) = self.sample_ford(p)?;
         if depth > MAX_WADE {
             if ford {
-                return Ok(WATER_Y - MAX_WADE);
+                return Ok(self.water_y(p) - MAX_WADE);
             }
             return Err(Blocked::Water);
         }
@@ -641,7 +662,7 @@ impl WalkGround {
     pub fn top(&self, p: Vec2) -> Option<f32> {
         self.sample(p)
             .ok()
-            .map(|(h, depth)| if depth > 0.0 { WATER_Y } else { h })
+            .map(|(h, depth)| if depth > 0.0 { self.water_y(p) } else { h })
     }
 
     /// The nearest drawn prop `ray` enters within `max` metres: its distance along the ray and the
@@ -721,13 +742,24 @@ impl WalkGround {
 
     /// Whether `p` stands on a landing stage's deck.
     pub fn on_deck(&self, p: Vec2) -> bool {
-        let ([x0, x1], [z0, z1], _) = STAGE_DECK;
-        self.decks.iter().any(|t| {
+        self.deck_y(p).is_some()
+    }
+
+    /// The top of the landing stage deck under `p`, if any: [`STAGE_DECK`]'s height over the
+    /// stage's origin.
+    fn deck_y(&self, p: Vec2) -> Option<f32> {
+        let ([x0, x1], [z0, z1], top) = STAGE_DECK;
+        self.decks.iter().find_map(|t| {
             let d = p - t.translation.xz();
             let (xa, za) = (t.rotation * Vec3::X, t.rotation * Vec3::Z);
             let (x, z) = (d.dot(xa.xz()), d.dot(za.xz()));
-            (x0..=x1).contains(&x) && (z0..=z1).contains(&z)
+            ((x0..=x1).contains(&x) && (z0..=z1).contains(&z)).then_some(t.translation.y + top)
         })
+    }
+
+    /// The water surface at rest on the tile under `p` ([`WATER_Y`] off the drawn tiles).
+    fn water_y(&self, p: Vec2) -> f32 {
+        self.cells.get(&cell_at(p)).map_or(WATER_Y, |g| g.water_y)
     }
 
     pub fn is_empty(&self) -> bool {

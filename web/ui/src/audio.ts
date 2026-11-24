@@ -55,6 +55,7 @@ import {
   emitterCues,
   cellWorld,
   emitterGain,
+  fallEmitters,
   emptyMix,
   MUSIC_OPTS,
   musicGains,
@@ -219,6 +220,8 @@ export interface AudioDebug {
   decodedBudgetBytes: number | null;
   eventCues: Record<string, string[]>;
   emitters: { cue: string; q: number; r: number; gain: number; voiced: boolean }[];
+  /** The voiced waterfall loops at their pools (`fallEmitters` in audio-mix.ts). */
+  falls: { x: number; z: number; gain: number }[];
   missingEmitters: string[];
   bed: { cue: string; gain: number }[];
   mix: Mix;
@@ -351,6 +354,8 @@ export class GameAudio {
   private byEvent = new Map<string, string[]>();
   private emitters = new Map<string, Voice>();
   private candidates: Candidate[] = [];
+  /** The waterfall loops, keyed by their pool's position. */
+  private falls = new Map<string, Voice>();
   private oneShots = new Map<string, OneShotState>(ONE_SHOTS.map((row) => [row.name, oneShotIdle()]));
   /** Per row, its pool's variants from the manifest, in manifest order. */
   private variants = new Map<string, string[]>();
@@ -782,6 +787,7 @@ export class GameAudio {
     this.candidates = cands;
     this.mix = biomeMix(placed, v);
     this.updateEmitters(ctx, cands);
+    this.updateFalls(ctx, fallEmitters(play.falls ?? [], v));
     this.updateBeds(ctx);
     this.updateMusic(ctx, play.photo_mode);
     this.oneShotTiles = oneShotTiles;
@@ -822,6 +828,7 @@ export class GameAudio {
     q: number,
     r: number,
     positional: boolean,
+    at?: readonly [number, number],
   ): Voice | null {
     const buf = this.buffers.get(cue);
     const c = this.cues.get(cue);
@@ -835,7 +842,7 @@ export class GameAudio {
     src.loopEnd = end;
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    const pan = positional ? this.panner(ctx, q, r) : null;
+    const pan = !positional ? null : at ? this.pannerAt(ctx, at[0], at[1]) : this.panner(ctx, q, r);
     src.connect(gain);
     (pan ? gain.connect(pan) : gain).connect(this.buses.get("ambience")!);
     // Each emitter starts at its own point in the loop, so two copies of one buffer never comb.
@@ -873,6 +880,29 @@ export class GameAudio {
       }
       v.level = c.gain;
       this.glide(v.gain.gain, c.gain);
+    }
+  }
+
+  /** One loop per voiced fall at its pool; a fall that drops out of the voiced set fades out. */
+  private updateFalls(ctx: AudioContext, want: ReturnType<typeof fallEmitters>): void {
+    const at = (e: { x: number; z: number }) => `waterfall@${round(e.x, 2)},${round(e.z, 2)}`;
+    const keep = new Set(want.map(at));
+    for (const [k, v] of this.falls)
+      if (!keep.has(k)) {
+        this.stopVoice(ctx, v);
+        this.falls.delete(k);
+      }
+    for (const e of want) {
+      const k = at(e);
+      let v = this.falls.get(k);
+      if (!v) {
+        const made = this.loopVoice(ctx, e.cue, k, 0, 0, true, [e.x, e.z]);
+        if (!made) continue;
+        v = made;
+        this.falls.set(k, v);
+      }
+      v.level = e.gain;
+      this.glide(v.gain.gain, e.gain);
     }
   }
 
@@ -1235,8 +1265,9 @@ export class GameAudio {
   private silence(): void {
     const ctx = this.ctx;
     if (!ctx) return;
-    for (const v of [...this.emitters.values(), ...this.beds.values()]) this.stopVoice(ctx, v);
+    for (const v of [...this.emitters.values(), ...this.falls.values(), ...this.beds.values()]) this.stopVoice(ctx, v);
     this.emitters.clear();
+    this.falls.clear();
     this.beds.clear();
     for (const tr of this.tracks.values()) tr.el.pause();
     this.music = musicIdle();
@@ -1276,6 +1307,7 @@ export class GameAudio {
       });
     const wanted = new Set(Object.values(EMITTER_CUE).filter((c): c is string => !!c));
     for (const b of Object.values(BED_CUE)) if (b) wanted.add(b.cue);
+    wanted.add("waterfall");
     const last = this.recent.at(-1) ?? null;
     const at = (t: number | null) => (t === null ? null : round(t, 3));
     const oneShots: AudioDebug["oneShots"] = {};
@@ -1315,6 +1347,10 @@ export class GameAudio {
       decodedBudgetBytes: this.manifest?.decodedBudgetBytes ?? null,
       eventCues: Object.fromEntries(this.byEvent),
       emitters,
+      falls: [...this.falls].map(([k, v]) => {
+        const [x = 0, z = 0] = k.split("@")[1]!.split(",").map(Number);
+        return { x, z, gain: round(v.level) };
+      }),
       missingEmitters: this.loading === "done" ? [...wanted].filter((c) => !this.buffers.has(c)).sort() : [],
       bed: [...this.bedLevels].map(([cue, gain]) => ({ cue, gain: round(gain) })),
       mix: Object.fromEntries(Object.entries(this.mix).map(([b, v]) => [b, round(v)])) as Mix,

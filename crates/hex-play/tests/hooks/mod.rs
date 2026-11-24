@@ -786,6 +786,7 @@ const HOOKED: &[(&str, &[Need])] = &[
         &[Need::Freeze, Need::TimeOfDay],
     ),
     ("assets/shaders/grass.wesl", &[Need::TimeOfDay]),
+    ("assets/shaders/fall_mist.wesl", &[Need::TimeOfDay]),
     ("crates/hex-render/src/hooks.wesl", &[Need::Library]),
 ];
 

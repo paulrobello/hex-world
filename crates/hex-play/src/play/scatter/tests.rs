@@ -28,7 +28,7 @@ use bevy::prelude::*;
 use hex_core::{Axial, HEX_RADIUS, NetworkKind, ScatterRule, TileCatalog, TileDef, cell_seed};
 
 use super::super::{APOTHEM, KitPart};
-use super::{bands::*, layout::*, surface::*, sync::*, tables::*};
+use super::{bands::*, falls::*, layout::*, surface::*, sync::*, tables::*};
 use crate::water::tiles::Coastline;
 use hex_render::kit_runtime::{MANIFEST, piece_rotation};
 
@@ -2605,5 +2605,428 @@ fn the_fence_map_gives_a_footprint_its_ring_cells_walls() {
                 "r{rotation}: {s:?} does not face the farm"
             );
         }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Waterfalls (rivers-at-levels): the lip and the pool are kept clear, and rocks ring the pool
+
+/// The river-family tiles with their prepared ground.
+fn river_grounds() -> Vec<(TileDef, Prepared)> {
+    let c = catalog();
+    let mut out: Vec<(TileDef, Prepared)> = c
+        .tiles()
+        .iter()
+        .filter(|d| river_family(d))
+        .map(|d| (d.clone(), prepared(d).unwrap()))
+        .collect();
+    out.sort_by(|a, b| a.0.id.cmp(&b.0.id));
+    out
+}
+
+fn seed_of(s: i32) -> u64 {
+    cell_seed(13, Axial::new(s, -s / 2))
+}
+
+/// The stone cluster a pool's rocks draw.
+fn is_fall_rock(def: &TileDef, i: &Instance) -> bool {
+    family(i.piece(def.props.scatter[i.rule as usize].piece.as_str())) == "river_stones"
+}
+
+#[test]
+fn the_fall_constants_match_the_pool() {
+    assert_eq!(FALL_CLEAR, crate::water::tiles::PLUNGE_R);
+    assert!(FALL_ROCK_RING.1 > FALL_ROCK_RING.0 && FALL_ROCK_RING.0 >= FALL_CLEAR - 1.0);
+}
+
+/// A fall's seam in a tile's frame: the world edge turns by the tile's rotation, the upper side
+/// is not the pool, and the redraw key differs per edge and side.
+#[test]
+fn fall_seams_follow_the_tile_rotation() {
+    let s = fall_seams(&[(2, true)], 0);
+    assert_eq!(s.len(), 1);
+    assert!(!s[0].lower);
+    assert!((s[0].mid - FallSeam::on_edge(2, false).mid).length() < 1e-4);
+    let turned = fall_seams(&[(2, false)], 1);
+    assert!(turned[0].lower);
+    assert!((turned[0].mid - FallSeam::on_edge(1, true).mid).length() < 1e-4);
+    assert_eq!(seams_sig(&[]), 0);
+    let sigs: HashSet<u64> = (0..6)
+        .flat_map(|e| [false, true].map(|l| seams_sig(&[FallSeam::on_edge(e, l)])))
+        .collect();
+    assert_eq!(sigs.len(), 12);
+    assert!(sigs.iter().all(|&v| v != 0));
+    let seam = FallSeam::on_edge(0, true);
+    assert!((seam.distance(seam.mid) - 0.0).abs() < 1e-4);
+    assert!((seam.distance(seam.mid - seam.out * 4.0) - 4.0).abs() < 1e-4);
+}
+
+/// Distance from `p` to the hex edge `edge` (tile frame), measured from the edge's two corners
+/// (radius `HEX_RADIUS` at 60 * edge +- 30 degrees), independently of [`FallSeam::distance`].
+fn edge_distance(edge: u8, p: Vec2) -> f32 {
+    let corner = |deg: f32| Vec2::from_angle(deg.to_radians()) * HEX_RADIUS;
+    let base = 60.0 * f32::from(edge);
+    let (a, b) = (corner(base - 30.0), corner(base + 30.0));
+    let ab = b - a;
+    let t = ((p - a).dot(ab) / ab.dot(ab)).clamp(0.0, 1.0);
+    (p - (a + ab * t)).length()
+}
+
+/// Nothing stands within [`FALL_CLEAR`] of a seam, measured from the hex edge's corners: the upper
+/// side keeps all of it clear, and on the lower side the only instances nearer are exactly the
+/// stones [`fall_rocks`] returns.
+#[test]
+fn no_bank_props_within_six_metres_of_a_waterfall_seam() {
+    let mut cleared = 0;
+    for (def, g) in river_grounds() {
+        for edge in 0..6u8 {
+            for lower in [false, true] {
+                let seams = [FallSeam::on_edge(edge, lower)];
+                for s in 0..256 {
+                    let seed = seed_of(s);
+                    let base = layout(&def, seed, &g);
+                    let kept: Vec<Instance> = base
+                        .instances
+                        .iter()
+                        .filter(|i| edge_distance(edge, i.pos.xz()) >= FALL_CLEAR)
+                        .cloned()
+                        .collect();
+                    cleared += base.instances.len() - kept.len();
+                    let rocks = if lower {
+                        fall_rocks(&def, seed, &g, &seams, &kept)
+                    } else {
+                        vec![]
+                    };
+                    let l = with_falls(base, &def, seed, &g, &seams);
+                    assert_eq!(
+                        l.instances.len(),
+                        kept.len() + rocks.len(),
+                        "{} edge {edge} seed {seed}",
+                        def.id
+                    );
+                    for i in &l.instances {
+                        if edge_distance(edge, i.pos.xz()) < FALL_CLEAR {
+                            assert!(
+                                lower && rocks.iter().any(|r| r.pos == i.pos),
+                                "{} edge {edge} seed {seed}: a prop inside the clear zone",
+                                def.id
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(cleared > 0, "some bank prop stood in the way");
+}
+
+/// A spring or bend falling onto a pool: no lily cluster or reed bed has any part of its centre
+/// in the plunge disc, and some would have without the fall.
+#[test]
+fn lilies_and_reed_beds_stay_out_of_the_plunge_disc() {
+    use crate::water::tiles::PLUNGE_R;
+    let (mut had, mut waters) = (0, 0);
+    for (def, g) in river_grounds() {
+        if !def
+            .props
+            .scatter
+            .iter()
+            .any(|r| water_prop(r.piece.as_str()))
+        {
+            continue;
+        }
+        for edge in 0..6u8 {
+            let seam = FallSeam::on_edge(edge, true);
+            for s in 0..256 {
+                let seed = seed_of(s);
+                let base = layout(&def, seed, &g);
+                let l = with_falls(base.clone(), &def, seed, &g, &[seam]);
+                let water =
+                    |i: &&Instance| water_prop(def.props.scatter[i.rule as usize].piece.as_str());
+                had += base
+                    .instances
+                    .iter()
+                    .filter(water)
+                    .filter(|i| i.pos.xz().distance(seam.mid) < PLUNGE_R)
+                    .count();
+                for i in l.instances.iter().filter(water) {
+                    waters += 1;
+                    assert!(
+                        i.pos.xz().distance(seam.mid) >= PLUNGE_R,
+                        "{} edge {edge} seed {seed}: a water prop in the pool",
+                        def.id
+                    );
+                }
+            }
+        }
+    }
+    assert!(had > 0 && waters > 0, "had {had}, kept {waters}");
+}
+
+/// A pool is ringed by 0 to [`FALL_ROCKS_MAX`] stone clusters, each [`FALL_ROCK_RING`] from the
+/// seam's midpoint on the bank, none on the upper side or a tile with no seam, the same for the
+/// same seed.
+#[test]
+fn waterfall_rocks_ring_the_pool() {
+    let mut per_count = [0u32; FALL_ROCKS_MAX + 1];
+    for (def, g) in river_grounds() {
+        let (low, high) = bank_band("river_stones").unwrap();
+        for edge in 0..6u8 {
+            let seam = FallSeam::on_edge(edge, true);
+            for s in 0..256 {
+                let seed = seed_of(s);
+                let base = layout(&def, seed, &g);
+                let kept: Vec<Instance> = base
+                    .instances
+                    .iter()
+                    .filter(|i| seam.distance(i.pos.xz()) >= FALL_CLEAR)
+                    .cloned()
+                    .collect();
+                let rocks = fall_rocks(&def, seed, &g, &[seam], &kept);
+                assert_eq!(rocks, fall_rocks(&def, seed, &g, &[seam], &kept));
+                assert!(rocks.len() <= FALL_ROCKS_MAX, "{} {}", def.id, rocks.len());
+                if edge == 0 && def.id == "river_straight" {
+                    per_count[rocks.len()] += 1;
+                }
+                for r in &rocks {
+                    let d = r.pos.xz().distance(seam.mid);
+                    assert!(
+                        (FALL_ROCK_RING.0..=FALL_ROCK_RING.1).contains(&d),
+                        "{} edge {edge} seed {seed}: {d:.2} m from the midpoint",
+                        def.id
+                    );
+                    assert!(is_fall_rock(&def, r));
+                    let piece = def.props.scatter[r.rule as usize].piece.as_str();
+                    let reach = footprint(r.piece(piece)).ground;
+                    assert!(
+                        stand(&g.surface, r.pos.xz(), floor_slots(piece), reach, false).is_some(),
+                        "{} edge {edge} seed {seed}: a rock off the bank floor",
+                        def.id
+                    );
+                    let (_, slot) = g.surface.at(r.pos.x, r.pos.z).unwrap();
+                    assert!(floor_ok(floor_slots(piece), slot), "{}: on {slot}", def.id);
+                    assert!(r.pos.y >= low && r.pos.y <= high, "{} on the bank", def.id);
+                    assert!(
+                        kept.iter().all(|k| k.pos.xz().distance(r.pos.xz()) > 0.5),
+                        "{}: a rock on another prop",
+                        def.id
+                    );
+                }
+                assert!(
+                    fall_rocks(&def, seed, &g, &[FallSeam::on_edge(edge, false)], &kept).is_empty()
+                );
+                assert!(fall_rocks(&def, seed, &g, &[], &kept).is_empty());
+            }
+        }
+    }
+    println!("river_straight pools by rock count {per_count:?}");
+    assert!(
+        per_count.iter().all(|&n| n > 0),
+        "every count 0..=2 occurs on a straight's pool: {per_count:?}"
+    );
+}
+
+/// FNV-1a over every [`river_family`] tile's layout fingerprints across 256 seeds.
+fn flat_river_hash() -> u64 {
+    let c = catalog();
+    let mut defs: Vec<&TileDef> = c.tiles().iter().filter(|d| river_family(d)).collect();
+    defs.sort_by(|a, b| a.id.cmp(&b.id));
+    let mut h: u64 = 0xCBF2_9CE4_8422_2325;
+    for def in defs {
+        let g = prepared(def).unwrap();
+        let bytes = def.id.bytes().chain((0..256).flat_map(|s| {
+            let seed = cell_seed(13, Axial::new(s, -s / 2));
+            layout(def, seed, &g).fingerprint().to_le_bytes()
+        }));
+        for b in bytes {
+            h = (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01B3);
+        }
+    }
+    h
+}
+
+/// A river with no fall scatters exactly as it did before the falls (hash computed at 9d6331d,
+/// before this task's scatter changes), and [`with_falls`] with no seam leaves the layout alone.
+#[test]
+fn a_flat_river_scatters_exactly_as_before() {
+    assert_eq!(flat_river_hash(), 0xdc79_7e66_0380_7365);
+    for (def, g) in river_grounds() {
+        for s in 0..256 {
+            let seed = seed_of(s);
+            let base = layout(&def, seed, &g);
+            assert_eq!(with_falls(base.clone(), &def, seed, &g, &[]), base);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The water layout's falls reach scatter as seams on the right edge and side
+
+use super::super::PlayTile;
+use hex_core::PlacedTile;
+
+fn play_tile(cell: Axial, id: &str, rotation: u8, level: u8) -> PlayTile {
+    PlayTile {
+        cell,
+        tile: id.into(),
+        rotation,
+        level,
+    }
+}
+
+/// The world edges of `id` at rotation 0 whose socket is a river.
+fn river_edges(c: &TileCatalog, id: &str) -> Vec<u8> {
+    (0..6u8)
+        .filter(|&e| c.get(id).unwrap().edge(e, 0).kind == SocketKind::River)
+        .collect()
+}
+
+/// A rotation of `id` whose world edge `e` is a river.
+fn rotation_with_river_at(c: &TileCatalog, id: &str, e: u8) -> u8 {
+    (0..6u8)
+        .find(|&k| c.get(id).unwrap().edge(e, k).kind == SocketKind::River)
+        .unwrap()
+}
+
+/// Checks that for (upper cell, lower cell) the seams [`fall_edges`] hands scatter put each
+/// tile's seam midpoint, turned to world space, on the midpoint of the two cell centres (the shared
+/// edge), facing the other cell, and mark only the lower tile lower.
+fn check_seams(c: &TileCatalog, tiles: &[PlayTile], (up, low): (Axial, Axial)) {
+    let falls = fall_edges(tiles, c);
+    let centre = |cell: Axial| Vec2::from(cell.to_world(HEX_RADIUS));
+    let turn = |cell: Axial| {
+        let t = tiles.iter().find(|t| t.cell == cell).unwrap();
+        Vec2::from_angle((60.0 * f32::from(t.rotation)).to_radians())
+    };
+    let seams = |cell: Axial| {
+        let t = tiles.iter().find(|t| t.cell == cell).unwrap();
+        fall_seams(&falls[&cell], t.rotation)
+    };
+    let shared = (centre(up) + centre(low)) * 0.5;
+    let (u, l) = (seams(up), seams(low));
+    assert_eq!((u.len(), l.len()), (1, 1), "{up:?} over {low:?}");
+    assert!(!u[0].lower && l[0].lower, "only the lower tile is the pool");
+    for (cell, seam, toward) in [(up, u[0], low), (low, l[0], up)] {
+        let mid = centre(cell) + turn(cell).rotate(seam.mid);
+        assert!(
+            (mid - shared).length() < 1e-3,
+            "{cell:?}: {mid} vs {shared}"
+        );
+        let out = turn(cell).rotate(seam.out);
+        assert!(out.dot((centre(toward) - centre(cell)).normalize()) > 0.99);
+    }
+}
+
+#[test]
+fn a_rotated_fall_reaches_scatter_on_the_shared_edge() {
+    let c = catalog();
+    let (up, low) = (Axial::new(0, 0), Axial::new(0, 0).neighbor(1));
+    // A straight turned one step has its river on world edges 1 and 4.
+    let tiles = [
+        play_tile(up, "river_straight", 1, 2),
+        play_tile(low, "river_straight", 1, 0),
+    ];
+    check_seams(&c, &tiles, (up, low));
+}
+
+#[test]
+fn a_spring_falling_onto_a_bend_reaches_scatter_on_the_shared_edge() {
+    let c = catalog();
+    let up = Axial::new(4, 0);
+    let w = river_edges(&c, "river_spring")[0];
+    let low = up.neighbor(w);
+    let bend = rotation_with_river_at(&c, "river_bend", (w + 3) % 6);
+    let tiles = [
+        play_tile(up, "river_spring", 0, 1),
+        play_tile(low, "river_bend", bend, 0),
+    ];
+    check_seams(&c, &tiles, (up, low));
+}
+
+/// `World::rivers().falls` and the water layout's fall edges name the same (cell, edge) pairs.
+#[test]
+fn the_core_waterfalls_and_the_water_layout_agree() {
+    let c = catalog();
+    let placed = |cell: Axial, id: &str, rotation: u8, level: u8| {
+        let tile = PlacedTile {
+            def: id.into(),
+            rotation,
+            level,
+            seed: cell_seed(1, cell),
+        };
+        (cell, tile)
+    };
+    let straight_facing = |e: u8| rotation_with_river_at(&c, "river_straight", e);
+    let o = Axial::new(3, 3);
+    let fork = river_edges(&c, "river_fork");
+    let arm = |w: u8, level: u8| {
+        placed(
+            o.neighbor(w),
+            "river_straight",
+            straight_facing((w + 3) % 6),
+            level,
+        )
+    };
+    let (b, bridge) = (Axial::new(-3, 2), river_edges(&c, "river_road_bridge"));
+    let worlds = [
+        (
+            "a straight fall",
+            vec![
+                placed(Axial::new(0, 0), "river_straight", 0, 2),
+                placed(Axial::new(0, 0).neighbor(0), "river_straight", 0, 0),
+            ],
+        ),
+        (
+            "a junction with one raised arm",
+            vec![
+                placed(o, "river_fork", 0, 0),
+                arm(fork[0], 1),
+                arm(fork[1], 0),
+                arm(fork[2], 0),
+            ],
+        ),
+        (
+            "a river bridge at level 1",
+            vec![
+                placed(
+                    b.neighbor(bridge[0]),
+                    "river_straight",
+                    straight_facing((bridge[0] + 3) % 6),
+                    1,
+                ),
+                placed(b, "river_road_bridge", 0, 1),
+                placed(
+                    b.neighbor(bridge[1]),
+                    "river_straight",
+                    straight_facing((bridge[1] + 3) % 6),
+                    0,
+                ),
+            ],
+        ),
+    ];
+    for (name, tiles) in worlds {
+        let w = World::from_parts(
+            1,
+            tiles.into_iter().collect(),
+            Default::default(),
+            Vec::new(),
+        );
+        let core: HashSet<(Axial, u8)> = w
+            .rivers(&c)
+            .falls
+            .iter()
+            .flat_map(|f| [(f.upper, f.edge), (f.lower, (f.edge + 3) % 6)])
+            .collect();
+        let play: Vec<PlayTile> = w
+            .tiles()
+            .iter()
+            .map(|(cell, t)| play_tile(*cell, &t.def, t.rotation, t.level))
+            .collect();
+        let layout_edges: HashSet<(Axial, u8)> = fall_edges(&play, &c)
+            .into_iter()
+            .flat_map(|(cell, f)| f.into_iter().map(move |(e, _)| (cell, e)))
+            .collect();
+        assert!(!core.is_empty(), "{name}: the world forms a fall");
+        assert_eq!(layout_edges, core, "{name}");
     }
 }

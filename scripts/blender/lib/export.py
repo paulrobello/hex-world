@@ -20,7 +20,8 @@ BUDGET_CLASSES = ("piece", "tileable", "hero")
 
 def add_socket(name, loc, parent, yaw_deg=0.0, **extras):
     """Named empty exported as a glTF node with extras (export_extras=True).
-    Names: socket-lane-<n> (network lanes), anchor-prop-<n> (prop anchors), anchor-park-<n> (parking spots)."""
+    Names: socket-lane-<n> (network lanes), socket-lip-<tier> (a fall face's sheet lips), anchor-prop-<n>
+    (prop anchors), anchor-park-<n> (parking spots)."""
     e = scene.empty(name, loc, parent)
     e.rotation_euler = (0.0, 0.0, math.radians(yaw_deg))
     for k, v in extras.items():
@@ -159,11 +160,12 @@ def write_export_report(path, root, piece_id, generator_path, budget_class=None)
         nodes.append(o.name)
         if o.type == "MESH" and o.name.startswith(f"{piece_id}_lod"):
             lods[o.name] = geom.tri_count(o)
-        if o.name.startswith(("socket-lane-", "anchor-prop-", "anchor-park-")):
+        if o.name.startswith(("socket-lane-", "socket-lip-", "anchor-prop-", "anchor-park-")):
             p = o.matrix_world.translation
             sockets.append({"name": o.name, "position": list(hexgeo.blender_to_rt(p.x, p.y, p.z)),
                             "yaw": math.degrees(o.matrix_world.to_euler().z),
-                            "extras": {k: o[k] for k in o.keys() if not k.startswith("_")}})
+                            "extras": {k: (o[k].to_list() if hasattr(o[k], "to_list") else o[k])
+                                       for k in o.keys() if not k.startswith("_")}})
     rep = {"pieceId": piece_id, "nodes": sorted(nodes), "lodTris": lods, "sockets": sockets,
            "generator": {"path": pathlib.Path(generator_path).resolve().relative_to(REPO).as_posix(),
                          "sha256": bake.sha256_file(generator_path)},

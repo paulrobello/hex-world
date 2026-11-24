@@ -34,4 +34,5 @@
             (piece: "reed_bed", density: 0.5),
         ],
     ),
+    raisable: true,
 )

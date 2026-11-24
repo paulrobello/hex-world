@@ -152,24 +152,30 @@ function ghostTag(st: PlayState, g: NonNullable<PlayState["ghost"]>, refusal: Re
   const ok = e ? steps.length > 0 : g.legal_rotations.length > 0;
   const name = tileName(g.tile);
   if (ok && g.valid) {
-    // A group (the Beach Curve) counts every member's steps at this level together, as R walks them.
+    // R turns the ghost's member on its level, T changes the member and E/Q the level (owner
+    // 2026-11-24), so a group (the Beach Curve) counts only the current member's steps here.
     const atLevel = e ? e.orientations.filter(([, , l]) => l === g.level) : [];
+    const own = atLevel.filter(([id]) => id === g.tile);
     const { index, count } =
       entry && e && entry.tiles.length > 1
-        ? groupReadout(atLevel, g.tile, g.rotation)
+        ? groupReadout(own, g.tile, g.rotation)
         : rotationReadout(def!, g.legal_rotations, g.rotation);
-    // R steps every level too, so the hint shows while any orientation is left to turn to.
-    const canTurn = turnHint(count, steps.length);
+    // Each hint shows while its key has somewhere else to go.
+    const canTurn = turnHint(count, own.length);
+    const canShape = !!entry && entry.tiles.length > 1 && atLevel.some(([id]) => id !== g.tile);
+    const canLift = steps.some((s) => s.level !== g.level);
     const fits = count === 1 ? "Fits" : `Rotation ${index + 1} of ${count}`;
     const pinned = ghostCovers(g, st.pinned);
     const parts = [text(name), fitPart(fits, "plain")];
     if (g.level > 0) parts.push(fitPart(`Level ${g.level}`, "quiet"));
     if (canTurn) parts.push({ kind: "kbd", key: "R" });
+    if (canShape) parts.push({ kind: "kbd", key: "T" });
+    if (canLift) parts.push({ kind: "kbd", key: "E/Q" });
     if (pinned) parts.push(fitPart("Pinned · click to place", "quiet"));
     return {
       cell: g,
       level: g.level,
-      sig: `ok|${cellKey(g)}|${g.tile}|${fits}|${g.level}|${canTurn}|${pinned}`,
+      sig: `ok|${cellKey(g)}|${g.tile}|${fits}|${g.level}|${canTurn}|${canShape}|${canLift}|${pinned}`,
       bad: false,
       stacked: false,
       parts,
@@ -194,7 +200,7 @@ function ghostTag(st: PlayState, g: NonNullable<PlayState["ghost"]>, refusal: Re
   };
 }
 
-/** Where the ghost's member and rotation sit among a group's steps at its level ("Rotation 4 of 5"). */
+/** Where the ghost's rotation sits among its member's steps at its level ("Rotation 2 of 3"). */
 function groupReadout(
   steps: readonly [member: string, rotation: number, level: number][],
   tile: string,

@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use bevy::prelude::*;
 use hex_core::{
-    Axial, EdgeStatus, Orientation, Refusal, ReplaceError, RotateDir, SocketKind, TileCatalog,
-    TileDef, World, opposite_edge,
+    Axial, EdgeStatus, LevelDir, Orientation, Refusal, ReplaceError, RotateDir, SocketKind,
+    TileCatalog, TileDef, World, opposite_edge,
 };
 use hex_play::play::{PlayGhost, PlayTile, PlayView, rise::RiseMessage};
 use hex_render::{ActiveScenario, Scenario};
@@ -466,7 +466,7 @@ impl GameState {
             self.world
                 .faces(&self.catalog, cell, d, o)
                 .iter()
-                .any(|f| f.cliff)
+                .any(|f| f.cliff || f.waterfall)
         };
         let fits = |o: &Orientation| legal.contains(o) && cliff(*o) == cliff(first);
         preferred
@@ -548,6 +548,22 @@ impl GameState {
             .collect();
         legal.sort();
         Some((cell, legal, edges, valid))
+    }
+
+    /// The flow the ghost at `cell` would give its river (`World::ghost_flow`, RQ11 O2) and its
+    /// waterfall-marker world edges (`World::waterfall_edges`), each in edge order. An orientation
+    /// whose river would run uphill has no flow, and so no marker either: a fall seam is shown only
+    /// where the placement would stand.
+    fn ghost_river(&self, cell: Axial) -> (Vec<(u8, hex_core::FlowDir)>, Vec<u8>) {
+        let def = self.selected_def();
+        let flow = self.world.ghost_flow(&self.catalog, cell, def, self.chosen);
+        if flow.is_empty() {
+            return (flow, vec![]);
+        }
+        let falls = self
+            .world
+            .waterfall_edges(&self.catalog, cell, def, self.chosen);
+        (flow, (0..6u8).filter(|&w| falls[usize::from(w)]).collect())
     }
 
     /// The glow of each outer edge of a footprint ghost standing at `cell`, in local outer-index
@@ -640,6 +656,8 @@ impl GameState {
                 None => self.refuse("select_tile", format!("no inventory tile {}", n + 1)),
             },
             Action::Rotate(dir) => self.rotate(dir),
+            Action::Level(dir) => self.step_level(dir),
+            Action::Shape(dir) => self.step_shape(dir),
             Action::Primary => self.primary(),
             Action::QuickPlace => self.quick_place_action(),
             Action::QuickReplace => match self.hovered {
@@ -772,6 +790,81 @@ impl GameState {
             .insert(self.selected.clone(), self.chosen);
         let valid = self.ghost().is_some_and(|g| g.3);
         self.result("rotate", self.target_slot().or(self.hovered), None);
+        vec![GameEvent::GhostRotated {
+            rotation: self.chosen.rotation,
+            level: self.chosen.level,
+            valid,
+        }]
+    }
+
+    /// E/Q: the ghost one level up or down ([`hex_core::World::step_level`]). With no slot, or
+    /// no legal level that way, nothing changes and no event fires: the level clamps.
+    fn step_level(&mut self, dir: LevelDir) -> Vec<GameEvent> {
+        let stepped = self.target_slot().and_then(|slot| {
+            let members = self.catalog.siblings(&self.selected);
+            self.world
+                .step_level(
+                    &self.catalog,
+                    self.anchor_for(slot, self.selected_def()),
+                    &members,
+                    (&self.selected, self.chosen),
+                    dir,
+                )
+                .map(|(d, o)| (d.id.clone(), o))
+        });
+        let at = self.target_slot().or(self.hovered);
+        let Some((tile, o)) = stepped else {
+            self.result("level", at, None);
+            return vec![];
+        };
+        self.selected = tile;
+        self.chosen = o;
+        if let Some(g) = self.catalog.group_of(&self.selected) {
+            self.chosen_variant
+                .insert(g.to_owned(), self.selected.clone());
+        }
+        self.chosen_orientation
+            .insert(self.selected.clone(), self.chosen);
+        let valid = self.ghost().is_some_and(|g| g.3);
+        self.result("level", at, None);
+        vec![GameEvent::GhostRotated {
+            rotation: self.chosen.rotation,
+            level: self.chosen.level,
+            valid,
+        }]
+    }
+
+    /// T/Shift+T: the ghost's next or previous picker-group member on its level
+    /// ([`hex_core::World::step_member`]). A lone tile, no slot, or no other member that fits
+    /// changes nothing and fires no event.
+    fn step_shape(&mut self, dir: RotateDir) -> Vec<GameEvent> {
+        let stepped = self.target_slot().and_then(|slot| {
+            let members = self.catalog.siblings(&self.selected);
+            self.world
+                .step_member(
+                    &self.catalog,
+                    self.anchor_for(slot, self.selected_def()),
+                    &members,
+                    (&self.selected, self.chosen),
+                    dir,
+                )
+                .map(|(d, o)| (d.id.clone(), o))
+        });
+        let at = self.target_slot().or(self.hovered);
+        let Some((tile, o)) = stepped else {
+            self.result("shape", at, None);
+            return vec![];
+        };
+        self.selected = tile;
+        self.chosen = o;
+        if let Some(g) = self.catalog.group_of(&self.selected) {
+            self.chosen_variant
+                .insert(g.to_owned(), self.selected.clone());
+        }
+        self.chosen_orientation
+            .insert(self.selected.clone(), self.chosen);
+        let valid = self.ghost().is_some_and(|g| g.3);
+        self.result("shape", at, None);
         vec![GameEvent::GhostRotated {
             rotation: self.chosen.rotation,
             level: self.chosen.level,
@@ -1015,17 +1108,17 @@ impl GameState {
             Err(ReplaceError::Empty) => self.refuse("replace", ReplaceError::Empty.to_string()),
             Err(e) => {
                 let reason = e.to_string();
-                let code = matches!(e, ReplaceError::Incompatible(_))
-                    .then(|| {
-                        self.world.socket_refusal(
-                            &self.catalog,
-                            cell,
-                            self.catalog
-                                .get(&tile)
-                                .expect("the event names a catalog tile"),
-                        )
-                    })
-                    .flatten();
+                let code = match e {
+                    ReplaceError::Incompatible(_) => self.world.socket_refusal(
+                        &self.catalog,
+                        cell,
+                        self.catalog
+                            .get(&tile)
+                            .expect("the event names a catalog tile"),
+                    ),
+                    ReplaceError::RiverUphill => Some(hex_core::Refusal::RiverUphill),
+                    _ => None,
+                };
                 self.result("replace", Some(cell), Some(reason.clone()));
                 self.refusals += 1;
                 vec![GameEvent::PlacementRefused {
@@ -1066,17 +1159,17 @@ impl GameState {
             }
             Err(e) => {
                 let reason = e.to_string();
-                let code = matches!(e, hex_core::PlaceError::Incompatible(_))
-                    .then(|| {
-                        self.world.socket_refusal(
-                            &self.catalog,
-                            cell,
-                            self.catalog
-                                .get(&tile)
-                                .expect("the event names a catalog tile"),
-                        )
-                    })
-                    .flatten();
+                let code = match e {
+                    hex_core::PlaceError::Incompatible(_) => self.world.socket_refusal(
+                        &self.catalog,
+                        cell,
+                        self.catalog
+                            .get(&tile)
+                            .expect("the event names a catalog tile"),
+                    ),
+                    hex_core::PlaceError::RiverUphill => Some(hex_core::Refusal::RiverUphill),
+                    _ => None,
+                };
                 self.result("place", Some(cell), Some(reason.clone()));
                 self.refusals += 1;
                 vec![GameEvent::PlacementRefused {
@@ -1187,7 +1280,29 @@ impl GameState {
                     "level": t.level, "kind": format!("{:?}", t.kind),
                 }))
                 .collect::<Vec<_>>(),
+            "falls": self.falls_json(),
         })
+    }
+
+    /// `play.falls`: per waterfall its upper cell, that cell's world edge, the drop, the pool's
+    /// world XZ at the seam midpoint (halfway between the two cell centres) and its mist landings
+    /// (`hex_play::water::tiles::fall_landings`: one per tier, each lip below the top and then the
+    /// plunge pool), sorted by (q, r, edge).
+    fn falls_json(&self) -> Vec<Value> {
+        let mut falls = self.world.rivers(&self.catalog).falls;
+        falls.sort_by_key(|f| (f.upper.q, f.upper.r, f.edge));
+        falls
+            .iter()
+            .map(|f| {
+                let a = f.upper.to_world(hex_core::HEX_RADIUS);
+                let b = f.lower.to_world(hex_core::HEX_RADIUS);
+                json!({
+                    "q": f.upper.q, "r": f.upper.r, "edge": f.edge, "drop": f.drop,
+                    "x": (a[0] + b[0]) / 2.0, "z": (a[1] + b[1]) / 2.0,
+                    "mist": hex_play::water::tiles::fall_tiers(f.drop).len(),
+                })
+            })
+            .collect()
     }
 
     /// Selection, mode and placement feedback, independent of world-sized tile data.
@@ -1204,9 +1319,15 @@ impl GameState {
         let ghost = self.ghost().map(|(c, legal, edges, valid)| {
             let outer = self.ghost_outer(c);
             let footprint = outer.map(|_| hex_core::footprint::members(c));
+            let (flow, waterfalls) = self.ghost_river(c);
+            let flow: Vec<Value> = flow
+                .iter()
+                .map(|(e, d)| json!({ "edge": e, "dir": d }))
+                .collect();
             json!({ "q": c.q, "r": c.r, "tile": self.selected, "rotation": self.chosen.rotation,
                     "level": self.chosen.level, "valid": valid, "legal_rotations": legal, "edges": edges,
-                    "outer_edges": outer, "footprint": footprint })
+                    "outer_edges": outer, "footprint": footprint, "flow": flow,
+                    "waterfalls": waterfalls })
         });
         let inventory: Vec<&str> = self
             .target_slot()
@@ -1327,6 +1448,7 @@ impl GameState {
                     self.chosen,
                 )
                 .cells,
+                flow: self.ghost_river(cell).0,
             }),
             pointer_slot: self.pointer_slot(&centres),
             pointer_tile: self
@@ -1650,6 +1772,119 @@ mod tests {
         GameState::new(1)
     }
 
+    /// Hover-sweep timing for the 2,066-tile save (Task 15, `play.fits` and the ghost's river
+    /// fields): loads the save, then for each of four selected tiles hovers up to
+    /// `HEXW_SWEEP_SLOTS` frontier slots (400 by default, spread evenly) and times the selection
+    /// publish (`state_fields_json`, which carries `fits` and `ghost`) of each cold hover, then
+    /// a warm second pass over the same slots. Prints one `SWEEP {json}` line with p50, p95 and
+    /// max in microseconds. CPU only, no GPU or browser: run it in release at host load of 15 or
+    /// less. `HEXW_SWEEP_SAVE` overrides the save path.
+    /// `cargo test -p hex-app --release hover_sweep -- --ignored --nocapture`
+    #[test]
+    #[ignore = "timing run: needs --release and a quiet host"]
+    fn hover_sweep_times_the_selection_publish() {
+        use std::time::Instant;
+        let path = std::env::var("HEXW_SWEEP_SAVE").unwrap_or_else(|_| {
+            format!(
+                "{}/../../docs/perf/post-arc001-2026-10-16/local-world.hexworld",
+                env!("CARGO_MANIFEST_DIR")
+            )
+        });
+        // A fresh decode and game per tile row: `fits_of` and the river cache are per world
+        // stamp and slot across tiles, so only a new game makes every cold pass cold.
+        let load = || {
+            let (save, version) = crate::persist::decode(&std::fs::read(&path).unwrap()).unwrap();
+            let mut g = game();
+            let tiles = save.world.tiles().len();
+            g.replace_world(
+                save.world,
+                GameEvent::Loaded {
+                    tiles: tiles as u32,
+                    version,
+                    settings: None,
+                },
+            );
+            g
+        };
+        let g = load();
+        let tiles = g.world.tiles().len();
+        let frontier = g.world.frontier();
+        let want: usize = std::env::var("HEXW_SWEEP_SLOTS")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(400);
+        let step = (frontier.len() / want.max(1)).max(1);
+        let slots: Vec<Axial> = frontier.iter().step_by(step).copied().collect();
+        let pct = |v: &mut Vec<f64>, p: f64| {
+            v.sort_by(|a, b| a.total_cmp(b));
+            v[((v.len() - 1) as f64 * p).round() as usize]
+        };
+        let mut out = serde_json::Map::new();
+        for id in ["river_straight", "river_bend", "meadow", "forest"] {
+            let mut g = load();
+            g.apply(Action::SelectTile(id.into()));
+            let mut row = serde_json::Map::new();
+            for pass in ["cold", "warm"] {
+                let mut us: Vec<f64> = vec![];
+                for &slot in &slots {
+                    g.apply(Action::Hover(Some(slot)));
+                    let t = Instant::now();
+                    let s = g.state_fields_json();
+                    us.push(t.elapsed().as_secs_f64() * 1e6);
+                    std::hint::black_box(s);
+                }
+                row.insert(
+                    pass.into(),
+                    json!({ "p50_us": pct(&mut us, 0.5), "p95_us": pct(&mut us, 0.95),
+                            "max_us": pct(&mut us, 1.0) }),
+                );
+            }
+            out.insert(id.into(), Value::Object(row));
+        }
+        println!(
+            "SWEEP {}",
+            json!({ "tiles": tiles, "slots": slots.len(), "frontier": frontier.len(), "tile_rows": out })
+        );
+    }
+
+    /// A river ghost whose orientation would run uphill publishes no flow and no waterfall marker
+    /// (M5): between a level-0 spring and a level-1 straight, level 0 meets the straight as a fall
+    /// in `World::waterfall_edges`, but the placement is refused, so no marker shows.
+    #[test]
+    fn an_uphill_river_ghost_publishes_no_fall_marker() {
+        use hex_core::{Orientation, PlacedTile, World, cell_seed};
+        let slot = ax(4, -2);
+        let tile = |def: &str, cell: Axial, level: u8| PlacedTile {
+            def: def.into(),
+            rotation: 0,
+            level,
+            seed: cell_seed(1, cell),
+        };
+        let (spring, straight) = (slot.neighbor(3), slot.neighbor(0));
+        let tiles = BTreeMap::from([
+            (spring, tile("river_spring", spring, 0)),
+            (straight, tile("river_straight", straight, 1)),
+        ]);
+        let mut g = game();
+        g.replace_world(
+            World::from_parts(1, tiles, VecDeque::new(), Vec::new()),
+            GameEvent::Loaded {
+                tiles: 2,
+                version: hex_core::SAVE_FORMAT_VERSION,
+                settings: None,
+            },
+        );
+        g.apply(Action::SelectTile("river_straight".into()));
+        g.apply(Action::Hover(Some(slot)));
+        g.chosen = Orientation::new(0, 0);
+        let def = g.selected_def().clone();
+        assert!(
+            g.world.waterfall_edges(&g.catalog, slot, &def, g.chosen)[0],
+            "the face meets the raised straight as a fall"
+        );
+        assert_eq!(g.ghost_river(slot), (vec![], vec![]));
+    }
+
     /// `fits_of` agrees with `fits_at` over the world, and the cache answers with the same fits
     /// while the world state stands and recomputes after a placement changes it.
     #[test]
@@ -1956,7 +2191,7 @@ mod tests {
         g.apply(Action::Place(ax(-1, 0)));
         assert_eq!(g.world.tile(ax(-1, 0)).unwrap().level, 0);
         // A level no orientation is legal on is a refusal with the world's own reason.
-        g.apply(Action::SelectTile("river_straight".into()));
+        g.apply(Action::SelectTile("river_mouth".into()));
         let e = g.apply(Action::PlaceAtLevel(ax(0, 1), 1));
         assert!(
             matches!(e.last(), Some(GameEvent::PlacementRefused { level: 1, .. })),
@@ -2008,26 +2243,29 @@ mod tests {
         g.apply(Action::SelectTile("road_straight".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
         // Legal 1, 2, 4, 5, but a straight road turned 180° looks the same: two orientations on
-        // the ground, then the same two one level up (a cliff to the meadow), and so on to 3.
+        // each level, and R stays on the ghost's level (owner 2026-11-24).
         assert_eq!(g.chosen, Orientation::new(1, 0));
         g.apply(Action::Rotate(RotateDir::Forward));
         assert_eq!(g.chosen, Orientation::new(2, 0));
         g.apply(Action::Rotate(RotateDir::Forward));
         assert_eq!(
             g.chosen,
-            Orientation::new(1, 1),
-            "4 repeats 1's sockets and is skipped; the ground ones are done"
+            Orientation::new(1, 0),
+            "4 repeats 1's sockets and is skipped; R wraps on the ground"
         );
         g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!(g.chosen, Orientation::new(2, 0));
-        g.apply(Action::Rotate(RotateDir::Back));
-        assert_eq!(g.chosen, Orientation::new(1, 0));
-        g.apply(Action::Rotate(RotateDir::Back));
         assert_eq!(
             g.chosen,
-            Orientation::new(2, 3),
+            Orientation::new(2, 0),
             "back from the first wraps"
         );
+        // E lifts it a level, keeping the rotation; R then turns on that level.
+        g.apply(Action::Level(LevelDir::Up));
+        assert_eq!(g.chosen, Orientation::new(2, 1));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(1, 1));
+        g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!(g.chosen, Orientation::new(2, 1));
     }
 
     #[test]
@@ -2035,11 +2273,21 @@ mod tests {
         let mut g = game();
         g.apply(Action::Hover(Some(ax(1, 0))));
         // A fully symmetric raisable tile (forest, meadow) has one orientation per level: R keeps
-        // rotation 0 and steps the level, ground first, and wraps.
+        // it, and E/Q step the level, clamping at the ground and the top.
         for id in ["forest", "meadow"] {
             g.apply(Action::SelectTile(id.into()));
             assert_eq!(g.chosen, Orientation::new(0, 0), "{id}");
             let e = g.apply(Action::Rotate(RotateDir::Forward));
+            assert_eq!(g.chosen, Orientation::new(0, 0), "{id}");
+            assert_eq!(
+                e,
+                [GameEvent::GhostRotated {
+                    rotation: 0,
+                    level: 0,
+                    valid: true
+                }]
+            );
+            let e = g.apply(Action::Level(LevelDir::Up));
             assert_eq!(g.chosen, Orientation::new(0, 1), "{id}");
             assert_eq!(
                 e,
@@ -2049,11 +2297,28 @@ mod tests {
                     valid: true
                 }]
             );
-            g.apply(Action::Rotate(RotateDir::Back));
-            g.apply(Action::Rotate(RotateDir::Back));
+            g.apply(Action::Level(LevelDir::Up));
+            g.apply(Action::Level(LevelDir::Up));
             assert_eq!(g.chosen, Orientation::new(0, 3), "{id}");
-            g.apply(Action::Rotate(RotateDir::Forward));
+            assert_eq!(
+                g.apply(Action::Level(LevelDir::Up)),
+                [],
+                "{id}: E clamps at the top"
+            );
+            assert_eq!(g.chosen, Orientation::new(0, 3), "{id}");
+            assert!(
+                g.last.as_ref().is_some_and(|r| r.ok && r.action == "level"),
+                "{id}: a clamp is no refusal"
+            );
+            for _ in 0..3 {
+                g.apply(Action::Level(LevelDir::Down));
+            }
             assert_eq!(g.chosen, Orientation::new(0, 0), "{id}");
+            assert_eq!(
+                g.apply(Action::Level(LevelDir::Down)),
+                [],
+                "{id}: Q clamps at the ground"
+            );
         }
     }
 
@@ -2092,13 +2357,13 @@ mod tests {
         assert_eq!(g.chosen.rotation, 2);
     }
 
-    /// A cliff chosen with R at one slot is never the default elsewhere, nor on coming back.
+    /// A cliff chosen with E at one slot is never the default elsewhere, nor on coming back.
     #[test]
     fn a_chosen_cliff_level_does_not_follow_the_hover() {
         let mut g = game();
         g.apply(Action::SelectTile("meadow".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        g.apply(Action::Rotate(RotateDir::Forward));
+        g.apply(Action::Level(LevelDir::Up));
         assert_eq!(g.chosen, Orientation::new(0, 1));
         g.apply(Action::Hover(Some(ax(-1, 0))));
         assert_eq!(g.chosen.level, 0, "a fresh ground slot snaps cliff-free");
@@ -2106,8 +2371,7 @@ mod tests {
         assert_eq!(g.chosen.level, 0, "back on the slot: no kept cliff");
         // The remembered rotation still applies where it is cliff-free.
         g.apply(Action::SelectTile("road_straight".into()));
-        g.apply(Action::Rotate(RotateDir::Forward));
-        g.apply(Action::Rotate(RotateDir::Forward));
+        g.apply(Action::Level(LevelDir::Up));
         assert_eq!(g.chosen, Orientation::new(1, 1));
         g.apply(Action::Hover(Some(ax(-1, 0))));
         assert_eq!(g.chosen, Orientation::new(1, 0));
@@ -2118,7 +2382,7 @@ mod tests {
         let mut g = game();
         g.apply(Action::SelectTile("meadow".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        g.apply(Action::Rotate(RotateDir::Forward));
+        g.apply(Action::Level(LevelDir::Up));
         assert_eq!(g.chosen, Orientation::new(0, 1));
         g.quick_place(ax(-1, 0));
         assert_eq!(g.world.tile(ax(-1, 0)).unwrap().level, 0);
@@ -2150,7 +2414,7 @@ mod tests {
         let mut g = game();
         g.apply(Action::SelectTile("meadow".into()));
         g.apply(Action::Hover(Some(ax(1, 0))));
-        g.apply(Action::Rotate(RotateDir::Forward));
+        g.apply(Action::Level(LevelDir::Up));
         assert_eq!(g.chosen, Orientation::new(0, 1));
         // The ocean fits nowhere beside the meadow, so nothing snaps; it still may not float.
         g.apply(Action::SelectTile("ocean".into()));
@@ -2287,25 +2551,29 @@ mod tests {
             "the group selects its first member"
         );
         g.apply(Action::Hover(Some(ax(1, 0))));
-        // East of the start meadow: one headland orientation, then three bay ones, then around.
-        let mut seen = vec![(g.selected.clone(), g.chosen.rotation)];
-        for _ in 0..4 {
+        // East of the start meadow the headland fits one way, so R keeps it; T switches to the
+        // bay (owner 2026-11-24), whose three orientations R then walks and wraps.
+        let e = g.apply(Action::Rotate(RotateDir::Forward));
+        assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_outer", 0));
+        assert_eq!(e.len(), 1, "R still reports the ghost");
+        let e = g.apply(Action::Shape(RotateDir::Forward));
+        assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_inner", 0));
+        assert_eq!(
+            e,
+            [GameEvent::GhostRotated {
+                rotation: 0,
+                level: 0,
+                valid: true
+            }]
+        );
+        let mut seen = vec![g.chosen.rotation];
+        for _ in 0..3 {
             g.apply(Action::Rotate(RotateDir::Forward));
             assert!(g.ghost().unwrap().3, "every step is legal");
-            seen.push((g.selected.clone(), g.chosen.rotation));
+            assert_eq!(g.selected, "beach_inner", "R keeps the bay");
+            seen.push(g.chosen.rotation);
         }
-        let ids: Vec<&str> = seen.iter().map(|(t, _)| t.as_str()).collect();
-        assert_eq!(
-            ids,
-            [
-                "beach_outer",
-                "beach_inner",
-                "beach_inner",
-                "beach_inner",
-                "beach_outer"
-            ]
-        );
-        assert_eq!(seen[0], seen[4], "the fifth press wraps");
+        assert_eq!(seen, [0, 1, 5, 0], "the bay's three, then around");
         g.apply(Action::Rotate(RotateDir::Back));
         assert_eq!((g.selected.as_str(), g.chosen.rotation), ("beach_inner", 5));
         // The bay stays chosen: hovering off and back, or picking the group again, restores it.
@@ -2319,6 +2587,18 @@ mod tests {
         g.apply(Action::Place(ax(1, 0)));
         let t = g.world.tile(ax(1, 0)).unwrap();
         assert_eq!((t.def.as_str(), t.rotation), ("beach_inner", 5));
+    }
+
+    /// T on a lone tile has no other shape: no change, no event, and no refusal.
+    #[test]
+    fn shape_on_a_lone_tile_is_a_quiet_no_op() {
+        let mut g = game();
+        g.apply(Action::SelectTile("road_straight".into()));
+        g.apply(Action::Hover(Some(ax(1, 0))));
+        let before = (g.selected.clone(), g.chosen);
+        assert_eq!(g.apply(Action::Shape(RotateDir::Forward)), []);
+        assert_eq!((g.selected.clone(), g.chosen), before);
+        assert!(g.last.as_ref().is_some_and(|r| r.ok && r.action == "shape"));
     }
 
     #[test]
@@ -2755,9 +3035,9 @@ mod tests {
                 .len()
         };
         assert_eq!(published(&g), 5, "meadow goes up beside the plateau");
-        g.apply(Action::SelectTile("river_straight".into()));
+        g.apply(Action::SelectTile("rail_station".into()));
         assert_eq!(published(&g), g.view().slot_levels.len());
-        assert_eq!(published(&g), 0, "a river stays on the ground");
+        assert_eq!(published(&g), 0, "a station stays on the ground");
     }
 
     #[test]
@@ -2922,6 +3202,50 @@ mod tests {
             g.apply(Action::Rotate(RotateDir::Forward));
         }
         assert_eq!(g.chosen, start);
+    }
+
+    /// `play.falls`: each waterfall's upper cell, its world edge, the drop and the pool's world XZ
+    /// at the seam midpoint, sorted by (q, r, edge).
+    #[test]
+    fn state_publishes_falls_sorted_with_their_pool() {
+        let mut g = game();
+        for q in 1..6 {
+            place(&mut g, "meadow", ax(q, 0));
+        }
+        for (q, level) in [(4, 1), (5, 0), (1, 2), (2, 0)] {
+            g.apply(Action::SelectTile("river_straight".into()));
+            g.apply(Action::PlaceAtLevel(ax(q, -1), level));
+            assert_eq!(g.world.tile(ax(q, -1)).map(|t| t.level), Some(level));
+        }
+        let pool = |q: i32| {
+            let a = ax(q, -1).to_world(hex_core::HEX_RADIUS);
+            let b = ax(q + 1, -1).to_world(hex_core::HEX_RADIUS);
+            [
+                f64::from((a[0] + b[0]) / 2.0),
+                f64::from((a[1] + b[1]) / 2.0),
+            ]
+        };
+        let falls = g.state_json()["falls"].clone();
+        let got: Vec<(i64, i64, i64, i64)> = falls
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| {
+                let n = |k: &str| f[k].as_i64().unwrap();
+                (n("q"), n("r"), n("edge"), n("drop"))
+            })
+            .collect();
+        assert_eq!(got, vec![(1, -1, 0, 2), (4, -1, 0, 1)]);
+        for (f, q) in falls.as_array().unwrap().iter().zip([1, 4]) {
+            let [x, z] = pool(q);
+            assert!((f["x"].as_f64().unwrap() - x).abs() < 1e-3, "{f}");
+            assert!((f["z"].as_f64().unwrap() - z).abs() < 1e-3, "{f}");
+            assert_eq!(f["mist"], f["drop"], "one mist landing per tier: {f}");
+        }
+        // The level-2 fall's pool sits an apothem east of its upper cell's centre.
+        let up = ax(1, -1).to_world(hex_core::HEX_RADIUS);
+        let apothem = f64::from(hex_core::HEX_RADIUS) * 3f64.sqrt() / 2.0;
+        assert!((falls[0]["x"].as_f64().unwrap() - f64::from(up[0]) - apothem).abs() < 1e-3);
     }
 
     #[test]

@@ -174,6 +174,8 @@ pub fn refused_while_walking(a: &Action) -> Option<&'static str> {
         Action::Pin(_) => "pin",
         Action::Bulldoze(_) => "bulldoze",
         Action::Rotate(_) => "rotate",
+        Action::Level(_) => "level",
+        Action::Shape(_) => "shape",
         Action::Undo => "undo",
         Action::Redo => "redo",
         Action::ToggleBulldoze | Action::SetTool(_) => "set_tool",

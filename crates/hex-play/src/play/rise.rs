@@ -35,7 +35,7 @@ pub const OVERSHOOT: f32 = 0.35;
 pub const SINK_SECONDS: f32 = 0.4;
 /// A bulldozed tile sinks this long (s), ease-in, inside its dust cloud (`in-world.md`, Bulldoze).
 pub const BULLDOZE_SINK_SECONDS: f32 = 0.7;
-/// Tile base (m), where water starts to fill from.
+/// Level-0 tile base (m), where water starts to fill from; a raised tile's is lifted by its level.
 const FLOOR_Y: f32 = -LEVEL_STEP;
 /// Peak camera shake as a fraction of the camera's distance to the rising tile (~3 px at 1280 px).
 const SHAKE: f32 = 0.0016;
@@ -135,10 +135,13 @@ pub struct RisePose {
     /// Props stage progress 0..1 (`None` before it starts).
     pub props: Option<f32>,
     pub agents: bool,
+    /// The tile's level (P4): its water fills from that level's base.
+    pub level: u8,
 }
 
 impl RisePose {
     pub const REST: RisePose = RisePose {
+        level: 0,
         column_y: 0.0,
         edges: Some(1.0),
         fill: 1.0,
@@ -238,6 +241,7 @@ impl Rise {
             fill: edges.map_or(0.0, smoothstep01),
             props: self.progress(RiseStage::Props, t),
             agents: self.progress(RiseStage::Agents, t).is_some(),
+            level: self.level,
         }
     }
 
@@ -334,7 +338,8 @@ impl RisePartPose for RisePart {
                 }
                 let s = pose.fill;
                 t.scale.y = self.rest.scale.y * s;
-                t.translation.y = self.rest.translation.y + pose.column_y + FLOOR_Y * (1.0 - s);
+                let base = FLOOR_Y + f32::from(pose.level) * LEVEL_STEP;
+                t.translation.y = self.rest.translation.y + pose.column_y + base * (1.0 - s);
                 (t, true)
             }
         }
@@ -850,7 +855,7 @@ pub struct PlayDust {
     meshes: [Option<Handle<Mesh>>; 3],
 }
 
-fn hash01(cell: Axial, i: u32, salt: u32) -> f32 {
+pub(crate) fn hash01(cell: Axial, i: u32, salt: u32) -> f32 {
     let mut h = (cell.q as u32).wrapping_mul(0x8da6_b343)
         ^ (cell.r as u32).wrapping_mul(0xd816_3841)
         ^ i.wrapping_mul(0xcb1a_b31f)
@@ -1328,6 +1333,29 @@ mod tests {
         assert!(y > FLOOR_Y && y < -1.4, "{y}");
         let (t, _) = part.at(&RisePose::REST);
         assert_eq!(t, Transform::IDENTITY);
+    }
+
+    /// A raised tile's water fills from that tile's own base (`4 * level - 4`), not the level-0 one.
+    #[test]
+    fn water_of_a_raised_tile_fills_from_its_own_base() {
+        let part = RisePart::new(Axial::new(0, 0), RiseRole::Water, Transform::IDENTITY);
+        for level in 0..=hex_core::MAX_LEVEL {
+            let mut r = rise();
+            r.level = level;
+            r.t = 0.8 + 0.2;
+            let mut pose = r.pose();
+            pose.column_y = 0.0;
+            pose.fill = 1e-3 + 1e-4;
+            let surface = crate::water::tiles::water_y(level);
+            let y = part
+                .at(&pose)
+                .0
+                .transform_point(Vec3::new(0.0, surface, 0.0))
+                .y;
+            let base = 4.0 * f32::from(level) - 4.0;
+            assert!((y - base).abs() < 0.05, "level {level}: fill starts at {y}");
+        }
+        assert_eq!(part.at(&RisePose::REST).0, Transform::IDENTITY);
     }
 
     #[test]

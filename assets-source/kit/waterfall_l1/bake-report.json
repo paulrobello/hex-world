@@ -1,0 +1,91 @@
+{
+  "aoDistanceM": 0.8,
+  "bakeStats": {
+    "albedoLuma": {
+      "mean": 0.4484548270702362,
+      "min": 0.17798693478107452,
+      "p01": 0.28742486238479614,
+      "p05": 0.3186928331851959,
+      "texels": 720418
+    },
+    "ao": {
+      "mean": 0.846723735332489,
+      "min": 0.1882353127002716,
+      "p01": 0.3764706254005432,
+      "p05": 0.501960813999176,
+      "texels": 720418
+    },
+    "normalMissFraction": 0.0,
+    "roughness": {
+      "mean": 0.4968804717063904,
+      "min": 0.38431376218795776,
+      "p01": 0.38431376218795776,
+      "p05": 0.38431376218795776,
+      "texels": 720418
+    }
+  },
+  "blender": "5.2.2 LTS",
+  "cageExtrusionM": 0.3,
+  "channels": {
+    "albedo": {
+      "colorspace": "srgb",
+      "size": 1024
+    },
+    "masks": {
+      "colorspace": "linear",
+      "size": 256
+    },
+    "normal": {
+      "colorspace": "linear",
+      "size": 512
+    },
+    "orm": {
+      "colorspace": "linear",
+      "size": 512
+    }
+  },
+  "device": "CPU",
+  "drop": 1,
+  "faceHalfWidthM": 7.0,
+  "lips": [
+    {
+      "at": [
+        13.8564,
+        0.0,
+        -1.4
+      ],
+      "fall": 4.0,
+      "tier": 0
+    }
+  ],
+  "lod2Drops": {},
+  "lodSpecs": [
+    [
+      0.22,
+      0.19,
+      3234
+    ],
+    [
+      0.325,
+      0.2807,
+      1616
+    ],
+    [
+      0.5837,
+      0.5041,
+      446
+    ]
+  ],
+  "marginPx": 8,
+  "maxRayDistanceM": 0.6,
+  "reachM": 0.931,
+  "receiverSignature": "946dd769514cde30c7c3336b7589d1fb3b7b37dafe28c20c405741a34cea6293",
+  "samples": 32,
+  "skipped": false,
+  "texelDensityPxPerM": {
+    "max": 164.43810193647727,
+    "median": 106.14880340867987,
+    "min": 47.41689675725155
+  },
+  "texelMinPxPerM": 100.0
+}

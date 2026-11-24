@@ -10,7 +10,11 @@ use ::bevy::{
     world_serialization::WorldSerializationPlugin,
 };
 use hex_assets::*;
-use hex_play::water::tiles::{Coastline, Mouth, coast_height};
+use hex_play::play::{PlayTile, fall_face_local, fall_face_piece, tile_rest};
+use hex_play::water::tiles::{
+    Coastline, LEDGE_STEP, Mouth, WATER_Y, coast_height, fall_tiers, layout, river_height,
+    sheet_mesh,
+};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -566,13 +570,28 @@ const MASSIF_TEXEL_MIN_PX_PER_M: f32 = 20.0;
 const LANDFORM_TEXEL_MIN_PX_PER_M: &[(&str, f32)] =
     &[("hill_meadow", 50.0), ("peak_granite", 20.0)];
 
+/// The waterfall fall faces' unique granite (rivers-at-levels Task 18, scoped as A54 pending the
+/// owner's ruling): a 14 m face 4, 8 or 12 m tall on one 1024² atlas at the piece's KTX budget.
+/// Each floor is the piece's measured LOD0 median (106.1, 71.3 and 59.9 px/m), rounded down to a
+/// multiple of 5 px/m.
+const WATERFALL_TEXEL_MIN_PX_PER_M: &[(&str, f32)] = &[
+    ("waterfall_l1", 100.0),
+    ("waterfall_l2", 70.0),
+    ("waterfall_l3", 55.0),
+];
+
 /// A piece's texel-density floor: `BOULDER_TEXEL_MIN_PX_PER_M` for the B1 set,
 /// `MASSIF_TEXEL_MIN_PX_PER_M` for massif_granite, `LANDFORM_TEXEL_MIN_PX_PER_M` for the
-/// single-tile landforms, else `TEXEL_MIN_PX_PER_M`.
+/// single-tile landforms, `WATERFALL_TEXEL_MIN_PX_PER_M` for the fall faces, else
+/// `TEXEL_MIN_PX_PER_M`.
 fn texel_min(id: &str) -> f32 {
     if BOULDER_PIECES.contains(&id) {
         BOULDER_TEXEL_MIN_PX_PER_M
-    } else if let Some((_, floor)) = LANDFORM_TEXEL_MIN_PX_PER_M.iter().find(|(p, _)| *p == id) {
+    } else if let Some((_, floor)) = LANDFORM_TEXEL_MIN_PX_PER_M
+        .iter()
+        .chain(WATERFALL_TEXEL_MIN_PX_PER_M)
+        .find(|(p, _)| *p == id)
+    {
         *floor
     } else if id == "massif_granite" {
         MASSIF_TEXEL_MIN_PX_PER_M
@@ -857,6 +876,9 @@ fn check_geometry(kit: &Kit, p: &PieceEntry) -> Vec<String> {
         geometry_base_cap(p, lod0, level, &buffers, &mut e);
     }
     geometry_sockets(p, &doc, &mut e);
+    if let Some(drop) = waterfall_drop(&p.id) {
+        e.extend(waterfall_face_in_doc(&p.id, drop, &doc, &buffers));
+    }
     e
 }
 
@@ -1099,6 +1121,417 @@ fn geometry_sockets(p: &PieceEntry, doc: &gltf::Document, e: &mut Vec<String>) {
     }
 }
 
+/// The waterfall fall faces (rivers-at-levels spec §4; owner answers WF-Q1 to WF-Q4 in
+/// assets-source/refs/waterfall/approval.json): `waterfall_l<drop>` for a drop of 1 to 3 levels, drawn
+/// under the upper tile's root on its edge 0 at the seam, so every position below is in the upper
+/// tile's frame.
+const WATERFALL_PIECES: [(&str, u8); 3] = [
+    (fall_face_piece(1), 1),
+    (fall_face_piece(2), 2),
+    (fall_face_piece(3), 3),
+];
+
+/// The drop in levels of a fall-face piece, `None` for every other piece.
+fn waterfall_drop(id: &str) -> Option<u8> {
+    WATERFALL_PIECES
+        .iter()
+        .find(|(p, _)| *p == id)
+        .map(|&(_, d)| d)
+}
+
+/// Half the fall face's width (WF-Q4: 14 m, centred on the lane): the whole 13.66 m channel cut,
+/// leaving about 1 m of the cliff column's soil at each corner.
+const WATERFALL_HALF_W: f32 = 7.0;
+/// The sheet's width at every lip, centred on the river lane (the same ruling).
+const WATERFALL_SHEET_W: f64 = 8.0;
+/// Largest distance (m) on each axis from a lip socket to its tier's place in the ruling.
+const WATERFALL_LIP_AT_TOL: f32 = 0.03;
+
+/// Tier `tier`'s lip in the upper tile's frame (controller ruling on WF-Q3, 2026-11-22: the
+/// runtime's `fall_tiers`): on the upper water level at the seam, then a level lower and
+/// `LEDGE_STEP` further out per tier, on the lane's centre line.
+fn waterfall_lip(tier: u8) -> [f32; 3] {
+    let (lip_drop, setout) = fall_tiers(tier + 1)[usize::from(tier)];
+    [APOTHEM + setout, WATER_Y - lip_drop, 0.0]
+}
+
+/// Furthest the rock may stand out past the border plane into the lower tile: the last tier's lip
+/// and up to 1 m of bank rock beyond it.
+fn waterfall_reach_max(drop: u8) -> f32 {
+    LEDGE_STEP * f32::from(drop.saturating_sub(1)) + 1.0
+}
+/// Largest gap (m) between neighbouring top or bottom ring vertices: the river seam profile's
+/// spacing (`_river.OFFS`, 0.488 m; the contract allows at most 0.5 m).
+const WATERFALL_RING_GAP: f32 = 0.5;
+/// Largest gap (m) between neighbouring side-end vertices down the column plane.
+const WATERFALL_SIDE_GAP: f32 = 1.0;
+/// Every interior vertex stands at least this far out of the border plane, so the face never
+/// z-fights the cliff column's soil skirt behind it.
+const WATERFALL_PROUD_MIN: f32 = 0.01;
+/// Largest distance (m) from a lip socket to the LOD0 surface.
+const WATERFALL_LIP_TOL: f32 = 0.05;
+/// Water contract (top and §2): 0.03 m where the water is shallower than 2.5 m, which on a river
+/// is the whole channel below 1.0 m under the meadow (`_river.WET_Z`), and 0.10 m on the dry bank.
+fn waterfall_ring_tol(y_rel: f32) -> f32 {
+    if y_rel < -1.0 { 0.03 } else { 0.10 }
+}
+
+/// One LOD of a fall face as plain triangles, every primitive merged.
+#[derive(Clone)]
+struct FaceMesh {
+    pos: Vec<[f32; 3]>,
+    idx: Vec<u32>,
+}
+
+/// A lip socket (WF-Q3): its node name, world position and extras.
+struct Lip {
+    name: String,
+    at: [f32; 3],
+    extras: serde_json::Value,
+}
+
+/// A LOD mesh's primitives merged into one triangle list.
+fn face_mesh(m: &gltf::Mesh, buffers: &[gltf::buffer::Data]) -> FaceMesh {
+    let mut out = FaceMesh {
+        pos: vec![],
+        idx: vec![],
+    };
+    for prim in m.primitives() {
+        let r = prim.reader(|b| Some(&buffers[b.index()]));
+        let base = out.pos.len() as u32;
+        out.pos.extend(r.read_positions().into_iter().flatten());
+        out.idx.extend(
+            r.read_indices()
+                .into_iter()
+                .flat_map(|i| i.into_u32())
+                .map(|i| i + base),
+        );
+    }
+    out
+}
+
+/// The vertices on a mesh's open boundary (edges used by one triangle), welded by position so split
+/// normals and UV seams do not open it.
+fn face_boundary(m: &FaceMesh) -> Vec<[f32; 3]> {
+    let key = |p: [f32; 3]| p.map(|c| (c * 1e4).round() as i64);
+    let mut id: BTreeMap<[i64; 3], usize> = BTreeMap::new();
+    let mut pts: Vec<[f32; 3]> = vec![];
+    let welded: Vec<usize> = m
+        .pos
+        .iter()
+        .map(|&p| {
+            *id.entry(key(p)).or_insert_with(|| {
+                pts.push(p);
+                pts.len() - 1
+            })
+        })
+        .collect();
+    let mut edges: BTreeMap<(usize, usize), u32> = BTreeMap::new();
+    for t in m.idx.as_chunks::<3>().0 {
+        let v = t.iter().map(|&i| welded[i as usize]).collect::<Vec<_>>();
+        for (a, b) in [(v[0], v[1]), (v[1], v[2]), (v[2], v[0])] {
+            if a != b {
+                *edges.entry((a.min(b), a.max(b))).or_default() += 1;
+            }
+        }
+    }
+    let on: BTreeSet<usize> = edges
+        .iter()
+        .filter(|(_, n)| **n == 1)
+        .flat_map(|(&(a, b), _)| [a, b])
+        .collect();
+    on.into_iter().map(|i| pts[i]).collect()
+}
+
+/// Distance from p to triangle abc (closest point by Voronoi region, Ericson 5.1.5).
+fn point_triangle_distance(p: [f32; 3], a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> f32 {
+    fn sub(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+        [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+    }
+    fn dot(a: [f32; 3], b: [f32; 3]) -> f32 {
+        a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+    }
+    fn at(a: [f32; 3], d: [f32; 3], t: f32) -> [f32; 3] {
+        [a[0] + d[0] * t, a[1] + d[1] * t, a[2] + d[2] * t]
+    }
+    let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(p, a));
+    let (d1, d2) = (dot(ab, ap), dot(ac, ap));
+    let q = if d1 <= 0.0 && d2 <= 0.0 {
+        a
+    } else {
+        let bp = sub(p, b);
+        let (d3, d4) = (dot(ab, bp), dot(ac, bp));
+        let cp = sub(p, c);
+        let (d5, d6) = (dot(ab, cp), dot(ac, cp));
+        let (vc, vb, va) = (d1 * d4 - d3 * d2, d5 * d2 - d1 * d6, d3 * d6 - d5 * d4);
+        if d3 >= 0.0 && d4 <= d3 {
+            b
+        } else if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
+            at(a, ab, d1 / (d1 - d3))
+        } else if d6 >= 0.0 && d5 <= d6 {
+            c
+        } else if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
+            at(a, ac, d2 / (d2 - d6))
+        } else if va <= 0.0 && d4 - d3 >= 0.0 && d5 - d6 >= 0.0 {
+            at(b, sub(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6)))
+        } else {
+            let s = 1.0 / (va + vb + vc);
+            at(at(a, ab, vb * s), ac, vc * s)
+        }
+    };
+    dot(sub(p, q), sub(p, q)).sqrt()
+}
+
+/// Fall-face errors (plan Task 17) for `id`, a drop of `drop` levels, its LOD meshes and its lip
+/// sockets, in the upper tile's frame:
+/// - every perimeter vertex sits on the border plane x = APOTHEM, and on the upper channel profile
+///   (water contract §2, `river_height`), on the lower tile's one `drop` levels down, or on a side
+///   end at |z| = 7, within 0.03 m below 1 m under the meadow and 0.10 m above;
+/// - the top and bottom rings cover the whole 14 m at the seam profile's spacing, and each side end
+///   runs flush down the column plane from the upper meadow to the lower;
+/// - the perimeter is the same in every LOD (a border piece is never decimated), every vertex stays
+///   inside the 14 m face and out of the upper tile, and the interior stands proud of the column;
+/// - one `socket-lip-<tier>` per tier (WF-Q3) where the controller's tier contract puts it
+///   (`waterfall_lip`), 8 m wide, every lip under a ledge (tier 1 on) on the LOD0 face.
+fn waterfall_face_errors(
+    id: &str,
+    drop: u8,
+    lods: &[Option<FaceMesh>],
+    lips: &[Lip],
+) -> Vec<String> {
+    let mut e = vec![];
+    let fall = f32::from(drop) * hex_core::LEVEL_STEP;
+    let reach = waterfall_reach_max(drop);
+    let top = |z: f32| river_height(z.abs());
+    let bot = |z: f32| river_height(z.abs()) - fall;
+    let near = |a: [f32; 3], b: [f32; 3]| (0..3).all(|c| (a[c] - b[c]).abs() < 1e-4);
+    let mut rings: Vec<(usize, Vec<[f32; 3]>)> = vec![];
+    for (i, m) in lods.iter().enumerate() {
+        let Some(m) = m else {
+            e.push(format!("{id}: mesh {id}_lod{i} missing"));
+            continue;
+        };
+        let lod = format!("{id}_lod{i}");
+        let ring = face_boundary(m);
+        let (mut top_z, mut bot_z) = (vec![], vec![]);
+        let mut sides: [Vec<f32>; 2] = [vec![], vec![]];
+        for &[x, y, z] in &ring {
+            if (x - APOTHEM).abs() > 1e-3 {
+                e.push(format!(
+                    "{lod}: perimeter vertex ({x:.3}, {y:.3}, {z:.3}) is off the border plane x = {APOTHEM}"
+                ));
+                continue;
+            }
+            let side = (z.abs() - WATERFALL_HALF_W).abs() <= 1e-3;
+            if side {
+                sides[usize::from(z > 0.0)].push(y);
+            }
+            let tol = waterfall_ring_tol(top(z));
+            let on_top = (y - top(z)).abs() <= tol;
+            let on_bot = (y - bot(z)).abs() <= tol;
+            if on_top {
+                top_z.push(z);
+            }
+            if on_bot {
+                bot_z.push(z);
+            }
+            if !(side || on_top || on_bot) {
+                e.push(format!(
+                    "{lod}: perimeter vertex ({x:.3}, {y:.3}, {z:.3}) is on neither the upper channel profile ({:.3}), the lower one ({:.3}) nor a side end",
+                    top(z),
+                    bot(z)
+                ));
+            }
+        }
+        for (what, mut zs) in [("top", top_z), ("bottom", bot_z)] {
+            zs.sort_by(f32::total_cmp);
+            let gap = zs.windows(2).map(|w| w[1] - w[0]).fold(0.0, f32::max);
+            if zs.first().is_none_or(|&z| z > -WATERFALL_HALF_W + 1e-3)
+                || zs.last().is_none_or(|&z| z < WATERFALL_HALF_W - 1e-3)
+                || gap > WATERFALL_RING_GAP + 1e-3
+            {
+                e.push(format!(
+                    "{lod}: {what} ring does not cover |z| <= {WATERFALL_HALF_W} at most {WATERFALL_RING_GAP} m apart ({} vertices, largest gap {gap:.3})",
+                    zs.len()
+                ));
+            }
+        }
+        for (k, mut ys) in sides.into_iter().enumerate() {
+            let z = if k == 1 {
+                WATERFALL_HALF_W
+            } else {
+                -WATERFALL_HALF_W
+            };
+            ys.sort_by(f32::total_cmp);
+            let gap = ys.windows(2).map(|w| w[1] - w[0]).fold(0.0, f32::max);
+            if ys.first().is_none_or(|&y| y > bot(z) + 1e-3)
+                || ys.last().is_none_or(|&y| y < top(z) - 1e-3)
+                || gap > WATERFALL_SIDE_GAP + 1e-3
+            {
+                e.push(format!(
+                    "{lod}: side end at z = {z} does not run flush down the column plane from {:.2} to {:.2} (largest gap {gap:.3})",
+                    top(z),
+                    bot(z)
+                ));
+            }
+        }
+        let (mut outside, mut flush) = (0, 0);
+        for &p in &m.pos {
+            let [x, y, z] = p;
+            if x < APOTHEM - 1e-3
+                || x > APOTHEM + reach
+                || z.abs() > WATERFALL_HALF_W + 1e-3
+                || y > top(z) + 0.10
+                || y < bot(z) - 0.10
+            {
+                outside += 1;
+            } else if x < APOTHEM + WATERFALL_PROUD_MIN && !ring.iter().any(|&q| near(p, q)) {
+                flush += 1;
+            }
+        }
+        if outside > 0 {
+            e.push(format!(
+                "{lod}: {outside} vertices outside the face (into the upper tile, over {reach} m out, past |z| = {WATERFALL_HALF_W}, above the upper channel or under the lower one)"
+            ));
+        }
+        if flush > 0 {
+            e.push(format!(
+                "{lod}: {flush} interior vertices within {WATERFALL_PROUD_MIN} m of the column plane (z-fights the soil skirt)"
+            ));
+        }
+        rings.push((i, ring));
+    }
+    if let Some((_, r0)) = rings.first() {
+        for (i, r) in &rings[1..] {
+            if r.len() != r0.len() || r0.iter().any(|&p| !r.iter().any(|&q| near(p, q))) {
+                e.push(format!(
+                    "{id}: LOD{i} perimeter differs from LOD0's ({} against {} vertices: a crack at the seam when the LOD switches)",
+                    r.len(),
+                    r0.len()
+                ));
+            }
+        }
+    }
+    let mut lips: Vec<&Lip> = lips.iter().collect();
+    lips.sort_by(|a, b| a.name.cmp(&b.name));
+    let want: Vec<String> = (0..drop).map(|k| format!("socket-lip-{k}")).collect();
+    let got: Vec<&str> = lips.iter().map(|l| l.name.as_str()).collect();
+    if got != want {
+        e.push(format!(
+            "{id}: lip sockets {got:?}, want {want:?} (WF-Q3: one per tier)"
+        ));
+    }
+    let lod0 = lods.first().and_then(Option::as_ref);
+    for (k, l) in lips.iter().enumerate() {
+        let x = &l.extras;
+        let normal_out = x["normal"]
+            .as_array()
+            .is_some_and(|n| n.len() == 3 && n[0].as_f64().is_some_and(|v| v > 0.5));
+        if x["kind"].as_str() != Some("lip")
+            || x["tier"].as_u64() != Some(k as u64)
+            || !x["width"]
+                .as_f64()
+                .is_some_and(|w| (w - WATERFALL_SHEET_W).abs() < 1e-3)
+            || !normal_out
+        {
+            e.push(format!(
+                "{id}: {} extras {x} lack kind \"lip\", tier {k}, a width of {WATERFALL_SHEET_W} m or an outward normal",
+                l.name
+            ));
+        }
+        let want = waterfall_lip(k as u8);
+        if (0..3).any(|c| (l.at[c] - want[c]).abs() > WATERFALL_LIP_AT_TOL) {
+            e.push(format!(
+                "{id}: {} at {:?} is off the tier contract's {want:?} (more than {WATERFALL_LIP_AT_TOL} m)",
+                l.name, l.at
+            ));
+        }
+        // Tier 0's lip is the upper river's own surface at the seam, over the channel bed.
+        if let Some(m) = lod0.filter(|_| k > 0) {
+            let d = m
+                .idx
+                .as_chunks::<3>()
+                .0
+                .iter()
+                .map(|t| {
+                    let [a, b, c] = [t[0], t[1], t[2]].map(|i| m.pos[i as usize]);
+                    point_triangle_distance(l.at, a, b, c)
+                })
+                .fold(f32::INFINITY, f32::min);
+            if d > WATERFALL_LIP_TOL {
+                e.push(format!(
+                    "{id}: {} sits {d:.3} m off the LOD0 face (more than {WATERFALL_LIP_TOL})",
+                    l.name
+                ));
+            }
+        }
+    }
+    e
+}
+
+/// The fall-face checks of one GLB: its LOD meshes and its `socket-lip-*` nodes at their world
+/// positions.
+fn waterfall_face_in_doc(
+    id: &str,
+    drop: u8,
+    doc: &gltf::Document,
+    buffers: &[gltf::buffer::Data],
+) -> Vec<String> {
+    let lods: Vec<Option<FaceMesh>> = (0..3)
+        .map(|i| mesh_named(doc, &lod_mesh_name(id, i)).map(|m| face_mesh(&m, buffers)))
+        .collect();
+    let world = world_matrices(doc);
+    let lips: Vec<Lip> = doc
+        .nodes()
+        .filter(|n| n.name().is_some_and(|s| s.starts_with("socket-lip-")))
+        .map(|n| {
+            let t = world[n.index()][3];
+            Lip {
+                name: n.name().unwrap_or_default().to_string(),
+                at: [t[0], t[1], t[2]],
+                extras: n
+                    .extras()
+                    .as_ref()
+                    .and_then(|r| serde_json::from_str(r.get()).ok())
+                    .unwrap_or_default(),
+            }
+        })
+        .collect();
+    waterfall_face_errors(id, drop, &lods, &lips)
+}
+
+/// The fall-face check (plan Task 17) for one piece of the real kit: in the manifest as a prop, its
+/// face on the channel and the column in every LOD, its lips, and the 4k / 50% / 15% LOD budgets.
+fn check_waterfall_face(piece: &str, drop: u8) -> Vec<String> {
+    let Some(kit) = kits().into_iter().find(|k| k.requires_refs) else {
+        return vec!["no real kit".into()];
+    };
+    let Some(p) = kit.manifest.pieces.iter().find(|p| p.id == piece) else {
+        return vec![format!(
+            "{piece}: not in assets/kit/manifest.json (the fall face has not landed)"
+        )];
+    };
+    let mut e = vec![];
+    if p.kind != PieceKind::Prop {
+        e.push(format!("{piece}: kind {:?}, want prop", p.kind));
+    }
+    match plain(&kit, p) {
+        Err(err) => e.push(err),
+        Ok((doc, buffers, _)) => {
+            e.extend(waterfall_face_in_doc(piece, drop, &doc, &buffers));
+            let lod_tris =
+                [0, 1, 2].map(|i| mesh_named(&doc, &lod_mesh_name(piece, i)).map(|m| tris(&m)));
+            e.extend(lod_budget_errors(
+                piece,
+                lod_tris,
+                lod0_budget(p),
+                LOD2_MAX_RATIO,
+            ));
+        }
+    }
+    e
+}
+
 /// Cross-section errors for one edge piece, given each LOD's (y, z) section at x = APOTHEM.
 fn section_errors(id: &str, secs: &[Vec<(i64, i64)>]) -> Vec<String> {
     let Some(sec) = secs.first() else {
@@ -1310,13 +1743,20 @@ const RIVER_DRESSING_PROPS: &[&str] = &["river_spring_center", "reed_bed"];
 const OPEN_PORTAL_LOD0_MAX: usize = 1_800;
 const OPEN_PORTAL_PROPS: &[&str] = &["rail_tunnel_portal"];
 
+/// The waterfall fall faces (rivers-at-levels spec §7, approved 2026-11-22: "Fall face LOD0 at most
+/// 4k triangles, LOD1 50%, LOD2 15%"): props, since they sit on a cliff column rather than on a tile's
+/// own border ring, with the kit-piece LOD0 ceiling.
+const WATERFALL_LOD0_MAX: usize = 4_000;
+
 /// A piece's LOD0 triangle ceiling: its kind's, `RIVER_DRESSING_LOD0_MAX` for a river dressing prop,
-/// or `OPEN_PORTAL_LOD0_MAX` for an open-tunnel portal.
+/// `OPEN_PORTAL_LOD0_MAX` for an open-tunnel portal, or `WATERFALL_LOD0_MAX` for a fall face.
 fn lod0_budget(p: &PieceEntry) -> usize {
     if p.kind == PieceKind::Prop && RIVER_DRESSING_PROPS.contains(&p.id.as_str()) {
         RIVER_DRESSING_LOD0_MAX
     } else if p.kind == PieceKind::Prop && OPEN_PORTAL_PROPS.contains(&p.id.as_str()) {
         OPEN_PORTAL_LOD0_MAX
+    } else if p.kind == PieceKind::Prop && waterfall_drop(&p.id).is_some() {
+        WATERFALL_LOD0_MAX
     } else {
         p.kind.lod0_budget()
     }
@@ -2728,6 +3168,7 @@ fn check_bevy(kit: &Kit) -> Vec<String> {
         }
         for (name, nh) in &g.named_nodes {
             if name.starts_with("socket-lane-")
+                || name.starts_with("socket-lip-")
                 || name.starts_with("anchor-prop-")
                 || name.starts_with("anchor-park-")
             {
@@ -2821,6 +3262,192 @@ fn geometry_budgets_lods_sockets_border() {
         e.extend(check_coast_seams(&k));
     }
     fail(e);
+}
+
+/// Plan Task 17: every fall face meets the upper channel, the lower bank and the column plane in
+/// every LOD, carries one lip socket per tier and keeps the 4k / 50% / 15% LOD budgets.
+#[test]
+fn waterfall_faces_meet_the_channel_and_the_column() {
+    fail(
+        WATERFALL_PIECES
+            .iter()
+            .flat_map(|&(id, drop)| check_waterfall_face(id, drop))
+            .collect(),
+    );
+}
+
+/// Largest distance (m) between a fall face's lip socket, placed as play places the piece, and its
+/// tier's lip on the runtime sheet.
+const FACE_SHEET_TOL: f32 = 0.05;
+
+/// Play draws each fall face where its water falls (Task 19): for every drop and several upper
+/// rotations and fall edges, each lip socket of `waterfall_l<drop>`, under the upper tile's rest
+/// transform and `fall_face_local`, lies within 5 cm of its tier's lip on `sheet_mesh` (the
+/// sheet's top row at the lane's centre).
+#[test]
+fn fall_face_lips_meet_the_runtime_sheet() {
+    let Some(kit) = kits().into_iter().find(|k| k.requires_refs) else {
+        panic!("no real kit");
+    };
+    let catalog = hex_core::TileCatalog::builtin().expect("builtin tile catalog");
+    let mut e = vec![];
+    for (piece, drop) in WATERFALL_PIECES {
+        let p = kit.manifest.pieces.iter().find(|p| p.id == piece).unwrap();
+        let (doc, _, _) = plain(&kit, p).unwrap();
+        let world = world_matrices(&doc);
+        let mut sockets: Vec<(String, Vec3)> = doc
+            .nodes()
+            .filter_map(|n| {
+                let name = n.name()?.strip_prefix("socket-lip-")?.to_owned();
+                let t = world[n.index()][3];
+                Some((name, Vec3::new(t[0], t[1], t[2])))
+            })
+            .collect();
+        sockets.sort_by(|a, b| a.0.cmp(&b.0));
+        for (rotation, local) in [(0u8, 0u8), (2, 3), (5, 0), (1, 3)] {
+            let edge = (local + rotation) % 6;
+            let up = hex_core::Axial::new(1, -1);
+            let upper = PlayTile {
+                cell: up,
+                tile: "river_straight".into(),
+                rotation,
+                level: drop,
+            };
+            let lower = PlayTile {
+                cell: up.neighbor(edge),
+                level: 0,
+                ..upper.clone()
+            };
+            let lay = layout(&[upper.clone(), lower], &catalog, |_| true);
+            let cw = &lay[&up];
+            let Some(&fall) = cw.falls.iter().find(|f| f.upper && f.edge == edge) else {
+                e.push(format!("{piece} r{rotation} edge {edge}: no fall"));
+                continue;
+            };
+            let (pos, uv, _) = sheet_mesh(cw, fall);
+            let [cx, cz] = up.to_world(hex_core::HEX_RADIUS);
+            let lips: Vec<Vec3> = pos
+                .iter()
+                .zip(&uv)
+                .filter(|(_, u)| {
+                    u[0].abs() < 1e-4 && (u[1] - hex_play::water::SHEET_TAG).abs() < 1e-4
+                })
+                .map(|(p, _)| Vec3::new(p[0] + cx, p[1], p[2] + cz))
+                .collect();
+            if lips.len() != sockets.len() {
+                e.push(format!(
+                    "{piece} r{rotation} edge {edge}: {} sheet lips, {} sockets",
+                    lips.len(),
+                    sockets.len()
+                ));
+                continue;
+            }
+            let at = tile_rest(&upper) * fall_face_local(rotation, edge);
+            for ((name, s), want) in sockets.iter().zip(&lips) {
+                let got = at.transform_point(*s);
+                if got.distance(*want) > FACE_SHEET_TOL {
+                    e.push(format!(
+                        "{piece} r{rotation} edge {edge}: socket-lip-{name} at {got:?}, the sheet's lip at {want:?}"
+                    ));
+                }
+            }
+        }
+    }
+    fail(e);
+}
+
+/// A synthetic fall face of `drop` levels: columns at the river seam's profile offsets and the
+/// side ends, rows every 0.5 m down the column and one through each ledge's lip, the interior
+/// bulging out of the border plane, each ledge's lip vertex out at its tier's set-out, and one lip
+/// socket per tier where the tier contract puts it.
+fn synthetic_face(drop: u8) -> (FaceMesh, Vec<Lip>) {
+    let fall = f32::from(drop) * hex_core::LEVEL_STEP;
+    let mut zs: Vec<f32> = (-14..=14).map(|i| 6.83 * i as f32 / 14.0).collect();
+    zs.insert(0, -WATERFALL_HALF_W);
+    zs.push(WATERFALL_HALF_W);
+    let steps = (fall / 0.5) as u32;
+    let ledge_d = |k: u8| river_height(0.0) - waterfall_lip(k)[1];
+    let mut ds: Vec<f32> = (0..=steps)
+        .map(|r| fall * r as f32 / steps as f32)
+        .collect();
+    ds.extend((1..drop).map(ledge_d));
+    ds.sort_by(f32::total_cmp);
+    let rows = ds.len() as u32 - 1;
+    let mut pos = vec![];
+    for (r, &d) in ds.iter().enumerate() {
+        for &z in &zs {
+            let edge = r == 0 || r as u32 == rows || z.abs() == WATERFALL_HALF_W;
+            let ledge = (1..drop).find(|&k| z == 0.0 && (d - ledge_d(k)).abs() < 1e-6);
+            let bulge = match ledge {
+                _ if edge => 0.0,
+                Some(k) => waterfall_lip(k)[0] - APOTHEM,
+                None => 0.05 + 0.4 * (1.0 - (z / WATERFALL_HALF_W).powi(2)),
+            };
+            pos.push([APOTHEM + bulge, river_height(z.abs()) - d, z]);
+        }
+    }
+    let n = zs.len() as u32;
+    let mut idx = vec![];
+    for r in 0..rows {
+        for c in 0..n - 1 {
+            let a = r * n + c;
+            idx.extend([a, a + n, a + 1, a + 1, a + n, a + n + 1]);
+        }
+    }
+    let lips = (0..drop)
+        .map(|k| Lip {
+            name: format!("socket-lip-{k}"),
+            at: waterfall_lip(k),
+            extras: serde_json::json!({"kind": "lip", "tier": k, "width": 8.0, "normal": [1.0, 0.0, 0.0]}),
+        })
+        .collect();
+    (FaceMesh { pos, idx }, lips)
+}
+
+/// The fall-face gate passes the analytic face and catches a face 0.2 m off the channel, one stood
+/// out of the column plane, a LOD whose perimeter moved, a missing lip and a lip off the tier
+/// contract.
+#[test]
+fn gate_catches_a_waterfall_face_off_the_channel() {
+    for drop in 1..=3 {
+        let (m, lips) = synthetic_face(drop);
+        let three = |m: &FaceMesh| vec![Some(m.clone()), Some(m.clone()), Some(m.clone())];
+        let e = waterfall_face_errors("w", drop, &three(&m), &lips);
+        assert!(e.is_empty(), "drop {drop}: the analytic face passes: {e:?}");
+        let mut low = m.clone();
+        low.pos.iter_mut().for_each(|p| p[1] -= 0.2);
+        let e = waterfall_face_errors("w", drop, &three(&low), &lips);
+        assert!(
+            e.iter()
+                .any(|m| m.contains("neither the upper channel profile")),
+            "drop {drop}: {e:?}"
+        );
+        let mut out = m.clone();
+        out.pos.iter_mut().for_each(|p| p[0] += 0.2);
+        let e = waterfall_face_errors("w", drop, &three(&out), &lips);
+        assert!(
+            e.iter().any(|m| m.contains("off the border plane")),
+            "{e:?}"
+        );
+        let mut moved = m.clone();
+        moved.pos[0][1] -= 0.01;
+        let e = waterfall_face_errors(
+            "w",
+            drop,
+            &[Some(m.clone()), Some(moved), Some(m.clone())],
+            &lips,
+        );
+        assert!(
+            e.iter().any(|m| m.contains("LOD1 perimeter differs")),
+            "{e:?}"
+        );
+        let e = waterfall_face_errors("w", drop, &three(&m), &lips[1..]);
+        assert!(e.iter().any(|m| m.contains("lip sockets")), "{e:?}");
+        let mut off = lips;
+        off[usize::from(drop) - 1].at[0] += 0.1;
+        let e = waterfall_face_errors("w", drop, &three(&m), &off);
+        assert!(e.iter().any(|m| m.contains("tier contract")), "{e:?}");
+    }
 }
 
 /// Every coast base carries the same extra beach-edge ring samples, so each legal beach seam
@@ -3051,6 +3678,18 @@ fn budgets_match_blender_lib() {
     );
     assert_eq!(value("OPEN_PORTAL_PROPS"), "(\"rail_tunnel_portal\",)");
     assert_eq!(OPEN_PORTAL_PROPS, ["rail_tunnel_portal"]);
+    assert_eq!(
+        value("WATERFALL_LOD0_MAX").parse::<usize>().unwrap(),
+        WATERFALL_LOD0_MAX
+    );
+    assert_eq!(
+        value("WATERFALL_PROPS"),
+        "(\"waterfall_l1\", \"waterfall_l2\", \"waterfall_l3\")"
+    );
+    assert_eq!(
+        WATERFALL_PIECES.map(|(id, _)| id),
+        ["waterfall_l1", "waterfall_l2", "waterfall_l3"]
+    );
     let lod0 = value("LOD0_MAX");
     for (name, kind) in [
         ("base", PieceKind::Base),
@@ -3815,7 +4454,8 @@ fn lane_cut_bases_get_the_wider_lod2_ceiling() {
 }
 
 /// The 2,500-tri LOD0 ceiling reaches the river dressing props only: every listed id is a prop in
-/// the runtime kit, other props keep 1,500 and other kinds keep their own.
+/// the runtime kit, other props keep 1,500 (but the open portals and the fall faces, scoped
+/// separately) and other kinds keep their own.
 #[test]
 fn river_dressing_lod0_budget_is_scoped_to_its_props() {
     let k = kits()
@@ -3834,7 +4474,10 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
     }
     for p in &k.manifest.pieces {
         let id = p.id.as_str();
-        if !RIVER_DRESSING_PROPS.contains(&id) && !OPEN_PORTAL_PROPS.contains(&id) {
+        if !RIVER_DRESSING_PROPS.contains(&id)
+            && !OPEN_PORTAL_PROPS.contains(&id)
+            && waterfall_drop(id).is_none()
+        {
             assert_eq!(lod0_budget(p), p.kind.lod0_budget(), "{}", p.id);
         }
     }
@@ -3844,6 +4487,9 @@ fn river_dressing_lod0_budget_is_scoped_to_its_props() {
     );
     assert_eq!(lod0_budget(piece("seabed_rock")), 1_500);
     assert_eq!(lod0_budget(piece("river_road_bridge_center")), 4_000);
+    for (id, _) in WATERFALL_PIECES {
+        assert_eq!(lod0_budget(piece(id)), WATERFALL_LOD0_MAX, "{id}");
+    }
 }
 
 /// A rotor's triangles count toward its LOD (PRD §7.2): the windmill's LODs are its body plus its

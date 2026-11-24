@@ -1,0 +1,568 @@
+{
+  "pieceId": "waterfall_l3",
+  "version": 1,
+  "route": "scripted",
+  "generator": {
+    "path": "scripts/blender/kit/waterfall_l3.py",
+    "sha256": "994dd5a90bc8355a012fdd682f7754991d1504ed9ffd931295eea463712ca80b"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_outcrop.py",
+      "sha256": "aaedeb7b062fdf122a98b9e49fbddea4974a21b68be962639588f14c16c1067c"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_waterfall.py",
+      "sha256": "e10770a36f0c37b4bf5b4d5f71ddbd24819b15c931a5d9504056035e356bef6e"
+    }
+  ],
+  "authoringAgent": {
+    "harness": "claude-code",
+    "model": "claude-opus-5-5"
+  },
+  "blender": "5.2.2 LTS",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "bake": {
+    "aoDistanceM": 0.8,
+    "bakeStats": {
+      "albedoLuma": {
+        "mean": 0.4507562816143036,
+        "min": 0,
+        "p01": 0.28742486238479614,
+        "p05": 0.334326833486557,
+        "texels": 828307
+      },
+      "ao": {
+        "mean": 0.8186925053596497,
+        "min": 0,
+        "p01": 0.1882353127002716,
+        "p05": 0.3764706254005432,
+        "texels": 828307
+      },
+      "normalMissFraction": 0.000020523791299602682,
+      "roughness": {
+        "mean": 0.49096816778182983,
+        "min": 0,
+        "p01": 0.38431376218795776,
+        "p05": 0.38431376218795776,
+        "texels": 828307
+      }
+    },
+    "blender": "5.2.2 LTS",
+    "cageExtrusionM": 0.3,
+    "channels": {
+      "albedo": {
+        "colorspace": "srgb",
+        "size": 1024
+      },
+      "masks": {
+        "colorspace": "linear",
+        "size": 256
+      },
+      "normal": {
+        "colorspace": "linear",
+        "size": 512
+      },
+      "orm": {
+        "colorspace": "linear",
+        "size": 512
+      }
+    },
+    "device": "CPU",
+    "drop": 3,
+    "faceHalfWidthM": 7,
+    "lips": [
+      {
+        "at": [
+          13.8564,
+          0,
+          -1.4
+        ],
+        "fall": 4,
+        "tier": 0
+      },
+      {
+        "at": [
+          15.3564,
+          0,
+          -5.4
+        ],
+        "fall": 4,
+        "tier": 1
+      },
+      {
+        "at": [
+          16.8564,
+          0,
+          -9.4
+        ],
+        "fall": 4,
+        "tier": 2
+      }
+    ],
+    "lod2Drops": {},
+    "lodSpecs": [
+      [
+        0.5295,
+        0.4573,
+        3774
+      ],
+      [
+        0.745,
+        0.6434,
+        1840
+      ],
+      [
+        1.1557,
+        0.9981,
+        562
+      ]
+    ],
+    "marginPx": 8,
+    "maxRayDistanceM": 0.6,
+    "reachM": 3.16,
+    "receiverSignature": "c3e2084387ff034f7da25a3f823a18b741dab3ca9e1681ab210ab019d7b72178",
+    "samples": 32,
+    "skipped": false,
+    "texelDensityPxPerM": {
+      "max": 217.0570799394718,
+      "median": 59.93739380188039,
+      "min": 17.412492027892366
+    },
+    "texelMinPxPerM": 55
+  },
+  "lods": [
+    {
+      "lod": 0,
+      "tris": 3774,
+      "ratio": 1
+    },
+    {
+      "lod": 1,
+      "tris": 1840,
+      "ratio": 0.48754636989931105
+    },
+    {
+      "lod": 2,
+      "tris": 562,
+      "ratio": 0.1489136195018548
+    }
+  ],
+  "collider": {
+    "node": "waterfall_l3_collider"
+  },
+  "sockets": [
+    {
+      "extras": {
+        "fall": 4,
+        "kind": "lip",
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "tier": 0,
+        "width": 8
+      },
+      "name": "socket-lip-0",
+      "position": [
+        13.856406211853027,
+        -1.399999976158142,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "fall": 4,
+        "kind": "lip",
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "tier": 1,
+        "width": 8
+      },
+      "name": "socket-lip-1",
+      "position": [
+        15.356406211853027,
+        -5.400000095367432,
+        0
+      ],
+      "yaw": 0
+    },
+    {
+      "extras": {
+        "fall": 4,
+        "kind": "lip",
+        "normal": [
+          1,
+          0,
+          0
+        ],
+        "tier": 2,
+        "width": 8
+      },
+      "name": "socket-lip-2",
+      "position": [
+        16.856407165527344,
+        -9.399999618530273,
+        0
+      ],
+      "yaw": 0
+    }
+  ],
+  "pivot": "hex_center",
+  "texelDensityPxPerM": {
+    "max": 217.0570799394718,
+    "median": 59.93739380188039,
+    "min": 17.412492027892366
+  },
+  "compression": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "budgets": {
+      "class": "piece",
+      "ktxMax": 1500000,
+      "ktxBytes": {
+        "bc7": 1293932,
+        "astc": 1310373
+      },
+      "glbBytes": 121596
+    },
+    "textureEncodes": [
+      {
+        "channel": "albedo",
+        "family": "bc7",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.bc7.ktx2",
+        "format": "BC7_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 146,
+        "levels": 11,
+        "bytes": 864107,
+        "sha256": "8182eeeac08bc1eb731ceee91652408f09953a54340fde2d2d4ff41607c42921"
+      },
+      {
+        "channel": "albedo",
+        "family": "astc",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.astc.ktx2",
+        "format": "ASTC_SRGB",
+        "transfer": "srgb",
+        "vkFormat": 158,
+        "levels": 11,
+        "bytes": 871455,
+        "sha256": "9a7cb1c6c615661dd7038ad3ae7d83f0a4ab6898ee1b7cd7bc3797711996ce7f"
+      },
+      {
+        "channel": "albedo",
+        "family": "png",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.png",
+        "format": "PNG",
+        "transfer": "srgb",
+        "bytes": 1517556,
+        "sha256": "8f53c2642f36cf10a835b15dc8fa736a56b6ab9c03a04d1b533612a0ad51f450"
+      },
+      {
+        "channel": "masks",
+        "family": "bc7",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 9,
+        "bytes": 16523,
+        "sha256": "79fc5b42cf77175d31553fb370d1dd2440467a2866c23eb409f1087601d97307"
+      },
+      {
+        "channel": "masks",
+        "family": "astc",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 9,
+        "bytes": 17251,
+        "sha256": "5e2f934643311fa7285326741e81e46466a2a0206402ef26c0f5f137f63cb9a3"
+      },
+      {
+        "channel": "masks",
+        "family": "png",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 18264,
+        "sha256": "1af6d886b336b908294b324c7d9f0aae7e529f30765b64e65c0b4f12e3f90bde"
+      },
+      {
+        "channel": "normal",
+        "family": "bc7",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 244166,
+        "sha256": "1de64c51dd4d8da5dc1589c59e0fdaa13f8ab8fedee07f15bd9e6ada7f04ba2e"
+      },
+      {
+        "channel": "normal",
+        "family": "astc",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 244006,
+        "sha256": "f7ae6ea46c13f3d6fb55f5c45ca50913eb05902b94fb6498ad6b501fb4be5eb3"
+      },
+      {
+        "channel": "normal",
+        "family": "png",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 433954,
+        "sha256": "a489b980c4580c71a25f0ac452a632ac442a71ca527a3c82073e503d37c4f8ef"
+      },
+      {
+        "channel": "orm",
+        "family": "bc7",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.bc7.ktx2",
+        "format": "BC7_UNORM",
+        "transfer": "linear",
+        "vkFormat": 145,
+        "levels": 10,
+        "bytes": 169136,
+        "sha256": "11298ccf1aba23391fda5e1fa6b529ae4a390b0b90034d3e1abdeb9f30d5f55f"
+      },
+      {
+        "channel": "orm",
+        "family": "astc",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.astc.ktx2",
+        "format": "ASTC_UNORM",
+        "transfer": "linear",
+        "vkFormat": 157,
+        "levels": 10,
+        "bytes": 177661,
+        "sha256": "2c1dba98e6a26dece7589e7d55d7d36ae0b56fa26b684cc7e6665726dbafec9b"
+      },
+      {
+        "channel": "orm",
+        "family": "png",
+        "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.png",
+        "format": "PNG",
+        "transfer": "linear",
+        "bytes": 255682,
+        "sha256": "8370ab157071ae5ac499075467ce4bd29333239c03f30c3353da2032833b797b"
+      }
+    ]
+  },
+  "derivedFiles": [
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.glb",
+      "sha256": "8a8a49b179efdd705c337c999cff36aa1f9c73d31d54088a6d0f94c5f0785e51",
+      "bytes": 121596
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.bc7.ktx2",
+      "sha256": "8182eeeac08bc1eb731ceee91652408f09953a54340fde2d2d4ff41607c42921",
+      "bytes": 864107
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.astc.ktx2",
+      "sha256": "9a7cb1c6c615661dd7038ad3ae7d83f0a4ab6898ee1b7cd7bc3797711996ce7f",
+      "bytes": 871455
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.albedo.png",
+      "sha256": "8f53c2642f36cf10a835b15dc8fa736a56b6ab9c03a04d1b533612a0ad51f450",
+      "bytes": 1517556
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.bc7.ktx2",
+      "sha256": "79fc5b42cf77175d31553fb370d1dd2440467a2866c23eb409f1087601d97307",
+      "bytes": 16523
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.astc.ktx2",
+      "sha256": "5e2f934643311fa7285326741e81e46466a2a0206402ef26c0f5f137f63cb9a3",
+      "bytes": 17251
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.masks.png",
+      "sha256": "1af6d886b336b908294b324c7d9f0aae7e529f30765b64e65c0b4f12e3f90bde",
+      "bytes": 18264
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.bc7.ktx2",
+      "sha256": "1de64c51dd4d8da5dc1589c59e0fdaa13f8ab8fedee07f15bd9e6ada7f04ba2e",
+      "bytes": 244166
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.astc.ktx2",
+      "sha256": "f7ae6ea46c13f3d6fb55f5c45ca50913eb05902b94fb6498ad6b501fb4be5eb3",
+      "bytes": 244006
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.normal.png",
+      "sha256": "a489b980c4580c71a25f0ac452a632ac442a71ca527a3c82073e503d37c4f8ef",
+      "bytes": 433954
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.bc7.ktx2",
+      "sha256": "11298ccf1aba23391fda5e1fa6b529ae4a390b0b90034d3e1abdeb9f30d5f55f",
+      "bytes": 169136
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.astc.ktx2",
+      "sha256": "2c1dba98e6a26dece7589e7d55d7d36ae0b56fa26b684cc7e6665726dbafec9b",
+      "bytes": 177661
+    },
+    {
+      "path": "assets/kit/p1/waterfall_l3/waterfall_l3.orm.png",
+      "sha256": "8370ab157071ae5ac499075467ce4bd29333239c03f30c3353da2032833b797b",
+      "bytes": 255682
+    }
+  ],
+  "references": [
+    {
+      "path": "assets-source/refs/waterfall/ref-1.jpg",
+      "sha256": "81d0bdba19d6ee7266a1a99132a4812353f7a2f91d8881f00aecf7d3e7e448fe",
+      "sourceSha256": "fce4fe5a196c6931c37b0a3981b2a1432f91a9fd5d49a5ad3750e0e1dab23a58",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "893ecaf8-c590-40c0-8fe5-256d2a4d1566",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands one level higher: its meadow top is 4 m above the lower tile's, about the height of a single-storey house, on a taller block. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall: the water slides over one straight, level granite lip spanning the whole channel and falls 4 m in a single smooth sheet, clear and glassy at the lip and turning white and foamy as it falls, into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high three-quarter camera in front of the lower tile looking down at about 45 degrees elevation, so the waterfall and its rock face look straight at the camera and every side of both hexagons reads clearly"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-2.jpg",
+      "sha256": "99f7fc2eec061027468669360811b0b44eaa84f2cde35e450c708ec112034ffd",
+      "sourceSha256": "9d36dae3c8a8b0d5f6a8f4187924052368749046824e0e774d1e6e5f5cec7a55",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "2b8f4408-47b4-439e-bf8f-27aff2b5ecbd",
+      "prompt": "Close-up of a 4 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: At the shared side the river pours off the raised tile as a waterfall: the water slides over one straight, level granite lip spanning the whole channel and falls 4 m in a single smooth sheet, clear and glassy at the lip and turning white and foamy as it falls, into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind the sheet and on both sides of it the wall is weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, the lip one straight level course of squared granite blocks, rough weathered blocks below, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-3.jpg",
+      "sha256": "540163851de3a3413f6c14037a5dded5d8720edd9d3c479c1f67a6d988784b92",
+      "sourceSha256": "b729ef5539fed0feb5253d08372f154913549ba08578af9d7260bc9b390b4245",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "e3dae414-b745-4d40-a039-8a4d663ef731",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands one level higher: its meadow top is 4 m above the lower tile's, about the height of a single-storey house, on a taller block. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall: the water slides over one straight, level granite lip spanning the whole channel and falls 4 m in a single smooth sheet, clear and glassy at the lip and turning white and foamy as it falls, into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a low camera at a person's eye height standing on the lower tile's grassy river bank about 12 m downstream of the fall, looking up at the waterfall and its whole rock face against the plain grey backdrop, the raised tile's dark earth side wall continuing beyond the face on both sides"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-4.jpg",
+      "sha256": "2faa165208aa1d574fb5e8ffe73d5f1a99b1097c09b44d308e066070ee5c8927",
+      "sourceSha256": "4cbdb338d085ce3921e142579a40d5250d919ca8d1533361675e08efb54857e5",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "c72d6744-2c22-4dc4-9f03-0f26482c0103",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands two levels higher: its meadow top is 8 m above the lower tile's, about the height of a two-storey house, on a much taller block. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall 8 m tall in two tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto one broad level granite ledge halfway down where it breaks into white foam, then falls again in a second white sheet into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high three-quarter camera in front of the lower tile looking down at about 45 degrees elevation, so the waterfall and its rock face look straight at the camera and every side of both hexagons reads clearly"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-5.jpg",
+      "sha256": "f7e81abceebf28a0db159118e64055385bd4bc1e72900115c5168c41efba3e3e",
+      "sourceSha256": "f51283c7fc8c3871a5effb3711d4094d37037b34adeba21f7a81685855ec1f85",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "4390a7b4-201d-405e-ad1a-5991ace61822",
+      "prompt": "Close-up of an 8 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: At the shared side the river pours off the raised tile as a waterfall 8 m tall in two tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto one broad level granite ledge halfway down where it breaks into white foam, then falls again in a second white sheet into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind the sheets and on both sides of them the wall is weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, the lip one straight level course of squared granite blocks, the halfway ledge a broad level shelf of rounded blocks with moss along its edge, rough weathered blocks between, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-6.jpg",
+      "sha256": "cef1cefb75b27a34c2411e2982e1873e7cad6519b85a5a1512795df9d1205b69",
+      "sourceSha256": "194a3da3306e09df2abf40a74a20103b91ab15e9f6943f9d595da0fc2eacc23e",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "b8ccd41d-6081-4942-852c-dc2cf24a7855",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands two levels higher: its meadow top is 8 m above the lower tile's, about the height of a two-storey house, on a much taller block. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall 8 m tall in two tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto one broad level granite ledge halfway down where it breaks into white foam, then falls again in a second white sheet into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a low camera at a person's eye height standing on the lower tile's grassy river bank about 12 m downstream of the fall, looking up at the waterfall and its whole rock face against the plain grey backdrop, the raised tile's dark earth side wall continuing beyond the face on both sides"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-7.jpg",
+      "sha256": "91dcf6fea5443a2067026c72f24d7b43547f50e3f5ead82f6fef9a883f294276",
+      "sourceSha256": "feaf6f2e8f5cb49d3241d9132a3ff8ab5a1a72831e9a65547ba5a7dfb9d1d03f",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "32cf9307-179a-47d2-b032-8e6bf8d6fe2b",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands three levels higher on a very tall solid block like a tower: its dark earth side walls are 12 m tall, three times as tall as the lower tile's block is thick, so its meadow top stands far above the lower tile, about the height of a three-storey house, and the waterfall is one and a half times as tall as the river is wide. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall 12 m tall in three tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto a broad level granite ledge, breaks into white foam, falls again onto a second ledge lower down, and falls a third time into a churning white foam plunge pool on the lower tile's river, the ledges stepping out a little toward the bottom, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, high three-quarter camera well back in front of the lower tile looking down at about 35 degrees elevation, so the whole height of the tall block and the waterfall faces the camera and every side of both hexagons reads clearly"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-8.jpg",
+      "sha256": "b44e06ae788396f3a2a7920040416916e52cd90e87bac41b7ab2aef33f68b2ed",
+      "sourceSha256": "cb65f93e6a27214c3719829f87e216613a09645b00ffa045e08483c90982709b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "804f8f93-4a57-4008-8bce-213bb6489f4a",
+      "prompt": "Close-up of a 12 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: At the shared side the river pours off the raised tile as a waterfall 12 m tall in three tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto a broad level granite ledge, breaks into white foam, falls again onto a second ledge lower down, and falls a third time into a churning white foam plunge pool on the lower tile's river, the ledges stepping out a little toward the bottom, with ripple rings spreading downstream. Behind the sheets and on both sides of them the wall is weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, the lip one straight level course of squared granite blocks, each ledge a broad level shelf of rounded blocks with moss along its edge, rough weathered blocks between, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-9.jpg",
+      "sha256": "6b65ca33fcfc8702a89eb15168e27009ad0f3dae1a209ff0031e49048e4c4d7f",
+      "sourceSha256": "2c56a1b45d82a3d06bf7be9608781c78007fe7f34c986f1cb56a87aea98944f3",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "d69f7edd-efb5-4409-a585-fa5ca215a02c",
+      "prompt": "Waterfall tiles: Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and the hexagon side walls show a thin grass lip over dark root-filled topsoil that darkens softly downward into a near-black foot, one continuous dark earth. The raised tile stands three levels higher: its meadow top is 12 m above the lower tile's, about the height of a three-storey house, on a very tall block. One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. Where the river leaves the pair through the outer sides, the hexagon side wall shows the water column in cross-section like clear tinted resin, turquoise at the top fading to deep blue at the bottom, never an empty gap. At the shared side the river pours off the raised tile as a waterfall 12 m tall in three tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto a broad level granite ledge, breaks into white foam, falls again onto a second ledge lower down, and falls a third time into a churning white foam plunge pool on the lower tile's river, the ledges stepping out a little toward the bottom, with ripple rings spreading downstream. Behind and beside the falling water, the raised tile's front wall is one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth. The whole pair is a clean photoreal 3D computer graphics render, stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, seen from a low camera at a person's eye height standing on the lower tile's grassy river bank about 12 m downstream of the fall, looking up at the waterfall and its whole rock face against the plain grey backdrop, the raised tile's dark earth side wall continuing beyond the face on both sides"
+    },
+    {
+      "path": "assets-source/refs/waterfall/ref-10.jpg",
+      "sha256": "17381d0f2b594624be979c4d3e916f213102f7eb6c35ba5b6705785abdf672a4",
+      "sourceSha256": "5082e79de8d5c045bb2037c457788541863b836a23bdef533adcd5395d52557b",
+      "provider": "higgsfield",
+      "model": "nano_banana_pro",
+      "jobId": "ec529324-3d5d-4746-aaa3-d9bd34cc201c",
+      "prompt": "Eye-level view of an 8 m waterfall in a stylized-real diorama landscape, seen from a camera standing in the grass on the river bank below the fall at a person's eye height, 1.7 m above the grass and about 12 m downstream, looking up at the fall towering overhead, as tall as a two-storey house and as tall as the river is wide. The river drops off the edge of a raised meadow in two tiers: At the shared side the river pours off the raised tile as a waterfall 8 m tall in two tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto one broad level granite ledge halfway down where it breaks into white foam, then falls again in a second white sheet into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream. Behind and beside the falling water rises one face of weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier, about 14 m wide, and beyond the rock on both sides the raised ground's wall is dark earth with a thin grass lip, its meadow edge and grass tufts seen from below against the plain grey sky. In the foreground the river runs toward the camera between natural earthy banks with pebbles and lush meadow grass, clear water tinted pale turquoise in the shallows and deep teal-blue where deep, sun glints, soft caustics on the shallow bed. A clean photoreal 3D computer graphics render, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    }
+  ],
+  "license": "MIT (original work, Hex World repo)",
+  "validation": {
+    "pass": true,
+    "date": "2026-11-23T08:12:38.235Z",
+    "checks": [
+      "kit_gate geometry",
+      "kit_gate textures",
+      "kit_gate bevy reimport",
+      "blender reimport sockets",
+      "six-view render"
+    ]
+  },
+  "approvals": [
+    {
+      "who": "Paul Robello (owner)",
+      "when": "2026-11-22",
+      "gate": "reference",
+      "approved": [
+        "assets-source/refs/waterfall/ref-1.jpg",
+        "assets-source/refs/waterfall/ref-4.jpg",
+        "assets-source/refs/waterfall/ref-7.jpg",
+        "assets-source/refs/waterfall/ref-10.jpg"
+      ],
+      "notes": "Recommendations accepted for WF-Q1 to WF-Q4. WF-Q1: ref-1 is the design (rounded pale granite with moss either side of one sheet), ref-4's single ledge for the 8 m drop, ref-7's three tiers for the 12 m drop, and ref-10 is the eye-level and layout guide. From ref-2, only the wet streaks and glossy wet stone. WF-Q2: a natural granite lip, no dressed coping. WF-Q3: the piece exports each tier's lip as a socket, and the runtime draws one sheet per tier. WF-Q4: a 14 m face. Answered in chat on 2026-11-22: \"lets go with your reocmendations\"."
+    },
+    {
+      "gate": "piece",
+      "status": "pending",
+      "requested": "2026-11-22",
+      "notes": "Pending owner review; not an approval. waterfall_l3, the 12 m fall face (rivers-at-levels Task 18; refs assets-source/refs/waterfall, approved 2026-11-22): three tiers: the seam lip and two granite ledges, 1.5 m and 3.0 m out, 4 m and 8 m down, on the controller's tier contract (WF-Q3). The piece approval waits for in-engine shots of the face with its sheets (docs/checkpoints/waterfall/). The controller records the owner's decision."
+    }
+  ]
+}

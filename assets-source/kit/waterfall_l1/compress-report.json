@@ -1,0 +1,183 @@
+{
+  "name": "waterfall_l1",
+  "date": "2026-11-23T08:10:06.245Z",
+  "toolVersions": {
+    "gltfTransform": "4.3.0",
+    "meshoptimizer": "0.25.0",
+    "ktxSoftware": "ktx version: v4.4.2",
+    "node": "v24.18.0"
+  },
+  "settings": {
+    "meshopt": "EXT_meshopt_compression QUANTIZE (FLOAT attributes)",
+    "uastcQuality": 4,
+    "uastcThreads": 1,
+    "uastcAslrOff": true,
+    "zstd": 18,
+    "rdo": {
+      "albedo": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "emissive": {
+        "srgb": true,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "normal": {
+        "srgb": false,
+        "rdo": 0.25,
+        "normalize": true
+      },
+      "orm": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      },
+      "masks": {
+        "srgb": false,
+        "rdo": 0.5,
+        "normalize": false
+      }
+    }
+  },
+  "textureEncodes": [
+    {
+      "channel": "albedo",
+      "family": "bc7",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.albedo.bc7.ktx2",
+      "format": "BC7_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 146,
+      "levels": 11,
+      "bytes": 765363,
+      "sha256": "171cff88d91fd188712492fe82fc97cf3d3ae9f9d3c54d4a933261bf328ed0f3"
+    },
+    {
+      "channel": "albedo",
+      "family": "astc",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.albedo.astc.ktx2",
+      "format": "ASTC_SRGB",
+      "transfer": "srgb",
+      "vkFormat": 158,
+      "levels": 11,
+      "bytes": 775953,
+      "sha256": "1a3c25c3e533f089e8aea3a4158bcb8883407bd6f89e98b5d7fd5d6ce162308c"
+    },
+    {
+      "channel": "albedo",
+      "family": "png",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.albedo.png",
+      "format": "PNG",
+      "transfer": "srgb",
+      "bytes": 1326331,
+      "sha256": "63b9675dffb3d882e936a77f09ef349418f101fd3e7911d6d18209fed3d80fb7"
+    },
+    {
+      "channel": "masks",
+      "family": "bc7",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.masks.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 9,
+      "bytes": 14237,
+      "sha256": "b965545bed318dc794b02df0f6e6665b88cf7fac020e9737e61ce8d7d169f0de"
+    },
+    {
+      "channel": "masks",
+      "family": "astc",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.masks.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 9,
+      "bytes": 14677,
+      "sha256": "b33969185bec96ff1838ce245cfb805223b9390aa464227ee822a344587a8b9b"
+    },
+    {
+      "channel": "masks",
+      "family": "png",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.masks.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 13289,
+      "sha256": "748f31530083b34b9b23383e0951e92576f4a21f8eac13c02330f5ea085b285b"
+    },
+    {
+      "channel": "normal",
+      "family": "bc7",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.normal.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 196903,
+      "sha256": "72b66e6eba78c7e45b4d99d3f2f2d30d3152ea113a38b6afcf7b3fdf8c8f1762"
+    },
+    {
+      "channel": "normal",
+      "family": "astc",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.normal.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 202724,
+      "sha256": "ad303340d8250bc49f99c39ba64f3c3a8e8cd186dacfb6d5e404e2723c315554"
+    },
+    {
+      "channel": "normal",
+      "family": "png",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.normal.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 327326,
+      "sha256": "695ac314ff4a3a86254e60258685fda64cb2c62152756b32622189f113a94631"
+    },
+    {
+      "channel": "orm",
+      "family": "bc7",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.orm.bc7.ktx2",
+      "format": "BC7_UNORM",
+      "transfer": "linear",
+      "vkFormat": 145,
+      "levels": 10,
+      "bytes": 144651,
+      "sha256": "affefac06e6d2dc7cabd49ea3f60ee296f8704e7d871fc64789c1d9a573ccc0d"
+    },
+    {
+      "channel": "orm",
+      "family": "astc",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.orm.astc.ktx2",
+      "format": "ASTC_UNORM",
+      "transfer": "linear",
+      "vkFormat": 157,
+      "levels": 10,
+      "bytes": 150940,
+      "sha256": "7184670abce0680cd5429573a5d0d9375295f5c4d5b0a3d5d7c8d298196b1e2f"
+    },
+    {
+      "channel": "orm",
+      "family": "png",
+      "path": "assets/kit/p1/waterfall_l1/waterfall_l1.orm.png",
+      "format": "PNG",
+      "transfer": "linear",
+      "bytes": 204264,
+      "sha256": "e385146ecca866b09c95b585280625efc60ba17585daa2344836a662269e3865"
+    }
+  ],
+  "budgets": {
+    "class": "piece",
+    "ktxMax": 1500000,
+    "ktxBytes": {
+      "bc7": 1121154,
+      "astc": 1144294
+    },
+    "glbBytes": 107600
+  },
+  "glb": {
+    "bytes": 107600,
+    "sha256": "801fd7e660730ab2d177ff9d170f9c31e6333e10979dc9d11270391277a11568"
+  }
+}

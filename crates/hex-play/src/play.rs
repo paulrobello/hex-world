@@ -566,6 +566,103 @@ pub struct NoBufferStops;
 #[derive(Resource, Clone, Copy, Debug, Default)]
 pub struct NoBoundaries;
 
+/// Leaves the waterfalls out of play (`water::tiles::without_falls`): no falling sheet and no
+/// plunge pool. A fall spans two tiles, so the thumbnail renderer, which draws each tile alone,
+/// keeps them out of its images, as it does the boundaries.
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct NoFalls;
+
+/// The fall-face piece of a waterfall `drop` levels high (rivers-at-levels Task 18). A drop is 1 to
+/// [`hex_core::MAX_LEVEL`] (3).
+pub const fn fall_face_piece(drop: u8) -> &'static str {
+    match drop {
+        0 | 1 => "waterfall_l1",
+        2 => "waterfall_l2",
+        _ => "waterfall_l3",
+    }
+}
+
+/// A fall face's transform under its upper tile's root (rotated `rotation` steps): the piece is
+/// authored on edge 0 at the seam, so it turns to the root-local edge of the fall's world `edge`.
+/// The root carries the level.
+pub fn fall_face_local(rotation: u8, edge: u8) -> Transform {
+    Transform::from_rotation(piece_rotation((edge % 6 + 6 - rotation % 6) % 6))
+}
+
+/// What a drawn fall face was drawn for: its upper tile's root, the lower tile and the drop. Any
+/// change (a level, a rotation, a replace on either side) draws it afresh.
+#[derive(Clone, Debug, PartialEq)]
+struct FaceDrawn {
+    root: Entity,
+    lower: PlayTile,
+    drop: u8,
+}
+
+/// The fall faces drawn under their upper tiles' roots, by (upper cell, world edge).
+#[derive(Default)]
+pub struct FallFaces(HashMap<(Axial, u8), (FaceDrawn, Vec<Entity>)>);
+
+/// Draws one fall face per waterfall in `falls` whose two tiles are drawn (`tiles`), under the
+/// upper tile's root at the seam, and despawns every face whose fall is gone or whose lower tile
+/// changed. A face whose upper root left the view is only forgotten: it sinks with that root. `force` redraws the faces under those upper cells (a root whose children a pack
+/// refresh rebuilt, or the face pieces arriving). A face rises with its upper tile when that one
+/// is `rising`, else with its lower tile when that one is, as a field boundary does.
+fn respawn_fall_faces(
+    commands: &mut Commands,
+    faces: &mut FallFaces,
+    tiles: &HashMap<Axial, (PlayTile, Entity)>,
+    kit: &HashMap<String, Vec<KitPart>>,
+    falls: &[hex_core::river::Waterfall],
+    (force, rising): (&BTreeSet<Axial>, &BTreeSet<Axial>),
+) {
+    let want: HashMap<(Axial, u8), FaceDrawn> = falls
+        .iter()
+        .filter_map(|w| {
+            let (_, root) = tiles.get(&w.upper)?;
+            let (lower, _) = tiles.get(&w.lower)?;
+            Some((
+                (w.upper, w.edge),
+                FaceDrawn {
+                    root: *root,
+                    lower: lower.clone(),
+                    drop: w.drop,
+                },
+            ))
+        })
+        .collect();
+    faces.0.retain(|(cell, edge), (drawn, es)| {
+        // A root that left the view (bulldozed or replaced) sinks with its face and takes it down.
+        if tiles.get(cell).map(|(_, root)| *root) != Some(drawn.root) {
+            return false;
+        }
+        let keep = !force.contains(cell) && want.get(&(*cell, *edge)) == Some(drawn);
+        if !keep {
+            for e in es.drain(..) {
+                commands.entity(e).try_despawn();
+            }
+        }
+        keep
+    });
+    for ((cell, edge), drawn) in want {
+        if faces.0.contains_key(&(cell, edge)) {
+            continue;
+        }
+        let Some((upper, _)) = tiles.get(&cell) else {
+            continue;
+        };
+        let rise = [cell, drawn.lower.cell]
+            .into_iter()
+            .find(|c| rising.contains(c))
+            .map(|c| (c, RiseRole::Edge));
+        let t = fall_face_local(upper.rotation, edge);
+        let mut ids = vec![];
+        commands.entity(drawn.root).with_children(|p| {
+            ids = spawn_kit_parts(p, kit, fall_face_piece(drawn.drop), t, rise).unwrap_or_default();
+        });
+        faces.0.insert((cell, edge), (drawn, ids));
+    }
+}
+
 /// A buffer stop's transform under its tile root ([`rail_end`]): at the cap height, its +X along
 /// the stop's heading toward the edge.
 pub(crate) fn buffer_stop_local(s: &BufferStop) -> Transform {
@@ -664,7 +761,7 @@ pub(crate) fn on_edge(e: u8, along: f32, y: f32) -> Transform {
 }
 
 /// A placed tile's root at rest: on its cell at its level (P4), turned to its rotation.
-pub(crate) fn tile_rest(t: &PlayTile) -> Transform {
+pub fn tile_rest(t: &PlayTile) -> Transform {
     let [x, z] = t.cell.to_world(HEX_RADIUS);
     Transform::from_xyz(x, f32::from(t.level) * LEVEL_STEP, z)
         .with_rotation(piece_rotation(t.rotation))
@@ -984,14 +1081,16 @@ pub fn sync(
     config: Res<RenderConfig>,
     (water, clock, cameras, mut meshes, mut images, mut water_mats, mut terrain_mats): WaterHooks,
     (mut rises, reduced, mut cues): RiseHooks,
-    (packs, waiting_out, children, no_stops, no_bounds, slope): (
+    (packs, waiting_out, children, no_stops, no_bounds, slope, no_falls): (
         Option<Res<PlayPacks>>,
         Option<ResMut<PlayWaiting>>,
         Query<&Children>,
         Option<Res<NoBufferStops>>,
         Option<Res<NoBoundaries>>,
         Option<ResMut<SlopeMeshes>>,
+        Option<Res<NoFalls>>,
     ),
+    mut faces: Local<FallFaces>,
 ) {
     let (Scenario::Play, Some(mut spawned), Some(plain), Some(mut slope)) =
         (active.0, spawned, plain, slope)
@@ -1008,6 +1107,8 @@ pub fn sync(
         .chain([&hex_core::boundary::hedgerow_oak()])
         .any(|p| spawned.refresh.contains(*p));
     let bounds = no_bounds.is_none().then_some(view.world_seed);
+    // A fall-face piece built since the last sync: every face draws afresh with the kit look.
+    let faces_arrived = (1..=3).any(|d| spawned.refresh.contains(fall_face_piece(d)));
     let waits = |t: &PlayTile| {
         packs.as_deref().is_some_and(|p| {
             catalog
@@ -1065,6 +1166,7 @@ pub fn sync(
         spawned.pair_entities.clear();
         spawned.refresh.clear();
         spawned.hidden.clear();
+        faces.0.clear();
     }
     // Water entities of hidden tiles wait with them.
     let water_tiles: Vec<PlayTile> = view
@@ -1073,6 +1175,12 @@ pub fn sync(
         .filter(|t| !waiting_cells.contains(&t.cell))
         .cloned()
         .collect();
+    // The fall faces stand at the seams the water draws sheets over, so they wait with it too.
+    let falls = if no_falls.is_none() {
+        water::tiles::waterfalls(&water_tiles, &catalog.0)
+    } else {
+        vec![]
+    };
     let mut released: HashMap<Axial, Vec<Entity>> = HashMap::new();
     if let Some(mut water) = water {
         released = water::tiles::sync(
@@ -1089,6 +1197,7 @@ pub fn sync(
             &catalog.0,
             |id| kit.contains_key(id),
             rebuild,
+            no_falls.is_none(),
         )
         .into_iter()
         .collect();
@@ -1197,6 +1306,10 @@ pub fn sync(
     // yet, even where the resolution did not change; a pair piece whose pack just arrived swaps
     // from nothing to the kit in place.
     redraw.extend(added_cells.iter().copied());
+    let mut redraw_faces = refreshed.clone();
+    if faces_arrived {
+        redraw_faces.extend(falls.iter().map(|w| w.upper));
+    }
     redraw.extend(refreshed);
     let mut rising = if rebuild {
         BTreeSet::new()
@@ -1211,6 +1324,14 @@ pub fn sync(
         (&catalog.0, stops, bounds),
         &redraw,
         &rising,
+    );
+    respawn_fall_faces(
+        &mut commands,
+        &mut faces,
+        &spawned.tiles,
+        kit,
+        &falls,
+        (&redraw_faces, &rising),
     );
     cues.write_batch(out);
     let mut now: Vec<Axial> = spawned.hidden.keys().copied().collect();
@@ -1970,5 +2091,137 @@ pub(crate) mod tests {
                 assert_eq!(outer, 18, "{} r{rotation}", def.id);
             }
         }
+    }
+
+    /// A kit with the three fall faces, one LOD0 part each.
+    fn face_kit() -> HashMap<String, Vec<KitPart>> {
+        (1..=3)
+            .map(|d| {
+                let piece = fall_face_piece(d);
+                let part = KitPart {
+                    lod: 0,
+                    mesh: Handle::default(),
+                    material: Handle::default(),
+                    slot: format!("{piece}_rock"),
+                    rotor: None,
+                };
+                (piece.to_owned(), vec![part])
+            })
+            .collect()
+    }
+
+    /// A river straight on (0, 0) at `level`, turned 3 steps (its lanes on world edges 3 and 0),
+    /// and one at level 0 on its edge-0 neighbour: a fall of `level` over world edge 0.
+    fn fall_pair(level: u8) -> (PlayTile, PlayTile) {
+        let upper = PlayTile {
+            cell: Axial::new(0, 0),
+            tile: "river_straight".into(),
+            rotation: 3,
+            level,
+        };
+        let lower = PlayTile {
+            cell: upper.cell.neighbor(0),
+            rotation: 0,
+            level: 0,
+            ..upper.clone()
+        };
+        (upper, lower)
+    }
+
+    /// The fall faces drawn for `tiles` (each with its root) with the world's falls: (upper cell,
+    /// world edge, the face's parent, its transform, the part's entity) per drawn part.
+    fn draw_faces(
+        world: &mut World,
+        faces: &mut FallFaces,
+        tiles: &[(PlayTile, Entity)],
+    ) -> Vec<(Axial, u8, Entity, Transform, Entity)> {
+        let catalog = TileCatalog::builtin().unwrap();
+        let placed: Vec<PlayTile> = tiles.iter().map(|(t, _)| t.clone()).collect();
+        let falls = water::tiles::waterfalls(&placed, &catalog);
+        let drawn: HashMap<Axial, (PlayTile, Entity)> = tiles
+            .iter()
+            .map(|(t, e)| (t.cell, (t.clone(), *e)))
+            .collect();
+        respawn_fall_faces(
+            &mut world.commands(),
+            faces,
+            &drawn,
+            &face_kit(),
+            &falls,
+            (&BTreeSet::new(), &BTreeSet::new()),
+        );
+        world.flush();
+        let mut out = vec![];
+        for (&(cell, edge), (_, es)) in &faces.0 {
+            for &e in es {
+                let parent = world.get::<ChildOf>(e).unwrap().parent();
+                out.push((cell, edge, parent, *world.get::<Transform>(e).unwrap(), e));
+            }
+        }
+        out
+    }
+
+    /// A waterfall draws `waterfall_l<drop>` under the upper tile's root, turned from edge 0 to
+    /// the root-local edge of the fall (world edge 0 on a tile turned 3 steps: local edge 3). An
+    /// unchanged world keeps it; a new drop draws the taller face.
+    #[test]
+    fn a_fall_spawns_its_face_under_the_upper_root() {
+        assert_eq!(
+            (1..=3).map(fall_face_piece).collect::<Vec<_>>(),
+            ["waterfall_l1", "waterfall_l2", "waterfall_l3"]
+        );
+        let mut world = World::new();
+        let (upper, lower) = fall_pair(1);
+        let (ru, rl) = (world.spawn_empty().id(), world.spawn_empty().id());
+        let mut faces = FallFaces::default();
+        let tiles = [(upper.clone(), ru), (lower.clone(), rl)];
+        let got = draw_faces(&mut world, &mut faces, &tiles);
+        assert_eq!(got.len(), 1, "one face per fall");
+        let (cell, edge, parent, t, e) = got[0];
+        assert_eq!((cell, edge, parent), (upper.cell, 0, ru));
+        assert_eq!(t, Transform::from_rotation(piece_rotation(3)));
+        assert_eq!(t, fall_face_local(3, 0));
+        assert_eq!(faces.0[&(cell, edge)].0.drop, 1);
+        let again = draw_faces(&mut world, &mut faces, &tiles);
+        assert_eq!(again[0].4, e, "an unchanged fall keeps its face");
+        let (upper2, _) = fall_pair(2);
+        let ru2 = world.spawn_empty().id();
+        let got = draw_faces(&mut world, &mut faces, &[(upper2, ru2), (lower, rl)]);
+        assert_eq!(got.len(), 1);
+        assert_eq!(
+            got[0].2, ru2,
+            "a raised upper tile's new root carries the face"
+        );
+        assert_eq!(faces.0[&(cell, edge)].0.drop, 2);
+        assert_eq!(
+            world.get::<ChildOf>(e).map(ChildOf::parent),
+            Some(ru),
+            "the old face sinks with the replaced root"
+        );
+    }
+
+    /// Bulldozing the lower tile takes the face down at once; bulldozing the upper one leaves the
+    /// face under its root, which sinks with it and takes it down. With no falls (`NoFalls`) none is drawn.
+    #[test]
+    fn bulldozing_either_tile_removes_the_face() {
+        let mut world = World::new();
+        let (upper, lower) = fall_pair(1);
+        let (ru, rl) = (world.spawn_empty().id(), world.spawn_empty().id());
+        let mut faces = FallFaces::default();
+        let both = [(upper.clone(), ru), (lower.clone(), rl)];
+        let e = draw_faces(&mut world, &mut faces, &both)[0].4;
+        assert!(draw_faces(&mut world, &mut faces, &both[..1]).is_empty());
+        assert!(world.get_entity(e).is_err(), "the lower tile bulldozed");
+        assert!(faces.0.is_empty());
+        let e = draw_faces(&mut world, &mut faces, &both)[0].4;
+        assert!(draw_faces(&mut world, &mut faces, &both[1..]).is_empty());
+        assert!(faces.0.is_empty());
+        assert_eq!(
+            world.get::<ChildOf>(e).map(ChildOf::parent),
+            Some(ru),
+            "the face sinks with the upper tile's root"
+        );
+        world.despawn(ru);
+        assert!(world.get_entity(e).is_err(), "the upper tile bulldozed");
     }
 }

@@ -1,0 +1,90 @@
+diff --git a/crates/hex-play/src/play/scatter/tables.rs b/crates/hex-play/src/play/scatter/tables.rs
+index bba65bb..bb7586b 100644
+--- a/crates/hex-play/src/play/scatter/tables.rs
++++ b/crates/hex-play/src/play/scatter/tables.rs
+@@ -1000,6 +1000,10 @@ pub const NOT_GROUND: &[&str] = &[
+     "viaduct_sleeper",
+     "viaduct_steel",
+     "viaduct_head",
++    // A fall face's rock stands under the upper tile's root at its waterfall seam: never ground.
++    "waterfall_l1_rock",
++    "waterfall_l2_rock",
++    "waterfall_l3_rock",
+ ];
+ 
+ /// Hero props that are ground, not obstacles: the station platform, whose paving and ramps the
+diff --git a/crates/hex-play/src/walk/tables.rs b/crates/hex-play/src/walk/tables.rs
+index 5e75444..9eb4a03 100644
+--- a/crates/hex-play/src/walk/tables.rs
++++ b/crates/hex-play/src/walk/tables.rs
+@@ -82,6 +82,11 @@ pub const OBSTACLES: &[&str] = &[
+     "hedge_bend",
+     "hedge_junction",
+     "hedge_oak",
++    // The fall faces (rivers-at-levels Task 19) stand out of a waterfall seam's column into the
++    // lower tile: one collider box per tier blocks the walker at the ledges.
++    "waterfall_l1",
++    "waterfall_l2",
++    "waterfall_l3",
+ ];
+ 
+ /// Props the walker deliberately passes through: low flora, reeds, lilies, pebbles and the seabed
+@@ -650,6 +655,7 @@ pub fn prop_kind(piece: &str) -> PropLabel {
+             || p.starts_with("river_stones")
+             || p.starts_with("boulder_granite")
+             || p.starts_with("outcrop_granite")
++            || p.starts_with("waterfall_l")
+             || p == VIADUCT_PIER
+             || FOOTPRINT_OBSTACLES.iter().any(|(_, part, _)| *part == p) =>
+         {
+diff --git a/crates/hex-play/src/walk/tests.rs b/crates/hex-play/src/walk/tests.rs
+index 79da9c8..c44b058 100644
+--- a/crates/hex-play/src/walk/tests.rs
++++ b/crates/hex-play/src/walk/tests.rs
+@@ -71,6 +71,7 @@ fn every_prop_piece_is_classified() {
+         .iter()
+         .copied()
+         .chain(["rail_buffer_stop"])
++        .chain(["waterfall_l1", "waterfall_l2", "waterfall_l3"])
+         .collect();
+     let classified: std::collections::BTreeSet<String> = lists
+         .iter()
+@@ -135,6 +136,7 @@ fn every_obstacle_reports_its_own_kind() {
+         ("river_stones*", "rock"),
+         ("boulder_granite*", "rock"),
+         ("outcrop_granite*", "rock"),
++        ("waterfall_l*", "rock"),
+     ];
+     let kind_of = |piece: &str| {
+         KINDS.iter().find_map(|&(pattern, kind)| {
+@@ -181,6 +183,7 @@ fn every_collider_piece_has_a_label() {
+             || piece.starts_with("river_stones")
+             || piece.starts_with("boulder_granite")
+             || piece.starts_with("outcrop_granite")
++            || piece.starts_with("waterfall_l")
+             || piece == VIADUCT_PIER
+             || FOOTPRINT_OBSTACLES
+                 .iter()
+diff --git a/crates/hex-render/src/kit_scene.rs b/crates/hex-render/src/kit_scene.rs
+index 59d741e..551fafc 100644
+--- a/crates/hex-render/src/kit_scene.rs
++++ b/crates/hex-render/src/kit_scene.rs
+@@ -92,6 +92,18 @@ pub const NOT_SHOWCASED: &[(&str, &str)] = &[
+         "an animated agent spawned by hex_play::boids",
+     ),
+     ("fish_trout", "an animated agent spawned by hex_play::boids"),
++    (
++        "waterfall_l1",
++        "a fall face drawn at a waterfall seam between two river tiles a level apart, with its sheet: reviewed in the waterfall shots (docs/checkpoints/waterfall/)",
++    ),
++    (
++        "waterfall_l2",
++        "a fall face drawn at a waterfall seam between two river tiles two levels apart, with its sheets: reviewed in the waterfall shots (docs/checkpoints/waterfall/)",
++    ),
++    (
++        "waterfall_l3",
++        "a fall face drawn at a waterfall seam between two river tiles three levels apart, with its sheets: reviewed in the waterfall shots (docs/checkpoints/waterfall/)",
++    ),
+     (
+         "fish_mackerel",
+         "an animated agent spawned by hex_play::boids",

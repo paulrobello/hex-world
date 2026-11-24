@@ -67,6 +67,7 @@
 //!   wildflowers, the forest pack spruces). Until then the tile shows its placeholder or bare cap.
 
 mod bands;
+mod falls;
 mod layout;
 mod surface;
 mod sync;
@@ -83,6 +84,10 @@ pub use bands::{
     beach_band, beach_count, beach_family, coast_band, dressing_cap, excluded_slot, floor_ok,
     floor_slots, ring_band, river_count, river_family, seabed, spring_nodes, verge_band,
     water_count, water_prop,
+};
+pub use falls::{
+    FALL_CLEAR, FALL_ROCK_RING, FALL_ROCKS_MAX, FallSeam, fall_rocks, fall_seams, seams_sig,
+    with_falls,
 };
 pub use layout::{
     BLUE_NOISE, BORDER_GAP, CAP_AREA, CROWN_OVERHANG, CROWN_SPACING, DRIFT_CELL, DRIFT_PACK,

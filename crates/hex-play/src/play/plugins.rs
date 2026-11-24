@@ -44,6 +44,7 @@ impl Plugin for PlayPlugin {
             RisePlugin,
             GhostPlugin,
             AffordancesPlugin,
+            MistPlugin,
         ));
     }
 }
@@ -133,6 +134,16 @@ impl Plugin for RisePlugin {
                     .chain()
                     .in_set(PlaySet::Rise),
             );
+    }
+}
+
+struct MistPlugin;
+impl Plugin for MistPlugin {
+    fn build(&self, app: &mut App) {
+        use crate::water::mist;
+        app.init_resource::<mist::PlayMist>()
+            .add_plugins(MaterialPlugin::<mist::FallMistMaterial>::default())
+            .add_systems(Update, mist::sync.in_set(PlaySet::Scatter));
     }
 }
 

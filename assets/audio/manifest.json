@@ -560,6 +560,38 @@
       "provenance": "assets-source/audio/ambience/surf/provenance.json"
     },
     {
+      "id": "waterfall",
+      "kind": "ambience",
+      "class": "loop",
+      "status": "mastered",
+      "events": [],
+      "playback": "decode",
+      "channels": 1,
+      "loop": {
+        "startSample": 0,
+        "endSample": 576000,
+        "sampleRate": 48000,
+        "startSeconds": 0.0,
+        "endSeconds": 12.0
+      },
+      "durationSeconds": 12.0,
+      "decodedBytes": 2304000,
+      "targetLufs": -16.0,
+      "files": {
+        "webm": {
+          "path": "ambience/waterfall.webm",
+          "sha256": "2e3bb7cfa042d988eb1f472cfa69470b8566b2f3f9c812c86444fc56b20c5142",
+          "bytes": 91368
+        },
+        "m4a": {
+          "path": "ambience/waterfall.m4a",
+          "sha256": "04e0e5a62f34973cffd833d6118ddc21a0ca25604c626e2b00eca0dfc1290ee7",
+          "bytes": 147986
+        }
+      },
+      "provenance": "assets-source/audio/ambience/waterfall/provenance.json"
+    },
+    {
       "id": "meadow-bees",
       "kind": "ambience",
       "class": "sfx",

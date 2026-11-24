@@ -227,9 +227,23 @@ mod tests {
         cells.dedup();
         // The showcase's newest blocks each bring their own cell: the tunnel bores at (4, 1) and
         // (5, 1), the hero-oak variants at (2, 2) and (3, 2), the wheat field at (0, 6) and the
-        // river spring at (-4, 4). Pin them so a dropped block cannot go unnoticed here either.
+        // river spring at (-4, 4), and the fall faces' river pairs from (3, -6) to (6, -10). Pin
+        // them so a dropped block cannot go unnoticed here either.
         let layout_cells: std::collections::BTreeSet<_> = cells.iter().copied().collect();
-        for cell in [(4, 1), (5, 1), (2, 2), (3, 2), (0, 6), (-4, 4)] {
+        for cell in [
+            (4, 1),
+            (5, 1),
+            (2, 2),
+            (3, 2),
+            (0, 6),
+            (-4, 4),
+            (3, -6),
+            (4, -6),
+            (4, -8),
+            (5, -8),
+            (5, -10),
+            (6, -10),
+        ] {
             assert!(
                 layout_cells.contains(&cell),
                 "{cell:?} missing from the kit layout"

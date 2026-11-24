@@ -4,7 +4,11 @@ use bevy::prelude::*;
 use hex_core::{Axial, SaveData, TileCatalog, World};
 
 use super::{hull_ellipse, oar_angles, plan::*, ride, sail_angles, surface_y};
-use crate::{play::PlayTile, walk::tests as walk_tests, water::tiles::WaterKind};
+use crate::{
+    play::PlayTile,
+    walk::tests as walk_tests,
+    water::tiles::{WaterKind, layout},
+};
 
 fn catalog() -> TileCatalog {
     TileCatalog::builtin().unwrap()
@@ -362,6 +366,52 @@ fn a_moored_boat_lies_at_its_stage_and_passing_boats_trail_their_oars() {
         }
     }
     assert!(passed, "no boat passed the mooring on its side");
+}
+
+/// A raised river's surface stands at its tile's water level, and so does a boat on it.
+#[test]
+fn a_raised_river_carries_its_boat_at_its_level() {
+    let c = catalog();
+    let raised = PlayTile {
+        level: 1,
+        ..tile(0, 0, "river_straight", 0)
+    };
+    let plan = BoatPlan::new(&[raised], &c, 1);
+    let want = crate::water::tiles::WATER_Y + hex_core::LEVEL_STEP;
+    for t in [0.0, 1.0, 3.0] {
+        let y = surface_y(&plan.cells, Vec2::ZERO, t, 8);
+        assert!((y - want).abs() < 1e-4, "{y}");
+    }
+    let tr = ride(BoatKind::Rowing, Vec2::ZERO, Vec2::X, 0.0, |q| {
+        surface_y(&plan.cells, q, 1.0, 8)
+    });
+    assert!(
+        (tr.translation.y - want).abs() < 0.05,
+        "{}",
+        tr.translation.y
+    );
+}
+
+/// A landing stage on a raised river: its deck is walker ground 0.45 m over that river's water.
+#[test]
+fn a_raised_stage_deck_is_ground_at_its_level() {
+    let c = catalog();
+    let mut g = walk_tests::world_at(&c, &[(0, 0, "river_straight", 0, 1)]);
+    let s = Stage {
+        cell: Axial::new(0, 0),
+        origin: Vec2::new(0.0, 4.0),
+        x: Vec2::new(0.0, -1.0),
+        run: 0,
+        u: 0.0,
+        side: 1.0,
+    };
+    let y = crate::water::tiles::water_y(1);
+    let stage_t = Transform::from_xyz(s.origin.x, y, s.origin.y)
+        .with_rotation(Quat::from_rotation_y(-s.yaw()));
+    g.pose_boats(&[], &[stage_t]);
+    let deck = s.origin + s.x * 0.3;
+    assert!(g.on_deck(deck));
+    assert!((g.ground(deck).unwrap() - (y + 0.45)).abs() < 1e-4);
 }
 
 #[test]
@@ -897,4 +947,261 @@ fn the_same_fork_world_runs_the_same_boats() {
     assert_eq!(ca, cb);
     let other = BoatPlan::new(&world, &c, 43);
     assert_ne!(other.poses(), BoatPlan::new(&world, &c, 42).poses());
+}
+
+fn river(id: &str, (q, r): (i32, i32), rotation: u8, level: u8) -> PlayTile {
+    PlayTile {
+        level,
+        ..tile(q, r, id, rotation)
+    }
+}
+
+fn cat() -> TileCatalog {
+    catalog()
+}
+
+#[test]
+fn a_rowing_run_ends_at_a_waterfall() {
+    let tiles = [
+        river("river_straight", (0, 0), 0, 1),
+        river("river_straight", (1, 0), 0, 1),
+        river("river_straight", (2, 0), 0, 0),
+        river("river_straight", (3, 0), 0, 0),
+    ];
+    let runs = runs(&tiles, &cat(), &layout(&tiles, &cat(), |_| true));
+    assert_eq!(runs.len(), 2);
+    assert!(runs.iter().any(|r| r.ends.contains(&RunEnd::Fall)));
+    assert_ne!(systems(&runs)[0], systems(&runs)[1]);
+}
+
+/// Above a fall a rower turns at the line-end margin short of the lip, below it [`FALL_CLEAR`]
+/// short of the seam, and never crosses it.
+#[test]
+fn rowers_turn_back_short_of_a_waterfall_on_both_sides() {
+    let tiles = [
+        river("river_straight", (0, 0), 0, 1),
+        river("river_straight", (1, 0), 0, 1),
+        river("river_straight", (2, 0), 0, 0),
+        river("river_straight", (3, 0), 0, 0),
+    ];
+    let seam_x = Vec2::from(Axial::new(1, 0).to_world(hex_core::HEX_RADIUS))
+        .midpoint(Vec2::from(Axial::new(2, 0).to_world(hex_core::HEX_RADIUS)));
+    for seed in 0..8 {
+        let mut plan = BoatPlan::new(&tiles, &cat(), seed);
+        let below = plan
+            .runs
+            .iter()
+            .position(|r| r.ends == [RunEnd::Fall, RunEnd::Open])
+            .expect("a run below the fall");
+        let above = plan
+            .runs
+            .iter()
+            .position(|r| r.ends == [RunEnd::Open, RunEnd::Fall])
+            .expect("a run above the fall");
+        let start: Vec<(u64, usize)> = plan
+            .boats
+            .iter()
+            .filter_map(|b| match &b.motion {
+                Motion::Rowing(r) => Some((b.id, r.run)),
+                _ => None,
+            })
+            .collect();
+        assert!(!start.is_empty());
+        for _ in 0..20 * 120 {
+            plan.tick();
+            for b in &plan.boats {
+                let Motion::Rowing(r) = &b.motion else {
+                    continue;
+                };
+                let run = &plan.runs[r.run];
+                assert_eq!(Some(&(b.id, r.run)), start.iter().find(|s| s.0 == b.id));
+                if r.run == below {
+                    assert!(r.u >= FALL_CLEAR - 1e-3, "seed {seed}: u {} below", r.u);
+                } else if r.run == above {
+                    let hi = run.line.length() - ROW_END_MARGIN;
+                    assert!(r.u <= hi + 1e-3, "seed {seed}: u {} above", r.u);
+                }
+                let (p, _) = plan.pose(b);
+                let side = p.x < seam_x.x;
+                assert_eq!(
+                    side,
+                    r.run == above,
+                    "seed {seed}: boat {} crossed at {p}",
+                    b.id
+                );
+            }
+        }
+    }
+}
+
+/// A fall's lower tile holds the plunge pool: no landing stage goes there.
+#[test]
+fn no_boat_moors_in_a_plunge_pool() {
+    let tiles = [
+        river("river_straight", (0, 0), 0, 1),
+        river("river_straight", (1, 0), 0, 0),
+    ];
+    let lay = layout(&tiles, &cat(), |_| true);
+    let pools: BTreeSet<Axial> = lay
+        .iter()
+        .filter(|(_, w)| w.falls.iter().any(|f| !f.upper))
+        .map(|(c, _)| *c)
+        .collect();
+    assert_eq!(pools, BTreeSet::from([Axial::new(1, 0)]));
+    for seed in 0..16 {
+        let plan = BoatPlan::new(&tiles, &cat(), seed);
+        for s in &plan.stages {
+            assert!(!pools.contains(&s.cell), "seed {seed}: a stage in the pool");
+        }
+    }
+}
+
+/// The rowing hull's outline points at pose (p, h): centre, bow, stern, both sides and the four
+/// corners (2.3 m half length, 0.6 m half beam).
+fn hull_points(p: Vec2, h: Vec2) -> [Vec2; 9] {
+    let s = Vec2::new(-h.y, h.x);
+    let (l, w) = (h * 2.3, s * 0.6);
+    [
+        p,
+        p + l,
+        p - l,
+        p + w,
+        p - w,
+        p + l + w,
+        p + l - w,
+        p - l + w,
+        p - l - w,
+    ]
+}
+
+/// No rowing hull ever enters a plunge pool's foam disc: every hull point on a fall's lower tile
+/// keeps [`PLUNGE_R`] from the seam's midpoint, across seeds and ticks.
+#[test]
+fn no_hull_enters_a_plunge_pool() {
+    use crate::water::tiles::PLUNGE_R;
+    let worlds = [
+        vec![
+            river("river_straight", (0, 0), 0, 1),
+            river("river_straight", (1, 0), 0, 1),
+            river("river_straight", (2, 0), 0, 0),
+            river("river_straight", (3, 0), 0, 0),
+        ],
+        vec![
+            river("river_straight", (0, 0), 0, 3),
+            river("river_straight", (1, 0), 0, 0),
+            river("river_straight", (2, 0), 0, 0),
+        ],
+    ];
+    let mut checked = 0usize;
+    for (wi, tiles) in worlds.iter().enumerate() {
+        let lay = layout(tiles, &cat(), |_| true);
+        // (lower cell, seam midpoint) of every fall.
+        let pools: Vec<(Axial, Vec2)> = lay
+            .iter()
+            .flat_map(|(c, w)| {
+                w.falls.iter().filter(|f| !f.upper).map(move |f| {
+                    let a = Vec2::from(c.to_world(hex_core::HEX_RADIUS));
+                    let b = Vec2::from(c.neighbor(f.edge).to_world(hex_core::HEX_RADIUS));
+                    (*c, a.midpoint(b))
+                })
+            })
+            .collect();
+        assert!(!pools.is_empty());
+        for seed in 0..16 {
+            let mut plan = BoatPlan::new(tiles, &cat(), seed);
+            for t in 0..20 * 180 {
+                plan.tick();
+                for b in &plan.boats {
+                    if b.kind != BoatKind::Rowing {
+                        continue;
+                    }
+                    let (p, h) = plan.pose(b);
+                    for q in hull_points(p, h) {
+                        for (cell, mid) in &pools {
+                            if cell_at_world(q) == *cell {
+                                checked += 1;
+                                let d = q.distance(*mid);
+                                assert!(
+                                    d >= PLUNGE_R - 1e-3,
+                                    "world {wi} seed {seed} tick {t}: boat {} hull point {q} \
+                                     {d:.2} m from the seam (pose {p}, {:?})",
+                                    b.id,
+                                    b.motion
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(checked > 0, "no hull point on a pool tile was checked");
+}
+
+/// A fork whose inflowing arm drops into it over a fall: that arm's rowable span is empty, and no
+/// rower panics, enters it, or turns back on consecutive moves (jitter).
+#[test]
+fn a_fork_below_a_fall_neither_panics_nor_jitters() {
+    let n = |e: u8| {
+        let a = Axial::ORIGIN.neighbor(e);
+        (a.q, a.r)
+    };
+    let tiles = [
+        river("river_fork", (0, 0), 0, 0),
+        river("river_straight", n(0), 0, 1),
+        river("river_straight", n(2), 2, 0),
+        river("river_straight", n(4), 1, 0),
+    ];
+    let probe = BoatPlan::new(&tiles, &cat(), 0);
+    let dead: Vec<usize> = probe
+        .runs
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.ends.contains(&RunEnd::Fall) && r.ends.contains(&RunEnd::Junction))
+        .map(|(i, _)| i)
+        .collect();
+    assert_eq!(
+        dead.len(),
+        1,
+        "{:?}",
+        probe.runs.iter().map(|r| r.ends).collect::<Vec<_>>()
+    );
+    let mut rowed = 0;
+    for seed in 0..12 {
+        let mut plan = BoatPlan::new(&tiles, &cat(), seed);
+        let mut last: std::collections::HashMap<u64, (f32, usize, Vec2)> = Default::default();
+        for t in 0..20 * 300 {
+            plan.tick();
+            for b in &plan.boats {
+                let Motion::Rowing(r) = &b.motion else {
+                    continue;
+                };
+                rowed += 1;
+                assert!(
+                    !dead.contains(&r.run),
+                    "seed {seed} tick {t}: on the dead arm"
+                );
+                let (p, _) = plan.pose(b);
+                if let Some((dir0, since, p0)) = last.get(&b.id).copied() {
+                    assert!(
+                        p.distance(p0) < 0.3,
+                        "seed {seed} tick {t}: jumped {p0} -> {p}"
+                    );
+                    if dir0 != r.dir {
+                        assert!(
+                            t - since > 40,
+                            "seed {seed} tick {t}: turned twice in {} ticks",
+                            t - since
+                        );
+                        last.insert(b.id, (r.dir, t, p));
+                        continue;
+                    }
+                    last.insert(b.id, (dir0, since, p));
+                } else {
+                    last.insert(b.id, (r.dir, t, p));
+                }
+            }
+        }
+    }
+    assert!(rowed > 0, "no rower in the fork world");
 }

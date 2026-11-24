@@ -30,6 +30,8 @@ pub enum PropLabel {
     Stage,
     Well,
     Rock,
+    /// A fall face's rock (rivers-at-levels Task 19).
+    Waterfall,
 }
 
 impl PropLabel {
@@ -47,6 +49,7 @@ impl PropLabel {
             PropLabel::Stage => "stage",
             PropLabel::Well => "well",
             PropLabel::Rock => "rock",
+            PropLabel::Waterfall => "waterfall",
         }
     }
 }

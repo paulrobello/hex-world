@@ -479,6 +479,27 @@ mod tests {
         assert_eq!(placed(None, &pose), stock_transform(&pose));
     }
 
+    /// Rivers at levels (RQ7 O2): the river rail bridge may stand at level 1, and a train posed on
+    /// a level-1 bridge stands on its rail top one `LEVEL_STEP` up.
+    #[test]
+    fn a_train_on_a_level_one_river_rail_bridge_stands_one_level_step_up() {
+        let c = hex_core::TileCatalog::builtin().unwrap();
+        let bridge = c.get("river_rail_bridge").unwrap();
+        assert!(hex_core::level_allowed(bridge, 1));
+        let pose = StockPose {
+            id: 0,
+            train: 0,
+            kind: StockKind::Engine,
+            pos: [0.0, 0.0],
+            yaw: 0.0,
+            lamps: 0.0,
+        };
+        let g = crate::walk::tests::world_at(&c, &[(0, 0, "river_rail_bridge", 0, 1)]);
+        let t = placed(Some(&g), &pose);
+        let want = hex_core::LEVEL_STEP + RAIL_TOP_Y;
+        assert!((t.translation.y - want).abs() < 1e-3, "{t:?}");
+    }
+
     /// A train on a viaduct rides the deck: `deck` levels above the valley floor, not the floor.
     #[test]
     fn a_train_on_a_viaduct_rides_the_deck() {

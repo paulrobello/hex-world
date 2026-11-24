@@ -33,7 +33,7 @@
   {"cmd": "place", "q": 1, "r": 1},
   {"cmd": "place", "q": 2, "r": -1},
   {"cmd": "hover", "q": -1, "r": -1},
-  {"cmd": "rotate", "dir": "cw"},
+  {"cmd": "level", "dir": "up"},
   {"cmd": "place", "q": -1, "r": -1},
   {"cmd": "hover", "q": -2, "r": 0},
   {"cmd": "place", "q": -2, "r": 0},

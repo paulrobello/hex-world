@@ -29,12 +29,23 @@ import {
   actionText,
   bulldozeRefusal,
   coord,
+  refusalWord,
   replaceRefusal,
 } from "../src/words.ts";
 
 const def = (id: string) => tileDef(id)!;
 const world = (...t: ([number, number, string, number] | [number, number, string, number, number])[]) =>
   tileMap(t.map(([q, r, tile, rotation, level]) => ({ q, r, tile, rotation, level: level ?? 0 })));
+
+test("river_uphill has a wording", () => assert.equal(refusalWord("river_uphill"), "Rivers can't run uphill."));
+test("a flat edge against a hillside's slope words as a slope, not as grass meeting grass", () => {
+  assert.equal(
+    refusalWord("slope_grass"),
+    "Grass can't meet a slope. Turn the hillside, or place another hillside here.",
+  );
+  assert.match(refusalWord("own_slope"), /^Its slope can't meet/);
+  assert.equal(refusalWord("clash_grass_grass"), "Grass can't meet grass.");
+});
 
 test("every catalog tile has a display name", () => {
   assert.deepEqual(TILES.map((t) => t.id).sort(), Object.keys(TILE_NAMES).sort());
@@ -160,11 +171,11 @@ test("a completed tunnel's cover is refused for bulldoze and replace, and cuts n
   assert.equal(tunnelCover(low).size, 0);
 });
 
-test("turnHint: the R hint shows while any rotation or orientation is left to turn to", () => {
+test("turnHint: the R hint shows while the ghost's member has another rotation on its level", () => {
   assert.equal(turnHint(1, 1), false, "a lone orientation has nowhere to go");
   assert.equal(turnHint(1, 0), false);
   assert.equal(turnHint(2, 0), true, "several rotations");
-  assert.equal(turnHint(1, 2), true, "one rotation but another level or group member");
+  assert.equal(turnHint(1, 2), true, "one distinct rotation but another orientation of the member");
   assert.equal(turnHint(3, 5), true);
 });
 

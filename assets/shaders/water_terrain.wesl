@@ -1,7 +1,7 @@
 // Placeholder terrain for the water scenario (crates/hex-render/src/water.rs). Custom Material:
 // bindings 100-102 only; default mesh vertex and prepass shaders. Grass plateau, beach sand with
 // the wet band and the live swash line (same `swash` as the water surface), river banks and beds.
-// Vertex COLOR: (land, river, shore distance, 1 on the cap / 0 on the skirt).
+// Vertex COLOR: (land, river, shore distance, 1 on the cap / 0 on the skirt); UV_1.x the water lift.
 import bevy_pbr::render::{
     forward_io::{VertexOutput, FragmentOutput},
     mesh_bindings::mesh,
@@ -53,7 +53,13 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     let cap = in.color.w;
     let beach = clamp(1.0 - land - river, 0.0, 1.0);
     let t = terrain.terrain_time;
-    let y = wp.y - terrain.sea_level;
+    // Heights over the mesh's own water: `sea_level` plus its lift (water.rs
+    // `WaterField::water_lift`, UV_1.x), 0 at level 0.
+    var lift = 0.0;
+    @if(VERTEX_UVS_B) {
+        lift = in.uv_b.x;
+    }
+    let y = wp.y - (terrain.sea_level + lift);
 
     let nz = textureSample(terrain_noise_texture, terrain_noise_sampler, wp.xz / 7.0);
     let fine = textureSample(terrain_noise_texture, terrain_noise_sampler, wp.xz / 1.3);

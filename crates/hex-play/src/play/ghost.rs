@@ -37,7 +37,8 @@ use bevy::{
     shader::ShaderRef,
 };
 use hex_core::{
-    Axial, Biome, EdgeStatus, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef, cell_seed,
+    Axial, Biome, EdgeStatus, FlowDir, HEX_RADIUS, LEVEL_STEP, SocketKind, TileCatalog, TileDef,
+    cell_seed,
     rail_end::{self, BUFFER_STOP},
 };
 
@@ -76,6 +77,29 @@ const SEABED: [u8; 3] = [62, 146, 156];
 const WATER_BIAS: f32 = 4.0;
 /// Steps along each side of the hex's six sector triangles in the water surface grid.
 const WATER_GRID: u32 = 16;
+
+/// A flow chevron's half size (m) and where it sits along its lane, as a fraction of the way from
+/// the tile centre to the edge.
+const CHEVRON: f32 = 2.4;
+const CHEVRON_AT: f32 = 0.55;
+
+/// The flow chevrons of a ghost centred at `c` (RQ11 O2): one V per River lane edge of `flow`,
+/// on the lane between the centre and the edge, its tip toward the centre where the river runs in
+/// and toward the edge where it runs out. Two segments each, drawn with the affordance lines.
+pub fn flow_chevrons(c: Vec3, flow: &[(u8, FlowDir)]) -> Vec<[(Vec3, Vec3); 2]> {
+    let apothem = HEX_RADIUS * 0.866_025_4;
+    flow.iter()
+        .map(|&(e, d)| {
+            let a = (60.0 * f32::from(e)).to_radians();
+            let out = Vec3::new(a.cos(), 0.0, a.sin());
+            let f = if d == FlowDir::Out { out } else { -out };
+            let side = Vec3::new(-f.z, 0.0, f.x) * CHEVRON;
+            let mid = c + out * (apothem * CHEVRON_AT);
+            let (tip, back) = (mid + f * (CHEVRON * 0.5), mid - f * (CHEVRON * 0.5));
+            [(back + side, tip), (tip, back - side)]
+        })
+        .collect()
+}
 
 /// One colour, no texture: lit by a fixed key light in `ghost.wesl`.
 #[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
@@ -317,9 +341,10 @@ fn clip_wet(out: &mut Vec<[f32; 3]>, tri: [Vec2; 3], depth: &impl Fn(Vec2) -> f3
     }
 }
 
-/// The water surface of `def` placed alone, tile-local at the water level: the hex wherever the
-/// tile's own water field has its bed below the level, cut along the shoreline. `None` for a tile
-/// that carries no water.
+/// The water surface of `def` placed alone, tile-local at the level-0 water level: the hex wherever
+/// the tile's own water field has its bed below the level, cut along the shoreline. The ghost root
+/// stands at [`root_y`] of the ghost's level, so a raised ghost shows it at that level's water
+/// (`water::tiles::water_y`). `None` for a tile that carries no water.
 fn water_surface(def: &TileDef, catalog: &TileCatalog) -> Option<Mesh> {
     let alone = PlayTile {
         cell: Axial::ORIGIN,
@@ -789,6 +814,12 @@ struct Cost {
     tris: usize,
 }
 
+/// Height (m) of the ghost root on a tile at `level`; the ghost's pieces and water are tile-local
+/// under it.
+fn root_y(level: u8) -> f32 {
+    f32::from(level) * LEVEL_STEP
+}
+
 /// Spawns the ghost root at `cell` and `rotation` with its pieces' LOD0 parts (tinted per slot on a
 /// water tile) and its water surface.
 #[allow(clippy::type_complexity)]
@@ -808,7 +839,7 @@ fn spawn(
     let [x, z] = cell.to_world(HEX_RADIUS);
     let root = commands
         .spawn((
-            Transform::from_xyz(x, f32::from(level) * LEVEL_STEP, z).with_rotation(rotation),
+            Transform::from_xyz(x, root_y(level), z).with_rotation(rotation),
             Visibility::default(),
             SceneEntity,
         ))
@@ -866,6 +897,35 @@ fn spawn(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A river ghost draws one chevron per River lane, tip inward where the water enters and
+    /// outward where it leaves, on the lane toward its edge.
+    #[test]
+    fn ghost_draws_one_chevron_per_river_lane() {
+        let c = Vec3::new(10.0, 0.35, -4.0);
+        let flow = [(0, FlowDir::Out), (3, FlowDir::In)];
+        let v = flow_chevrons(c, &flow);
+        assert_eq!(v.len(), flow.len());
+        assert!(flow_chevrons(c, &[]).is_empty());
+        let apothem = HEX_RADIUS * 0.866_025_4;
+        for (&(e, d), [(a, tip), (tip2, b)]) in flow.iter().zip(&v) {
+            assert_eq!(tip, tip2, "the V's arms meet at its tip");
+            let a_dir = (60.0 * f32::from(e)).to_radians();
+            let out = Vec3::new(a_dir.cos(), 0.0, a_dir.sin());
+            let back = (*a + *b) / 2.0;
+            let toward = (*tip - back).normalize();
+            let want = if d == FlowDir::Out { out } else { -out };
+            assert!(toward.dot(want) > 0.999, "edge {e}: {toward} points {want}");
+            let along = (*tip - c).dot(out);
+            assert!(
+                along > 0.0 && along < apothem,
+                "edge {e}: on the lane, inside the hex"
+            );
+            for p in [a, tip, b] {
+                assert!((p.y - c.y).abs() < 1e-6, "level with the ghost's cap");
+            }
+        }
+    }
 
     #[test]
     fn the_ghost_turns_the_short_way_over_the_hud_t_on_the_legend_curve() {
@@ -1080,10 +1140,14 @@ mod tests {
                     (b - a).cross(c - a).y > 0.0
                 });
                 assert!(up, "{id}: every triangle faces up");
-                assert!(
-                    p.iter().all(|v| v[1] == water::tiles::WATER_Y),
-                    "{id}: at the level"
-                );
+                // The mesh is tile-local under the ghost root, which stands at the ghost's level.
+                for level in [0, 2] {
+                    assert!(
+                        p.iter()
+                            .all(|v| root_y(level) + v[1] == water::tiles::water_y(level)),
+                        "{id}: at level {level}'s water"
+                    );
+                }
                 p.as_chunks::<3>()
                     .0
                     .iter()

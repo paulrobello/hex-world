@@ -601,11 +601,12 @@ fn edge_distance(local: Vec2, e: u8) -> f32 {
 }
 
 /// The fish band at world XZ `p` from the water module's analytic bed (`water::tiles`, the bed
-/// contract in docs/kit/water-contract.md): `[lowest centre y, highest centre y, room, 0]`. Room
-/// is the smaller of the band's height and the distance past [`WALL_CLEAR`] to the nearest
-/// exposed edge (a cut face); below 0 a fish may not be there. Over a river mouth the band skims
-/// the shallows ([`SKIM_GAP`]) and open skim water holds [`river_room`]. [`LAND`] outside water
-/// tiles.
+/// contract in docs/kit/water-contract.md), on the tile's own water: `[lowest centre y, highest
+/// centre y, room, lift]`, the lift being the tile's `level * LEVEL_STEP` (the compute pass's
+/// surface is `WATER_Y` plus it). Room is the smaller of the band's height and the distance past
+/// [`WALL_CLEAR`] to the nearest exposed edge (a cut face) or waterfall seam; below 0 a fish may
+/// not be there. Over a river mouth the band skims the shallows ([`SKIM_GAP`]) and open skim water
+/// holds [`river_room`]. [`LAND`] outside water tiles.
 pub fn band_at(cells: &BTreeMap<Axial, CellWater>, p: Vec2) -> [f32; 4] {
     let cell = cell_at(p);
     let Some(cw) = cells.get(&cell) else {
@@ -616,12 +617,14 @@ pub fn band_at(cells: &BTreeMap<Axial, CellWater>, p: Vec2) -> [f32; 4] {
     let s = field.water(p.x, p.y);
     let atten = smoothstep(0.05, 2.5, s.depth) * (1.0 - s.river);
     let mut floor = bed + BED_CLEAR;
-    let mut ceil = WATER_Y - SURF_CLEAR - WAVE_BOUND * atten;
+    let surface = field.level();
+    let lift = field.water_lift();
+    let mut ceil = surface - SURF_CLEAR - WAVE_BOUND * atten;
     let mut height = ceil - floor;
     if matches!(cw.kind, WaterKind::RiverMouth(_)) {
         let w = 1.0 - smoothstep(SKIM_DEPTH.0, SKIM_DEPTH.1, s.depth);
         floor += (bed + TROUT_BELLY + SKIM_GAP - floor) * w;
-        ceil += (WATER_Y - TROUT_TOP - SKIM_GAP - ceil) * w;
+        ceil += (surface - TROUT_TOP - SKIM_GAP - ceil) * w;
         let h = ceil - floor;
         height = if h < 0.0 {
             h
@@ -630,16 +633,18 @@ pub fn band_at(cells: &BTreeMap<Axial, CellWater>, p: Vec2) -> [f32; 4] {
         };
     }
     if river_water(&cw.kind) {
-        ceil = WATER_Y - TROUT_TOP * (1.0 + RIVER_GROW) - SKIM_GAP;
+        ceil = surface - TROUT_TOP * (1.0 + RIVER_GROW) - SKIM_GAP;
         floor = floor.max(ceil - RIVER_BAND);
     }
     let local = p - Vec2::from(cell.to_world(HEX_RADIUS));
     let wall = cw
         .exposed
         .iter()
-        .map(|&e| edge_distance(local, e))
+        .copied()
+        .chain(cw.falls.iter().map(|f| f.edge))
+        .map(|e| edge_distance(local, e))
         .fold(f32::MAX, f32::min);
-    [floor, ceil, height.min(wall - WALL_CLEAR), 0.0]
+    [floor, ceil, height.min(wall - WALL_CLEAR), lift]
 }
 
 /// The baked fish band ([`band_at`] every [`STEP`] metres) over the chunks that touch a water
@@ -807,6 +812,7 @@ impl FishWorld {
                     let n = c.neighbor(e);
                     if wet(def, cw.tile.rotation, e)
                         && !cw.exposed.contains(&e)
+                        && !cw.falls.iter().any(|f| f.edge == e)
                         && cells.contains_key(&n)
                         && seen.insert(n)
                     {
@@ -1617,6 +1623,67 @@ impl BoidPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn river(id: &str, (q, r): (i32, i32), rotation: u8, level: u8) -> PlayTile {
+        PlayTile {
+            level,
+            ..tile(q, r, id, rotation)
+        }
+    }
+
+    /// A waterfall seam is not continuous water: the fish on each side are their own region.
+    #[test]
+    fn fish_regions_split_at_a_waterfall() {
+        let world = [
+            river("river_straight", (0, 0), 0, 1),
+            river("river_straight", (1, 0), 0, 0),
+        ];
+        let w = FishWorld::new(&world, &catalog());
+        assert!(
+            !w.cells[&Axial::new(0, 0)].falls.is_empty(),
+            "the seam is a waterfall"
+        );
+        assert_eq!(w.regions.len(), 2);
+    }
+
+    /// A raised river's band stands on its own water: floor and ceiling one step up, the same
+    /// room, and the lift in the band's last slot for the compute pass.
+    #[test]
+    fn the_fish_band_of_a_raised_river_is_one_step_up() {
+        let c = catalog();
+        let at = |level: u8| {
+            let w = FishWorld::new(&[river("river_straight", (0, 0), 0, level)], &c);
+            band_at(&w.cells, Vec2::new(0.5, 0.0))
+        };
+        let (low, high) = (at(0), at(1));
+        assert_eq!(low[3], 0.0);
+        assert!(
+            (high[0] - (low[0] + LEVEL_STEP)).abs() < 1e-4,
+            "{low:?} {high:?}"
+        );
+        assert!(
+            (high[1] - (low[1] + LEVEL_STEP)).abs() < 1e-4,
+            "{low:?} {high:?}"
+        );
+        assert!((high[2] - low[2]).abs() < 1e-4, "{low:?} {high:?}");
+        assert_eq!(high[3], LEVEL_STEP);
+    }
+
+    /// The band keeps its wall clearance from a waterfall seam as from a cut face, so fish never
+    /// slide down the blended band into the other region.
+    #[test]
+    fn the_fish_band_keeps_clear_of_a_waterfall() {
+        let world = [
+            river("river_straight", (0, 0), 0, 1),
+            river("river_straight", (1, 0), 0, 0),
+        ];
+        let w = FishWorld::new(&world, &catalog());
+        let seam = Vec2::from(Axial::new(0, 0).to_world(HEX_RADIUS))
+            .lerp(Vec2::from(Axial::new(1, 0).to_world(HEX_RADIUS)), 0.5);
+        for p in [seam - Vec2::X * 0.5, seam + Vec2::X * 0.5] {
+            assert!(band_at(&w.cells, p)[2] < 0.0, "room at the seam {p}");
+        }
+    }
 
     /// A piece's `data/pieces.ron` `perches` is set exactly when [`canopy_perches`] has perch
     /// points for it, so [`BoidPlan::set_world`] watches every piece birds roost on arrive.

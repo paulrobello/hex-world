@@ -388,6 +388,7 @@ export function turnAngle(current: number, k: number): number {
 
 /**
  * Whether the ghost tag shows the R hint: its readout counts more than one rotation, or R's walk
- * (`seqLength` orientations across every level and group member) has somewhere else to go.
+ * (`seqLength` orientations of the ghost's member on its level; T changes the member) has
+ * somewhere else to go.
  */
 export const turnHint = (count: number, seqLength: number): boolean => count > 1 || seqLength > 1;

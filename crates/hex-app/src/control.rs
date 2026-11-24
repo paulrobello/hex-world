@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use bevy::prelude::*;
 use hex_core::save::QualitySetting;
-use hex_core::{Axial, RotateDir};
+use hex_core::{Axial, LevelDir, RotateDir};
 use hex_play::play::{
     packs::PlayPacks,
     rise::{PlayRises, ReducedMotion},
@@ -30,6 +30,22 @@ use crate::{FrameCount, RunFlags, bridge, capture};
 pub enum Spin {
     Cw,
     Ccw,
+}
+
+/// `level` direction: `up` is E, `down` is Q.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LevelStep {
+    Up,
+    Down,
+}
+
+/// `shape` direction: `next` is T, `prev` is Shift+T.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ShapeStep {
+    Next,
+    Prev,
 }
 
 /// `toggle` target: the B, Tab and P bindings.
@@ -149,8 +165,19 @@ pub enum Command {
         q: i32,
         r: i32,
     },
+    /// R and Shift+R: the next or previous legal orientation on the ghost's level.
     Rotate {
         dir: Spin,
+    },
+    /// E and Q: the ghost one level up or down, at the nearest level with a legal orientation,
+    /// keeping its rotation where legal there. A no-op at the highest or lowest such level.
+    Level {
+        dir: LevelStep,
+    },
+    /// T and Shift+T: the next or previous picker-group member (shape) that fits on the ghost's
+    /// level, keeping its rotation where legal. A no-op for a lone tile or when no other fits.
+    Shape {
+        dir: ShapeStep,
     },
     /// Place the selected tile at the current ghost rotation; a cell other than the hovered one
     /// is hovered first, which auto-rotates. `level` (P4) places it on that level, at the ghost's
@@ -291,6 +318,14 @@ impl Command {
             Command::Rotate { dir } => Action::Rotate(match dir {
                 Spin::Cw => RotateDir::Forward,
                 Spin::Ccw => RotateDir::Back,
+            }),
+            Command::Level { dir } => Action::Level(match dir {
+                LevelStep::Up => LevelDir::Up,
+                LevelStep::Down => LevelDir::Down,
+            }),
+            Command::Shape { dir } => Action::Shape(match dir {
+                ShapeStep::Next => RotateDir::Forward,
+                ShapeStep::Prev => RotateDir::Back,
             }),
             Command::Place { q, r, level: None } => Action::Place(Axial::new(*q, *r)),
             Command::Place {
@@ -557,6 +592,8 @@ pub fn run_commands(
         c @ (Command::SelectTile { .. }
         | Command::Hover { .. }
         | Command::Rotate { .. }
+        | Command::Level { .. }
+        | Command::Shape { .. }
         | Command::Place { .. }
         | Command::Pin { .. }
         | Command::Unpin
@@ -1217,6 +1254,8 @@ mod tests {
     fn parses_play_commands_into_actions() {
         let s = r#"[{"cmd":"select_tile","id":"forest"},{"cmd":"hover","q":1,"r":-2},
                     {"cmd":"rotate","dir":"cw"},{"cmd":"rotate","dir":"ccw"},
+                    {"cmd":"level","dir":"up"},{"cmd":"level","dir":"down"},
+                    {"cmd":"shape","dir":"next"},{"cmd":"shape","dir":"prev"},
                     {"cmd":"place","q":1,"r":0},{"cmd":"replace","q":1,"r":0},
                     {"cmd":"undo"},{"cmd":"redo"},
                     {"cmd":"bulldoze","q":0,"r":1},{"cmd":"set_tool","mode":"bulldoze"},
@@ -1234,6 +1273,10 @@ mod tests {
                 Action::Hover(Some(Axial::new(1, -2))),
                 Action::Rotate(RotateDir::Forward),
                 Action::Rotate(RotateDir::Back),
+                Action::Level(LevelDir::Up),
+                Action::Level(LevelDir::Down),
+                Action::Shape(RotateDir::Forward),
+                Action::Shape(RotateDir::Back),
                 Action::Place(Axial::new(1, 0)),
                 Action::Replace(Axial::new(1, 0)),
                 Action::Undo,
@@ -1253,6 +1296,8 @@ mod tests {
     fn bad_play_commands_fail_at_parse_time() {
         for bad in [
             r#"[{"cmd":"rotate","dir":"left"}]"#,
+            r#"[{"cmd":"level","dir":"sideways"}]"#,
+            r#"[{"cmd":"shape","dir":"up"}]"#,
             r#"[{"cmd":"set_tool","mode":"shovel"}]"#,
             r#"[{"cmd":"place","q":1}]"#,
             r#"[{"cmd":"hover","q":"a","r":0}]"#,

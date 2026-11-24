@@ -66,7 +66,8 @@ fn norm2(v: vec2<f32>) -> vec2<f32> {
     return vec2<f32>(0.0);
 }
 
-// The fish band at XZ p, bilinear: (lowest centre y, highest centre y, room, 0). FishField::sample.
+// The fish band at XZ p, bilinear: (lowest centre y, highest centre y, room, water lift over
+// WATER_Y). FishField::sample.
 fn band(p: vec2<f32>) -> vec4<f32> {
     let c = floor(p / CHUNK);
     let cx = i32(c.x) - params.field_x0;
@@ -374,8 +375,8 @@ fn animate(i: u32, b: Boid, c: Ctl) -> vec4<f32> {
     // mouth's skim water.
     var grow = 0.0;
     if (mode == SWIM && c.look.x > 0.25) {
-        let ceil = band(b.pos.xz).y;
-        grow = clamp((WATER_Y - ceil - SKIM_GAP) / TROUT_TOP - 1.0, 0.0, RIVER_GROW);
+        let here = band(b.pos.xz);
+        grow = clamp((WATER_Y + here.w - here.y - SKIM_GAP) / TROUT_TOP - 1.0, 0.0, RIVER_GROW);
     }
     a.w = mix(a.w, grow, clamp(dt * 2.0, 0.0, 1.0));
     return a;

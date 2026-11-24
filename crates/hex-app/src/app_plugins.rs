@@ -41,7 +41,7 @@ impl Plugin for ActionsPlugin {
             .add_systems(Update, actions::read_input.in_set(AppSet::Input))
             .add_systems(
                 PreUpdate,
-                actions::drop_live_input.after(bevy::input::InputSystems),
+                (actions::drop_live_input, actions::claim_t_key).after(bevy::input::InputSystems),
             );
     }
 }

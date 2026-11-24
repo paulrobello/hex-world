@@ -1,6 +1,6 @@
 //! Shared presentation data. No game rules, plugins, or renderer dependency.
 use bevy::prelude::*;
-use hex_core::{Axial, EdgeStatus, PairPieces, TileCatalog};
+use hex_core::{Axial, EdgeStatus, FlowDir, PairPieces, TileCatalog};
 use std::collections::{BTreeMap, HashMap, HashSet};
 /// Locks `m`, taking the data even if another thread panicked while holding it.
 pub fn locked<T>(m: &std::sync::Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -39,6 +39,9 @@ pub struct PlayGhost {
     /// A portal ghost's tunnel preview (P4, `hex_core::tunnel::preview`): the cells its tunnel
     /// would run under, in order from the portal. Empty for any other tile.
     pub tunnel: Vec<Axial>,
+    /// The flow the placement would give each River lane world edge (`hex_core::World::ghost_flow`,
+    /// RQ11 O2), in edge order. Empty for a tile without a river or an orientation that does not fit.
+    pub flow: Vec<(u8, FlowDir)>,
 }
 
 /// What the play scenario draws, written by `hex-app` when the game changes.

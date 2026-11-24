@@ -1,0 +1,12 @@
+{
+  "who": "Paul Robello (owner)",
+  "when": "2026-11-22",
+  "gate": "reference",
+  "approved": [
+    "assets-source/refs/waterfall/ref-1.jpg",
+    "assets-source/refs/waterfall/ref-4.jpg",
+    "assets-source/refs/waterfall/ref-7.jpg",
+    "assets-source/refs/waterfall/ref-10.jpg"
+  ],
+  "notes": "Recommendations accepted for WF-Q1 to WF-Q4. WF-Q1: ref-1 is the design (rounded pale granite with moss either side of one sheet), ref-4's single ledge for the 8 m drop, ref-7's three tiers for the 12 m drop, and ref-10 is the eye-level and layout guide. From ref-2, only the wet streaks and glossy wet stone. WF-Q2: a natural granite lip, no dressed coping. WF-Q3: the piece exports each tier's lip as a socket, and the runtime draws one sheet per tier. WF-Q4: a 14 m face. Answered in chat on 2026-11-22: \"lets go with your reocmendations\"."
+}

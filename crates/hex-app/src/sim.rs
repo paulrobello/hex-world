@@ -932,6 +932,211 @@ mod tests {
         assert!(dark, "no car lit its headlights in the tunnel");
     }
 
+    /// The `make shots-waterfall-ghost` script (`docs/checkpoints/waterfall/ghost/waterfall-ghost.json`)
+    /// shows the ghost's flow at each shot (RQ11 O2): a straight below the fall takes its water
+    /// (in from the west, out to the east), a straight above it feeds it, and one E step lifts that
+    /// ghost into a fall onto the raised straight, its east edge marked as a waterfall.
+    #[test]
+    fn the_waterfall_ghost_shots_show_the_flow_and_the_fall_marker() {
+        let json = include_str!("../../../docs/checkpoints/waterfall/ghost/waterfall-ghost.json");
+        let mut g = GameState::new(1);
+        let mut shots = vec![];
+        for c in parse_script(json).unwrap() {
+            if let Some(a) = c.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, crate::game::GameEvent::PlacementRefused { .. }),
+                        "{c:?}: {e:?}"
+                    );
+                }
+            }
+            if matches!(c, crate::control::Command::Screenshot { .. }) {
+                shots.push(g.state_fields_json()["ghost"].clone());
+            }
+        }
+        let east = serde_json::json!([{ "edge": 0, "dir": "out" }, { "edge": 3, "dir": "in" }]);
+        let got: Vec<(u64, bool, &serde_json::Value, &serde_json::Value)> = shots
+            .iter()
+            .map(|s| {
+                (
+                    s["level"].as_u64().unwrap(),
+                    s["valid"].as_bool().unwrap(),
+                    &s["flow"],
+                    &s["waterfalls"],
+                )
+            })
+            .collect();
+        let (none, fall) = (serde_json::json!([]), serde_json::json!([0]));
+        assert_eq!(
+            got,
+            vec![
+                (0, true, &east, &none),
+                (1, true, &east, &none),
+                (2, true, &east, &fall),
+            ]
+        );
+    }
+
+    /// The `make shots-waterfall-staircase` script
+    /// (`docs/checkpoints/waterfall/staircase/waterfall-staircase.json`) builds the 34-tile mixed
+    /// river, beach and ocean world of `make shots-scatter` plus a meadow row and a river
+    /// staircase on levels 3, 2, 1 and 0 along r = -4, without a refusal. The mixed world is all
+    /// level 0 and adds no fall, so the world's falls are exactly the staircase's three 1-level
+    /// drops, each onto a `river_straight`.
+    #[test]
+    fn the_waterfall_staircase_world_is_the_mixed_world_plus_three_falls() {
+        let json =
+            include_str!("../../../docs/checkpoints/waterfall/staircase/waterfall-staircase.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if let Some(a) = c.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, crate::game::GameEvent::PlacementRefused { .. }),
+                        "{c:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        let tiles: Vec<hex_play_state::PlayTile> = g
+            .world
+            .tiles()
+            .iter()
+            .map(|(c, t)| hex_play_state::PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+                level: t.level,
+            })
+            .collect();
+        let staircase: Vec<(i32, u8)> = tiles
+            .iter()
+            .filter(|t| t.cell.r == -4)
+            .map(|t| (t.cell.q, t.level))
+            .collect();
+        assert_eq!(staircase, vec![(5, 3), (6, 2), (7, 1), (8, 0)]);
+        let count = |id: &str| tiles.iter().filter(|t| t.tile == id).count();
+        assert_eq!(
+            tiles.len(),
+            44,
+            "mixed world 34 + meadow row 6 + staircase 4"
+        );
+        for id in [
+            "river_mouth",
+            "river_mouth_l",
+            "ocean",
+            "beach",
+            "forest",
+            "oak",
+            "road_straight",
+        ] {
+            assert!(count(id) > 0, "the mixed world lost its {id}");
+        }
+        let lay = hex_play::water::tiles::layout(&tiles, &g.catalog, |_| true);
+        let mut falls: Vec<(i32, u8, &str)> = lay
+            .iter()
+            .flat_map(|(c, cw)| {
+                cw.falls.iter().filter(|f| f.upper).map(|f| {
+                    let lower = &lay[&c.neighbor(f.edge)];
+                    (c.q, f.drop, lower.tile.tile.as_str())
+                })
+            })
+            .collect();
+        falls.sort();
+        assert_eq!(
+            falls,
+            vec![
+                (5, 1, "river_straight"),
+                (6, 1, "river_straight"),
+                (7, 1, "river_straight"),
+            ]
+        );
+    }
+
+    /// The `make shots-waterfall` script (`docs/checkpoints/waterfall/runtime/waterfall.json`)
+    /// builds without a refusal and lays out exactly its four waterfalls: drops of 1, 2 and 3
+    /// levels onto `river_straight` and one of 1 level onto a `river_mouth`, each shot by a camera
+    /// looking at its seam.
+    #[test]
+    fn the_waterfall_shots_world_has_its_four_falls() {
+        let json = include_str!("../../../docs/checkpoints/waterfall/runtime/waterfall.json");
+        let mut g = GameState::new(1);
+        for c in parse_script(json).unwrap() {
+            if let Some(a) = c.action() {
+                for e in g.apply(a) {
+                    assert!(
+                        !matches!(e, crate::game::GameEvent::PlacementRefused { .. }),
+                        "{c:?}: {e:?}"
+                    );
+                }
+            }
+        }
+        let tiles: Vec<hex_play_state::PlayTile> = g
+            .world
+            .tiles()
+            .iter()
+            .map(|(c, t)| hex_play_state::PlayTile {
+                cell: *c,
+                tile: t.def.clone(),
+                rotation: t.rotation,
+                level: t.level,
+            })
+            .collect();
+        let lay = hex_play::water::tiles::layout(&tiles, &g.catalog, |_| true);
+        let lay = &lay;
+        let mut falls: Vec<(i32, u8, &str)> = lay
+            .iter()
+            .flat_map(|(c, cw)| {
+                cw.falls.iter().filter(|f| f.upper).map(move |f| {
+                    let lower = &lay[&c.neighbor(f.edge)];
+                    (c.q, f.drop, lower.tile.tile.as_str())
+                })
+            })
+            .collect();
+        falls.sort();
+        assert_eq!(
+            falls,
+            vec![
+                (1, 1, "river_straight"),
+                (4, 2, "river_straight"),
+                (7, 3, "river_straight"),
+                (10, 1, "river_mouth"),
+            ]
+        );
+        // Play draws the fall faces from `water::tiles::waterfalls`: the same seams the sheets
+        // fall over, the mouth's included.
+        let mut sheets: Vec<(hex_core::Axial, u8, u8)> = lay
+            .iter()
+            .flat_map(|(c, cw)| {
+                cw.falls
+                    .iter()
+                    .filter(|f| f.upper)
+                    .map(move |f| (*c, f.edge, f.drop))
+            })
+            .collect();
+        let mut faces: Vec<(hex_core::Axial, u8, u8)> =
+            hex_play::water::tiles::waterfalls(&tiles, &g.catalog)
+                .iter()
+                .map(|w| (w.upper, w.edge, w.drop))
+                .collect();
+        sheets.sort();
+        faces.sort();
+        assert_eq!(faces, sheets);
+        let script: Vec<serde_json::Value> = serde_json::from_str(json).unwrap();
+        for (q, _, _) in &falls {
+            let seam = Axial::new(*q, -1).to_world(hex_core::HEX_RADIUS);
+            let seam = [seam[0] + hex_core::HEX_RADIUS * 0.866_025_4, seam[1]];
+            assert!(
+                script.iter().any(|c| c["cmd"] == "camera" && {
+                    let l = &c["look_at"];
+                    let (x, z) = (l[0].as_f64().unwrap(), l[2].as_f64().unwrap());
+                    (x - f64::from(seam[0])).hypot(z - f64::from(seam[1])) < 4.0
+                }),
+                "no camera looks at the fall at q = {q}"
+            );
+        }
+    }
+
     /// The flat control of `e2e/perf-elevation-orbit.mjs` (`docs/checkpoints/elevation/flat-control.json`)
     /// is legal, covers the very cells of the elevation world, and holds only level-0 meadow (roads are left out: a road needs its neighbours' road edges, which the cell-for-cell copy cannot give it).
     #[test]

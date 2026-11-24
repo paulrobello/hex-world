@@ -1286,6 +1286,34 @@
       "creditsCharged": 30,
       "subscriptionDelta": 0,
       "file": "assets-source/audio/ambience/town-murmur-2/town-murmur-2.mp3"
+    },
+    {
+      "n": 93,
+      "cueId": "waterfall",
+      "requestedAt": "2026-11-23T08:02:14+00:00",
+      "reason": "first take",
+      "creditsBefore": 8738,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "894054e40f257d08b9a01a865f6c2897",
+      "creditsAfter": 8738,
+      "creditsCharged": 120,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/waterfall/waterfall.mp3"
+    },
+    {
+      "n": 94,
+      "cueId": "waterfall",
+      "requestedAt": "2026-11-23T08:15:46+00:00",
+      "reason": "attempt 93 held 1.6% of its power under 300 Hz against the brief's low and broad plunge; retake prompted for weight at prompt_influence 0.7",
+      "creditsBefore": 8858,
+      "status": "ok",
+      "httpStatus": 200,
+      "generationId": "b44e000c3809abc3d0e35606fe30bb9d",
+      "creditsAfter": 8858,
+      "creditsCharged": 120,
+      "subscriptionDelta": 0,
+      "file": "assets-source/audio/ambience/waterfall/waterfall.mp3"
     }
   ]
 }

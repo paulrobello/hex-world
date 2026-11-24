@@ -97,6 +97,7 @@ pub fn kit_layout() -> Vec<Placement> {
     block_landforms(&mut v);
     block_tunnel_bore(&mut v);
     block_hero_oak_variants(&mut v);
+    block_waterfalls(&mut v);
     v
 }
 
@@ -653,6 +654,43 @@ fn block_hero_oak_variants(v: &mut Vec<Placement>) {
         y: MEADOW_CENTRE_Y,
         ..hero("tree_hero_oak_c", 3, 2, [0.0, 0.0], 100.0)
     });
+}
+
+/// The fall faces (rivers-at-levels Task 19) north of the landforms: three river straights at rot 0
+/// (lanes on world edges 0 and 3), each `drop` levels above a river straight on its edge-0
+/// neighbour, with `waterfall_l<drop>` under the upper one at rot 0 (its seam on world edge 0), as
+/// play draws it under the upper tile's root. The 1, 2 and 3-level falls stand in rows r = -6, -8
+/// and -10, their lower tiles all on x = 27.7, so a camera looking back along -x sees the three
+/// faces side by side. The kit scenario draws no water and no cliff column, so the upper tiles
+/// stand in the air over their faces; play draws both.
+pub const WATERFALL_BLOCK: [(u8, i32, i32); 3] = [(1, 3, -6), (2, 4, -8), (3, 5, -10)];
+
+fn block_waterfalls(v: &mut Vec<Placement>) {
+    for (drop, q, r) in WATERFALL_BLOCK {
+        let y = f32::from(drop) * hex_core::LEVEL_STEP;
+        let lower = Axial { q, r }.neighbor(0);
+        for (cell, y) in [(Axial { q, r }, y), (lower, 0.0)] {
+            v.push(Placement {
+                y,
+                ..place("river_straight_base", cell.q, cell.r, 0)
+            });
+            for k in [0, 3] {
+                v.push(Placement {
+                    y,
+                    ..place("river_edge", cell.q, cell.r, k)
+                });
+            }
+        }
+        let piece = match drop {
+            1 => "waterfall_l1",
+            2 => "waterfall_l2",
+            _ => "waterfall_l3",
+        };
+        v.push(Placement {
+            y,
+            ..place(piece, q, r, 0)
+        });
+    }
 }
 
 /// The play water at rest (`hex_play::water::tiles::WATER_Y`).
@@ -1213,8 +1251,8 @@ mod tests {
     use super::*;
     use hex_assets::parse_manifest;
 
-    const PINNED_LEN: usize = 273;
-    const PINNED_HASH: u64 = 0x472f_65fd_985f_20f4;
+    const PINNED_LEN: usize = 294;
+    const PINNED_HASH: u64 = 0xf4e9_06df_c9c6_ca16;
 
     /// Every prop, tree and hero piece of the manifest is placed by [`kit_layout`] or has a
     /// `data/pieces.ron` `showcase: NotShowcased(reason)`, and no such piece is placed, so a new

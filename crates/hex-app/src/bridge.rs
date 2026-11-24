@@ -336,7 +336,7 @@ mod schema {
 
     use super::{View, cell_rect};
     use crate::actions::{Action, Tool};
-    use crate::control::{Command, Spin, Toggle, parse_script};
+    use crate::control::{Command, LevelStep, ShapeStep, Spin, Toggle, parse_script};
     use crate::game::{GameEvent, GameState};
 
     const SCHEMA_PATH: &str = concat!(
@@ -383,6 +383,8 @@ mod schema {
         r#"{"cmd":"select_tile","id":"meadow"}"#,
         r#"{"cmd":"hover","q":1,"r":0}"#,
         r#"{"cmd":"rotate","dir":"cw"}"#,
+        r#"{"cmd":"level","dir":"up"}"#,
+        r#"{"cmd":"shape","dir":"next"}"#,
         r#"{"cmd":"place","q":1,"r":0,"level":1}"#,
         r#"{"cmd":"pin","q":1,"r":0}"#,
         r#"{"cmd":"unpin"}"#,
@@ -425,6 +427,8 @@ mod schema {
             Command::SelectTile { .. } => "select_tile",
             Command::Hover { .. } => "hover",
             Command::Rotate { .. } => "rotate",
+            Command::Level { .. } => "level",
+            Command::Shape { .. } => "shape",
             Command::Place { .. } => "place",
             Command::Pin { .. } => "pin",
             Command::Unpin => "unpin",
@@ -684,6 +688,25 @@ mod schema {
         v
     }
 
+    /// The ghost's flow directions (`hex_core::FlowDir`, RQ11 O2), exhaustive so a new one reaches
+    /// this file.
+    fn flow_dir_names() -> Vec<String> {
+        use hex_core::FlowDir;
+        [FlowDir::In, FlowDir::Out]
+            .iter()
+            .map(|d| {
+                match d {
+                    FlowDir::In | FlowDir::Out => {}
+                }
+                serde_json::to_value(d)
+                    .unwrap()
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            })
+            .collect()
+    }
+
     /// The `play` object as `publish_state` builds it (game, cars, rise) with every optional part
     /// filled: a ghost, a bulldoze target, a result, a rising tile.
     fn play_shapes() -> Value {
@@ -864,10 +887,13 @@ mod schema {
             "enums": {
                 "tool": tool,
                 "spin": serde_variants::<Spin>(r#""__none__""#),
+                "level_step": serde_variants::<LevelStep>(r#""__none__""#),
+                "shape_step": serde_variants::<ShapeStep>(r#""__none__""#),
                 "toggle": serde_variants::<Toggle>(r#""__none__""#),
                 "dof": serde_variants::<crate::photo::Dof>(r#""__none__""#),
                 "photo_filter": serde_variants::<crate::photo_fx::PhotoFilter>(r#""__none__""#),
                 "edge_status": edge_status_names(),
+                "flow_dir": flow_dir_names(),
                 "refusal": Refusal::codes(),
                 "grade": hex_render::Grade::ALL.iter().map(|g| g.name()).collect::<Vec<_>>(),
                 "grass": hex_play::play::grass::Density::ALIASES.iter().map(|(n, _)| *n).collect::<Vec<_>>(),

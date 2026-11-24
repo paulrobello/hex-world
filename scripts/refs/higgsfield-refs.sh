@@ -15,6 +15,7 @@
 #   P4 mega tiles (owner A52, 2026-10-29): massif_granite
 #   P4 rail at levels (deferred; candidates 2026-11-13): rail_tunnel_portal rail_viaduct
 #   P4 single-tile hills and peaks (owner A40 O1, 2026-10-27): hill_meadow peak_granite
+#   P4 rivers at levels, waterfall fall faces (owner 2026-11-22): waterfall
 set -euo pipefail
 id="$1"; out="assets-source/refs/$id"; mkdir -p "$out"
 style="stylized-real diorama miniature, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background, 35 degree three-quarter view"
@@ -361,6 +362,44 @@ case "$id" in
       "Mountain peak tile: $hex $tail. $meadow $foot The whole tile is $high"
       "Mountain peak tile: $hex $crag. $meadow $foot The whole tile is $low")
     fi ;;
+  # Waterfall fall faces (P4 rivers at levels, owner 2026-11-22, spec docs/superpowers/specs/2026-11-22-rivers-at-levels-design.md):
+  # one family for waterfall_l1, _l2 and _l3, a granite face on the raised tile's column where a river drops
+  # one, two or three levels (4, 8, 12 m) onto river below. RQ2: a straight lip and one sheet at 4 m (O1),
+  # stepped ledges breaking the sheet into two or three tiers at 8 and 12 m (O2), one design scaled by drop.
+  # $wfgranite is massif_granite's approved $granite (local to its case, so copied) plus the wet and moss
+  # wording. The sheet and the pool foam are runtime water, drawn here only to judge the face behind them;
+  # pool boulders and reeds are runtime scatter. Slots per height: the pair of tiles from the front, a
+  # three-quarter close-up of the face, and eye level from the lower bank (ref-1..3 4 m, ref-4..6 8 m,
+  # ref-7..9 12 m).
+  waterfall) wfgranite="weathered pale grey granite speckled with darker grey and black flecks, softly rounded by weather with a few sharp fractured faces and shallow cracks, patches of pale green-grey and mustard-yellow lichen, the stone reading as a matte surface where it is dry, with cushions of bright green moss on the ledges beside the falling water and dark wet streaks running down the rock wherever spray and trickles reach it, the wet stone a little darker and glossier"
+    pair="Two regular hexagonal diorama tiles, each one solid block with exactly six straight flat sides 16 m long and 32 m across from corner to corner, never squares or circles, stand side by side sharing one whole flat side, the lower tile in front and the raised tile behind it, the whole pair centred in frame with plain grey margin all round and nothing else in the frame. Both tops are lush meadow of fresh green grass with a few small wildflowers, and $skirt"
+    river="One straight 8 m wide river runs through the centres of both tiles, crossing their shared side at its exact middle, square-on, and leaving each tile at the middle of its opposite side, in a channel sunk below the meadow surface between natural earthy banks with pebbles, $water. Where the river leaves the pair through the outer sides, $cut"
+    face="Behind and beside the falling water, the raised tile's front wall is one face of $wfgranite, about 14 m wide, centred on the river and running from the lip down into the lower tile's river bank, while the last metre of that wall at each of its two corners, and every other side wall, stays the same dark earth"
+    lip1="At the shared side the river pours off the raised tile as a waterfall: the water slides over one straight, level granite lip spanning the whole channel and falls 4 m in a single smooth sheet, clear and glassy at the lip and turning white and foamy as it falls, into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream"
+    lip2="At the shared side the river pours off the raised tile as a waterfall 8 m tall in two tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto one broad level granite ledge halfway down where it breaks into white foam, then falls again in a second white sheet into a churning white foam plunge pool on the lower tile's river, with ripple rings spreading downstream"
+    lip3="At the shared side the river pours off the raised tile as a waterfall 12 m tall in three tiers: the water slides over a straight granite lip spanning the whole channel, falls as a smooth sheet, clear and glassy at the lip and turning white as it falls, onto a broad level granite ledge, breaks into white foam, falls again onto a second ledge lower down, and falls a third time into a churning white foam plunge pool on the lower tile's river, the ledges stepping out a little toward the bottom, with ripple rings spreading downstream"
+    high="a clean photoreal 3D computer graphics render, $look, high three-quarter camera in front of the lower tile looking down at about 45 degrees elevation, so the waterfall and its rock face look straight at the camera and every side of both hexagons reads clearly"
+    close="a clean photoreal 3D computer graphics render, $style"
+    # First rolls (2026-11-22): ref-1..6, 8 and 9 kept. ref-3, ref-6 and ref-9 asked for eye level and came
+    # back as front views, kept for what they show (ref-3 two massive flanking blocks, ref-9 the face set
+    # into the dark earth wall). ref-7's drop read as about 5 m in two tiers, so it takes $tall3 and $far,
+    # which scale the block and the fall against the river's width. ref-10 is the eye-level view of the
+    # 8 m fall, worded without the tile pair, which pulled every camera back to the tabletop.
+    tall3="The raised tile stands three levels higher on a very tall solid block like a tower: its dark earth side walls are 12 m tall, three times as tall as the lower tile's block is thick, so its meadow top stands far above the lower tile, about the height of a three-storey house, and the waterfall is one and a half times as tall as the river is wide."
+    far="a clean photoreal 3D computer graphics render, $look, high three-quarter camera well back in front of the lower tile looking down at about 35 degrees elevation, so the whole height of the tall block and the waterfall faces the camera and every side of both hexagons reads clearly"
+    eye="Eye-level view of an 8 m waterfall in a stylized-real diorama landscape, seen from a camera standing in the grass on the river bank below the fall at a person's eye height, 1.7 m above the grass and about 12 m downstream, looking up at the fall towering overhead, as tall as a two-storey house and as tall as the river is wide. The river drops off the edge of a raised meadow in two tiers: $lip2. Behind and beside the falling water rises one face of $wfgranite, about 14 m wide, and beyond the rock on both sides the raised ground's wall is dark earth with a thin grass lip, its meadow edge and grass tufts seen from below against the plain grey sky. In the foreground the river runs toward the camera between natural earthy banks with pebbles and lush meadow grass, $water. A clean photoreal 3D computer graphics render, real PBR materials, slightly exaggerated proportions, soft noon sun, neutral grey studio background"
+    low="a clean photoreal 3D computer graphics render, $look, seen from a low camera at a person's eye height standing on the lower tile's grassy river bank about 12 m downstream of the fall, looking up at the waterfall and its whole rock face against the plain grey backdrop, the raised tile's dark earth side wall continuing beyond the face on both sides"
+    prompts=(
+    "Waterfall tiles: $pair. The raised tile stands one level higher: its meadow top is 4 m above the lower tile's, about the height of a single-storey house, on a taller block. $river. $lip1. $face. The whole pair is $high"
+    "Close-up of a 4 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: $lip1. Behind the sheet and on both sides of it the wall is $wfgranite, the lip one straight level course of squared granite blocks, rough weathered blocks below, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is $close"
+    "Waterfall tiles: $pair. The raised tile stands one level higher: its meadow top is 4 m above the lower tile's, about the height of a single-storey house, on a taller block. $river. $lip1. $face. The whole pair is $low"
+    "Waterfall tiles: $pair. The raised tile stands two levels higher: its meadow top is 8 m above the lower tile's, about the height of a two-storey house, on a much taller block. $river. $lip2. $face. The whole pair is $high"
+    "Close-up of an 8 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: $lip2. Behind the sheets and on both sides of them the wall is $wfgranite, the lip one straight level course of squared granite blocks, the halfway ledge a broad level shelf of rounded blocks with moss along its edge, rough weathered blocks between, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is $close"
+    "Waterfall tiles: $pair. The raised tile stands two levels higher: its meadow top is 8 m above the lower tile's, about the height of a two-storey house, on a much taller block. $river. $lip2. $face. The whole pair is $low"
+    "Waterfall tiles: $pair. $tall3 $river. $lip3. $face. The whole pair is $far"
+    "Close-up of a 12 m waterfall where a river drops off a raised hexagonal diorama tile onto a lower one: $lip3. Behind the sheets and on both sides of them the wall is $wfgranite, the lip one straight level course of squared granite blocks, each ledge a broad level shelf of rounded blocks with moss along its edge, rough weathered blocks between, rich specific surface detail, the edge of the raised tile's meadow and the dark earth wall beyond the rock visible at the sides. The whole scene is $close"
+    "Waterfall tiles: $pair. The raised tile stands three levels higher: its meadow top is 12 m above the lower tile's, about the height of a three-storey house, on a very tall block. $river. $lip3. $face. The whole pair is $low"
+    "$eye") ;;
   *) echo "unknown piece $id" >&2; exit 2 ;;
 esac
 entries=()

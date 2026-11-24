@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 
 use hex_core::{
     AudioVolumes, Axial, CameraState, GameSettings, MAX_SAVE_TILES, Orientation, QualitySetting,
-    SAVE_FORMAT_VERSION, SaveData, SaveError, TileCatalog, World, WorldIssue, cell_seed,
+    RiverEnd, SAVE_FORMAT_VERSION, SaveData, SaveError, SocketKind, TileCatalog, World, WorldIssue,
+    cell_seed,
 };
 
 fn fixture_dir() -> PathBuf {
@@ -114,14 +115,20 @@ fn every_fixture_loads_and_every_version_has_one() {
     }
 }
 
-/// P4 reads the v1 `level` byte that every earlier save wrote as 0: each fixture loads with all
-/// tiles (and every history record) on level 0. A current-version fixture re-encodes byte for
+/// Fixtures that place tiles above level 0 on purpose.
+const LEVELLED: [&str; 1] = ["v3-waterfall.hexworld"];
+
+/// P4 reads the v1 `level` byte that every earlier save wrote as 0: each fixture written before
+/// levels (all but [`LEVELLED`]) loads with all tiles (and every history record) on level 0. A current-version fixture re-encodes byte for
 /// byte. An older one is upgraded on load, so it re-encodes to the current version and decodes
 /// back equal instead.
 #[test]
 fn fixtures_load_at_level_zero() {
     let c = catalog();
     for (path, version) in &fixtures() {
+        if LEVELLED.iter().any(|name| path.ends_with(name)) {
+            continue;
+        }
         let bytes = std::fs::read(path).unwrap();
         let save = SaveData::decode(&bytes, &c).unwrap();
         let w = &save.world;
@@ -335,6 +342,89 @@ fn v3_massif_expands_on_load() {
     }
 }
 
+/// The fork in `v3-waterfall.hexworld`, east of the start meadow.
+const FORK: Axial = Axial { q: 1, r: 0 };
+
+/// The save in `v3-waterfall.hexworld`: a level-2 river fork east of the start meadow, fed by a
+/// level-2 spring, falling one level into a level-1 straight and two levels into a level-0 mouth,
+/// then a meadow placed west of the start and undone, so both history stacks are non-empty.
+fn waterfall_v3(c: &TileCatalog) -> SaveData {
+    let mut w = World::new(2027);
+    let lay = |w: &mut World, cell: Axial, id: &str, rivers: &[u8], level: u8| {
+        let d = c.get(id).unwrap();
+        let want: BTreeSet<u8> = rivers.iter().copied().collect();
+        let o = (0..6)
+            .map(|k| Orientation::new(k, level))
+            .find(|o| {
+                (0..6)
+                    .filter(|&e| d.edge(e, o.rotation).kind == SocketKind::River)
+                    .collect::<BTreeSet<u8>>()
+                    == want
+                    && w.fits(c, cell, d, *o)
+            })
+            .unwrap_or_else(|| panic!("{id} at {cell:?} level {level} with rivers on {want:?}"));
+        w.place(c, cell, id, o).unwrap();
+    };
+    lay(&mut w, FORK, "river_fork", &[0, 2, 4], 2);
+    lay(&mut w, FORK.neighbor(2), "river_spring", &[5], 2);
+    lay(&mut w, FORK.neighbor(0), "river_straight", &[0, 3], 1);
+    lay(&mut w, FORK.neighbor(4), "river_mouth", &[1], 0);
+    lay(&mut w, WEST, "meadow", &[], 0);
+    assert!(w.undo(c));
+    let mut save = tilt_chosen_v2(c);
+    save.world = w;
+    save
+}
+
+#[test]
+fn v3_waterfall_fixture_derives_its_falls_and_flow() {
+    let c = catalog();
+    let bytes = std::fs::read(fixture_dir().join("v3-waterfall.hexworld")).unwrap();
+    let save = SaveData::decode(&bytes, &c).unwrap();
+    assert_eq!(save.encode(), bytes);
+    let r = save.world.rivers(&c);
+    assert_eq!(
+        r.falls.iter().map(|f| f.drop).collect::<Vec<_>>(),
+        vec![1, 2]
+    );
+    assert!(r.falls.iter().all(|f| f.upper == FORK));
+    let seg = |cell: Axial| {
+        let mut segs = r.segs.range((cell, 0)..=(cell, usize::MAX)).map(|(_, s)| s);
+        let s = segs
+            .next()
+            .unwrap_or_else(|| panic!("no segment at {cell:?}"));
+        assert!(segs.next().is_none(), "{cell:?} holds one segment");
+        s.clone()
+    };
+    assert_eq!(
+        seg(FORK.neighbor(2)).up,
+        RiverEnd::Spring,
+        "the level-2 spring is the source"
+    );
+    assert_eq!(
+        seg(FORK.neighbor(0)).up,
+        RiverEnd::Edge(3),
+        "the straight flows away from the fall"
+    );
+    assert_eq!(
+        seg(FORK.neighbor(4)).down,
+        RiverEnd::Mouth,
+        "the river ends at the mouth"
+    );
+    let fork: Vec<_> = r
+        .segs
+        .range((FORK, 0)..=(FORK, usize::MAX))
+        .map(|(_, s)| (s.up, s.down))
+        .collect();
+    assert!(
+        fork.contains(&(RiverEnd::Edge(2), RiverEnd::Junction)),
+        "{fork:?}"
+    );
+    if SAVE_FORMAT_VERSION == 3 {
+        assert_eq!(save, waterfall_v3(&c));
+    }
+}
+
 /// The tile cap (owner decision, 2026-11-15): a file holding more than [`MAX_SAVE_TILES`] tiles
 /// refuses outright, before any rule runs over them. The cap is about ten times the largest
 /// measured world and bounds the history replay's worst case (PRD §12.2, docs/save-format.md).
@@ -396,6 +486,19 @@ fn a_world_over_the_tile_cap_is_refused() {
     }
     .encode();
     SaveData::decode(&bytes, &c).expect("a world at the cap loads");
+}
+
+#[test]
+#[ignore = "writes the v3 waterfall fixture once; fixtures are frozen"]
+fn write_v3_waterfall_fixture() {
+    let path = fixture_dir().join("v3-waterfall.hexworld");
+    assert!(
+        !path.exists(),
+        "{} exists and is frozen; add a new version instead",
+        path.display()
+    );
+    assert_eq!(SAVE_FORMAT_VERSION, 3, "this writer only produces v3");
+    std::fs::write(&path, waterfall_v3(&catalog()).encode()).unwrap();
 }
 
 #[test]

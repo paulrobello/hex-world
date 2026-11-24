@@ -139,14 +139,20 @@ pub enum HeightMeet {
     Seamless,
     /// Both edges are flat with no lane and sit at different heights: a cliff face.
     Cliff,
+    /// Two flat River lane edges whose absolute ground differs by `drop` (1 to 3) levels: the
+    /// river falls from the higher side into the lower ([`river_fall`]).
+    Waterfall {
+        drop: u8,
+    },
     Refused,
 }
 
 /// PRD §5.2 height rule. Edge `a` of a tile at `a_level` and edge `b` of the tile across the seam
 /// at `b_level` meet `Seamless` when `a`'s absolute (start, end) corner heights equal `b`'s
 /// absolute (end, start), as the two edges run in opposite directions. Two `Flat` edges without
-/// lanes that differ meet as a `Cliff`. Anything else is `Refused`, so a lane edge (road, river,
-/// rail) always meets at equal absolute height.
+/// lanes that differ meet as a `Cliff`, and two River lanes that differ meet as a `Waterfall`
+/// ([`river_fall`]). Anything else is `Refused`, so a road or rail lane edge meets at equal
+/// absolute height (bar a viaduct's deck end, [`deck_meet`]).
 pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) -> HeightMeet {
     if a.deck() > 0 || b.deck() > 0 {
         return deck_meet(a, a_level, b, b_level);
@@ -158,15 +164,42 @@ pub fn heights_meet(a: &EdgeSocket, a_level: u8, b: &EdgeSocket, b_level: u8) ->
     let (b_start, b_end) = (abs(b_start, b_level), abs(b_end, b_level));
     if (a_start, a_end) == (b_end, b_start) {
         HeightMeet::Seamless
-    } else if a.profile == EdgeProfile::Flat
-        && b.profile == EdgeProfile::Flat
-        && a.lane.is_none()
+    } else if let Some((drop, _)) = river_fall(a, a_level, b, b_level) {
+        HeightMeet::Waterfall { drop }
+    } else if a.lane.is_none()
         && b.lane.is_none()
+        && (a_start.max(a_end) < b_start.min(b_end) || b_start.max(b_end) < a_start.min(a_end))
     {
+        // One edge stands wholly below the other (owner 2026-11-24: Meadow at levels 0 and
+        // 1 against a level-3 hillside's slope), so each side's own column or skirt shows the soil.
         HeightMeet::Cliff
     } else {
         HeightMeet::Refused
     }
+}
+
+/// A waterfall seam (rivers at levels): both edges are flat River lanes without a deck whose
+/// absolute ground differs by 1 to 3 levels. Returns the drop and whether `a` is the upper side;
+/// `None` for any other pair.
+pub(crate) fn river_fall(
+    a: &EdgeSocket,
+    a_level: u8,
+    b: &EdgeSocket,
+    b_level: u8,
+) -> Option<(u8, bool)> {
+    let river = |s: &EdgeSocket| {
+        s.kind == SocketKind::River
+            && s.profile == EdgeProfile::Flat
+            && s.lane.is_some()
+            && s.deck() == 0
+    };
+    if !(river(a) && river(b)) {
+        return None;
+    }
+    let ground = |s: &EdgeSocket, level: u8| u16::from(level) + u16::from(s.height);
+    let (ga, gb) = (ground(a, a_level), ground(b, b_level));
+    let drop = ga.abs_diff(gb);
+    (1..=3).contains(&drop).then_some((drop as u8, ga > gb))
 }
 
 /// A viaduct's deck end (P4, rail at levels) meets rail whose top stands at the same absolute
@@ -693,15 +726,49 @@ mod tests {
         assert!(table().edges_compatible(&g, 1, &g, 0));
     }
 
+    fn river_lane() -> EdgeSocket {
+        EdgeSocket {
+            lane: table().lane(River),
+            ..EdgeSocket::new(River)
+        }
+    }
+
     #[test]
-    fn lane_edges_never_cliff() {
-        let t = table();
-        let road = EdgeSocket {
-            lane: t.lane(Road),
-            ..EdgeSocket::new(Road)
+    fn river_lanes_fall_one_to_three_levels() {
+        let r = river_lane();
+        assert!(r.lane.is_some());
+        for d in 1..=3 {
+            assert_eq!(
+                heights_meet(&r, d, &r, 0),
+                HeightMeet::Waterfall { drop: d }
+            );
+            assert!(table().edges_compatible(&r, d, &r, 0));
+        }
+        assert_eq!(
+            heights_meet(&r, 0, &r, 3),
+            HeightMeet::Waterfall { drop: 3 }
+        );
+        assert_eq!(heights_meet(&r, 1, &r, 1), HeightMeet::Seamless);
+        assert_eq!(heights_meet(&r, 4, &r, 0), HeightMeet::Refused);
+        let sloped_river = EdgeSocket {
+            profile: EdgeProfile::Rise,
+            ..river_lane()
         };
-        assert!(road.lane.is_some());
+        assert_eq!(heights_meet(&sloped_river, 1, &r, 0), HeightMeet::Refused);
+    }
+
+    /// Narrowed from `lane_edges_never_cliff`: road and rail lanes never meet across a height
+    /// step, and a River lane falls only onto another River lane.
+    #[test]
+    fn only_river_lanes_fall() {
+        let t = table();
+        let (road, rail) = (lane(Road, 0.0, 6.0), lane(Rail, 0.0, 3.5));
         assert_eq!(heights_meet(&road, 1, &road, 0), HeightMeet::Refused);
+        assert_eq!(heights_meet(&rail, 1, &rail, 0), HeightMeet::Refused);
+        assert_eq!(
+            heights_meet(&river_lane(), 1, &EdgeSocket::new(Grass), 0),
+            HeightMeet::Refused
+        );
         assert!(!t.edges_compatible(&road, 1, &road, 0));
         assert!(t.edges_compatible(&road, 1, &road, 1));
     }
@@ -766,15 +833,40 @@ mod tests {
     }
 
     #[test]
-    fn slope_against_flat_refused() {
+    fn slope_against_flat_is_a_cliff_only_wholly_above_or_below() {
         let flat = EdgeSocket::new(Grass);
         for profile in [EdgeProfile::Rise, EdgeProfile::Fall] {
             let slope = sloped(Grass, 0, profile);
-            for (sl, fl) in (0..=2).flat_map(|a| (0..=2).map(move |b| (a, b))) {
-                assert_eq!(heights_meet(&slope, sl, &flat, fl), HeightMeet::Refused);
-                assert_eq!(heights_meet(&flat, fl, &slope, sl), HeightMeet::Refused);
+            for (sl, fl) in (0..=3).flat_map(|a| (0..=3).map(move |b| (a, b))) {
+                // The slope spans sl..=sl + 1: a flat edge touching that span is refused, one
+                // wholly above or below it meets as a cliff (owner 2026-11-24).
+                let want = if fl < sl || fl > sl + 1 {
+                    HeightMeet::Cliff
+                } else {
+                    HeightMeet::Refused
+                };
+                assert_eq!(
+                    heights_meet(&slope, sl, &flat, fl),
+                    want,
+                    "slope {sl} flat {fl}"
+                );
+                assert_eq!(
+                    heights_meet(&flat, fl, &slope, sl),
+                    want,
+                    "flat {fl} slope {sl}"
+                );
             }
         }
+    }
+
+    #[test]
+    fn lanes_never_meet_across_a_slope_cliff() {
+        let road = EdgeSocket {
+            lane: table().lane(Road),
+            ..EdgeSocket::new(Road)
+        };
+        let slope = sloped(Road, 0, EdgeProfile::Rise);
+        assert_eq!(heights_meet(&road, 0, &slope, 3), HeightMeet::Refused);
     }
 
     #[test]

@@ -42,6 +42,10 @@ const settle = [{ cmd: "hover", q: 9, r: -9 }, { cmd: "toggle", what: "photo" },
 // read from the checkpoint script, at its every-tile overview and at the 20-tile overview pose.
 const mixedScript = JSON.parse(await readFile("docs/checkpoints/scatter/scatter-mixed.json", "utf8"))
   .filter((c) => ["select_tile", "hover", "place"].includes(c.cmd));
+// The 44-tile waterfall staircase world (docs/checkpoints/waterfall/staircase/waterfall-staircase.json):
+// the mixed world plus a river staircase on levels 3, 2, 1, 0 (three 4 m falls, 12 m in all).
+const stairScript = JSON.parse(await readFile("docs/checkpoints/waterfall/staircase/waterfall-staircase.json", "utf8"))
+  .filter((c) => ["select_tile", "hover", "place"].includes(c.cmd));
 const WORLDS = {
   world20: { tiles: 20, args: [], setup: [cam([20, 160, 150, 20, 0, -5]), { cmd: "wait", frames: 30 }, ...world20, ...settle],
     cameras: {
@@ -54,10 +58,17 @@ const WORLDS = {
     close: [10, 12, 40, 0, 0, 0],
     overview: [20, 160, 150, 20, 0, -5],
   } },
-  mixed: { tiles: 31, args: [], setup: [cam([12, 172, 165, 12, 0, -2]), { cmd: "wait", frames: 30 }, ...mixedScript, ...settle],
+  mixed: { tiles: 34, args: [], setup: [cam([12, 172, 165, 12, 0, -2]), { cmd: "wait", frames: 30 }, ...mixedScript, ...settle],
     cameras: {
       overview: [12, 172, 165, 12, 0, -2],
       pose20: [20, 160, 150, 20, 0, -5],
+    } },
+  staircase: { tiles: 44, args: [], setup: [cam([60, 200, 175, 60, 0, -20]), { cmd: "wait", frames: 30 }, ...stairScript, ...settle],
+    cameras: {
+      overview: [60, 200, 175, 60, 0, -20],     // the whole world in frame (waterfall-staircase-00-overview)
+      full: [164.7, 44, -36, 124.7, 6, -96],    // the 12 m staircase from the side (waterfall-staircase-04-full)
+      fall3to2: [121, 15.6, -84, 97, 8.6, -96], // front of the top 4 m fall
+      fall1to0: [176.4, 7.6, -84, 152.4, 0.6, -96], // front of the bottom 4 m fall
     } },
 };
 const RUN_WORLDS = (process.env.WORLDS ?? Object.keys(WORLDS).join(",")).split(",").filter((w) => {

@@ -609,6 +609,58 @@ for (const query of ["?scenario=water_kit&kit_src=fixture_tiled&post=full", "?sc
   });
 }
 
+// 8a. A waterfall in play (rivers at levels, water contract §5): a two-level fall's sheet rides the
+// upper tile's water mesh and its plunge pool the lower one's, on the existing water bindings, so
+// with the device clamped to WebGPU's default 16 the water and kit pipelines keep High's counts.
+// The world is the first fall of docs/checkpoints/waterfall/runtime/waterfall.json, two levels high.
+// (The `water_kit` scenario above is the look-dev patch, which has no tiles or levels.)
+{
+  const clamp = WEBGPU_DEFAULT_SAMPLED;
+  const query = "?scenario=play&post=full&tier_warm=off";
+  await withPage(gpuArgs(), async (page) => {
+    await page.addInitScript(clampSampledTextures, clamp);
+    await page.addInitScript(countSampledTextures);
+    await page.goto(base + pinHigh(query));
+    const tag = `waterfall ${query} (clamped ${clamp})`;
+    if (!(await page.waitForFunction(() => window.hexWorld?.ready() === true, null, { timeout: 90_000 }).then(() => true, () => false))) {
+      fail(`${tag}: never ready; sampled textures per stage max ${(await page.evaluate(() => window.__sampledTextures))?.max}`);
+      return;
+    }
+    await page.evaluate(() => {
+      const h = window.hexWorld;
+      for (const q of [1, 2]) { h.cmd({ cmd: "select_tile", id: "meadow" }); h.cmd({ cmd: "place", q, r: 0 }); }
+      h.cmd({ cmd: "select_tile", id: "river_straight" });
+      h.cmd({ cmd: "place", q: 1, r: -1, level: 2 });
+      h.cmd({ cmd: "place", q: 2, r: -1, level: 0 });
+    });
+    const deadline = Date.now() + 90_000;
+    while (Date.now() < deadline && !(await page.evaluate(() => {
+      const s = window.__sampledTextures ?? {};
+      return window.hexWorld.state().tiles === 5 && (window.hexWorld.state().play?.rising ?? []).length === 0 &&
+        (s.water ?? []).some((k) => k.pass === "water" && k.ibl);
+    }))) await page.waitForTimeout(200);
+    await page.evaluate(() => window.hexWorld.cmd({ cmd: "camera", pos: [52, 9, -12], look_at: [27.7, 1.6, -24] }));
+    await frames(page, 90);
+    const { sampled, limit, state } = await page.evaluate(() => ({
+      sampled: window.__sampledTextures, limit: window.__deviceSampledLimit, state: window.hexWorld.state() }));
+    const placed = (state.play?.tiles ?? []).filter((t) => t.r === -1).map((t) => [t.q, t.level]);
+    console.log(`${tag}: river tiles ${JSON.stringify(placed)}; water pipelines ${JSON.stringify(sampled?.water)}`);
+    if (JSON.stringify(placed.sort()) !== JSON.stringify([[1, 2], [2, 0]])) fail(`${tag}: the fall's tiles are ${JSON.stringify(placed)}`);
+    const got = (sampled?.water ?? []).filter((k) => k.pass === "water" && k.ibl);
+    if (!got.length) fail(`${tag}: no IBL water pipeline was created`);
+    else if (!got.every((k) => k.sampled === WATER_SAMPLED.high.water && k.transmission))
+      fail(`${tag}: water pipeline ${JSON.stringify(got)}, expected ${WATER_SAMPLED.high.water} sampled with transmission`);
+    for (const pass of ["forward", "prepass"]) {
+      const kit = (sampled?.kit ?? []).filter((k) => k.pass === pass && (pass === "prepass" || k.ibl));
+      if (kit.length && !kit.every((k) => k.sampled === KIT_SAMPLED_WITH_WATER[pass]))
+        fail(`${tag}: kit ${pass} pipeline uses ${kit.map((k) => k.sampled)} sampled textures, expected ${KIT_SAMPLED_WITH_WATER[pass]}`);
+    }
+    if (limit !== clamp) fail(`${tag}: device limit ${limit}, expected ${clamp}`);
+    if (!(sampled?.max <= clamp)) fail(`${tag}: a pipeline layout uses ${sampled?.max} sampled textures`);
+    await page.locator("canvas#hex-world").screenshot({ path: "e2e/test-results/smoke-waterfall.png" });
+  });
+}
+
 // 8b. Quality warm-up in play (crates/hex-play/src/tier/warm.rs, PRD §9.2): with the device clamped to
 // 16, the same water world at High warms Medium's pipelines once idle. They must fit the clamp (the
 // kit forward without SSAO and the normal prepass samples 14), and a change to Medium afterwards

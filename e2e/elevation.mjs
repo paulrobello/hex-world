@@ -6,7 +6,9 @@
 //   2. a complete tunnel exists: a road_tunnel_portal at each end and a level-1 cover between them,
 //   3. a car with its headlights fully up (`car_list[].lamps` 1, the level a car reports only
 //      inside a tunnel) is near the cover.
-// Exits 0 only when all three hold and the page logged no error. Not a timing run, so it takes no
+//   4. a river_straight cannot go on the cell between a level-0 spring and a level-1 straight that face it
+//      (play.fits refusal river_uphill, worded in the sheet).
+// Exits 0 only when all of them hold and the page logged no error. Not a timing run, so it takes no
 // load guard. Run after `make build-web`: node e2e/elevation.mjs dist (also run by `make ui-e2e`).
 // ELEVATION_OUT (default e2e/test-results/elevation) is where the HUD frame goes:
 // ELEVATION_OUT=docs/checkpoints/elevation refreshes the committed evidence.
@@ -76,7 +78,7 @@ try {
   else console.log("car in the tunnel", JSON.stringify(car));
 
   // The HUD "Level N" readout (web only: the native shots draw no HUD). A hillside ghost on a free
-  // slot beside the plateau, turned until it stands on a level above the ground, shows the tag.
+  // slot beside the plateau, lifted (the `level` command, E) until it stands above the ground, shows the tag.
   // Evidence, not an assertion: a missing tag warns.
   const slots = await page.evaluate(() => window.hexWorld.state().play?.frontier ?? []);
   await page.evaluate(() => window.hexWorld.cmd({ cmd: "select_tile", id: "hillside_000011" }));
@@ -88,7 +90,7 @@ try {
       const g = await page.evaluate(() => window.hexWorld.state().play?.ghost);
       if (process.env.DEBUG_GHOST) console.log(JSON.stringify({ c, g: g && { tile: g.tile, level: g.level, valid: g.valid, legal: g.legal_rotations } }));
       if (g?.valid && g.level > 0 && (await page.getByText(`Level ${g.level}`).count()) > 0) tagged = true;
-      else await page.evaluate(() => window.hexWorld.cmd({ cmd: "rotate", dir: "cw" }));
+      else await page.evaluate(() => window.hexWorld.cmd({ cmd: "level", dir: "up" }));
     }
     if (tagged) break;
   }
@@ -97,6 +99,50 @@ try {
     console.log(`HUD Level readout captured: ${out}/hud-level.jpg`);
   } else {
     console.warn("WARN: no ghost stood on a level above the ground, so no HUD Level frame was captured");
+  }
+
+  // Rivers cannot run uphill: on a fresh world, a level-0 river_spring and a level-1 river_straight
+  // whose lanes face the same empty cell (the pinch, hex-core world.rs `pinch_world`) leave that
+  // cell with no legal river_straight. Its `play.fits` entry carries refusal river_uphill and the
+  // Tiles sheet words it. Both tiles lie along world edges 0 and 3 at rotation 0.
+  await page.evaluate(() => window.hexWorld.cmd({ cmd: "new_world" }));
+  await page.waitForFunction(() => (window.hexWorld.state().play?.tiles ?? []).length === 1, null, { timeout: 30_000 });
+  const SPRING = { q: 1, r: 0 };
+  const PINCH = { q: 2, r: 0 };
+  const STRAIGHT = { q: 3, r: 0 };
+  const put = async (id, c, level) => {
+    await page.evaluate(([id, c, level]) => {
+      window.hexWorld.cmd({ cmd: "select_tile", id });
+      window.hexWorld.cmd({ cmd: "place", q: c.q, r: c.r, ...(level === undefined ? {} : { level }) });
+    }, [id, c, level]);
+    for (const d = Date.now() + 15_000; Date.now() < d;) {
+      const t = (await page.evaluate(() => window.hexWorld.state().play?.tiles ?? [])).find((t) => t.q === c.q && t.r === c.r);
+      if (t) return t;
+      await page.waitForTimeout(150);
+    }
+    return undefined;
+  };
+  // Support meadows along r = 1 reach both ends of the pinch.
+  for (const c of [{ q: 0, r: 1 }, { q: 1, r: 1 }, { q: 2, r: 1 }]) await put("meadow", c);
+  const spring = await put("river_spring", SPRING);
+  const straight = await put("river_straight", STRAIGHT, 1);
+  if (spring?.level !== 0 || spring?.rotation !== 0) fail(`pinch spring not placed at level 0, rotation 0: ${JSON.stringify(spring)}`);
+  else if (straight?.level !== 1 || straight?.rotation !== 0) fail(`pinch straight not placed at level 1, rotation 0: ${JSON.stringify(straight)}`);
+  else {
+    await page.evaluate((c) => {
+      window.hexWorld.cmd({ cmd: "select_tile", id: "river_straight" });
+      window.hexWorld.cmd({ cmd: "hover", q: c.q, r: c.r });
+    }, PINCH);
+    let entry;
+    for (const d = Date.now() + 10_000; Date.now() < d;) {
+      const fits = await page.evaluate(() => window.hexWorld.state().play?.fits);
+      entry = fits?.entries?.find((e) => e.id === "river_straight");
+      if (entry && entry.refusal) break;
+      await page.waitForTimeout(150);
+    }
+    if (entry?.refusal !== "river_uphill") fail(`pinch fits entry for river_straight: ${JSON.stringify(entry)}, want refusal river_uphill`);
+    else if ((await page.getByText("Rivers can't run uphill.").count()) === 0) fail("the Tiles sheet does not word river_uphill");
+    else console.log("pinch refused: river_straight at", PINCH.q + "," + PINCH.r, "refusal", entry.refusal);
   }
 
   if (errors.length > 0) fail(`page errors: ${errors.slice(0, 5).join(" | ")}`);

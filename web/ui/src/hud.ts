@@ -75,6 +75,8 @@ export class Hud {
   private hidden = false;
   private pointerOff = true;
   private lastRotate = 0;
+  private lastLevel = 0;
+  private lastShape = 0;
   private placed: PlacedNote | null = null;
   private refusal: RefusalNote | null = null;
   private toastState: { verb: string; count: number } | null = null;
@@ -156,6 +158,18 @@ export class Hud {
     this.inventory.turns += back ? -1 : 1;
     this.cmd({ cmd: "rotate", dir: back ? "ccw" : "cw" });
     this.advanceHint("rotate");
+  }
+
+  /** E/Q: the ghost one level up or down; the engine clamps at the highest and lowest legal level. */
+  private level(up: boolean): void {
+    if (!this.st?.ghost) return;
+    this.cmd({ cmd: "level", dir: up ? "up" : "down" });
+  }
+
+  /** T/Shift+T: the ghost's next or previous group member on its level; a lone tile stays put. */
+  private shape(back: boolean): void {
+    if (!this.st?.ghost) return;
+    this.cmd({ cmd: "shape", dir: back ? "prev" : "next" });
   }
 
   // ---------- Worlds: autosave, saved worlds and files (S10) ----------
@@ -251,7 +265,7 @@ export class Hud {
       bar.append(btn);
     };
     add("place", "place", "Place", "", "Place|Click");
-    add("rotate", "rotate", "Rotate", "R", "Rotate|R|Shift+R turns back");
+    add("rotate", "rotate", "Rotate", "R", "Rotate|R|Shift+R turns back, T changes the shape, E and Q raise and lower");
     add("undo", "undo", "Undo", `${MOD}Z`, `Undo|${MOD}Z`);
     add("redo", "redo", "", "", `Redo|${isMac() ? "⇧⌘Z" : "Ctrl+Shift+Z"}`, "Redo");
     add("bulldoze", "bulldoze", "Bulldoze", "B", "Bulldoze|B");
@@ -762,6 +776,18 @@ export class Hud {
         this.lastRotate = performance.now();
         this.rotate(e.shiftKey);
         return;
+      case "level":
+        take();
+        if (action.repeat && performance.now() - this.lastLevel < ROTATE_REPEAT_MS) return;
+        this.lastLevel = performance.now();
+        this.level(action.up);
+        return;
+      case "shape":
+        take();
+        if (action.repeat && performance.now() - this.lastShape < ROTATE_REPEAT_MS) return;
+        this.lastShape = performance.now();
+        this.shape(action.back);
+        return;
       case "toggle_bulldoze":
         take();
         if (!action.repeat) this.toggleBulldoze();
@@ -873,7 +899,7 @@ const HINTS: Hint[] = [
     when: (st) => !!st.ghost,
     anchor: (hud) => hud.tagAnchor(),
     offset: [-60, 60],
-    body: () => [h("kbd", {}, "R"), "turns the tile before you place it"],
+    body: () => [h("kbd", {}, "R"), "turns the tile before you place it, ", h("kbd", {}, "T"), "changes its shape"],
   },
   {
     done: ["undo", "place"],

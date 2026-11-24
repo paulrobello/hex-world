@@ -106,7 +106,8 @@ pub const BUILDS_PER_FRAME: usize = 3;
 pub const BUILD_BUDGET_MS: f32 = 4.0;
 /// Scale on the shared wind's push for grass.
 pub const WIND_SCALE: f32 = 1.0;
-/// Blades keep this far (m) above the water level (`water::tiles::WATER_Y`).
+/// Blades keep this far (m) above the water level: `water::tiles::WATER_Y` in the tile frame the
+/// layout works in, which the tile root lifts to `water::tiles::water_y` of the tile's level.
 pub const WATER_MARGIN: f32 = 0.3;
 /// Gap (m) between a blade's root and a prop's ground footprint.
 pub const PROP_GAP: f32 = 0.05;
@@ -1517,6 +1518,29 @@ mod tests {
         assert_eq!(b.size, [0.3, 0.06]);
         assert_eq!(b.color, [0, 32768, 65535, 0]);
         assert!(i.aabb.half_extents.y > 0.0);
+    }
+
+    /// Grass lays out in the tile frame and the tile root carries the level, where every tile's
+    /// water stands at `WATER_Y`: a level-1 river bank grows the level-0 bank's blades, each
+    /// root `WATER_MARGIN` or more over `water_y(1)` once lifted.
+    #[test]
+    fn grass_keeps_its_margin_over_a_raised_river() {
+        let c = TileCatalog::builtin().unwrap();
+        let m = parse_manifest(MANIFEST).unwrap();
+        let def = c.get("river_straight").unwrap();
+        let tris = |id: &str| crate::walk::tests::mesh_tris(id, "lod0");
+        let g = scatter::prepare(def, &c, &mut |id| tris(id)).unwrap();
+        let slots = grass_slots(&m, def, &c);
+        let l = tile_layout(1, &g, &slots, &[]);
+        assert!(!l.blades.is_empty(), "the banks grow grass");
+        let water = crate::water::tiles::water_y(1) + WATER_MARGIN;
+        for b in &l.blades {
+            let y = b.root.y + LEVEL_STEP;
+            // `layout_at` drops every point under the water line, so a root only misses it by the
+            // rounding of adding the level's height.
+            const LIFT_ROUNDING: f32 = 1e-4;
+            assert!(y + LIFT_ROUNDING >= water, "a blade at {y} under {water}");
+        }
     }
 
     /// Every grass slot's blade colour fits unorm16 without clamping, and the instances draw the

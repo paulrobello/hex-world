@@ -398,10 +398,11 @@ pub fn surface_y(
     let Some(cw) = cells.get(&cell_at(p)) else {
         return WATER_Y;
     };
-    let s = cw.field().water(p.x, p.y);
+    let field = cw.field();
+    let s = field.water(p.x, p.y);
     let atten = smoothstep(0.05, 2.5, s.depth) * (1.0 - s.river);
     let wash = (1.0 - smoothstep(0.3, 2.5, s.depth)) * (1.0 - s.river);
-    WATER_Y + gerstner_height(p, t, count) * atten + WASH_AMP * swash(s.shore, t) * wash
+    field.level() + gerstner_height(p, t, count) * atten + WASH_AMP * swash(s.shore, t) * wash
 }
 
 /// A boat's transform riding the surface at `p` heading `h`: heaved to the mean of its bow,
@@ -500,7 +501,8 @@ fn draw(
     let mut stages: Vec<Transform> = vec![];
     if pieces.is_some() {
         for (i, s) in boats.plan.stages.iter().enumerate() {
-            let tr = Transform::from_xyz(s.origin.x, WATER_Y, s.origin.y)
+            let y = cells.get(&s.cell).map_or(WATER_Y, |c| c.field().level());
+            let tr = Transform::from_xyz(s.origin.x, y, s.origin.y)
                 .with_rotation(Quat::from_rotation_y(-s.yaw()));
             let shown = rises.settled_cell(s.cell);
             if shown {

@@ -13,9 +13,11 @@ use serde::{Deserialize, Serialize};
 use crate::axial::Axial;
 use crate::catalog::TileCatalog;
 use crate::footprint;
+use crate::river;
 use crate::tile::{TileDef, opposite_edge};
 use crate::world::{
-    Action, HISTORY_DEPTH, MAX_LEVEL, PlacedTile, World, facing_in, footprint_index, level_allowed,
+    Action, HISTORY_DEPTH, MAX_LEVEL, Orientation, PlacedTile, World, facing_in, footprint_index,
+    level_allowed, river_network_uphill, river_tiles_of,
 };
 
 /// First bytes of every `.hexworld` file.
@@ -157,6 +159,12 @@ pub enum WorldIssue {
     Disconnected,
     /// More tiles than [`MAX_SAVE_TILES`], with the count.
     TooManyTiles(usize),
+    /// A river network that cannot flow downhill ([`river::orient`]): the upper cell and world
+    /// edge of its first offending waterfall.
+    RiverUphill {
+        cell: Axial,
+        edge: u8,
+    },
 }
 
 impl fmt::Display for WorldIssue {
@@ -188,6 +196,11 @@ impl fmt::Display for WorldIssue {
             }
             WorldIssue::Disconnected => write!(f, "the world is not connected"),
             WorldIssue::TooManyTiles(n) => write!(f, "{n} tiles exceed the {MAX_SAVE_TILES} cap"),
+            WorldIssue::RiverUphill { cell, edge } => write!(
+                f,
+                "the river over edge {edge} of ({}, {}) runs uphill",
+                cell.q, cell.r
+            ),
         }
     }
 }
@@ -491,7 +504,7 @@ fn check_edges(
 
 /// The world rules every reachable world obeys: non-empty, coordinates in range (a mega tile's ring
 /// cells too), known tiles, rotations `0..6`, no cell covered twice, every touching edge pair
-/// compatible, and one connected piece. A mega tile is saved once, at its anchor; its footprint
+/// compatible, one connected piece, and river networks that flow downhill. A mega tile is saved once, at its anchor; its footprint
 /// comes from its definition. The range check runs before any neighbor arithmetic.
 fn validate_tiles(
     tiles: &BTreeMap<Axial, PlacedTile>,
@@ -521,10 +534,19 @@ fn validate_tiles(
             }
         }
     }
-    if seen.len() == occupied.len() {
-        Ok(())
-    } else {
-        Err(WorldIssue::Disconnected)
+    if seen.len() != occupied.len() {
+        return Err(WorldIssue::Disconnected);
+    }
+    river::orient(&river_tiles_of(tiles, catalog))
+        .map(|_| ())
+        .map_err(uphill_issue)
+}
+
+/// The [`WorldIssue`] for a river network's first uphill seam.
+fn uphill_issue(u: river::Uphill) -> WorldIssue {
+    WorldIssue::RiverUphill {
+        cell: u.cell,
+        edge: u.edge,
     }
 }
 
@@ -749,7 +771,17 @@ impl Replay {
                 });
             }
         }
-        Ok(())
+        // An insertion can only break the river networks the inserted tile joins; a removal
+        // never makes a legal network run uphill.
+        let def = catalog.get(&tile.def).expect("check_tile found the tile");
+        let o = Orientation::new(tile.rotation, tile.level);
+        river_network_uphill(&self.tiles, catalog, cell, def, o).map_err(|u| {
+            HistoryIssue::InvalidState {
+                stack,
+                index,
+                issue: uphill_issue(u),
+            }
+        })
     }
 }
 
@@ -1210,7 +1242,7 @@ mod v3 {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
     use crate::world::Orientation;
 
@@ -1221,7 +1253,7 @@ mod tests {
     const EAST: Axial = Axial { q: 1, r: 0 };
     const WEST: Axial = Axial { q: -1, r: 0 };
 
-    fn camera() -> CameraState {
+    pub(crate) fn camera() -> CameraState {
         CameraState {
             focus: [12.5, 0.0, -3.25],
             yaw: 0.75,
@@ -1230,7 +1262,7 @@ mod tests {
         }
     }
 
-    fn settings() -> GameSettings {
+    pub(crate) fn settings() -> GameSettings {
         GameSettings {
             quality: QualitySetting::High,
             tilt_shift: true,
@@ -1954,6 +1986,86 @@ mod tests {
         assert_eq!(invalid(&w), HistoryIssue::TooDeep(depth));
     }
 
+    /// River straights in a row at levels 0, 1 and 0: two waterfalls facing each other, a
+    /// network no placement builds. `from_parts` skips the rules, as a tampered file would.
+    fn uphill_world() -> World {
+        let a = Axial::new(4, 4);
+        let tile = |cell: Axial, level: u8| {
+            (
+                cell,
+                PlacedTile {
+                    def: "river_straight".into(),
+                    rotation: 0,
+                    level,
+                    seed: crate::cell_seed(1, cell),
+                },
+            )
+        };
+        World::from_parts(
+            1,
+            BTreeMap::from([
+                tile(a, 0),
+                tile(a.neighbor(0), 1),
+                tile(a.neighbor(0).neighbor(0), 0),
+            ]),
+            VecDeque::new(),
+            Vec::new(),
+        )
+    }
+
+    #[test]
+    fn a_tampered_uphill_river_is_refused() {
+        let bytes = save_of(uphill_world()).encode();
+        let lip = Axial::new(4, 4).neighbor(0);
+        assert_eq!(
+            decode(&bytes),
+            Err(SaveError::InvalidWorld(WorldIssue::RiverUphill {
+                cell: lip,
+                edge: 0
+            }))
+        );
+    }
+
+    /// A played river chain (level 1, 0, 0) whose last tile was bulldozed, with the bulldoze
+    /// record edited to name the tile one level up: undoing it re-inserts a fall that runs
+    /// against the first one, so both validators refuse that step.
+    #[test]
+    fn replay_rechecks_rivers_on_every_insert() {
+        let c = catalog();
+        let mut w = World::new(7);
+        let a = Axial::ORIGIN.neighbor(1);
+        let (b, end) = (a.neighbor(0), a.neighbor(0).neighbor(0));
+        w.place(&c, a, "river_straight", Orientation::new(0, 1))
+            .unwrap();
+        w.place(&c, b, "river_straight", Orientation::new(0, 0))
+            .unwrap();
+        w.place(&c, end, "river_straight", Orientation::new(0, 0))
+            .unwrap();
+        assert_eq!(w.rivers(&c).falls.len(), 1);
+        w.bulldoze(&c, end).unwrap();
+        let (undo, redo) = w.history_stacks();
+        let mut undo = undo.clone();
+        match undo.back_mut() {
+            Some(Action::Bulldoze { tile, .. }) => tile.level = 1,
+            other => panic!("the last action is the bulldoze, got {other:?}"),
+        }
+        let tampered = World::from_parts(w.seed(), w.tiles().clone(), undo, redo.to_vec());
+        let want = Err(HistoryIssue::InvalidState {
+            stack: HistoryStack::Undo,
+            index: 0,
+            issue: WorldIssue::RiverUphill { cell: a, edge: 0 },
+        });
+        assert_eq!(validate_history_full(&tampered, &c), want);
+        assert_eq!(validate_history(&tampered, &c), want);
+        assert!(matches!(
+            decode(&save_of(tampered).encode()),
+            Err(SaveError::InvalidHistory(HistoryIssue::InvalidState {
+                issue: WorldIssue::RiverUphill { .. },
+                ..
+            }))
+        ));
+    }
+
     /// A tiny seeded RNG (xorshift64*) for the replay oracle, so its worlds and tampering are
     /// reproducible.
     struct OracleRng(u64);
@@ -1976,11 +2088,12 @@ mod tests {
     /// The incremental history replay and the full per-step sweep must agree: worlds played at
     /// random (placements, replaces, bulldozes, undos, redos), each saved, one history action
     /// mutated, and both validators run over the same world. A mutation may leave the history
-    /// valid; the two must then both accept it.
+    /// valid; the two must then both accept it. The river worlds form waterfalls, and their
+    /// tampering also moves an inserted tile to another level, which can run a river uphill.
     #[test]
     fn incremental_history_replay_matches_the_full_sweep() {
         let c = catalog();
-        let ids = [
+        let land: &[&str] = &[
             "meadow",
             "forest",
             "oak",
@@ -1988,150 +2101,227 @@ mod tests {
             "beach",
             "massif_granite",
         ];
+        // River worlds place from the legal orientations, so they raise tiles and form falls.
+        let water: &[&str] = &[
+            "meadow",
+            "river_straight",
+            "river_bend",
+            "river_bend_60",
+            "river_fork",
+            "river_spring",
+            "river_mouth",
+        ];
         let mut rng = OracleRng(0x5EED);
-        let mut rejects = 0;
-        for _ in 0..300 {
-            let mut w = World::new(rng.next());
-            for _ in 0..30 {
-                let here = w
-                    .tiles()
-                    .keys()
-                    .nth(rng.below(w.tiles().len()))
-                    .copied()
-                    .expect("a played world always holds the start tile");
-                match rng.below(6) {
-                    0 | 1 => {
-                        let cell = here.neighbor(rng.below(6) as u8);
-                        let id = ids[rng.below(ids.len())];
-                        let o = Orientation::new(rng.below(6) as u8, rng.below(4) as u8);
-                        let _ = w.place(&c, cell, id, o);
-                    }
-                    2 => {
-                        let id = ids[rng.below(ids.len())];
-                        let os = w.replace_orientations(&c, here, c.get(id).unwrap());
-                        if !os.is_empty() {
-                            let _ = w.replace(&c, here, id, os[rng.below(os.len())]);
-                        }
-                    }
-                    3 => {
-                        if w.can_bulldoze(&c, here).is_ok() {
-                            let _ = w.bulldoze(&c, here);
-                        }
-                    }
-                    4 => {
-                        w.undo(&c);
-                    }
-                    _ => {
-                        w.redo(&c);
-                    }
-                }
-            }
-            let save = save_of(w);
-            // The clean save replays: both validators accept a world play reached.
-            let full = validate_history_full(&save.world, &c);
-            assert_eq!(full, Ok(()), "a played world must pass the full sweep");
-            assert_eq!(
-                validate_history(&save.world, &c),
-                full,
-                "the replay must accept every world the sweep accepts"
-            );
-
-            // Tamper one action and compare again, whatever the verdict.
-            let (undo, redo) = save.world.history_stacks();
-            let mut undo: VecDeque<Action> = undo.clone();
-            let mut redo: Vec<Action> = redo.to_vec();
-            let on_undo = !undo.is_empty() && (redo.is_empty() || rng.below(2) == 0);
-            let i = rng.below(if on_undo { undo.len() } else { redo.len() });
-            let tamper = rng.below(4);
-            let base = if on_undo {
-                undo[i].clone()
-            } else {
-                redo[i].clone()
-            };
-            let mutated = match (&base, tamper) {
-                (_, 0) => match &base {
-                    Action::Place { cell, tile } => Action::Bulldoze {
-                        cell: *cell,
-                        tile: tile.clone(),
-                    },
-                    Action::Bulldoze { cell, tile } => Action::Place {
-                        cell: *cell,
-                        tile: tile.clone(),
-                    },
-                    Action::Replace { cell, to, .. } => Action::Place {
-                        cell: *cell,
-                        tile: to.clone(),
-                    },
-                },
-                (Action::Replace { .. }, 1) => match &base {
-                    Action::Replace { cell, from, to } => Action::Replace {
-                        cell: *cell,
-                        from: to.clone(),
-                        to: from.clone(),
-                    },
-                    other => other.clone(),
-                },
-                (_, 1) | (_, 2) => {
-                    let mut a = base.clone();
-                    match &mut a {
-                        Action::Place { tile, .. } | Action::Bulldoze { tile, .. } => {
-                            tile.def = ids[rng.below(ids.len())].to_owned();
-                        }
-                        Action::Replace { from, to, .. } => {
-                            if rng.below(2) == 0 {
-                                from.def = ids[rng.below(ids.len())].to_owned();
+        let (mut rejects, mut falls, mut uphill) = (0, 0, 0);
+        for (ids, rivers, rounds) in [(land, false, 300), (water, true, 1000)] {
+            for _ in 0..rounds {
+                let mut w = World::new(rng.next());
+                for _ in 0..30 {
+                    let here = w
+                        .tiles()
+                        .keys()
+                        .nth(rng.below(w.tiles().len()))
+                        .copied()
+                        .expect("a played world always holds the start tile");
+                    match rng.below(6) {
+                        0 | 1 => {
+                            let cell = here.neighbor(rng.below(6) as u8);
+                            let id = ids[rng.below(ids.len())];
+                            let legal = if rivers {
+                                w.legal_orientations(&c, cell, c.get(id).unwrap())
                             } else {
-                                to.def = ids[rng.below(ids.len())].to_owned();
+                                Vec::new()
+                            };
+                            let o = if legal.is_empty() {
+                                Orientation::new(rng.below(6) as u8, rng.below(4) as u8)
+                            } else {
+                                legal[rng.below(legal.len())]
+                            };
+                            let _ = w.place(&c, cell, id, o);
+                        }
+                        2 => {
+                            let id = ids[rng.below(ids.len())];
+                            let os = w.replace_orientations(&c, here, c.get(id).unwrap());
+                            if !os.is_empty() {
+                                let _ = w.replace(&c, here, id, os[rng.below(os.len())]);
                             }
                         }
-                    }
-                    a
-                }
-                _ => {
-                    let mut a = base.clone();
-                    match &mut a {
-                        Action::Place { cell, .. } | Action::Bulldoze { cell, .. } => {
-                            *cell = cell.neighbor(rng.below(6) as u8);
+                        3 => {
+                            if w.can_bulldoze(&c, here).is_ok() {
+                                let _ = w.bulldoze(&c, here);
+                            }
                         }
-                        Action::Replace { cell, .. } => {
-                            *cell = cell.neighbor(rng.below(6) as u8);
+                        4 => {
+                            w.undo(&c);
+                        }
+                        _ => {
+                            w.redo(&c);
                         }
                     }
-                    a
                 }
-            };
-            if on_undo {
-                undo[i] = mutated;
-            } else {
-                redo[i] = mutated;
-            }
-            let seed = save.world.seed();
-            let tampered = SaveData {
-                world: World::from_parts(seed, save.world.tiles().clone(), undo, redo),
-                unlocks: save.unlocks.clone(),
-                camera: save.camera,
-                settings: save.settings,
-            };
-            let full = validate_history_full(&tampered.world, &c);
-            let incremental = validate_history(&tampered.world, &c);
-            if full.is_err() {
-                rejects += 1;
-            }
-            if incremental != full {
-                // When one tampered state breaks several rules, or one seam breaks, the two
-                // sweeps can name a different first failure (the replay checks the touched
-                // cells over all six edges, the sweep each touching pair once from the first
-                // cell in map order). Accept versus reject must still agree.
+                if rivers && !w.rivers(&c).falls.is_empty() {
+                    falls += 1;
+                }
+                let save = save_of(w);
+                // The clean save replays: both validators accept a world play reached.
+                let full = validate_history_full(&save.world, &c);
+                assert_eq!(full, Ok(()), "a played world must pass the full sweep");
                 assert_eq!(
-                    incremental.is_err(),
-                    full.is_err(),
-                    "the replay and the sweep disagree on accept/reject: {full:?} vs {incremental:?}"
+                    validate_history(&save.world, &c),
+                    full,
+                    "the replay must accept every world the sweep accepts"
                 );
+
+                // Tamper one action and compare again, whatever the verdict.
+                let (undo, redo) = save.world.history_stacks();
+                let mut undo: VecDeque<Action> = undo.clone();
+                let mut redo: Vec<Action> = redo.to_vec();
+                let on_undo = !undo.is_empty() && (redo.is_empty() || rng.below(2) == 0);
+                let mut i = rng.below(if on_undo { undo.len() } else { redo.len() });
+                let tamper = if rivers {
+                    rng.below(8).min(4)
+                } else {
+                    rng.below(4)
+                };
+                if tamper == 4 {
+                    // A level change only reaches the river check on a record the walk
+                    // inserts (an undone bulldoze, a redone place); on any other it mismatches.
+                    let inserts: Vec<usize> = if on_undo {
+                        (0..undo.len())
+                            .filter(|&j| matches!(undo[j], Action::Bulldoze { .. }))
+                            .collect()
+                    } else {
+                        (0..redo.len())
+                            .filter(|&j| matches!(redo[j], Action::Place { .. }))
+                            .collect()
+                    };
+                    if !inserts.is_empty() {
+                        i = inserts[rng.below(inserts.len())];
+                    }
+                }
+                let base = if on_undo {
+                    undo[i].clone()
+                } else {
+                    redo[i].clone()
+                };
+                let mutated = match (&base, tamper) {
+                    (_, 0) => match &base {
+                        Action::Place { cell, tile } => Action::Bulldoze {
+                            cell: *cell,
+                            tile: tile.clone(),
+                        },
+                        Action::Bulldoze { cell, tile } => Action::Place {
+                            cell: *cell,
+                            tile: tile.clone(),
+                        },
+                        Action::Replace { cell, to, .. } => Action::Place {
+                            cell: *cell,
+                            tile: to.clone(),
+                        },
+                    },
+                    (Action::Replace { .. }, 1) => match &base {
+                        Action::Replace { cell, from, to } => Action::Replace {
+                            cell: *cell,
+                            from: to.clone(),
+                            to: from.clone(),
+                        },
+                        other => other.clone(),
+                    },
+                    (_, 1) | (_, 2) => {
+                        let mut a = base.clone();
+                        match &mut a {
+                            Action::Place { tile, .. } | Action::Bulldoze { tile, .. } => {
+                                tile.def = ids[rng.below(ids.len())].to_owned();
+                            }
+                            Action::Replace { from, to, .. } => {
+                                if rng.below(2) == 0 {
+                                    from.def = ids[rng.below(ids.len())].to_owned();
+                                } else {
+                                    to.def = ids[rng.below(ids.len())].to_owned();
+                                }
+                            }
+                        }
+                        a
+                    }
+                    (_, 4) => {
+                        let mut a = base.clone();
+                        let level = rng.below(4) as u8;
+                        match &mut a {
+                            Action::Place { tile, .. } | Action::Bulldoze { tile, .. } => {
+                                tile.level = level;
+                            }
+                            Action::Replace { from, to, .. } => {
+                                if rng.below(2) == 0 {
+                                    from.level = level;
+                                } else {
+                                    to.level = level;
+                                }
+                            }
+                        }
+                        a
+                    }
+                    _ => {
+                        let mut a = base.clone();
+                        match &mut a {
+                            Action::Place { cell, .. } | Action::Bulldoze { cell, .. } => {
+                                *cell = cell.neighbor(rng.below(6) as u8);
+                            }
+                            Action::Replace { cell, .. } => {
+                                *cell = cell.neighbor(rng.below(6) as u8);
+                            }
+                        }
+                        a
+                    }
+                };
+                if on_undo {
+                    undo[i] = mutated;
+                } else {
+                    redo[i] = mutated;
+                }
+                let seed = save.world.seed();
+                let tampered = SaveData {
+                    world: World::from_parts(seed, save.world.tiles().clone(), undo, redo),
+                    unlocks: save.unlocks.clone(),
+                    camera: save.camera,
+                    settings: save.settings,
+                };
+                let full = validate_history_full(&tampered.world, &c);
+                let incremental = validate_history(&tampered.world, &c);
+                if full.is_err() {
+                    rejects += 1;
+                }
+                if let Err(HistoryIssue::InvalidState {
+                    issue: WorldIssue::RiverUphill { .. },
+                    ..
+                }) = full
+                {
+                    uphill += 1;
+                    assert_eq!(
+                        incremental, full,
+                        "the replay must name the same uphill seam"
+                    );
+                }
+                if incremental != full {
+                    // When one tampered state breaks several rules, or one seam breaks, the two
+                    // sweeps can name a different first failure (the replay checks the touched
+                    // cells over all six edges, the sweep each touching pair once from the first
+                    // cell in map order). Accept versus reject must still agree.
+                    assert_eq!(
+                        incremental.is_err(),
+                        full.is_err(),
+                        "the replay and the sweep disagree on accept/reject: {full:?} vs {incremental:?}"
+                    );
+                }
             }
         }
         assert!(
             rejects > 100,
             "the tampering must reject most mutated histories, got {rejects}"
+        );
+        assert!(
+            falls > 200 && uphill >= 10,
+            "the river worlds must form falls and the level tampering must run some uphill, got \
+             {falls} worlds with falls and {uphill} uphill rejects"
         );
     }
 

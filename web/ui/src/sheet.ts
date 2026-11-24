@@ -144,6 +144,10 @@ export class Sheet {
       " pick ",
       h("kbd", {}, "R"),
       " turn ",
+      h("kbd", {}, "T"),
+      " shape ",
+      h("kbd", {}, "E/Q"),
+      " level ",
       h("kbd", {}, "F6"),
       " next panel",
     );

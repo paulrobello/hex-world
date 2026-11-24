@@ -15,7 +15,8 @@
 //!   colours, every walk obstacle footprint, and each scatter instance's ground footprint with the
 //!   disc grass keeps clear around it. The axial labels are the web overlay's (projected per cell).
 //!   `hex-app` draws the **networks** overlay (the car and river routing graphs it owns) into the
-//!   same gizmo group.
+//!   same gizmo group, and this plugin adds its flow chevrons: one every [`FLOW_STEP`] m along each
+//!   oriented river centre line, pointing downstream.
 //!
 //! Every overlay is off by default, nothing persists, and an off overlay runs no system: each one
 //! is gated by a run condition on [`DebugOverlays`] (see `off_overlays_run_nothing`).
@@ -33,6 +34,7 @@ use crate::{
         scatter::{ScatterLayouts, footprint},
     },
     walk::WalkGround,
+    water::tiles::oriented_rivers,
 };
 use hex_render::{
     car_material::CarMaterial,
@@ -58,7 +60,8 @@ pub struct DebugOverlays {
     pub colliders: bool,
     /// Scatter instance footprints and the grass exclusion discs around them.
     pub scatter: bool,
-    /// The road and river routing graphs: link centerlines and nodes (drawn by `hex-app`).
+    /// The road and river routing graphs: link centerlines and nodes (drawn by `hex-app`), and
+    /// the river flow chevrons.
     pub networks: bool,
 }
 
@@ -217,6 +220,7 @@ impl Plugin for DebugPlugin {
                     draw_sockets.run_if(|d: Res<DebugOverlays>| d.sockets),
                     draw_colliders.run_if(|d: Res<DebugOverlays>| d.colliders),
                     draw_scatter.run_if(|d: Res<DebugOverlays>| d.scatter),
+                    draw_river_flow.run_if(|d: Res<DebugOverlays>| d.networks),
                 ),
             );
     }
@@ -487,6 +491,63 @@ fn draw_colliders(
     }
 }
 
+/// Spacing (m) of the flow chevrons along each river centre line; the first sits half a step in.
+pub const FLOW_STEP: f32 = 6.0;
+/// Length (m) of a flow chevron's arms, back from its tip.
+const CHEVRON: f32 = 1.2;
+const FLOW: Color = Color::WHITE;
+
+/// Chevron tips along `points` (a centre line, upstream first) at `FLOW_STEP / 2`, then every
+/// [`FLOW_STEP`] m, each with the unit downstream direction there.
+fn chevrons(points: &[Vec2]) -> Vec<(Vec2, Vec2)> {
+    let (mut out, mut next, mut walked) = (vec![], FLOW_STEP / 2.0, 0.0);
+    for w in points.windows(2) {
+        let len = w[0].distance(w[1]);
+        if len <= 0.0 {
+            continue;
+        }
+        let dir = (w[1] - w[0]) / len;
+        while next <= walked + len {
+            out.push((w[0] + dir * (next - walked), dir));
+            next += FLOW_STEP;
+        }
+        walked += len;
+    }
+    out
+}
+
+/// The flow chevrons of every oriented river path of `tiles`.
+fn flow_marks(
+    tiles: &[hex_play_state::PlayTile],
+    catalog: &hex_core::TileCatalog,
+) -> Vec<(Vec2, Vec2)> {
+    oriented_rivers(tiles, catalog)
+        .values()
+        .flat_map(|path| chevrons(&path.points))
+        .collect()
+}
+
+/// The networks overlay's flow half: a chevron pointing downstream every [`FLOW_STEP`] m along
+/// each river, on `hex-app`'s link lines. Rebuilt when the view or the catalog changes.
+fn draw_river_flow(
+    view: Res<PlayView>,
+    catalog: Res<PlayCatalog>,
+    mut marks: Local<Vec<(Vec2, Vec2)>>,
+    mut gizmos: Gizmos<DebugGizmos>,
+    mut report: ResMut<DebugReport>,
+) {
+    report.work += 1;
+    if view.is_changed() || catalog.is_changed() {
+        *marks = flow_marks(&view.tiles, &catalog.0);
+    }
+    let y = LINE_Y + 0.15;
+    for &(tip, dir) in marks.iter() {
+        let (back, side) = (tip - dir * CHEVRON, dir.perp() * CHEVRON * 0.6);
+        gizmos.line(at(back + side, y), at(tip, y), FLOW);
+        gizmos.line(at(back - side, y), at(tip, y), FLOW);
+    }
+}
+
 const FOOTPRINT: Color = Color::srgb(0.9, 0.62, 0.0);
 const GRASS_CLEAR: Color = Color::srgb(0.34, 0.71, 0.91);
 
@@ -566,6 +627,59 @@ fn draw_scatter(
 mod tests {
     use super::*;
     use hex_render::scene::lod_range;
+
+    /// Chevrons sit half a step in, then every step, pointing along the travel; a spring's chain
+    /// points away from the spring.
+    #[test]
+    fn flow_chevrons_point_downstream() {
+        let line = [Vec2::ZERO, Vec2::new(10.0, 0.0), Vec2::new(10.0, 14.0)];
+        let marks = chevrons(&line);
+        let tips: Vec<Vec2> = marks.iter().map(|m| m.0).collect();
+        assert_eq!(
+            tips,
+            [
+                Vec2::new(3.0, 0.0),
+                Vec2::new(9.0, 0.0),
+                Vec2::new(10.0, 5.0),
+                Vec2::new(10.0, 11.0)
+            ]
+        );
+        assert_eq!(marks[1].1, Vec2::X);
+        assert_eq!(marks[2].1, Vec2::Y);
+        let cat = hex_core::TileCatalog::builtin().unwrap();
+        let spring = cat.get("river_spring").unwrap();
+        let e = (0..6)
+            .find(|&e| spring.edge(e, 0).kind == hex_core::SocketKind::River)
+            .unwrap();
+        let next = Axial::new(0, 0).neighbor(e);
+        let straight = cat.get("river_straight").unwrap();
+        let rot = (0..6)
+            .find(|&r| straight.edge(e, r).kind == hex_core::SocketKind::River)
+            .unwrap();
+        let tiles = [
+            hex_play_state::PlayTile {
+                cell: Axial::new(0, 0),
+                tile: "river_spring".into(),
+                rotation: 0,
+                level: 0,
+            },
+            hex_play_state::PlayTile {
+                cell: next,
+                tile: "river_straight".into(),
+                rotation: rot,
+                level: 0,
+            },
+        ];
+        let away = cell_centre(next) - cell_centre(Axial::new(0, 0));
+        let marks = flow_marks(&tiles, &cat);
+        assert!(marks.len() > 2);
+        for (_, dir) in marks
+            .iter()
+            .filter(|m| m.0.distance(cell_centre(next)) < 8.0)
+        {
+            assert!(dir.dot(away) > 0.0, "{dir} points back to the spring");
+        }
+    }
 
     #[test]
     fn parses_the_flag_list() {

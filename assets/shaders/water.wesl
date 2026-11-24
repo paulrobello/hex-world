@@ -59,12 +59,39 @@ struct WaterVarying {
     @location(6) ground: f32,
     // Surface: the river churn (water.rs `foam_tag`, the flow's advective acceleration in m/s²).
     @location(7) churn: f32,
+    // The mesh's water over `sea_level` (water.rs `WaterField::water_lift`, UV_1.x): a raised
+    // tile's level * LEVEL_STEP, 0 at level 0.
+    @location(8) @interpolate(flat) lift: f32,
+    // Waterfall sheet (water.rs `SHEET_TAG`, hex_play water::tiles `sheet_mesh`): (1 on a sheet
+    // vertex else 0, lateral offset along the lip in m, metres below its tier's lip).
+    @location(9) sheet: vec3<f32>,
+    // The sheet's world normal (the mesh normal).
+    @location(10) sheet_n: vec3<f32>,
+    // Plunge pool proximity (water.rs `WaterField::plunge`, UV_1.y): 1 at a waterfall seam's
+    // midpoint on the lower tile, 0 from PLUNGE_R on and on every other tile.
+    @location(11) plunge: f32,
 }
 
 // water.rs `SKIRT_TAG`: a cut-face vertex carries SKIRT_TAG + terrain height in UV_0.y.
 const SKIRT_TAG: f32 = 10.0;
 // water.rs `MEET_TAG`: a surface vertex carries the mouth foam weight times MEET_TAG in UV_0.y.
 const MEET_TAG: f32 = 0.4;
+// water.rs `SHEET_TAG`: a waterfall sheet vertex carries SHEET_TAG + metres below its tier's lip.
+const SHEET_TAG: f32 = 100.0;
+// hex_play water::tiles `PLUNGE_R`: the plunge pool's radius (m) from the seam's midpoint.
+const PLUNGE_R: f32 = 6.0;
+// The sheet refracts within this far (m) below each tier's lip, at High and Ultra only (RQ5 O2).
+const SHEET_CLEAR: f32 = 1.5;
+// The water column (m) a ray crosses through the sheet, for its absorption.
+const SHEET_THICK: f32 = 0.3;
+// How fast (m/s) the sheet's streaks run down the fall at a lip; they speed up as the water
+// falls, to three times this at the foot of a tier.
+const SHEET_FALL: f32 = 3.5;
+// hex_core LEVEL_STEP: each tier of a fall drops one level (m).
+const FALL_LEVEL: f32 = 4.0;
+// The foot of each tier (m above where it lands) churns white where the water hits the lip below
+// or the plunge pool.
+const SHEET_SPLASH: f32 = 1.1;
 
 @vertex
 fn vertex(v: Vertex) -> WaterVarying {
@@ -78,9 +105,21 @@ fn vertex(v: Vertex) -> WaterVarying {
     let t = water.water_time;
     // Surface vertices and skirt tops (at rest on the sea level) move with the waves, by the same
     // function at the same world XZ as the rim they share, so the cut face never parts from the surface.
-    let skirt = u.uv.y > 0.5;
-    out_ground = select(max(u.uv.y, 0.0) / MEET_TAG, u.uv.y - SKIRT_TAG, skirt);
-    let moves = !skirt || rest.y > water.sea_level - 1e-4;
+    // A waterfall sheet hangs still under the lip: no waves, no swash, not a cut face.
+    let sheet = u.uv.y >= SHEET_TAG - 1.0;
+    let skirt = u.uv.y > 0.5 && !sheet;
+    out_ground = select(select(max(u.uv.y, 0.0) / MEET_TAG, u.uv.y - SKIRT_TAG, skirt), 0.0, sheet);
+    var lift = 0.0;
+    var plunge = 0.0;
+    @if(VERTEX_UVS_B) {
+        lift = u.uv_b.x;
+        plunge = u.uv_b.y;
+    }
+    var sheet_n = vec3(0.0, 1.0, 0.0);
+    @if(VERTEX_NORMALS) {
+        sheet_n = mesh_functions::mesh_normal_local_to_world(u.normal, v.instance_index);
+    }
+    let moves = !sheet && (!skirt || rest.y > water.sea_level + lift - 1e-4);
     let g = wc::gerstner(rest.xz, t, water.wave_count);
     var p = rest;
     if (moves) {
@@ -102,6 +141,10 @@ fn vertex(v: Vertex) -> WaterVarying {
     out.flow = u.color.xy;
     out.site = vec3(river, depth, shore);
     out.instance_index = v.instance_index;
+    out.lift = lift;
+    out.sheet = vec3(select(0.0, 1.0, sheet), u.uv.x, max(u.uv.y - SHEET_TAG, 0.0));
+    out.sheet_n = sheet_n;
+    out.plunge = plunge;
     return out;
 }
 
@@ -113,6 +156,13 @@ fn ripple(p: vec2<f32>, scale_m: f32) -> vec2<f32> {
 
 fn noise_b(p: vec2<f32>, scale_m: f32) -> f32 {
     return textureSample(water_noise_texture, water_noise_sampler, p / scale_m).b;
+}
+
+// Streak noise on a waterfall sheet at sheet point `q` (lateral m, m down the fall): stretched
+// down the fall so it reads as falling strands. An explicit level, so it may run in the sheet's
+// non-uniform branch.
+fn sheet_noise(q: vec2<f32>) -> f32 {
+    return textureSampleLevel(water_noise_texture, water_noise_sampler, vec2(q.x * 2.0, q.y * 0.4) / 3.0, 0.0).b;
 }
 
 // World position of the opaque surface behind screen point `frag` (prepass depth); `far` is true
@@ -188,6 +238,22 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     let riv = mix(r0, r1, w1) * (0.35 + 0.6 * speed);
     let detail = mix(sea * 0.22, riv, river);
     let skirt = in.skirt > 0.5;
+    let sheet = in.sheet.x > 0.5;
+    // Waterfall sheet: streaks advected down the fall in the flow map's two phases, in sheet
+    // coordinates (along the lip, metres below the upper water), which stay continuous over the tiers.
+    // Only sheet pixels sample it.
+    var fall_streak = 0.5;
+    if (sheet) {
+        // Down the tier in a coordinate the streaks advect through at a steady rate: the water's
+        // speed grows from SHEET_FALL at the lip to three times that at the foot, so the streaks
+        // run faster and stretch lower down.
+        let z = in.sheet.z;
+        let tier_top = water.sea_level + in.lift - in.world_position.y - z;
+        let fall_q = vec2(in.sheet.y, tier_top + 0.5 * FALL_LEVEL * log(1.0 + 2.0 * z / FALL_LEVEL));
+        let fs0 = sheet_noise(fall_q - vec2(0.0, SHEET_FALL * ph0 * period));
+        let fs1 = sheet_noise(fall_q - vec2(-0.37, SHEET_FALL * ph1 * period));
+        fall_streak = mix(fs0, fs1, w1);
+    }
     // A cut face exists only where water stands above the terrain: inside a bank it is clipped away.
     if (skirt && in.world_position.y < in.ground) {
         discard;
@@ -197,7 +263,9 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
         discard;
     }
     // On a cut face the view looks straight into the volume: no surface slope to refract along.
-    let n = select(normalize(n_wave + vec3(detail.x, 0.0, detail.y)), vec3(0.0, 1.0, 0.0), skirt);
+    // A sheet takes its own normal, broken up by its streaks.
+    let n_sheet = normalize(normalize(in.sheet_n) + vec3(fall_streak - 0.5, 0.0, 0.5 - fall_streak) * 0.25);
+    let n = select(select(normalize(n_wave + vec3(detail.x, 0.0, detail.y)), vec3(0.0, 1.0, 0.0), skirt), n_sheet, sheet);
 
     // What lies behind the surface: the bed (or bank, or sky) from the depth prepass.
     let frag = in.position.xy;
@@ -226,9 +294,10 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     }
 }
 
-    let path = select(max(distance(bed, wp), 0.0), 60.0, far);
+    // A ray crosses the sheet's thin water, never a column down to the face behind it.
+    let path = select(select(max(distance(bed, wp), 0.0), 60.0, far), SHEET_THICK, sheet);
     // Vertical water column under the surface point (for foam and caustics).
-    let column = select(max(wp.y - bed.y, 0.0), 60.0, far);
+    let column = select(select(max(wp.y - bed.y, 0.0), 60.0, far), 60.0, sheet);
     let sigma = mix(SIGMA_SEA, SIGMA_RIVER, river);
     let trans = exp(-sigma * path);
 
@@ -251,8 +320,21 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
         streak = mix(s0, s1, w1);
     }
     let churn = river * smoothstep(0.05, 0.22, in.churn) * (0.1 + 0.3 * streak) * (1.0 + water.churn_delta);
-    let raw = max(contact, lines * 0.75) + crest + rapids + meet + churn;
-    let foam = select(clamp((raw - (1.0 - nb) * 0.85) * 2.4, 0.0, 1.0), 0.0, skirt);
+    // Plunge pool: foam rings running out from the seam, and a soft mist over the water nearest
+    // the fall (both 0 off a pool).
+    let pool_r = (1.0 - in.plunge) * PLUNGE_R;
+    let rings = in.plunge * smoothstep(0.55, 0.95, sin(pool_r * 2.4 - t * 3.0)) * 0.5;
+    // The water nearest the fall boils: two noise fields drifting apart churn the white.
+    let boil = noise_b(p + t * vec2(0.55, -0.35), 1.9) * noise_b(p - t * vec2(0.3, 0.6), 2.7);
+    let mist = in.plunge * in.plunge * (0.3 + 0.55 * smoothstep(0.08, 0.4, boil));
+    let raw = max(contact, lines * 0.75) + crest + rapids + meet + churn + rings;
+    // The sheet is aerated white water (RQ5 O1). At High and Ultra it stays clear and refracts
+    // within SHEET_CLEAR m below each tier's lip, turning white below (RQ5 O2).
+    var sheet_foam = 1.0;
+    @if(WATER_HQ) {
+        sheet_foam = mix(0.2 + 0.4 * fall_streak, 1.0, smoothstep(0.0, SHEET_CLEAR, in.sheet.z));
+    }
+    let foam = select(max(select(clamp((raw - (1.0 - nb) * 0.85) * 2.4, 0.0, 1.0), 0.0, skirt), mist), sheet_foam, sheet);
 
     // Surface lighting from Bevy's PBR: IBL reflection and the sun's specular (glints) with its
     // shadows, plus the in-scattered body as a diffuse layer and foam as a rough white one.
@@ -262,10 +344,19 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     pbr.V = pbr_functions::calculate_view(in.world_position, pbr.is_orthographic);
     pbr.frag_coord = in.position;
     pbr.world_position = in.world_position;
-    pbr.world_normal = n_wave;
+    pbr.world_normal = select(n_wave, n, sheet);
     pbr.N = n;
     let body = mix(SCATTER_SEA, SCATTER_RIVER, river) * (vec3(1.0) - trans);
     pbr.material.base_color = vec4(mix(body, vec3(0.82, 0.85, 0.86), foam), 1.0);
+    // The sheet's white water carries its streaks as strands, and churns brighter at each
+    // tier's foot, where it lands.
+    if (sheet) {
+        let strand = smoothstep(0.3, 0.75, fall_streak);
+        let splash_n = textureSampleLevel(water_noise_texture, water_noise_sampler, vec2(in.sheet.y, in.sheet.z) / 1.4 + t * vec2(0.4, -1.6), 0.0).b;
+        let splash = smoothstep(FALL_LEVEL - SHEET_SPLASH, FALL_LEVEL, in.sheet.z) * (0.55 + 0.45 * splash_n);
+        let white = mix(vec3(0.82, 0.85, 0.86) * (0.66 + 0.34 * strand), vec3(0.93, 0.95, 0.96), splash);
+        pbr.material.base_color = vec4(mix(body, white, foam), 1.0);
+    }
     pbr.material.perceptual_roughness = mix(0.07, 0.6, foam);
     pbr.material.metallic = 0.0;
     pbr.material.reflectance = vec3(mix(REFLECTANCE_WATER, 0.5, foam));
@@ -322,7 +413,7 @@ fn fragment(in: WaterVarying) -> @location(0) vec4<f32> {
     if (skirt) {
         // Light fades with depth below the (animated) surface; just under it, the underside of the
         // surface shows as a bright band (total internal reflection outside Snell's window).
-        let surf = water.sea_level + g.disp.y * atten + water.wash_amp * wc::swash(in.site.z, t) * wc::swash_weight(depth, river);
+        let surf = water.sea_level + in.lift + g.disp.y * atten + water.wash_amp * wc::swash(in.site.z, t) * wc::swash_weight(depth, river);
         let below = max(surf - wp.y, 0.0);
         color *= exp(-below * 0.35) * 1.4;
         color += color * 5.0 * exp(-below * 7.0) + vec3(0.6, 0.75, 0.75) * dot(color, vec3(0.33)) * 6.0 * exp(-below * 40.0);

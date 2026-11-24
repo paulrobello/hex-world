@@ -7,10 +7,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use serde::{Deserialize, Serialize};
 
+use crate::NetworkKind;
 use crate::axial::Axial;
 use crate::catalog::{Facing, START_TILE, TileCatalog};
 use crate::footprint;
-use crate::socket::{HeightMeet, SocketKind};
+use crate::river::{self, RiverTile, Rivers};
+use crate::socket::{EdgeProfile, HeightMeet, SocketKind};
 use crate::tile::{EdgePieces, KitRef, TileDef, local_edge, opposite_edge};
 use crate::tunnel;
 
@@ -63,13 +65,24 @@ pub enum EdgeStatus {
 }
 
 /// One outward face of a ghosted tile: the ghost's own `cell`, its world edge `w`, the glow
-/// against the occupant across it, and whether that seam is an accepted cliff.
+/// against the occupant across it, whether that seam is an accepted cliff, and whether it is an
+/// accepted waterfall (a river seam, never also a cliff).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Face {
     pub cell: Axial,
     pub w: u8,
     pub status: EdgeStatus,
     pub cliff: bool,
+    pub waterfall: bool,
+}
+
+/// Which way the river runs across one of a ghost's River lane edges ([`World::ghost_flow`]): into
+/// the tile or out of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum FlowDir {
+    In,
+    Out,
 }
 
 /// Direction for cycling through distinct legal tile orientations.
@@ -77,6 +90,13 @@ pub struct Face {
 pub enum RotateDir {
     Forward,
     Back,
+}
+
+/// Which way the ghost's level steps ([`World::step_level`]): `Up` is E, `Down` is Q.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LevelDir {
+    Up,
+    Down,
 }
 
 /// A placement refusal. Failed placements leave the world and history unchanged.
@@ -94,6 +114,8 @@ pub enum PlaceError {
     LevelOutOfRange(u8),
     /// World edges whose neighbor socket does not fit.
     Incompatible(Vec<u8>),
+    /// The river network the tile would join could not flow downhill ([`river::orient`]).
+    RiverUphill,
 }
 
 impl fmt::Display for PlaceError {
@@ -105,6 +127,7 @@ impl fmt::Display for PlaceError {
             PlaceError::BadRotation(k) => write!(f, "rotation {k} is not 0..6"),
             PlaceError::LevelOutOfRange(l) => write!(f, "this tile cannot stand at level {l}"),
             PlaceError::Incompatible(edges) => write!(f, "edges {edges:?} do not fit"),
+            PlaceError::RiverUphill => write!(f, "the river would run uphill"),
         }
     }
 }
@@ -132,6 +155,15 @@ pub enum Refusal {
     FootprintEdges,
     /// A footprint tile has no seven free cells beside the world.
     NoFootprintRoom,
+    /// The tile meets every socket in some orientation, but each such orientation leaves a river
+    /// network that cannot flow downhill ([`river::orient`]).
+    RiverUphill,
+    /// The tile's `mine` edge meets a placed sloped edge (a hillside's Rise or Fall) of a kind it
+    /// accepts, but the heights along the seam differ.
+    Slope { mine: SocketKind },
+    /// The tile's own sloped edge meets a placed flat edge of a kind it accepts, but the heights
+    /// along the seam differ.
+    OwnSlope,
 }
 
 /// The lower-case word for a socket kind in a [`Refusal`] code.
@@ -159,6 +191,9 @@ impl Refusal {
             }
             Refusal::FootprintEdges => "footprint_edges".into(),
             Refusal::NoFootprintRoom => "no_footprint_room".into(),
+            Refusal::RiverUphill => "river_uphill".into(),
+            Refusal::Slope { mine } => format!("slope_{}", kind_word(*mine)),
+            Refusal::OwnSlope => "own_slope".into(),
         }
     }
 
@@ -170,6 +205,7 @@ impl Refusal {
             "deck_end",
             "footprint_edges",
             "no_footprint_room",
+            "river_uphill",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -182,6 +218,10 @@ impl Refusal {
                 out.push(format!("clash_{}_{}", kind_word(mine), kind_word(theirs)));
             }
         }
+        for kind in SocketKind::ALL {
+            out.push(format!("slope_{}", kind_word(kind)));
+        }
+        out.push("own_slope".into());
         out
     }
 }
@@ -238,6 +278,8 @@ pub enum ReplaceError {
     TunnelCover,
     /// A footprint tile cannot take the place of a single tile, or the reverse.
     FootprintMismatch,
+    /// The river network the tile would join could not flow downhill ([`river::orient`]).
+    RiverUphill,
 }
 
 impl fmt::Display for ReplaceError {
@@ -253,6 +295,7 @@ impl fmt::Display for ReplaceError {
             ReplaceError::FootprintMismatch => {
                 write!(f, "a mega tile and a single tile cannot replace each other")
             }
+            ReplaceError::RiverUphill => write!(f, "the river would run uphill"),
         }
     }
 }
@@ -314,7 +357,35 @@ pub struct World {
     members: BTreeMap<Axial, Axial>,
     #[serde(skip)]
     stamp: Stamp,
+    #[serde(skip)]
+    rivers: RiversCache,
 }
+
+/// [`World::rivers`] for the stamp it was derived at. It takes no part in equality or the save.
+#[derive(Debug, Default)]
+struct RiversCache(std::sync::Mutex<Option<(u64, Rivers)>>);
+
+impl RiversCache {
+    fn lock(&self) -> std::sync::MutexGuard<'_, Option<(u64, Rivers)>> {
+        self.0
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+}
+
+impl Clone for RiversCache {
+    fn clone(&self) -> Self {
+        Self(std::sync::Mutex::new(self.lock().clone()))
+    }
+}
+
+impl PartialEq for RiversCache {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+impl Eq for RiversCache {}
 
 static NEXT_STAMP: AtomicU64 = AtomicU64::new(1);
 
@@ -361,6 +432,7 @@ impl World {
             history: History::default(),
             members: BTreeMap::new(),
             stamp: Stamp::fresh(),
+            rivers: RiversCache::default(),
         }
     }
 
@@ -381,6 +453,7 @@ impl World {
             history: History { undo, redo },
             members: BTreeMap::new(),
             stamp: Stamp::fresh(),
+            rivers: RiversCache::default(),
         }
     }
 
@@ -501,28 +574,30 @@ impl World {
     }
 
     /// The face `mine` shows across world edge `w` of `m` against the occupant there; its `cliff`
-    /// is worked out only when `cliff` asks for it (else `false`).
-    fn face(&self, catalog: &TileCatalog, m: Axial, w: u8, mine: Facing, cliff: bool) -> Face {
+    /// and `waterfall` are worked out only when `heights` asks for them (else `false`).
+    fn face(&self, catalog: &TileCatalog, m: Axial, w: u8, mine: Facing, heights: bool) -> Face {
         let across = m.neighbor(w);
-        let (status, cliff) = if !self.occupied(across) {
-            (EdgeStatus::Neutral, false)
+        let (status, cliff, waterfall) = if !self.occupied(across) {
+            (EdgeStatus::Neutral, false, false)
         } else {
             match self.facing(catalog, across, opposite_edge(w)) {
-                None => (EdgeStatus::Incompatible, false),
+                None => (EdgeStatus::Incompatible, false, false),
                 Some(theirs) => {
                     let status = if catalog.facing_meets(mine, theirs) {
                         EdgeStatus::Compatible
                     } else {
                         EdgeStatus::Incompatible
                     };
-                    let cliff = cliff
-                        && match mine.meet(theirs) {
-                            HeightMeet::Seamless => false,
-                            HeightMeet::Cliff | HeightMeet::Refused => {
-                                catalog.facings_meet(mine, theirs)
-                            }
-                        };
-                    (status, cliff)
+                    let (cliff, waterfall) = if heights && catalog.facings_meet(mine, theirs) {
+                        match mine.meet(theirs) {
+                            HeightMeet::Seamless => (false, false),
+                            HeightMeet::Waterfall { .. } => (false, true),
+                            HeightMeet::Cliff | HeightMeet::Refused => (true, false),
+                        }
+                    } else {
+                        (false, false)
+                    };
+                    (status, cliff, waterfall)
                 }
             }
         };
@@ -531,11 +606,13 @@ impl World {
             w,
             status,
             cliff,
+            waterfall,
         }
     }
 
-    /// The cliffs `def` at `cell` in `o` makes: how many faces meet their occupant as a cliff, and
-    /// the summed corner drop across them.
+    /// The cliffs `def` at `cell` in `o` makes: how many faces meet their occupant as a cliff or a
+    /// waterfall (RQ1 O1: placement never picks a fall by default), and the summed corner drop
+    /// across them.
     fn cliffs(
         &self,
         catalog: &TileCatalog,
@@ -545,7 +622,8 @@ impl World {
     ) -> (u8, u16) {
         let (mut n, mut drop) = (0, 0);
         each_face(cell, def, o, |m, w, mine| {
-            if self.face(catalog, m, w, mine, true).cliff {
+            let face = self.face(catalog, m, w, mine, true);
+            if face.cliff || face.waterfall {
                 n += 1;
                 if let Some(theirs) = self.facing(catalog, m.neighbor(w), opposite_edge(w)) {
                     let abs = |f: Facing, c: u8| i32::from(c) + i32::from(f.level);
@@ -620,8 +698,39 @@ impl World {
         out
     }
 
-    /// Whether `def` may be placed at `cell` in orientation `o`.
+    /// World edges of `def` at `cell` in orientation `o` that meet a placed neighbour as an accepted
+    /// waterfall ([`Face::waterfall`]): the ghost's waterfall marker, never also a cliff. A mega def
+    /// has no river, so every entry is `false`.
+    pub fn waterfall_edges(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> [bool; 6] {
+        let mut out = [false; 6];
+        for f in self.faces(catalog, cell, def, o) {
+            if f.cell == cell {
+                out[usize::from(f.w)] = f.waterfall;
+            }
+        }
+        out
+    }
+
+    /// Whether `def` may be placed at `cell` in orientation `o`: every face meets its occupant
+    /// and the river networks it joins still flow downhill ([`World::rivers_legal_with`]).
     pub fn fits(&self, catalog: &TileCatalog, cell: Axial, def: &TileDef, o: Orientation) -> bool {
+        self.fits_faces(catalog, cell, def, o) && self.rivers_legal_with(catalog, cell, def, o)
+    }
+
+    /// [`World::fits`] without its river check: the level, the slot and every face.
+    fn fits_faces(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> bool {
         o.rotation < 6
             && level_allowed(def, o.level)
             && self.is_slot_for(cell, def)
@@ -631,6 +740,76 @@ impl World {
                 status != EdgeStatus::Incompatible
                     && (mine.socket.deck() == 0 || status == EdgeStatus::Compatible)
             })
+    }
+
+    /// Whether the river networks `def` at `cell` in `o` joins still orient
+    /// ([`river_network_uphill`]).
+    fn rivers_legal_with(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> bool {
+        river_network_uphill(&self.tiles, catalog, cell, def, o).is_ok()
+    }
+
+    /// The placed tiles with River networks, as [`river::orient`] takes them.
+    fn river_tiles<'c>(&self, catalog: &'c TileCatalog) -> Vec<RiverTile<'c>> {
+        river_tiles_of(&self.tiles, catalog)
+    }
+
+    /// The oriented river network of the placed tiles and its waterfalls, derived once per
+    /// [`World::stamp`]. Placement and decode never build an uphill network; should one arrive
+    /// anyway (`World::from_parts` checks nothing), it flows as the same tiles would at level 0.
+    pub fn rivers(&self, catalog: &TileCatalog) -> Rivers {
+        let mut cache = self.rivers.lock();
+        if let Some((stamp, rivers)) = cache.as_ref()
+            && *stamp == self.stamp.0
+        {
+            return rivers.clone();
+        }
+        let tiles = self.river_tiles(catalog);
+        let rivers = river::orient(&tiles).unwrap_or_else(|_| {
+            let flat: Vec<RiverTile> = tiles.iter().map(|t| RiverTile { level: 0, ..*t }).collect();
+            river::orient(&flat).expect("a network without waterfalls is always legal")
+        });
+        *cache = Some((self.stamp.0, rivers.clone()));
+        rivers
+    }
+
+    /// The flow `def` ghosted at `cell` in `o` would get: one entry per River lane world edge of the
+    /// ghost, in edge order, from orienting the network it joins with it placed (RQ11 O2). Empty
+    /// for an orientation that does not fit.
+    pub fn ghost_flow(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        def: &TileDef,
+        o: Orientation,
+    ) -> Vec<(u8, FlowDir)> {
+        if !self.fits_faces(catalog, cell, def, o) {
+            return vec![];
+        }
+        let Some(net) = river_network(&self.tiles, catalog, cell, def, o) else {
+            return vec![];
+        };
+        let Ok(rivers) = river::orient(&net) else {
+            return vec![];
+        };
+        let mut out: Vec<(u8, FlowDir)> = rivers
+            .segs
+            .range((cell, 0)..=(cell, usize::MAX))
+            .flat_map(|(_, s)| {
+                [
+                    s.up.edge().map(|e| (e, FlowDir::In)),
+                    s.down.edge().map(|e| (e, FlowDir::Out)),
+                ]
+            })
+            .flatten()
+            .collect();
+        out.sort_by_key(|&(e, _)| e);
+        out
     }
 
     /// The orientations `test` accepts in [`World::placement_key`] order, so placement never
@@ -752,6 +931,13 @@ impl World {
             // Room at this centre, but every orientation clashes on an outer edge.
             return Some(Refusal::FootprintEdges);
         }
+        let meets = (0..=MAX_LEVEL).filter(|&l| level_allowed(def, l)).any(|l| {
+            (0..6).any(|k| self.clash_count(catalog, cell, def, Orientation::new(k, l)) == 0)
+        });
+        if meets {
+            // Some orientation meets every socket, so only the river check refused it.
+            return Some(Refusal::RiverUphill);
+        }
         self.socket_refusal(catalog, cell, def)
     }
 
@@ -805,10 +991,24 @@ impl World {
             None => Some(Refusal::DeckEnd),
             Some(theirs) => {
                 let mine = Facing::single(def, best, 0, w);
-                Some(Refusal::Clash {
-                    mine: mine.socket.kind,
-                    theirs: theirs.socket.kind,
-                })
+                // Kinds that accept each other clash only on height: name a slope when one shows.
+                let kinds_meet = catalog
+                    .sockets()
+                    .kinds_compatible(mine.socket.kind, theirs.socket.kind);
+                Some(
+                    if kinds_meet && theirs.socket.profile != EdgeProfile::Flat {
+                        Refusal::Slope {
+                            mine: mine.socket.kind,
+                        }
+                    } else if kinds_meet && mine.socket.profile != EdgeProfile::Flat {
+                        Refusal::OwnSlope
+                    } else {
+                        Refusal::Clash {
+                            mine: mine.socket.kind,
+                            theirs: theirs.socket.kind,
+                        }
+                    },
+                )
             }
         }
     }
@@ -899,12 +1099,16 @@ impl World {
         order.into_iter().map(|j| seq[j]).collect()
     }
 
-    /// The next entry of [`World::group_orientations`] after `(current tile, current orientation)`
-    /// in `dir`, wrapping, so every step changes what the ghost shows and a step may switch to
-    /// another member. From an illegal `current` it is the current tile's next legal orientation in
-    /// the same order (wrapping among that tile's own), else the first (or, backwards, the last)
-    /// entry. Returns the current orientation's own entry when it is the only one, and `None` when
-    /// no member fits.
+    /// The next entry of [`World::group_orientations`] for the current member at the current
+    /// orientation's level after `(current tile, current orientation)` in `dir`, wrapping, so every
+    /// step changes what the ghost shows. R stays on its member and level: T changes the member
+    /// ([`World::step_member`]) and E/Q the level ([`World::step_level`]) (owner 2026-11-24). A
+    /// level with no entry for the member cycles the member's entries on every level, and a member
+    /// with no entry at all cycles every member's at the level (every level's when that is empty
+    /// too). From an illegal `current` it is the current tile's next legal orientation in the same
+    /// order (wrapping among that tile's own), else the first (or, backwards, the last) entry.
+    /// Returns the current orientation's own entry when it is the only one, and `None` when no
+    /// member fits.
     pub fn cycle_group<'a>(
         &self,
         catalog: &TileCatalog,
@@ -913,13 +1117,26 @@ impl World {
         current: (&str, Orientation),
         dir: RotateDir,
     ) -> Option<(&'a TileDef, Orientation)> {
-        let seq = self.group_orientations(catalog, cell, members);
+        let (id, o) = current;
+        let o = Orientation::new(o.rotation % 6, o.level);
+        let all = self.group_orientations(catalog, cell, members);
+        let at_level = |seq: &[(&'a TileDef, Orientation)]| -> Vec<(&'a TileDef, Orientation)> {
+            seq.iter()
+                .copied()
+                .filter(|(_, r)| r.level == o.level)
+                .collect()
+        };
+        let mine: Vec<_> = all.iter().copied().filter(|(d, _)| d.id == id).collect();
+        let seq = match (at_level(&mine), at_level(&all)) {
+            (own, _) if !own.is_empty() => own,
+            _ if !mine.is_empty() => mine,
+            (_, level) if !level.is_empty() => level,
+            _ => all,
+        };
         let n = seq.len();
         if n == 0 {
             return None;
         }
-        let (id, o) = current;
-        let o = Orientation::new(o.rotation % 6, o.level);
         if let Some(i) = seq.iter().position(|(d, r)| {
             d.id == id && r.level == o.level && d.same_orientation(r.rotation, o.rotation)
         }) {
@@ -955,6 +1172,78 @@ impl World {
             RotateDir::Forward => seq[0],
             RotateDir::Back => seq[n - 1],
         }))
+    }
+
+    /// The ghost's next or previous picker-group member (T / Shift+T, owner 2026-11-24): the
+    /// first member after (or, backwards, before) `current`'s in `members` order, wrapping, with
+    /// an entry of [`World::group_orientations`] at `current`'s level, keeping the rotation where
+    /// that member is legal in it there, else that member's first entry at the level in ranking
+    /// order. When no other member fits at this level, the same search runs on the nearest other
+    /// level with an entry (the lower first on a tie). `None` for a lone tile, a tile outside
+    /// `members`, or when no other member fits anywhere.
+    pub fn step_member<'a>(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        members: &[&'a TileDef],
+        current: (&str, Orientation),
+        dir: RotateDir,
+    ) -> Option<(&'a TileDef, Orientation)> {
+        let (id, o) = current;
+        let rotation = o.rotation % 6;
+        let n = members.len();
+        let i = members.iter().position(|d| d.id == id)?;
+        let seq = self.group_orientations(catalog, cell, members);
+        let order: Vec<&'a TileDef> = (1..n)
+            .map(|k| match dir {
+                RotateDir::Forward => members[(i + k) % n],
+                RotateDir::Back => members[(i + n - k) % n],
+            })
+            .collect();
+        let at = |level: u8| {
+            order.iter().find_map(|m| {
+                let mine: Vec<_> = seq
+                    .iter()
+                    .copied()
+                    .filter(|(d, r)| d.id == m.id && r.level == level)
+                    .collect();
+                mine.iter()
+                    .find(|(d, r)| d.same_orientation(r.rotation, rotation))
+                    .map(|&(d, _)| (d, Orientation::new(rotation, level)))
+                    .or(mine.first().copied())
+            })
+        };
+        let mut levels: Vec<u8> = seq.iter().map(|(_, r)| r.level).collect();
+        levels.sort_by_key(|&l| (l.abs_diff(o.level), l));
+        levels.dedup();
+        at(o.level).or_else(|| levels.into_iter().filter(|&l| l != o.level).find_map(at))
+    }
+
+    /// The ghost one level up or down (E/Q, owner 2026-11-24): the nearest level strictly above or
+    /// below `current`'s with an entry of [`World::group_orientations`], keeping the current
+    /// member and rotation where that orientation is legal there, else that level's first entry in
+    /// ranking order. `None` when no such level exists: the level clamps, it never wraps.
+    pub fn step_level<'a>(
+        &self,
+        catalog: &TileCatalog,
+        cell: Axial,
+        members: &[&'a TileDef],
+        current: (&str, Orientation),
+        dir: LevelDir,
+    ) -> Option<(&'a TileDef, Orientation)> {
+        let (id, o) = current;
+        let rotation = o.rotation % 6;
+        let seq = self.group_orientations(catalog, cell, members);
+        let levels = seq.iter().map(|(_, r)| r.level);
+        let target = match dir {
+            LevelDir::Up => levels.filter(|&l| l > o.level).min(),
+            LevelDir::Down => levels.filter(|&l| l < o.level).max(),
+        }?;
+        let at: Vec<_> = seq.into_iter().filter(|(_, r)| r.level == target).collect();
+        at.iter()
+            .find(|(d, r)| d.id == id && d.same_orientation(r.rotation, rotation))
+            .map(|&(d, _)| (d, Orientation::new(rotation, target)))
+            .or(at.first().copied())
     }
 
     /// World edges of `def` at `cell` in orientation `o` whose neighbor does not fit, ascending
@@ -1009,6 +1298,9 @@ impl World {
         if !bad.is_empty() {
             return Err(PlaceError::Incompatible(bad));
         }
+        if !self.rivers_legal_with(catalog, cell, def, o) {
+            return Err(PlaceError::RiverUphill);
+        }
         let tile = PlacedTile {
             def: def_id.to_owned(),
             rotation: o.rotation,
@@ -1050,6 +1342,7 @@ impl World {
         }
         self.ordered_orientations(catalog, cell, def, |o| {
             self.clashes(catalog, cell, def, o).is_empty()
+                && self.rivers_legal_with(catalog, cell, def, o)
         })
     }
 
@@ -1093,6 +1386,9 @@ impl World {
         let bad = self.clashes(catalog, cell, def, o);
         if !bad.is_empty() {
             return Err(ReplaceError::Incompatible(bad));
+        }
+        if !self.rivers_legal_with(catalog, cell, def, o) {
+            return Err(ReplaceError::RiverUphill);
         }
         let to = PlacedTile {
             def: def_id.to_owned(),
@@ -1280,6 +1576,95 @@ fn each_face<'c>(
                 None => true,
             }),
     }
+}
+
+/// The first uphill seam of the river networks `def` at `cell` in `o` joins in `tiles` (flooded
+/// tile by tile from its River edges across seams where both sides show River, any tile at
+/// `cell` left out), or `Ok` when they still orient ([`river::orient`]). A network on one level
+/// has no waterfall and is always legal, so `orient` runs only when the flooded tiles stand on
+/// more than one level. Placement and the save's history replay share it.
+pub(crate) fn river_network_uphill(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    catalog: &TileCatalog,
+    cell: Axial,
+    def: &TileDef,
+    o: Orientation,
+) -> Result<(), river::Uphill> {
+    let Some(net) = river_network(tiles, catalog, cell, def, o) else {
+        return Ok(());
+    };
+    if net.iter().all(|t| t.level == o.level) {
+        return Ok(());
+    }
+    river::orient(&net).map(|_| ())
+}
+
+/// The river network `def` at `cell` in `o` joins in `tiles`, the candidate first: flooded tile
+/// by tile from its River edges across seams where both sides show River, any tile at `cell`
+/// left out. `None` for a footprint tile or a tile without a River edge.
+fn river_network<'c>(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    catalog: &'c TileCatalog,
+    cell: Axial,
+    def: &'c TileDef,
+    o: Orientation,
+) -> Option<Vec<RiverTile<'c>>> {
+    let river = |d: &TileDef, k: u8, w: u8| d.edge(w, k).kind == SocketKind::River;
+    if def.is_mega() || !(0..6).any(|w| river(def, o.rotation, w)) {
+        return None;
+    }
+    let mut net = vec![RiverTile {
+        cell,
+        def,
+        rotation: o.rotation,
+        level: o.level,
+    }];
+    let mut seen = BTreeSet::from([cell]);
+    let mut i = 0;
+    while i < net.len() {
+        let t = net[i];
+        for w in (0..6).filter(|&w| river(t.def, t.rotation, w)) {
+            let n = t.cell.neighbor(w);
+            let Some(p) = tiles.get(&n) else {
+                continue;
+            };
+            let Some(d) = catalog.get(&p.def) else {
+                continue;
+            };
+            if !d.is_mega() && river(d, p.rotation, opposite_edge(w)) && seen.insert(n) {
+                net.push(RiverTile {
+                    cell: n,
+                    def: d,
+                    rotation: p.rotation,
+                    level: p.level,
+                });
+            }
+        }
+        i += 1;
+    }
+    Some(net)
+}
+
+/// The tiles of `tiles` with River networks, as [`river::orient`] takes them.
+pub(crate) fn river_tiles_of<'c>(
+    tiles: &BTreeMap<Axial, PlacedTile>,
+    catalog: &'c TileCatalog,
+) -> Vec<RiverTile<'c>> {
+    tiles
+        .iter()
+        .filter_map(|(&cell, t)| {
+            let def = catalog.get(&t.def)?;
+            def.networks
+                .iter()
+                .any(|n| n.kind == NetworkKind::River)
+                .then_some(RiverTile {
+                    cell,
+                    def,
+                    rotation: t.rotation,
+                    level: t.level,
+                })
+        })
+        .collect()
 }
 
 /// The anchor of the tile covering `cell` in `tiles` with footprint members `members`.
@@ -1650,7 +2035,7 @@ pub(crate) mod tests {
             [EdgeStatus::Neutral; 6]
         );
         assert_eq!(w.cliff_edges(&c, CENTRE, massif, o(0, 1)), [false; 6]);
-        // R walks the massif's six turns at level 0 before the cliffs.
+        // R walks the massif's six turns at level 0 before the cliffs, and stays on level 0.
         let seq = w.group_orientations(&c, CENTRE, &[massif]);
         let first: Vec<Orientation> = seq.iter().take(6).map(|(_, o)| *o).collect();
         assert_eq!(first, (0..6).map(|k| o(k, 0)).collect::<Vec<_>>());
@@ -1662,7 +2047,12 @@ pub(crate) mod tests {
                 (&massif.id, o(5, 0)),
                 RotateDir::Forward
             ),
-            Some((massif, o(0, 1)))
+            Some((massif, o(0, 0)))
+        );
+        // E lifts it onto the cliffs, keeping its turn.
+        assert_eq!(
+            w.step_level(&c, CENTRE, &[massif], (&massif.id, o(5, 0)), LevelDir::Up),
+            Some((massif, o(5, 1)))
         );
     }
 
@@ -1890,6 +2280,46 @@ pub(crate) mod tests {
             .filter(|(_, o)| o.level == 0)
             .map(|(_, o)| o.rotation)
             .collect()
+    }
+
+    /// R walks every level of `members`' [`World::group_orientations`] at `cell`: from a level's
+    /// first entry, Forward visits that level's entries once each in order and wraps to it, and E
+    /// from it reaches the next level up.
+    fn walk_levels(w: &World, c: &TileCatalog, cell: Axial, members: &[&TileDef]) {
+        let seq = w.group_orientations(c, cell, members);
+        let mut levels: Vec<u8> = seq.iter().map(|(_, o)| o.level).collect();
+        levels.sort_unstable();
+        levels.dedup();
+        for (i, &l) in levels.iter().enumerate() {
+            let at: Vec<(String, Orientation)> = seq
+                .iter()
+                .filter(|(_, o)| o.level == l)
+                .map(|(d, o)| (d.id.clone(), *o))
+                .collect();
+            // R walks one member's entries at the level (owner 2026-11-24).
+            for m in members {
+                let own: Vec<(String, Orientation)> =
+                    at.iter().filter(|(d, _)| *d == m.id).cloned().collect();
+                let Some(start) = own.first().cloned() else {
+                    continue;
+                };
+                let mut cur = start;
+                let mut seen = vec![];
+                for _ in 0..own.len() {
+                    seen.push(cur.clone());
+                    let (d, k) = w
+                        .cycle_group(c, cell, members, (&cur.0, cur.1), RotateDir::Forward)
+                        .unwrap();
+                    cur = (d.id.clone(), k);
+                }
+                assert_eq!(cur, seen[0], "level {l} {}: the walk wraps", m.id);
+                assert_eq!(seen, own, "level {l} {}: every entry once, in order", m.id);
+            }
+            let up = w
+                .step_level(c, cell, members, (&at[0].0, at[0].1), LevelDir::Up)
+                .map(|(_, o)| o.level);
+            assert_eq!(up, levels.get(i + 1).copied(), "E from level {l}");
+        }
     }
 
     /// R on a lone tile at level 0: the rotation [`World::cycle_group`] steps to.
@@ -2236,18 +2666,14 @@ pub(crate) mod tests {
             .filter(|d| !d.is_mega())
             .map(|d| d.id.clone())
             .filter(|id| id != "ocean")
-            .filter(|id| {
-                c.get(id)
-                    .is_some_and(|d| d.edges.iter().any(|e| e.profile == EdgeProfile::Flat))
-            })
             // A viaduct needs rail on both deck ends, so it never fits at a lone slot.
             .filter(|id| {
                 c.get(id)
                     .is_some_and(|d| d.edges.iter().all(|e| e.deck() == 0))
             })
             .collect();
-        // A tile with no Flat edge (hillside 010101) cannot face the level meadow, so it never fits
-        // beside it. A massif centre is never a frontier cell.
+        // A tile with no Flat edge (hillside 010101) fits a level up, its slopes wholly above the
+        // meadow as a cliff (owner 2026-11-24). A massif centre is never a frontier cell.
         assert_eq!(ids(&w, EAST), all_but_ocean);
 
         // A road end now points at EAST's world edge 4, next to the meadow on its edge 3: only
@@ -2323,16 +2749,8 @@ pub(crate) mod tests {
             let mut sorted = order.clone();
             sorted.sort_unstable();
             assert_eq!(sorted, legal, "{}", d.id);
-            // R steps through the whole sequence (every level for a raisable tile), in order.
-            let full = w.group_orientations(&c, EAST, &[d]);
-            let mut cur = full[0].1;
-            for (_, want) in full[1..].iter().chain(&full[..1]) {
-                let (_, next) = w
-                    .cycle_group(&c, EAST, &[d], (&d.id, cur), RotateDir::Forward)
-                    .unwrap();
-                assert_eq!(next, *want, "{} steps through each legal orientation", d.id);
-                cur = next;
-            }
+            // R steps through each level's entries in order and wraps on that level.
+            walk_levels(&w, &c, EAST, &[d]);
         }
         let windmill = def(&c, "windmill");
         assert_eq!(distinct0(&w, &c, EAST, windmill), vec![0, 1, 2, 3, 4, 5]);
@@ -2405,28 +2823,43 @@ pub(crate) mod tests {
                 );
             }
         }
-        // R walks the sequence and wraps; Shift+R walks it back.
-        let mut cur = ("beach_outer".to_owned(), o(0, 0));
-        let mut walked = vec![];
-        for _ in 0..seq.len() {
+        // R turns only the current member (owner 2026-11-24): the headland's one orientation
+        // stays put, the bay walks its three and wraps; Shift+R walks it back.
+        let r = |id: &str, k: Orientation, dir: RotateDir| {
+            let (d, k) = w.cycle_group(&c, EAST, &members, (id, k), dir).unwrap();
+            (d.id.clone(), k)
+        };
+        assert_eq!(
+            r("beach_outer", o(0, 0), RotateDir::Forward),
+            ("beach_outer".to_owned(), o(0, 0))
+        );
+        assert_eq!(
+            r("beach_inner", o(0, 0), RotateDir::Forward),
+            ("beach_inner".to_owned(), o(1, 0))
+        );
+        assert_eq!(
+            r("beach_inner", o(5, 0), RotateDir::Forward),
+            ("beach_inner".to_owned(), o(0, 0))
+        );
+        assert_eq!(
+            r("beach_inner", o(0, 0), RotateDir::Back),
+            ("beach_inner".to_owned(), o(5, 0))
+        );
+        // T switches the member, keeping the rotation where it is legal, else the member's first.
+        let t = |id: &str, k: Orientation| {
             let (d, k) = w
-                .cycle_group(&c, EAST, &members, (&cur.0, cur.1), RotateDir::Forward)
+                .step_member(&c, EAST, &members, (id, k), RotateDir::Forward)
                 .unwrap();
-            cur = (d.id.clone(), k);
-            walked.push(cur.clone());
-        }
-        assert_eq!(walked.last().unwrap(), &("beach_outer".to_owned(), o(0, 0)));
-        assert_eq!(walked[0], ("beach_inner".to_owned(), o(0, 0)));
-        let back = w
-            .cycle_group(
-                &c,
-                EAST,
-                &members,
-                ("beach_outer", o(0, 0)),
-                RotateDir::Back,
-            )
-            .unwrap();
-        assert_eq!((back.0.id.as_str(), back.1), ("beach_inner", o(5, 0)));
+            (d.id.clone(), k)
+        };
+        assert_eq!(
+            t("beach_outer", o(0, 0)),
+            ("beach_inner".to_owned(), o(0, 0))
+        );
+        assert_eq!(
+            t("beach_inner", o(1, 0)),
+            ("beach_outer".to_owned(), o(0, 0))
+        );
         // From an illegal headland rotation: the headland's own next legal one.
         let from_bad = w
             .cycle_group(
@@ -2528,8 +2961,18 @@ pub(crate) mod tests {
                 .unwrap()
                 .1
         };
-        assert_eq!(step(o(3, 0)), o(0, 1), "r3 is r0's orientation");
-        assert_eq!(step(o(0, 3)), o(0, 0));
+        // R stays on the level: r3 is r0's orientation, the level's only one.
+        assert_eq!(step(o(3, 0)), o(0, 0), "r3 is r0's orientation");
+        assert_eq!(step(o(0, 3)), o(0, 3));
+        // E and Q step the level and clamp at the ends.
+        let level = |k: Orientation, dir| {
+            w.step_level(&c, EAST, &[meadow], ("meadow", k), dir)
+                .map(|(_, o)| o)
+        };
+        assert_eq!(level(o(0, 0), LevelDir::Up), Some(o(0, 1)));
+        assert_eq!(level(o(0, 2), LevelDir::Down), Some(o(0, 1)));
+        assert_eq!(level(o(0, 3), LevelDir::Up), None);
+        assert_eq!(level(o(0, 0), LevelDir::Down), None);
     }
 
     #[test]
@@ -3351,7 +3794,7 @@ pub(crate) mod tests {
         let mut w = World::new(1);
         w.place(&c, EAST, "meadow", o(0, 1)).unwrap();
         let next = Axial::new(2, 0);
-        let river = def(&c, "river_straight");
+        let river = def(&c, "river_mouth");
         assert!(!river.raisable);
         let legal = w.legal_orientations(&c, next, river);
         assert!(!legal.is_empty());
@@ -3362,7 +3805,7 @@ pub(crate) mod tests {
             assert!(w.cliff_edges(&c, next, river, k)[3], "{k:?}");
         }
         assert_eq!(
-            w.place(&c, next, "river_straight", o(legal[0].rotation, 1)),
+            w.place(&c, next, "river_mouth", o(legal[0].rotation, 1)),
             Err(PlaceError::LevelOutOfRange(1))
         );
     }
@@ -3398,7 +3841,8 @@ pub(crate) mod tests {
     }
 
     /// Rail at levels (owner, 2026-11-14): the straight, both bends and the junction are raisable,
-    /// the station, level crossing and river rail bridge stay on the ground.
+    /// the station and level crossing stay on the ground. The river rail bridge rises with the
+    /// rivers (rivers-at-levels RQ7 O2).
     #[test]
     fn rail_tiles_are_raisable_and_the_special_ones_stay_on_the_ground() {
         let c = catalog();
@@ -3407,12 +3851,13 @@ pub(crate) mod tests {
             "rail_bend_60",
             "rail_bend_120",
             "rail_junction",
+            "river_rail_bridge",
         ] {
             let d = def(&c, id);
             assert!(d.raisable, "{id}");
             assert!(level_allowed(d, 3), "{id}");
         }
-        for id in ["rail_station", "rail_road_crossing", "river_rail_bridge"] {
+        for id in ["rail_station", "rail_road_crossing"] {
             assert!(!def(&c, id).raisable, "{id}");
         }
     }
@@ -3540,17 +3985,7 @@ pub(crate) mod tests {
                 .iter()
                 .map(|(d, k)| (d.id.clone(), *k))
                 .collect();
-            let mut cur = seq[0].clone();
-            let mut seen = vec![];
-            for _ in 0..seq.len() {
-                seen.push(cur.clone());
-                let (d, k) = w
-                    .cycle_group(&c, EAST, members, (&cur.0, cur.1), RotateDir::Forward)
-                    .unwrap();
-                cur = (d.id.clone(), k);
-            }
-            assert_eq!(cur, seen[0], "the walk wraps to its start");
-            assert_eq!(seen, seq, "every entry once, in order");
+            walk_levels(&w, &c, EAST, members);
             seq
         };
         // The Beach Curve (not raisable): every entry at level 0, headland then bay.
@@ -3654,18 +4089,21 @@ pub(crate) mod tests {
             .unwrap(),
             serde_json::json!("missing_beach"),
         );
-        // The closed set: the four fixed codes, a missing_ code per kind, a clash_ code per pair.
+        // The closed set: the five fixed codes, a missing_ code per kind, a clash_ code per pair,
+        // a slope_ code per kind and own_slope.
         let codes = Refusal::codes();
         assert_eq!(
             codes.len(),
-            4 + SocketKind::ALL.len() + SocketKind::ALL.len() * SocketKind::ALL.len()
+            6 + 2 * SocketKind::ALL.len() + SocketKind::ALL.len() * SocketKind::ALL.len()
         );
         assert_eq!(codes[0], "inner_slot");
         assert_eq!(codes[1], "deck_end");
         assert_eq!(codes[2], "footprint_edges");
         assert_eq!(codes[3], "no_footprint_room");
-        assert_eq!(codes[4], "missing_grass");
-        assert_eq!(codes.last().unwrap(), "clash_rail_rail");
+        assert_eq!(codes[4], "river_uphill");
+        assert_eq!(codes[5], "missing_grass");
+        assert_eq!(codes[codes.len() - 2], "slope_rail");
+        assert_eq!(codes.last().unwrap(), "own_slope");
     }
 
     /// Each refusal code fires where the mirror's wording for it does (ENH-002), on worlds built
@@ -3725,6 +4163,194 @@ pub(crate) mod tests {
         );
     }
 
+    /// A meadow across a hillside's sloped edge fits only wholly above or below the slope, as a
+    /// cliff (owner 2026-11-24: Meadow at levels 0 and 1 against a level-3 hillside); a refusal there
+    /// names a slope, not grass meeting grass.
+    #[test]
+    fn meadow_beside_a_hillside_slope_fits_only_as_a_cliff() {
+        let c = catalog();
+        let hill = def(&c, "hillside_000111");
+        let mut w = World::new(1);
+        let k = w.legal_orientations(&c, EAST, hill)[0];
+        w.place(&c, EAST, &hill.id, k).unwrap();
+        let slot = (0..6)
+            .filter(|&e| {
+                w.facing(&c, EAST, e)
+                    .is_some_and(|f| f.socket.profile != EdgeProfile::Flat)
+            })
+            .map(|e| EAST.neighbor(e))
+            .find(|&n| w.is_slot(n))
+            .expect("a free slot across a sloped edge");
+        let levels: BTreeSet<u8> = w
+            .legal_orientations(&c, slot, def(&c, "meadow"))
+            .iter()
+            .map(|o| o.level)
+            .collect();
+        // The level-0 hillside's slope spans levels 0 and 1, so the meadow stands at 2 or 3.
+        assert_eq!(levels, BTreeSet::from([2, 3]));
+        assert_eq!(
+            Refusal::Slope {
+                mine: SocketKind::Grass
+            }
+            .code(),
+            "slope_grass"
+        );
+        assert_eq!(Refusal::OwnSlope.code(), "own_slope");
+    }
+
+    /// R stays on the ghost's level across a group's members (owner 2026-11-24), and E/Q step
+    /// the level, keeping the member and its rotation where they are legal on the new level.
+    #[test]
+    fn step_level_keeps_the_hillside_member_and_clamps() {
+        let c = catalog();
+        let w = World::new(1);
+        let hills: Vec<&TileDef> = c.group_members("hillside");
+        let seq = w.group_orientations(&c, EAST, &hills);
+        let first = (seq[0].0.id.as_str(), seq[0].1);
+        assert_eq!(first.1.level, 0);
+        // Every R step from the first entry stays on level 0.
+        let mut cur = (first.0.to_owned(), first.1);
+        for _ in 0..seq.len() {
+            let (d, k) = w
+                .cycle_group(&c, EAST, &hills, (&cur.0, cur.1), RotateDir::Forward)
+                .unwrap();
+            assert_eq!(k.level, 0, "{} {k:?}", d.id);
+            cur = (d.id.clone(), k);
+        }
+        // E keeps the member and rotation one level up; Q brings it back.
+        let (d, up) = w.step_level(&c, EAST, &hills, first, LevelDir::Up).unwrap();
+        assert_eq!(
+            (d.id.as_str(), up),
+            (first.0, Orientation::new(first.1.rotation, 1))
+        );
+        let (d, down) = w
+            .step_level(&c, EAST, &hills, (&d.id, up), LevelDir::Down)
+            .unwrap();
+        assert_eq!((d.id.as_str(), down), first);
+        assert_eq!(
+            w.step_level(&c, EAST, &hills, first, LevelDir::Down),
+            None,
+            "Q clamps at the ground"
+        );
+        let top = seq.iter().map(|(_, o)| o.level).max().unwrap();
+        let at_top = seq.iter().find(|(_, o)| o.level == top).unwrap();
+        assert_eq!(
+            w.step_level(&c, EAST, &hills, (&at_top.0.id, at_top.1), LevelDir::Up),
+            None,
+            "E clamps at the top"
+        );
+        // A member not legal at the new level gives that level's first entry: the meadow, which
+        // is not a hillside, at level 0 stays a hillside sequence entry.
+        let meadow = def(&c, "meadow");
+        let (d, k) = w
+            .step_level(
+                &c,
+                EAST,
+                &hills,
+                (&meadow.id, Orientation::new(0, 0)),
+                LevelDir::Up,
+            )
+            .unwrap();
+        let first1 = seq.iter().find(|(_, o)| o.level == 1).unwrap();
+        assert_eq!((&d.id, k), (&first1.0.id, first1.1));
+        // A level with no entry cycles every level's, as before.
+        assert!(top < MAX_LEVEL);
+        let (_, k) = w
+            .cycle_group(
+                &c,
+                EAST,
+                &hills,
+                (first.0, Orientation::new(first.1.rotation, MAX_LEVEL)),
+                RotateDir::Forward,
+            )
+            .unwrap();
+        assert!(k.level <= top, "{k:?}");
+    }
+
+    /// With the Hillside group (12 shapes), R turns only the current shape on its level (owner
+    /// 2026-11-24): the walk returns to its start after that shape's own entries.
+    #[test]
+    fn hillside_r_stays_on_one_member() {
+        let c = catalog();
+        let w = World::new(1);
+        let hills: Vec<&TileDef> = c.group_members("hillside");
+        let seq = w.group_orientations(&c, EAST, &hills);
+        let (d0, k0) = seq[0];
+        let own = seq
+            .iter()
+            .filter(|(d, k)| d.id == d0.id && k.level == k0.level)
+            .count();
+        assert!(
+            seq.iter().filter(|(_, k)| k.level == k0.level).count() > own,
+            "other shapes fit on this level too"
+        );
+        let mut cur = (d0.id.clone(), k0);
+        for step in 1..=own {
+            let (d, k) = w
+                .cycle_group(&c, EAST, &hills, (&cur.0, cur.1), RotateDir::Forward)
+                .unwrap();
+            assert_eq!(d.id, d0.id, "step {step}: R keeps the shape");
+            assert_eq!(k.level, k0.level, "step {step}: R keeps the level");
+            cur = (d.id.clone(), k);
+        }
+        assert_eq!(
+            cur,
+            (d0.id.clone(), k0),
+            "R wraps after the shape's own entries"
+        );
+    }
+
+    /// T steps the Hillside shape and keeps the level, wrapping through every shape that fits
+    /// there; Shift+T walks back. A lone tile has no other shape.
+    #[test]
+    fn step_member_changes_the_hillside_shape_and_keeps_the_level() {
+        let c = catalog();
+        let w = World::new(1);
+        let hills: Vec<&TileDef> = c.group_members("hillside");
+        let seq = w.group_orientations(&c, EAST, &hills);
+        let (d0, k0) = seq[0];
+        let fitting: Vec<&str> = hills
+            .iter()
+            .filter(|m| seq.iter().any(|(d, k)| d.id == m.id && k.level == k0.level))
+            .map(|m| m.id.as_str())
+            .collect();
+        assert!(fitting.len() > 1);
+        let mut cur = (d0.id.clone(), k0);
+        let mut seen = vec![];
+        for _ in 0..fitting.len() {
+            seen.push(cur.0.clone());
+            let (d, k) = w
+                .step_member(&c, EAST, &hills, (&cur.0, cur.1), RotateDir::Forward)
+                .unwrap();
+            assert_ne!(d.id, cur.0, "T changes the shape");
+            assert_eq!(k.level, k0.level, "T keeps the level");
+            assert!(
+                seq.contains(&(d, k)) || w.fits(&c, EAST, d, k),
+                "{} {k:?} is legal",
+                d.id
+            );
+            cur = (d.id.clone(), k);
+        }
+        assert_eq!(cur.0, d0.id, "T wraps through every fitting shape");
+        let mut sorted = seen.clone();
+        sorted.sort();
+        sorted.dedup();
+        assert_eq!(sorted.len(), fitting.len(), "each fitting shape once");
+        let (next, k) = w
+            .step_member(&c, EAST, &hills, (&d0.id, k0), RotateDir::Forward)
+            .unwrap();
+        let (back, _) = w
+            .step_member(&c, EAST, &hills, (&next.id, k), RotateDir::Back)
+            .unwrap();
+        assert_eq!(back.id, d0.id, "Shift+T walks back");
+        let meadow = def(&c, "meadow");
+        assert_eq!(
+            w.step_member(&c, EAST, &[meadow], ("meadow", o(0, 0)), RotateDir::Forward),
+            None,
+            "a lone tile has no other shape"
+        );
+    }
+
     /// The classification agrees with the mirror's wording order: the same slot's needs name the
     /// missing kind, and a fitting tile has no refusal.
     #[test]
@@ -3740,5 +4366,561 @@ pub(crate) mod tests {
             w.placement_refusal(&c, Axial::new(1, 0), c.get("forest").unwrap()),
             None
         );
+    }
+
+    /// The world edges where `def` at rotation `k` shows River.
+    fn river_edges(def: &TileDef, k: u8) -> BTreeSet<u8> {
+        (0..6)
+            .filter(|&w| def.edge(w, k).kind == SocketKind::River)
+            .collect()
+    }
+
+    /// Places `id` at `cell` on level 0 in the first rotation whose River edges are `rivers`.
+    fn lay(w: &mut World, c: &TileCatalog, cell: Axial, id: &str, rivers: &[u8]) {
+        let d = def(c, id);
+        let want: BTreeSet<u8> = rivers.iter().map(|e| e % 6).collect();
+        let k = (0..6)
+            .filter(|&k| river_edges(d, k) == want)
+            .find(|&k| w.fits(c, cell, d, o(k, 0)))
+            .unwrap_or_else(|| panic!("{id} at {cell:?} with rivers on {want:?}"));
+        w.place(c, cell, id, o(k, 0)).unwrap();
+    }
+
+    /// The flat networks today's rule accepts and stricter rules would not, each built by
+    /// `place` at level 0: two springs joined by a straight, two mouths joined by a straight, a
+    /// fork with a spring on each arm, and a closed ring of bends.
+    fn flat_cases(c: &TileCatalog) -> Vec<World> {
+        let d = 0u8;
+        let s0 = Axial::ORIGIN.neighbor(d);
+        let s1 = Axial::ORIGIN.neighbor(d + 1);
+        let s2 = s1.neighbor(d + 2);
+        let mut springs = World::new(1);
+        lay(&mut springs, c, s0, "river_spring", &[d + 2]);
+        lay(&mut springs, c, s1, "river_straight", &[d + 2, d + 5]);
+        lay(&mut springs, c, s2, "river_spring", &[d + 5]);
+        let mut mouths = World::new(2);
+        lay(&mut mouths, c, s0, "river_mouth", &[d + 2]);
+        lay(&mut mouths, c, s1, "river_straight", &[d + 2, d + 5]);
+        lay(&mut mouths, c, s2, "river_mouth", &[d + 5]);
+        let mut fork = World::new(3);
+        lay(&mut fork, c, s0, "river_fork", &[d, d + 2, d + 4]);
+        for arm in [d, d + 2, d + 4] {
+            lay(&mut fork, c, s0.neighbor(arm), "river_spring", &[arm + 3]);
+        }
+        let mut ring = World::new(4);
+        let centre = Axial::ORIGIN.neighbor(0).neighbor(0);
+        for j in [3u8, 2, 4, 1, 5, 0] {
+            lay(
+                &mut ring,
+                c,
+                centre.neighbor(j),
+                "river_bend",
+                &[j + 2, j + 4],
+            );
+        }
+        vec![springs, mouths, fork, ring]
+    }
+
+    fn encode(w: &World) -> Vec<u8> {
+        crate::SaveData {
+            world: w.clone(),
+            unlocks: BTreeSet::new(),
+            camera: crate::save::tests::camera(),
+            settings: crate::save::tests::settings(),
+        }
+        .encode()
+    }
+
+    #[test]
+    fn flat_networks_accepted_today_still_place_and_decode() {
+        let c = catalog();
+        let cases = flat_cases(&c);
+        assert_eq!(cases.len(), 4);
+        for w in cases {
+            assert!(w.rivers(&c).falls.is_empty());
+            assert!(
+                crate::SaveData::decode(&encode(&w), &c).is_ok(),
+                "{:?}",
+                w.tiles()
+            );
+        }
+    }
+
+    /// A lone level-1 river straight at `RAISED`, its lane running along world edges 0 and 3.
+    fn raised_straight_world() -> World {
+        let tile = PlacedTile {
+            def: "river_straight".into(),
+            rotation: 0,
+            level: 1,
+            seed: cell_seed(1, RAISED),
+        };
+        World::from_parts(
+            1,
+            BTreeMap::from([(RAISED, tile)]),
+            VecDeque::new(),
+            Vec::new(),
+        )
+    }
+
+    const RAISED: Axial = Axial { q: 5, r: 5 };
+
+    #[test]
+    fn placement_never_picks_a_waterfall_by_default() {
+        let c = catalog();
+        let w = raised_straight_world();
+        let next = RAISED.neighbor(0);
+        let d = def(&c, "river_straight");
+        assert_eq!(w.auto_orient(&c, next, d), Some(o(0, 1)));
+        let seq: Vec<Orientation> = w
+            .group_orientations(&c, next, &[d])
+            .into_iter()
+            .map(|(_, o)| o)
+            .collect();
+        let falls = |o: Orientation| w.faces(&c, next, d, o).iter().any(|f| f.waterfall);
+        assert_eq!(seq[0], o(0, 1));
+        assert!(!falls(seq[0]));
+        let fall = seq
+            .iter()
+            .position(|&x| x == o(0, 0))
+            .expect("R reaches the fall");
+        assert!(fall > 0);
+        assert!(seq[1..].iter().all(|&o| falls(o)), "{seq:?}");
+        // R stays on the default's level; Q steps down to the fall.
+        let turn = w
+            .cycle_group(
+                &c,
+                next,
+                &[d],
+                ("river_straight", seq[0]),
+                RotateDir::Forward,
+            )
+            .unwrap();
+        assert_eq!(turn.1.level, 1, "{turn:?}");
+        let step = w
+            .step_level(&c, next, &[d], ("river_straight", seq[0]), LevelDir::Down)
+            .unwrap();
+        assert!(falls(step.1), "{step:?}");
+    }
+
+    #[test]
+    fn a_fall_face_is_flagged_on_the_ghost() {
+        let c = catalog();
+        let w = raised_straight_world();
+        let next = RAISED.neighbor(0);
+        let d = def(&c, "river_straight");
+        let faces = w.faces(&c, next, d, o(0, 0));
+        assert!(faces.iter().any(|f| f.waterfall && !f.cliff), "{faces:?}");
+        assert_eq!(faces.iter().filter(|f| f.waterfall).count(), 1);
+        assert!(w.faces(&c, next, d, o(0, 1)).iter().all(|f| !f.waterfall));
+        assert!(!w.cliff_edges(&c, next, d, o(0, 0)).contains(&true));
+    }
+
+    /// The rotations of `d` at `level` that fit at `cell` with a `kind` lane on world edge `edge`.
+    fn fitting(
+        w: &World,
+        c: &TileCatalog,
+        cell: Axial,
+        d: &TileDef,
+        level: u8,
+        edge: u8,
+        kind: SocketKind,
+    ) -> Vec<Orientation> {
+        (0..6)
+            .map(|k| o(k, level))
+            .filter(|&x| d.edge(edge, x.rotation).kind == kind && w.fits(c, cell, d, x))
+            .collect()
+    }
+
+    /// The first world edge where `d` at rotation `k` shows `kind` and `cell`'s neighbour is free.
+    fn free_edge(w: &World, d: &TileDef, cell: Axial, k: u8, kind: SocketKind) -> u8 {
+        (0..6)
+            .find(|&e| d.edge(e, k).kind == kind && w.tile(cell.neighbor(e)).is_none())
+            .unwrap_or_else(|| panic!("{} at {cell:?}: no free {kind:?} edge", d.id))
+    }
+
+    /// RQ8 O1: a bridge may be the lip or the pool of a waterfall. Each bridge, placed beside the
+    /// start tile, meets a river straight one level away across a free River edge.
+    #[test]
+    fn a_bridge_may_be_the_lip_or_the_pool_of_a_fall() {
+        let c = catalog();
+        let straight = def(&c, "river_straight");
+        for bridge in ["river_road_bridge", "river_rail_bridge"] {
+            for (bridge_level, straight_level) in [(1, 0), (0, 1)] {
+                let tag = format!("{bridge} at {bridge_level}");
+                let mut w = World::new(1);
+                let d = def(&c, bridge);
+                let k = (0..6)
+                    .map(|k| o(k, bridge_level))
+                    .find(|&x| w.fits(&c, EAST, d, x))
+                    .unwrap_or_else(|| panic!("{tag}: no fit"));
+                w.place(&c, EAST, bridge, k).unwrap();
+                let e = free_edge(&w, d, EAST, k.rotation, SocketKind::River);
+                let next = EAST.neighbor(e);
+                let fit = fitting(
+                    &w,
+                    &c,
+                    next,
+                    straight,
+                    straight_level,
+                    (e + 3) % 6,
+                    SocketKind::River,
+                );
+                assert!(!fit.is_empty(), "{tag}");
+                assert_eq!(w.placement_refusal(&c, next, straight), None, "{tag}");
+                w.place(&c, next, "river_straight", fit[0]).unwrap();
+                assert_eq!(w.rivers(&c).falls.len(), 1, "{tag}");
+            }
+        }
+    }
+
+    /// RQ7 O2: a raised river rail bridge carries raised rail on its own level, and its rail edge
+    /// never meets rail on the ground.
+    #[test]
+    fn a_raised_river_rail_bridge_meets_raised_rail_and_refuses_ground_rail() {
+        let c = catalog();
+        let mut w = World::new(1);
+        w.place(&c, EAST, "rail_straight", o(1, 1)).unwrap();
+        let next = EAST.neighbor(1);
+        let bridge = def(&c, "river_rail_bridge");
+        // World edge 4 of `next` faces the raised straight's rail.
+        let raised = fitting(&w, &c, next, bridge, 1, 4, SocketKind::Rail);
+        assert!(!raised.is_empty());
+        assert!(fitting(&w, &c, next, bridge, 0, 4, SocketKind::Rail).is_empty());
+        w.place(&c, next, "river_rail_bridge", raised[0]).unwrap();
+        let far = (0..6)
+            .find(|&e| e != 4 && bridge.edge(e, raised[0].rotation).kind == SocketKind::Rail)
+            .unwrap();
+        let ground = next.neighbor(far);
+        let rail = def(&c, "rail_straight");
+        let flat = (0..6)
+            .map(|k| o(k, 0))
+            .find(|&x| rail.edge((far + 3) % 6, x.rotation).kind == SocketKind::Rail)
+            .unwrap();
+        assert!(w.place(&c, ground, "rail_straight", flat).is_err());
+        assert!(fitting(&w, &c, ground, rail, 0, (far + 3) % 6, SocketKind::Rail).is_empty());
+        assert!(!fitting(&w, &c, ground, rail, 1, (far + 3) % 6, SocketKind::Rail).is_empty());
+    }
+
+    /// A raised river may fall into a river mouth on the ground (the mouth is the pool), but a
+    /// raised river edge never meets the mouth's ocean or beach.
+    #[test]
+    fn a_raised_river_falls_into_a_mouth_but_never_onto_its_shore() {
+        let c = catalog();
+        let mouth = def(&c, "river_mouth");
+        let straight = def(&c, "river_straight");
+        let mut w = World::new(1);
+        let k = (0..6)
+            .map(|k| o(k, 0))
+            .find(|&x| {
+                w.fits(&c, EAST, mouth, x)
+                    && (0..6).any(|e| {
+                        mouth.edge(e, x.rotation).kind == SocketKind::River
+                            && w.tile(EAST.neighbor(e)).is_none()
+                    })
+            })
+            .expect("a mouth fits beside the start tile");
+        w.place(&c, EAST, "river_mouth", k).unwrap();
+        // The shore: a raised river edge against each free ocean or beach edge is refused.
+        let shore: Vec<u8> = (0..6)
+            .filter(|&e| {
+                matches!(
+                    mouth.edge(e, k.rotation).kind,
+                    SocketKind::Ocean | SocketKind::Beach
+                ) && w.tile(EAST.neighbor(e)).is_none()
+            })
+            .collect();
+        assert!(!shore.is_empty());
+        for e in shore {
+            let cell = EAST.neighbor(e);
+            for x in (0..6).map(|r| o(r, 1)) {
+                if straight.edge((e + 3) % 6, x.rotation).kind == SocketKind::River {
+                    assert!(
+                        w.place(&c, cell, "river_straight", x).is_err(),
+                        "edge {e} {x:?}"
+                    );
+                }
+            }
+        }
+        // The pool: a level-1 straight falls onto the mouth's River edge.
+        let e = free_edge(&w, mouth, EAST, k.rotation, SocketKind::River);
+        let next = EAST.neighbor(e);
+        let fit = fitting(&w, &c, next, straight, 1, (e + 3) % 6, SocketKind::River);
+        assert!(!fit.is_empty());
+        w.place(&c, next, "river_straight", fit[0]).unwrap();
+        assert_eq!(w.rivers(&c).falls.len(), 1);
+    }
+
+    /// The pinch: `PINCH` lies between a level-0 spring whose lane faces it (world edge 3 side)
+    /// and a level-1 straight whose lane faces it from the opposite side (world edge 0).
+    fn pinch_world() -> (World, Axial) {
+        let spring = PINCH.neighbor(3);
+        let straight = PINCH.neighbor(0);
+        let tile = |def: &str, cell: Axial, level: u8| PlacedTile {
+            def: def.into(),
+            rotation: 0,
+            level,
+            seed: cell_seed(1, cell),
+        };
+        let tiles = BTreeMap::from([
+            (spring, tile("river_spring", spring, 0)),
+            (straight, tile("river_straight", straight, 1)),
+        ]);
+        (
+            World::from_parts(1, tiles, VecDeque::new(), Vec::new()),
+            PINCH,
+        )
+    }
+
+    const PINCH: Axial = Axial { q: 4, r: -2 };
+
+    /// The rotations of `def` whose River edges run along world edges 0 and 3.
+    fn aligned_rotations(def: &TileDef) -> Vec<u8> {
+        (0..6)
+            .filter(|&k| river_edges(def, k) == BTreeSet::from([0, 3]))
+            .collect()
+    }
+
+    #[test]
+    fn an_uphill_river_is_refused_as_river_uphill() {
+        let c = catalog();
+        let (w, cell) = pinch_world();
+        let d = def(&c, "river_straight");
+        let aligned = aligned_rotations(d);
+        assert_eq!(aligned.len(), 2);
+        for o in aligned
+            .into_iter()
+            .flat_map(|k| (0..=3).map(move |l| Orientation::new(k, l)))
+        {
+            assert_eq!(w.clash_count(&c, cell, d, o), 0, "{o:?} meets the sockets");
+            assert!(!w.fits(&c, cell, d, o), "{o:?} must be river-illegal");
+            let mut v = w.clone();
+            assert_eq!(
+                v.place(&c, cell, "river_straight", o),
+                Err(PlaceError::RiverUphill)
+            );
+            assert_eq!(v, w);
+        }
+        assert!(w.legal_orientations(&c, cell, d).is_empty());
+        assert_eq!(w.placement_refusal(&c, cell, d), Some(Refusal::RiverUphill));
+        assert_eq!(Refusal::RiverUphill.code(), "river_uphill");
+        assert!(Refusal::codes().contains(&"river_uphill".to_owned()));
+    }
+
+    /// A straight ghosted beside a spring takes the spring's water: its lane toward the spring
+    /// runs in, the far lane out.
+    #[test]
+    fn ghost_flow_follows_the_spring() {
+        let c = catalog();
+        let spring = PINCH.neighbor(3);
+        let tiles = BTreeMap::from([(
+            spring,
+            PlacedTile {
+                def: "river_spring".into(),
+                rotation: 0,
+                level: 0,
+                seed: cell_seed(1, spring),
+            },
+        )]);
+        let w = World::from_parts(1, tiles, VecDeque::new(), Vec::new());
+        let d = def(&c, "river_straight");
+        for k in aligned_rotations(d) {
+            assert!(w.fits(&c, PINCH, d, o(k, 0)));
+            assert_eq!(
+                w.ghost_flow(&c, PINCH, d, o(k, 0)),
+                vec![(0, FlowDir::Out), (3, FlowDir::In)],
+                "rotation {k}"
+            );
+        }
+    }
+
+    /// A ghost one level below a raised straight takes its fall: the shared edge runs in.
+    #[test]
+    fn ghost_flow_follows_a_fall() {
+        let c = catalog();
+        let w = raised_straight_world();
+        let next = RAISED.neighbor(0);
+        let d = def(&c, "river_straight");
+        assert!(w.fits(&c, next, d, o(0, 0)));
+        assert_eq!(
+            w.ghost_flow(&c, next, d, o(0, 0)),
+            vec![(0, FlowDir::Out), (3, FlowDir::In)]
+        );
+        let mut marker = [false; 6];
+        marker[3] = true;
+        assert_eq!(w.waterfall_edges(&c, next, d, o(0, 0)), marker);
+        assert_eq!(w.waterfall_edges(&c, next, d, o(0, 1)), [false; 6]);
+    }
+
+    /// The pinch has no legal orientation, so no ghost there shows a flow.
+    #[test]
+    fn ghost_flow_is_empty_when_uphill() {
+        let c = catalog();
+        let (w, cell) = pinch_world();
+        let d = def(&c, "river_straight");
+        for k in aligned_rotations(d) {
+            for l in 0..=3 {
+                assert!(w.ghost_flow(&c, cell, d, o(k, l)).is_empty(), "{k} {l}");
+            }
+        }
+    }
+
+    /// Replace runs the placement's river check: a straight below a fall swapped for a spring
+    /// would take the falling water, so no orientation of the spring is offered there.
+    #[test]
+    fn replacing_into_an_uphill_river_is_refused() {
+        let c = catalog();
+        let mut w = raised_straight_world();
+        let next = RAISED.neighbor(0);
+        let end = next.neighbor(0);
+        w.place(&c, next, "river_straight", o(0, 0)).unwrap();
+        w.place(&c, end, "river_straight", o(0, 0)).unwrap();
+        assert_eq!(w.rivers(&c).falls.len(), 1);
+        let spring = def(&c, "river_spring");
+        assert!(w.replace_orientations(&c, end, spring).is_empty());
+        let before = w.clone();
+        assert_eq!(
+            w.replace(&c, end, "river_spring", o(3, 0)),
+            Err(ReplaceError::RiverUphill)
+        );
+        assert_eq!(w, before);
+        assert!(!w.can_undo() || w.history_stacks() == before.history_stacks());
+    }
+
+    /// A tiny deterministic generator for the random world tests.
+    struct Lcg(u64);
+
+    impl Lcg {
+        fn next(&mut self, n: usize) -> usize {
+            self.0 = self
+                .0
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
+            ((self.0 >> 33) % n as u64) as usize
+        }
+    }
+
+    /// Whether every river network of `w` orients without the flat fallback.
+    fn rivers_legal(w: &World, c: &TileCatalog) -> bool {
+        river::orient(&w.river_tiles(c)).is_ok()
+    }
+
+    #[test]
+    fn bulldozing_never_makes_a_river_uphill() {
+        let c = catalog();
+        let ids = [
+            "river_straight",
+            "river_bend",
+            "river_bend_60",
+            "river_fork",
+            "river_spring",
+            "meadow",
+        ];
+        let (mut falls, mut removals) = (0, 0);
+        for seed in 0..40u64 {
+            let mut rng = Lcg(seed);
+            let mut w = World::new(seed);
+            for _ in 0..24 {
+                let frontier = w.frontier();
+                let cell = frontier[rng.next(frontier.len())];
+                let id = ids[rng.next(ids.len())];
+                let legal = w.legal_orientations(&c, cell, def(&c, id));
+                if legal.is_empty() {
+                    continue;
+                }
+                let o = legal[rng.next(legal.len())];
+                w.place(&c, cell, id, o).unwrap();
+                assert!(rivers_legal(&w, &c), "seed {seed}: place left it uphill");
+            }
+            falls += w.rivers(&c).falls.len();
+            for &cell in w.tiles().keys() {
+                if w.can_bulldoze(&c, cell).is_err() {
+                    continue;
+                }
+                let mut v = w.clone();
+                v.bulldoze(&c, cell).unwrap();
+                removals += 1;
+                assert!(rivers_legal(&v, &c), "seed {seed}: bulldozing {cell:?}");
+            }
+        }
+        assert!(
+            falls > 30 && removals > 200,
+            "{falls} falls, {removals} removals"
+        );
+    }
+
+    /// The ghost's flow is the flow the placement gives: for random river worlds, `ghost_flow`
+    /// before each placement equals the placed cell's segments in `World::rivers` after it.
+    #[test]
+    fn ghost_flow_matches_the_placed_flow() {
+        let c = catalog();
+        let ids = [
+            "river_straight",
+            "river_bend",
+            "river_bend_60",
+            "river_fork",
+            "river_spring",
+            "river_mouth",
+            "river_mouth_l",
+            "river_road_bridge",
+            "ocean",
+            "meadow",
+        ];
+        let mut checked = 0;
+        let mut seen = std::collections::BTreeSet::new();
+        for seed in 0..40u64 {
+            let mut rng = Lcg(seed);
+            let mut w = World::new(seed);
+            for _ in 0..24 {
+                let frontier = w.frontier();
+                let cell = frontier[rng.next(frontier.len())];
+                let id = ids[rng.next(ids.len())];
+                let d = def(&c, id);
+                let legal = w.legal_orientations(&c, cell, d);
+                if legal.is_empty() {
+                    continue;
+                }
+                let o = legal[rng.next(legal.len())];
+                let ghost = w.ghost_flow(&c, cell, d, o);
+                w.place(&c, cell, id, o).unwrap();
+                let mut placed: Vec<(u8, FlowDir)> = w
+                    .rivers(&c)
+                    .segs
+                    .range((cell, 0)..=(cell, usize::MAX))
+                    .flat_map(|(_, s)| {
+                        [
+                            s.up.edge().map(|e| (e, FlowDir::In)),
+                            s.down.edge().map(|e| (e, FlowDir::Out)),
+                        ]
+                    })
+                    .flatten()
+                    .collect();
+                placed.sort_by_key(|&(e, _)| e);
+                assert_eq!(ghost, placed, "seed {seed}: {id} at {cell:?} {o:?}");
+                checked += usize::from(!ghost.is_empty());
+                if !ghost.is_empty() {
+                    seen.insert(id);
+                }
+            }
+        }
+        assert!(checked > 200, "{checked} river placements checked");
+        for id in ["river_mouth", "river_mouth_l", "river_road_bridge"] {
+            assert!(seen.contains(id), "{id} never placed with a river flow");
+        }
+    }
+
+    #[test]
+    fn rivers_are_cached_per_stamp() {
+        let c = catalog();
+        let mut w = raised_straight_world();
+        let before = w.rivers(&c);
+        assert!(before.falls.is_empty());
+        assert_eq!(w.rivers(&c), before);
+        w.place(&c, RAISED.neighbor(0), "river_straight", o(0, 0))
+            .unwrap();
+        assert_eq!(w.rivers(&c).falls.len(), 1);
+        w.undo(&c);
+        assert!(w.rivers(&c).falls.is_empty());
+        w.redo(&c);
+        assert_eq!(w.rivers(&c).falls.len(), 1);
     }
 }

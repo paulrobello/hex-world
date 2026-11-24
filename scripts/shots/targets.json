@@ -161,6 +161,47 @@
     ]
   },
   {
+    "name": "waterfall",
+    "about": "Waterfall runtime (rivers at levels): the sheet and plunge pool of 1, 2 and 3-level falls and a fall onto a mouth, at High and Low",
+    "doc": "Waterfall runtime review shots (rivers at levels, Task 11): runs `docs/checkpoints/waterfall/runtime/waterfall.json` natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed`, once at `--tier high` (the sheet refracts within 1.5 m below each tier's lip, RQ5 O2) into `docs/checkpoints/waterfall/runtime/high/` and once at `--tier low` (opaque white with streaks, RQ5 O1) into `docs/checkpoints/waterfall/runtime/low/`. The world is a meadow row with four falls off it along r = -1: 1, 2 and 3-level drops onto `river_straight` and a 1-level drop onto a `river_mouth`. Each fall gets a front view of the sheet (`waterfall-01-drop1`, `-02-drop2`, `-03-drop3`, `-04-onto-mouth`), a lip view (`-lip`) and a plunge-pool view (`-pool`), after an overview (`waterfall-00-overview`), and `waterfall-state.json` is dumped. `hex-app` test `the_waterfall_shots_world_has_its_four_falls` replays the script. Each seam draws its fall face (`waterfall_l1` to `_l3`, Task 19) under the upper tile's root. Every tier's sheet streaks downward, faster toward its foot, which churns white where it lands, and the plunge pool boils (`water.wesl`, all tiers). Each tier landing raises soft camera-facing spray and mist puffs that rise, drift out over the lower tile and fade, the plunge pool a bigger cloud that grows with the drop (owner 2026-11-24; `hex_play::water::mist`, `assets/shaders/fall_mist.wesl`): every fall's puffs are one mesh in one draw, none without a fall, so the thumbnails (`NoFalls`) are unchanged. Puffs per lip landing at Low, Medium, High and Ultra: 3, 5, 8, 12; per plunge pool 5, 8, 12, 16 plus 2, 3, 5, 7 per level of drop. They move as a pure function of the water clock, so `--water_clock fixed` replays them; under reduced motion none are drawn. Booked load-sensitive window only",
+    "runs": [
+      {
+        "script": "docs/checkpoints/waterfall/runtime/waterfall.json",
+        "out": "docs/checkpoints/waterfall/runtime/high",
+        "args": "--scenario play --clock fixed --water_clock fixed --tier high"
+      },
+      {
+        "script": "docs/checkpoints/waterfall/runtime/waterfall.json",
+        "out": "docs/checkpoints/waterfall/runtime/low",
+        "args": "--scenario play --clock fixed --water_clock fixed --tier low"
+      }
+    ]
+  },
+  {
+    "name": "waterfall-ghost",
+    "about": "River ghost beside a fall (rivers at levels, RQ11 O2): its flow chevrons, and the waterfall marker one R step up",
+    "doc": "River ghost review shots (rivers at levels, Task 14): runs `docs/checkpoints/waterfall/ghost/waterfall-ghost.json` natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed` into `docs/checkpoints/waterfall/ghost/`. Beside a meadow row, a level-1 `river_straight` at (1, -1) falls onto a level-0 one at (2, -1). A `river_straight` ghost below the fall at (3, -1) shows its flow chevrons, in from the west and out to the east (`waterfall-ghost-01-below-fall`); a ghost above it at (0, -1) on level 1 feeds the raised straight (`-02-above`); one R step lifts it to level 2, a fall onto the raised straight, with world edge 0 in the ghost's `waterfalls` (`-03-fall-marker`). Each shot dumps its state (`play.ghost.flow` and `play.ghost.waterfalls`). `hex-app` test `the_waterfall_ghost_shots_show_the_flow_and_the_fall_marker` replays the script. Named apart from `make shots-ghost` (`e2e/ghost-shots.mjs`), whose explicit rule would shadow a `ghost` row. Booked load-sensitive window only",
+    "runs": [
+      {
+        "script": "docs/checkpoints/waterfall/ghost/waterfall-ghost.json",
+        "out": "docs/checkpoints/waterfall/ghost",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
+    "name": "waterfall-staircase",
+    "about": "Waterfall staircase (rivers at levels): three 1-level falls down one river, levels 3, 2, 1, 0, beside the mixed river, beach and ocean scatter world",
+    "doc": "Waterfall staircase review shots (rivers at levels, Task 15): runs `docs/checkpoints/waterfall/staircase/waterfall-staircase.json` natively under `caffeinate -d -u` with `--clock fixed --water_clock fixed` into `docs/checkpoints/waterfall/staircase/`. The world is the mixed river, beach and ocean world of `make shots-scatter` (forest, oak, meadow, road; 34 tiles, all level 0, no fall) plus a meadow row at r = -3 (q 3 to 8) and a river_straight staircase along r = -4 at q 5, 6, 7, 8 on levels 3, 2, 1, 0. Shots: an overview of the whole world (`waterfall-staircase-00-overview`), then per fall a front view, a lip view (`-lip`) and a plunge-pool view (`-pool`) for the 3 to 2, 2 to 1 and 1 to 0 falls (`waterfall-staircase-01-fall3to2`, `-02-fall2to1`, `-03-fall1to0`), and the whole 12 m staircase from the side (`-04-full`). `waterfall-staircase-state.json` is dumped. `hex-app` test `the_waterfall_staircase_world_is_the_mixed_world_plus_three_falls` replays the script. e2e/perf-close-camera.mjs and e2e/perf-close-camera-native.mjs read its placements as the `staircase` world. Booked load-sensitive window only",
+    "runs": [
+      {
+        "script": "docs/checkpoints/waterfall/staircase/waterfall-staircase.json",
+        "out": "docs/checkpoints/waterfall/staircase",
+        "args": "--scenario play --clock fixed --water_clock fixed"
+      }
+    ]
+  },
+  {
     "name": "wheat-play",
     "about": "Wheat field tile in play: seam and sun/shade close-ups, scale shot, eye level, the walk into the field",
     "doc": "Wheat field tile in play: runs `docs/checkpoints/wheat_field/wheat-play.json` natively at 1280x800 with `--tilt off --clock fixed --water_clock fixed`. It places two wheat fields one row apart, the farm and meadows, and shoots play distance (`wheat-play`), the seams with the grass margin and the second field (`wheat-seam`), sun-side and shade-side close-ups (`wheat-close-sun`, then `wheat-close-sun-1s` 60 frames later for the wind sway, `wheat-close-shade`), a scale shot across the wheat to the barn (`wheat-scale`), eye level in walk mode (`wheat-walk-eye`), then walks 9 s into the field and dumps the state (`wheat-walk-state.json`: `blocked` null, the walker stands on the earth) and shoots it (`wheat-walk-inside`). It fails on a black still and copies JPEG stills and the dumps to `docs/checkpoints/wheat_field/`; `python3 docs/checkpoints/wheat_field/sheet.py` builds the review sheet",

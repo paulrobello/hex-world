@@ -94,6 +94,12 @@ impl Default for TiltShiftSettings {
 #[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct TiltPinned(pub bool);
 
+/// Set by the app while T is a game key (play mode placing tiles: T steps the picker-group shape,
+/// owner 2026-11-24), so a T press there does not also toggle tilt-shift. Photo mode, walk mode and
+/// the other scenarios leave it unset, and T toggles tilt-shift as before.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct TiltKeyBlocked(pub bool);
+
 /// The tilt-shift the last scene (re)build set from the tier: where a loaded world with no
 /// player choice puts the toggle and strength back.
 #[derive(Resource, Clone, Copy, Debug, Default, PartialEq)]
@@ -227,6 +233,7 @@ impl Plugin for TiltShiftPlugin {
         app.init_resource::<TiltShiftSettings>()
             .init_resource::<TiltPinned>()
             .init_resource::<TiltTierDefault>()
+            .init_resource::<TiltKeyBlocked>()
             .add_plugins((
                 ExtractComponentPlugin::<TiltShift>::default(),
                 UniformComponentPlugin::<TiltShift>::default(),
@@ -252,13 +259,14 @@ impl Plugin for TiltShiftPlugin {
 #[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TiltShiftPass;
 
-/// `T` toggles the effect at runtime.
+/// `T` toggles the effect at runtime, except while [`TiltKeyBlocked`] holds T as a game key.
 fn toggle_key(
     keys: Option<Res<ButtonInput<KeyCode>>>,
+    blocked: Res<TiltKeyBlocked>,
     mut settings: ResMut<TiltShiftSettings>,
     mut pinned: ResMut<TiltPinned>,
 ) {
-    if keys.is_some_and(|k| k.just_pressed(KeyCode::KeyT)) {
+    if !blocked.0 && keys.is_some_and(|k| k.just_pressed(KeyCode::KeyT)) {
         settings.enabled = !settings.enabled;
         pinned.0 = true;
         info!(

@@ -1,0 +1,192 @@
+{
+  "cueId": "waterfall",
+  "kind": "ambience",
+  "class": "loop",
+  "version": 1,
+  "use": "Per-fall emitter (rivers-at-levels RQ10 O1): a quiet positional loop at each waterfall's pool, from play.falls (fallEmitters in web/ui/src/audio-mix.ts), at FALL_GAIN by drop (0.6, 0.8, 1.0 for drops 1 to 3) times the focus mix, at most MAX_FALL_VOICES (2) at once.",
+  "events": [],
+  "loop": {
+    "startSample": 0,
+    "endSample": 576000,
+    "sampleRate": 48000,
+    "startSeconds": 0.0,
+    "endSeconds": 12.0
+  },
+  "playback": "decode",
+  "channels": 1,
+  "provider": {
+    "name": "ElevenLabs",
+    "endpoint": "POST /v1/sound-generation",
+    "model": "eleven_text_to_sound_v2",
+    "subscription": "ElevenLabs Starter (paid, owner account; tier from GET /v1/user/subscription)",
+    "outputFormat": "mp3_44100_128"
+  },
+  "prompt": "Deep, heavy waterfall pounding into a deep plunge pool, heard close by: a booming low rumble of tons of falling water under thick splashing and churning foam, broad and powerful, even level throughout, continuous with no build or fade. Natural sound only: no hiss, no wind, no birds, no voices, no music.",
+  "promptFile": null,
+  "parameters": {
+    "text": "Deep, heavy waterfall pounding into a deep plunge pool, heard close by: a booming low rumble of tons of falling water under thick splashing and churning foam, broad and powerful, even level throughout, continuous with no build or fade. Natural sound only: no hiss, no wind, no birds, no voices, no music.",
+    "model_id": "eleven_text_to_sound_v2",
+    "duration_seconds": 12,
+    "prompt_influence": 0.7,
+    "loop": true
+  },
+  "generation": {
+    "id": "b44e000c3809abc3d0e35606fe30bb9d",
+    "generatedAt": "2026-11-23T08:15:46+00:00",
+    "attempt": 94,
+    "creditsCharged": 120,
+    "record": {
+      "path": "assets-source/audio/ambience/waterfall/generation.json",
+      "sha256": "25fe6b226d7a59dcd978f64ce3b7f2d5b8f40af7cd8ac705dfd137ef093332dd",
+      "bytes": 2115
+    }
+  },
+  "source": {
+    "path": "assets-source/audio/ambience/waterfall/waterfall.mp3",
+    "sha256": "f6bfa30fe81613645c5008bc142b6b3064e63a4c966ba786082dad2eb204d825",
+    "bytes": 193140,
+    "codec": "mp3",
+    "sampleRate": 44100,
+    "channels": 2,
+    "durationSeconds": 12.0
+  },
+  "loudness": {
+    "targetLufs": -16.0,
+    "toleranceLu": 1.0,
+    "truePeakCeilingDb": -1.0,
+    "masterTruePeakDb": -2.0,
+    "before": {
+      "integrated": -17.9,
+      "lra": 0.3,
+      "truePeak": -4.3
+    },
+    "master": {
+      "integrated": -16.0,
+      "lra": 0.3,
+      "truePeak": -2.3
+    },
+    "after": {
+      "webm": {
+        "integrated": -16.0,
+        "lra": 0.3,
+        "truePeak": -1.6
+      },
+      "m4a": {
+        "integrated": -16.2,
+        "lra": 0.3,
+        "truePeak": -2.0
+      }
+    }
+  },
+  "processing": [
+    {
+      "step": "decode",
+      "to": "48000 Hz float, 1 ch",
+      "fold": "pan=mono|c0=0.5*c0+0.5*c1"
+    },
+    {
+      "step": "source-loop-check",
+      "wrapStep": 0.011071,
+      "stepP999": 0.126005,
+      "headDb": -17.9,
+      "tailDb": -17.9,
+      "minWindowDb": -21.6,
+      "seamless": true
+    },
+    {
+      "step": "rotate-loop",
+      "offsetFrames": 28800,
+      "headTailLevelDeltaDb": 0.0
+    },
+    {
+      "step": "loudness",
+      "pass1": {
+        "integrated": -18.0,
+        "lra": 0.3,
+        "truePeak": -4.3
+      },
+      "targetLufs": -16.0,
+      "gainDb": 2.0,
+      "requiredPeakReductionDb": 0.0,
+      "mode": "linear"
+    },
+    {
+      "step": "settle",
+      "trimDb": 0.0
+    },
+    {
+      "step": "encode-webm",
+      "bitrate": "64k"
+    },
+    {
+      "step": "encode-m4a",
+      "bitrate": "96k"
+    }
+  ],
+  "master": {
+    "path": "target/audio-master/ambience/waterfall.wav",
+    "sha256": "ecec00f850e7cf3572cea05253c56c2d69935ac441fd5fb931bd48b3f9da5c37",
+    "frames": 576000,
+    "sampleRate": 48000,
+    "format": "WAV float32 (target/, not committed; rebuilt by make audio-master)"
+  },
+  "runtime": [
+    {
+      "path": "assets/audio/ambience/waterfall.webm",
+      "sha256": "2e3bb7cfa042d988eb1f472cfa69470b8566b2f3f9c812c86444fc56b20c5142",
+      "bytes": 91368,
+      "codec": "opus",
+      "bitrate": "64k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 12.008,
+      "decodedFrames": 576000,
+      "loudness": {
+        "integrated": -16.0,
+        "lra": 0.3,
+        "truePeak": -1.6
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/waterfall.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a libopus -b:a 64k -vbr on -compression_level 10 -application audio -frame_duration 20 assets/audio/ambience/waterfall.webm"
+    },
+    {
+      "path": "assets/audio/ambience/waterfall.m4a",
+      "sha256": "04e0e5a62f34973cffd833d6118ddc21a0ca25604c626e2b00eca0dfc1290ee7",
+      "bytes": 147986,
+      "codec": "aac",
+      "bitrate": "96k",
+      "channels": 1,
+      "sampleRate": 48000,
+      "durationSeconds": 12.0,
+      "decodedFrames": 576000,
+      "loudness": {
+        "integrated": -16.2,
+        "lra": 0.3,
+        "truePeak": -2.0
+      },
+      "command": "ffmpeg -nostdin -y -v error -i target/audio-master/ambience/waterfall.wav -map_metadata -1 -fflags +bitexact -flags:a +bitexact -ac 1 -ar 48000 -c:a aac -b:a 96k -movflags +faststart assets/audio/ambience/waterfall.m4a"
+    }
+  ],
+  "decodedBytes": 2304000,
+  "toolVersions": {
+    "ffmpeg": "9.0.2",
+    "libavcodec": "63.1.102",
+    "libavformat": "63.1.102",
+    "libavfilter": "12.1.102",
+    "libopus": "1.6.1",
+    "aacEncoder": "ffmpeg native aac",
+    "python": "3.14.10",
+    "scripts": {
+      "scripts/audio/audio_lib.py": "634b6392f1bf646433dfc88ad7af196ad046a88543db85fece4d1b2b83849d75",
+      "scripts/audio/master.py": "6584166c626b52ca849d0c1d19e4530348bad05b8a8adbe7e8d771815778e5b3",
+      "scripts/audio/review.py": "d6434b8d11347ac4c5c87ddb08ad4bb16140e16cd97d4a0a24f39e79299f2a6b"
+    }
+  },
+  "license": "Generated with the owner's paid ElevenLabs Starter subscription. Per PRD D21 the owner holds the rights to this audio, so it is committed to the public Hex World repository and served from hex-world.pardev.net. Rights basis: the owner's D21 attestation; the provider's current terms were not re-verified by the mastering script.",
+  "deviation": null,
+  "approvals": {
+    "technical": "make audio-check",
+    "creative": "pending owner audition (review.html)",
+    "rights": "owner attestation, PRD D21",
+    "owner": "pending"
+  }
+}

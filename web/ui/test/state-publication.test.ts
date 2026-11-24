@@ -97,3 +97,22 @@ test("state merges only changed fields, preserves prior snapshots and never accu
     restore();
   }
 });
+
+test("play.falls arrives with the world fields and is kept until the world changes", () => {
+  const { hw, patches, restore } = bridge();
+  try {
+    const fall = { q: 1, r: -1, edge: 0, drop: 2, x: 13.9, z: -24 };
+    patches.push(
+      JSON.stringify({ state: { frames: 1, play: {} }, play: { tiles: [], falls: [fall], focus: [0, 0, 0] } }),
+    );
+    const first = hw.state().play as unknown as { falls: (typeof fall)[] };
+    assert.deepEqual(first.falls, [fall]);
+    patches.push(JSON.stringify({ state: { frames: 2 }, play: { focus: [1, 0, 0] } }));
+    const second = hw.state().play as unknown as { falls: (typeof fall)[] };
+    assert.equal(second.falls, first.falls, "an unchanged world keeps its falls array");
+    patches.push(JSON.stringify({ state: { frames: 3 }, play: { falls: [] } }));
+    assert.deepEqual((hw.state().play as unknown as { falls: unknown[] }).falls, []);
+  } finally {
+    restore();
+  }
+});

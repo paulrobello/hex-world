@@ -19,6 +19,7 @@ use super::super::{
 };
 use hex_render::{ActiveScenario, Scenario, SceneEntity};
 
+use super::falls::{fall_seams, seams_sig, with_falls};
 use super::layout::{Instance, Layout, Prepared, layout, prepare};
 use super::surface::{Tri, ground_pieces, ground_tris};
 use super::tables::{footprint, group};
@@ -52,6 +53,9 @@ pub struct PlayScatter {
     fences: (u64, Arc<HashMap<Axial, Vec<hex_core::boundary::Seg>>>),
     /// How many times `fences` was derived (tests).
     pub(crate) fence_builds: u64,
+    /// The waterfall seams per drawn tile (world edge, upper side), with the fingerprint of the
+    /// placed tiles and levels they were derived from.
+    falls: (u64, Arc<HashMap<Axial, Vec<(u8, bool)>>>),
 }
 
 impl PlayScatter {
@@ -292,7 +296,7 @@ pub fn sync(
                 .bytes()
                 .chain(c.q.to_le_bytes())
                 .chain(c.r.to_le_bytes())
-                .chain([t.rotation])
+                .chain([t.rotation, t.level])
             {
                 h = (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01B3);
             }
@@ -304,6 +308,12 @@ pub fn sync(
         state.fences = (tiles_sig, Arc::new(map));
         state.fence_builds += 1;
     }
+    if state.falls.0 != tiles_sig {
+        let placed: Vec<super::super::PlayTile> =
+            cells.iter().map(|(_, (t, _))| t.clone()).collect();
+        state.falls = (tiles_sig, Arc::new(fall_edges(&placed, &catalog.0)));
+    }
+    let fall_map = state.falls.1.clone();
     let fence_map = state.fences.1.clone();
     let ridges = super::super::tunnels::ridges(&view);
     for (&cell, (t, root)) in cells {
@@ -325,11 +335,17 @@ pub fn sync(
         // so the rest of the layout stays where it was.
         let fences = fence_map.get(&cell).cloned().unwrap_or_default();
         let ridge = ridges.get(&cell).copied();
-        let cut = super::super::boundaries::fingerprint(&fences) ^ ridge.map_or(0, |r| r.sig());
+        let seams = fall_map
+            .get(&cell)
+            .map(|f| fall_seams(f, t.rotation))
+            .unwrap_or_default();
+        let cut = super::super::boundaries::fingerprint(&fences)
+            ^ ridge.map_or(0, |r| r.sig())
+            ^ seams_sig(&seams);
         let layout = match state.layouts.get(&cell) {
             Some((id, s, k, l)) if *id == def.id && *s == seed && *k == cut => l.clone(),
             _ => {
-                let mut l = layout(def, seed, &prepared);
+                let mut l = with_falls(layout(def, seed, &prepared), def, seed, &prepared, &seams);
                 // Nothing stands on a rail tunnel's turf ridge (owner Q4).
                 if let Some(r) = ridge {
                     let pieces: Vec<&str> =
@@ -410,6 +426,19 @@ pub fn sync(
     if out.0 != json {
         out.0 = json;
     }
+}
+
+/// The waterfall seams of every drawn tile that has one, by cell: (world edge, whether the tile is
+/// the upper side), from the water layout's fall edges.
+pub(super) fn fall_edges(
+    tiles: &[super::super::PlayTile],
+    catalog: &TileCatalog,
+) -> HashMap<Axial, Vec<(u8, bool)>> {
+    crate::water::tiles::layout(tiles, catalog, |_| true)
+        .into_iter()
+        .filter(|(_, w)| !w.falls.is_empty())
+        .map(|(c, w)| (c, w.falls.iter().map(|f| (f.edge, f.upper)).collect()))
+        .collect()
 }
 
 /// The boundary footprints of every drawn field tile, by the drawn tile they lie on, in its

@@ -73,6 +73,7 @@ fn every_prop_piece_is_classified() {
         .iter()
         .copied()
         .chain(["rail_buffer_stop"])
+        .chain(["waterfall_l1", "waterfall_l2", "waterfall_l3"])
         .collect();
     let classified: std::collections::BTreeSet<String> = lists
         .iter()
@@ -137,6 +138,7 @@ fn every_obstacle_reports_its_own_kind() {
         ("river_stones*", "rock"),
         ("boulder_granite*", "rock"),
         ("outcrop_granite*", "rock"),
+        ("waterfall_l*", "waterfall"),
     ];
     let kind_of = |piece: &str| {
         KINDS.iter().find_map(|&(pattern, kind)| {
@@ -185,6 +187,12 @@ fn every_collider_piece_has_a_label() {
         assert_eq!(label == PropLabel::Rock, is_rock, "{piece} is {label:?}");
     }
     assert_eq!(prop_kind("rail_lever"), PropLabel::Lever);
+    for d in 1..=3 {
+        assert_eq!(
+            prop_kind(crate::play::fall_face_piece(d)),
+            PropLabel::Waterfall
+        );
+    }
 }
 
 /// Only the paddock fence's collider has disjoint parts (one box per run) and only
@@ -1696,6 +1704,27 @@ fn a_gap_in_the_leaves_still_hits_the_crown() {
     );
 }
 
+/// A raised river is forded at its own water: the same depth over its bed as at level 0, and the
+/// feet, the bed and the visible surface each two steps up on a level-2 tile.
+#[test]
+fn walker_fords_a_raised_river_at_its_level() {
+    let c = catalog();
+    let at = |level: u8| world_at(&c, &[(0, 0, "river_straight", 0, level)]);
+    let (low, high) = (at(0), at(2));
+    let p = centre(0, 0);
+    assert!(low.water_depth(p) > MAX_WADE, "a ford at the centre");
+    assert!((high.water_depth(p) - low.water_depth(p)).abs() < 1e-4);
+    let lift = 2.0 * LEVEL_STEP;
+    assert_eq!(
+        high.ground(p),
+        Ok(crate::water::tiles::water_y(2) - MAX_WADE)
+    );
+    assert!((high.ground(p).unwrap() - low.ground(p).unwrap() - lift).abs() < 1e-4);
+    assert_eq!(high.top(p), Some(crate::water::tiles::water_y(2)));
+    let bank = p + Vec2::new(0.0, 5.0);
+    assert!((high.ground(bank).unwrap() - low.ground(bank).unwrap() - lift).abs() < 1e-4);
+}
+
 #[test]
 fn the_visible_top_is_the_ground_or_the_water_surface() {
     let g = world(&[(0, 0, "meadow", 0), (-1, 0, "river_straight", 0)]);
@@ -2461,4 +2490,58 @@ fn walk_fences_read_a_ring_cell_as_its_footprint() {
             .count()
     });
     assert!(fences > 0, "no boundary toward the ring cell");
+}
+
+/// A fall face's collider (rivers-at-levels Task 19) stops a walker wading down the upper river at
+/// the lip, so it does not walk off the fall, and blocks the pool at the cliff's foot out to the
+/// face's reach. The lower bank beside the face (past its 14 m width) and the pool past its reach
+/// stay open: the boxes overhang no bank.
+#[test]
+fn walker_is_stopped_by_a_fall_face() {
+    let c = catalog();
+    let (up, low) = (Axial::new(0, 0), Axial::new(0, 0).neighbor(0));
+    let dir = (centre(low.q, low.r) - centre(up.q, up.r)).normalize();
+    let lat = dir.perp();
+    let seam = centre(up.q, up.r) + dir * HEX_RADIUS * 0.866_025_4;
+    for drop in 1..=3u8 {
+        let piece = crate::play::fall_face_piece(drop);
+        let g = world_at(
+            &c,
+            &[
+                (up.q, up.r, "river_straight", 3, drop),
+                (low.q, low.r, "river_straight", 0, 0),
+            ],
+        );
+        let s = walk(&g, seam - dir * 6.0, dir, 8.0);
+        assert_eq!(
+            s.blocked,
+            Some(Blocked::Obstacle(piece.into())),
+            "drop {drop}"
+        );
+        let out = (s.pos.xz() - seam).dot(dir);
+        assert!(
+            (-0.5..0.0).contains(&out),
+            "drop {drop}: stopped {out} m from the seam"
+        );
+        let reach = 1.5 * f32::from(drop - 1) + 1.0;
+        let blocked = |p: Vec2| g.obstacle(p).map(|o| o.piece.clone());
+        assert_eq!(
+            blocked(seam + dir * 0.5),
+            Some(piece.into()),
+            "drop {drop}: the face's foot"
+        );
+        assert_eq!(
+            blocked(seam + dir * (reach + BODY_RADIUS + 0.05)),
+            None,
+            "drop {drop}: the pool past its reach"
+        );
+        for side in [-1.0, 1.0] {
+            let bank = seam + dir * 1.0 + lat * side * (7.0 + BODY_RADIUS + 0.05);
+            assert_eq!(
+                blocked(bank),
+                None,
+                "drop {drop}: the lower bank beside the face"
+            );
+        }
+    }
 }

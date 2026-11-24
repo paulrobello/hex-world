@@ -5,8 +5,14 @@
 export type SocketKind = "Grass" | "Forest" | "Road" | "River" | "Beach" | "Ocean" | "Rail";
 export type Tool = "place" | "bulldoze";
 export type Spin = "cw" | "ccw";
+/** `level` direction: `up` is E, `down` is Q. */
+export type LevelStep = "up" | "down";
+/** `shape` direction: `next` is T, `prev` is Shift+T. */
+export type ShapeStep = "next" | "prev";
 export type ToggleTarget = "bulldoze" | "inventory" | "photo";
 export type EdgeStatus = "Compatible" | "Incompatible" | "Neutral";
+/** Which way the river runs across a ghost's River lane edge (hex-core `FlowDir`). */
+export type FlowDir = "in" | "out";
 export type HoveredKind = "tile" | "slot" | "empty";
 /** Photo mode's depth of field: off, the tilt-shift kernel, or the lens (manual). */
 export type Dof = "off" | "tilt" | "manual";
@@ -112,6 +118,10 @@ export type Command =
   | { cmd: "pin"; q: number; r: number }
   | { cmd: "unpin" }
   | { cmd: "rotate"; dir: Spin }
+  /** E/Q: the ghost one level up or down; a no-op past the highest or lowest legal level. */
+  | { cmd: "level"; dir: LevelStep }
+  /** T/Shift+T: the next or previous picker-group member that fits on the ghost's level; a no-op for a lone tile. */
+  | { cmd: "shape"; dir: ShapeStep }
   | { cmd: "place"; q: number; r: number; level?: number }
   | { cmd: "replace"; q: number; r: number }
   | { cmd: "undo" }
@@ -258,6 +268,13 @@ export interface Ghost {
   outer_edges: EdgeStatus[] | null;
   /** The seven cells a footprint ghost covers, its centre (`q`, `r`) first; null for a single tile. */
   footprint: Cell[] | null;
+  /**
+   * The flow this placement would give each River lane world edge, in edge order (hex-core
+   * `World::ghost_flow`, RQ11 O2); empty for a tile without a river or an orientation that does not fit.
+   */
+  flow: { edge: number; dir: FlowDir }[];
+  /** World edges where the ghost meets a neighbour as an accepted waterfall (its marker, never a cliff), ascending. */
+  waterfalls: number[];
 }
 
 /**
@@ -274,8 +291,10 @@ export interface MegaSlot {
 
 /**
  * Every refusal code the engine can publish in `play.fits` entries (hex-core `Refusal::codes`,
- * ENH-002), in bridge-schema.json's order: the four fixed codes, a `missing_` code per socket
- * kind and a `clash_` code per ordered kind pair, kinds in declaration order. `REFUSAL_CODES`
+ * ENH-002), in bridge-schema.json's order: the five fixed codes, a `missing_` code per socket
+ * kind, a `clash_` code per ordered kind pair, a `slope_` code per kind (a flat edge against a
+ * placed sloped one) and `own_slope` (the tile's sloped edge against a placed flat one), kinds in
+ * declaration order. `REFUSAL_CODES`
  * is checked against the schema by test/bridge-sync.test.ts; the type stays closed here.
  */
 const KIND_WORDS = ["grass", "forest", "road", "river", "beach", "ocean", "rail"] as const;
@@ -285,8 +304,11 @@ export type RefusalCode =
   | "deck_end"
   | "footprint_edges"
   | "no_footprint_room"
+  | "river_uphill"
   | `missing_${KindWord}`
-  | `clash_${KindWord}_${KindWord}`;
+  | `clash_${KindWord}_${KindWord}`
+  | `slope_${KindWord}`
+  | "own_slope";
 const missingCode = (k: KindWord): RefusalCode => `missing_${k}`;
 const clashCode = (mine: KindWord, theirs: KindWord): RefusalCode => `clash_${mine}_${theirs}`;
 export const REFUSAL_CODES: RefusalCode[] = [
@@ -294,8 +316,11 @@ export const REFUSAL_CODES: RefusalCode[] = [
   "deck_end",
   "footprint_edges",
   "no_footprint_room",
+  "river_uphill",
   ...KIND_WORDS.map(missingCode),
   ...KIND_WORDS.flatMap((mine) => KIND_WORDS.map((theirs) => clashCode(mine, theirs))),
+  ...KIND_WORDS.map((k): RefusalCode => `slope_${k}`),
+  "own_slope",
 ];
 
 /**
@@ -386,6 +411,19 @@ export interface TrainInfo {
   route: number | null;
 }
 
+/** A waterfall in `play.falls`: its upper cell, that cell's world edge, the drop in levels, the
+ * pool's world XZ at the seam midpoint and its mist landings (one per tier: each lip below the top,
+ * then the plunge pool). */
+export interface PlayFall {
+  q: number;
+  r: number;
+  edge: number;
+  drop: number;
+  x: number;
+  z: number;
+  mist: number;
+}
+
 /** A complete tunnel in `play.tunnels`: its portal cells, the cover cells between and its kind. */
 export interface TunnelInfo {
   a: Cell;
@@ -453,6 +491,8 @@ export interface PlayState {
   closed_crossings: Cell[];
   /** The complete tunnels: portal cells, the cover between, the level and the network kind. */
   tunnels: TunnelInfo[];
+  /** The waterfalls, sorted by (q, r, edge). */
+  falls: PlayFall[];
   rising: RisingTile[];
   reduced_motion: boolean;
   /** The ground point the camera orbits, in world metres, or null without a camera. */
@@ -538,7 +578,8 @@ export type PropKind =
   | "boat"
   | "stage"
   | "well"
-  | "rock";
+  | "rock"
+  | "waterfall";
 
 /** Why the walker's latest move stopped. */
 export type WalkBlocked = PropKind | "water" | "edge" | "steep";
@@ -791,6 +832,8 @@ export const COMMAND_FIELDS: { [K in Command["cmd"]]: string[] } = {
   pin: keys<CommandOf<"pin">>({ q: true, r: true }),
   unpin: keys<CommandOf<"unpin">>({}),
   rotate: keys<CommandOf<"rotate">>({ dir: true }),
+  level: keys<CommandOf<"level">>({ dir: true }),
+  shape: keys<CommandOf<"shape">>({ dir: true }),
   place: keys<CommandOf<"place">>({ q: true, r: true, level: true }),
   replace: keys<CommandOf<"replace">>({ q: true, r: true }),
   undo: keys<CommandOf<"undo">>({}),
@@ -884,8 +927,11 @@ export const EVENT_FIELDS: { [K in GameEvent["type"]]: string[] } = {
 export const ENUMS = {
   tool: keys<Record<Tool, true>>({ place: true, bulldoze: true }),
   spin: keys<Record<Spin, true>>({ cw: true, ccw: true }),
+  level_step: keys<Record<LevelStep, true>>({ up: true, down: true }),
+  shape_step: keys<Record<ShapeStep, true>>({ next: true, prev: true }),
   toggle: keys<Record<ToggleTarget, true>>({ bulldoze: true, inventory: true, photo: true }),
   edge_status: keys<Record<EdgeStatus, true>>({ Compatible: true, Incompatible: true, Neutral: true }),
+  flow_dir: keys<Record<FlowDir, true>>({ in: true, out: true }),
   refusal: [...REFUSAL_CODES],
   dof: keys<Record<Dof, true>>({ off: true, tilt: true, manual: true }),
   photo_filter: keys<Record<PhotoFilter, true>>({ normal: true, mono: true, sepia: true }),
@@ -930,6 +976,7 @@ export const STATE_FIELDS = {
     junctions: true,
     closed_crossings: true,
     tunnels: true,
+    falls: true,
     rising: true,
     reduced_motion: true,
     focus: true,
@@ -948,6 +995,8 @@ export const STATE_FIELDS = {
     edges: true,
     outer_edges: true,
     footprint: true,
+    flow: true,
+    waterfalls: true,
   }),
   mega_slot: keys<MegaSlot>({ q: true, r: true, tile: true, orientations: true }),
   orientation: keys<MegaSlot["orientations"][number]>({ rotation: true, level: true }),

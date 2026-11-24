@@ -7,7 +7,7 @@
   {"cmd": "place", "q": -1, "r": 1},
   {"cmd": "select_tile", "id": "river_road_bridge"},
   {"cmd": "hover", "q": -2, "r": 2},
-  {"cmd": "rotate", "dir": "cw"},
+  {"cmd": "level", "dir": "up"},
   {"cmd": "place", "q": -2, "r": 2},
   {"cmd": "select_tile", "id": "river_straight"},
   {"cmd": "place", "q": -3, "r": 3},

@@ -85,7 +85,7 @@ fn instance_yaw(band: Option<BeachBand>, coast: Option<Coastline>, p: Vec2, u: f
 
 /// A yaw from draw `u` in [0, 1) laying the piece's +x along `t`, either way round, within
 /// [`DRIFT_YAW_JITTER`].
-fn along_yaw(t: Vec2, u: f32) -> f32 {
+pub(super) fn along_yaw(t: Vec2, u: f32) -> f32 {
     let flip = if u < 0.5 { 0.0 } else { std::f32::consts::PI };
     let jitter = ((u * 2.0).fract() * 2.0 - 1.0) * DRIFT_YAW_JITTER;
     // Quat::from_rotation_y(yaw) turns the piece's +x to (cos yaw, -sin yaw) in (x, z).
@@ -126,7 +126,7 @@ pub(super) fn portable_atan2(y: f32, x: f32) -> f32 {
 }
 
 /// Scale jitter (± fraction): trees vary less than rocks and flowers.
-fn scale_jitter(f: Footprint) -> f32 {
+pub(super) fn scale_jitter(f: Footprint) -> f32 {
     if f.crown > 0.0 { 0.12 } else { 0.15 }
 }
 
@@ -648,7 +648,13 @@ fn drift_cells(seed: u64, mask: &Mask) -> Vec<u32> {
 
 /// Lowest surface height under the centre and a 0.3 m ring around `p` (the centre's own height
 /// when `level` is false: a bank prop, laid along the bank's contour), if `p` stands on `floors`.
-fn stand(surface: &Surface, p: Vec2, floors: &[&str], reach: f32, level: bool) -> Option<f32> {
+pub(super) fn stand(
+    surface: &Surface,
+    p: Vec2,
+    floors: &[&str],
+    reach: f32,
+    level: bool,
+) -> Option<f32> {
     let on_floor = |q: Vec2| surface.at(q.x, q.y).filter(|(_, s)| floor_ok(floors, s));
     let (h, _) = on_floor(p)?;
     // The footprint's rim and half-rim, exactly (the mask only eroded the sampled ground).

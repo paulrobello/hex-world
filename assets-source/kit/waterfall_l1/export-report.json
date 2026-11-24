@@ -1,0 +1,65 @@
+{
+  "blender": "5.2.2 LTS",
+  "generator": {
+    "path": "scripts/blender/kit/waterfall_l1.py",
+    "sha256": "3c75e520eff80f9b737d699fd19822947990aa190947a06ab8274212273edeaa"
+  },
+  "generatorDeps": [
+    {
+      "path": "scripts/blender/kit/_boulder.py",
+      "sha256": "5680b8a899bc98640c174d850712fd43a90e6a218243db7c56b41f0359f47956"
+    },
+    {
+      "path": "scripts/blender/kit/_outcrop.py",
+      "sha256": "aaedeb7b062fdf122a98b9e49fbddea4974a21b68be962639588f14c16c1067c"
+    },
+    {
+      "path": "scripts/blender/kit/_river.py",
+      "sha256": "56a0d89a32559539626ae161da47c4baa132a6e0dc425c5ca333d98b72ca29ba"
+    },
+    {
+      "path": "scripts/blender/kit/_rock.py",
+      "sha256": "dc59c395fc033ceb0c4cb15e7b2f789024287da231e9a370ce32a868a88d8481"
+    },
+    {
+      "path": "scripts/blender/kit/_waterfall.py",
+      "sha256": "e10770a36f0c37b4bf5b4d5f71ddbd24819b15c931a5d9504056035e356bef6e"
+    }
+  ],
+  "lodTris": {
+    "waterfall_l1_lod0": 3234,
+    "waterfall_l1_lod1": 1616,
+    "waterfall_l1_lod2": 446
+  },
+  "nodes": [
+    "socket-lip-0",
+    "waterfall_l1",
+    "waterfall_l1_collider",
+    "waterfall_l1_lod0",
+    "waterfall_l1_lod1",
+    "waterfall_l1_lod2"
+  ],
+  "pieceId": "waterfall_l1",
+  "sockets": [
+    {
+      "extras": {
+        "fall": 4.0,
+        "kind": "lip",
+        "normal": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "tier": 0,
+        "width": 8.0
+      },
+      "name": "socket-lip-0",
+      "position": [
+        13.856406211853027,
+        -1.399999976158142,
+        -0.0
+      ],
+      "yaw": 0.0
+    }
+  ]
+}

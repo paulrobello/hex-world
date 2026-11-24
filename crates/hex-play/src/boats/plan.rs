@@ -7,7 +7,9 @@
 //!   `river_fork`). A run ends at a bridge tile (a River network beside a Road or Rail one: the 6 m
 //!   sail mast and D4 keep boats off the arch), a spring, a mouth or an open end, and the boat turns
 //!   back [`ROW_END_MARGIN`] short of it, on a half circle of [`ROW_LANE`] radius. It keeps to the
-//!   right of its heading, so turning back puts it on the other half of the channel.
+//!   right of its heading, so turning back puts it on the other half of the channel. A waterfall
+//!   ends the runs on both sides ([`RunEnd::Fall`]): above it the boat turns back as at a line end,
+//!   below it [`FALL_CLEAR`] short of the seam, and no stage stands on the pool's tile.
 //! - **Junctions.** A fork's arms end their runs at its node ([`RunEnd::Junction`]). Each pair of
 //!   arms is joined by a link run ([`Run::joins`]): a curve from [`JUNCTION_D`] up one arm to as far
 //!   up the other, tangent to both. A rower reaching [`JUNCTION_D`] short of the node takes a
@@ -32,7 +34,7 @@ use hex_core::{Axial, HEX_RADIUS, NetworkKind, TileCatalog, TileDef, cell_seed};
 use crate::{
     boids::plan::{FishWorld, Rng, cell_at},
     play::PlayTile,
-    water::tiles::{CellWater, Coastline, RiverEnd, WaterKind, oriented_rivers},
+    water::tiles::{CellWater, Coastline, PLUNGE_R, RiverEnd, WaterKind, oriented_rivers},
 };
 
 /// Seconds per tick: the 20 Hz fixed tick the cars, trains and herds run on.
@@ -47,6 +49,9 @@ pub const ROW_LANE: f32 = 1.9;
 pub const ROW_END_MARGIN: f32 = 4.2;
 /// Shortest run a rowing boat rows (the turn needs room at both ends).
 pub const MIN_RUN: f32 = 12.0;
+/// How far below a waterfall's seam a rower turns back: the plunge pool's foam radius
+/// ([`PLUNGE_R`]) plus the line-end margin, so no part of the hull enters the disc.
+pub const FALL_CLEAR: f32 = PLUNGE_R + ROW_END_MARGIN;
 /// How far up each arm from a junction's node a link run starts (m). The link is a quadratic
 /// curve with the node as its control point: across a fork's 120 degrees between arms its tightest
 /// radius is 1.5 times this, so the inside lane keeps 4.1 m of radius, and its midpoint passes 1 m
@@ -185,6 +190,9 @@ pub enum RunEnd {
     Open,
     /// A fork's node, where the run's arm meets the others: a rower goes on along a link run.
     Junction,
+    /// A waterfall at its end: the boat turns back short of the lip, or short of the pool's foam
+    /// disc below.
+    Fall,
 }
 
 /// A stretch of river centre line a rowing boat may row: plain river tiles in flow order, or a
@@ -200,6 +208,8 @@ pub struct Run {
     /// A link run: the (arm run, its end: 0 upstream, 1 downstream) it leaves from at its start
     /// and the one it reaches at its end, each [`JUNCTION_D`] from the node. `None` on river runs.
     pub joins: Option<[(usize, usize); 2]>,
+    /// Whether each end (upstream, downstream) is the lower side of a waterfall: its plunge pool.
+    pub pool: [bool; 2],
 }
 
 /// A river tile a boat may row on: river water that is no bridge, spring or mouth. A fork and the
@@ -231,9 +241,25 @@ pub fn runs(
     };
     let ok = |c: Axial| def_at(c).is_some_and(|(d, w)| rowable(d, w));
     let opposite = |e: u8| (e + 3) % 6;
-    // The segment across `end` of `cell` whose other end meets it with `want` (up or down).
+    let fall_at = |cell: Axial, e: u8| {
+        cells
+            .get(&cell)
+            .and_then(|w| w.falls.iter().find(|f| f.edge == e))
+            .copied()
+    };
+    let fall = |cell: Axial, e: u8| fall_at(cell, e).is_some();
+    let pool = |cell: Axial, end: RiverEnd| {
+        end.edge()
+            .and_then(|e| fall_at(cell, e))
+            .is_some_and(|f| !f.upper)
+    };
+    // The segment across `end` of `cell` whose other end meets it with `want` (up or down). A
+    // waterfall seam is not continuous water: no segment is across it.
     let across = |cell: Axial, end: RiverEnd, up: bool| -> Option<(Axial, usize)> {
         let e = end.edge()?;
+        if fall(cell, e) {
+            return None;
+        }
         let n = cell.neighbor(e);
         let back = RiverEnd::Edge(opposite(e));
         rivers
@@ -249,6 +275,9 @@ pub fn runs(
                 RunEnd::Water
             };
         };
+        if fall(cell, e) {
+            return RunEnd::Fall;
+        }
         match def_at(cell.neighbor(e)) {
             Some((d, _)) if bridge(d) => RunEnd::Bridge,
             Some(_) if across(cell, end, up).is_some() => RunEnd::Water,
@@ -298,6 +327,10 @@ pub fn runs(
             ends,
             cell_start,
             joins: None,
+            pool: [
+                pool(first.0, rivers[&first].up),
+                pool(last.0, rivers[&last].down),
+            ],
         });
     }
     // The arm ends at each junction node, then a link run for every pair of them.
@@ -324,6 +357,7 @@ pub fn runs(
                         ends: [RunEnd::Junction; 2],
                         cell_start: vec![0.0],
                         joins: Some([a, b]),
+                        pool: [false; 2],
                     });
                 }
             }
@@ -365,10 +399,11 @@ fn link_line(a: &Line, a_end: usize, b: &Line, b_end: usize) -> Option<Line> {
 /// Where a rower leaving run `run` through `end` (0 its start, 1 its end) goes on, as (run, the
 /// end it enters by): from a link to the arm it reaches, from an arm's junction end onto one of
 /// the links leaving that end (a SplitMix64 draw on `draw` among them, in run order). `None`
-/// where the rower turns back.
+/// where the rower turns back. An arm with no rowable span ([`span`]) is never entered, nor a
+/// link leading only to one.
 pub fn onward(runs: &[Run], run: usize, end: usize, draw: &mut u64) -> Option<(usize, usize)> {
     if let Some(joins) = runs[run].joins {
-        return Some(joins[end]);
+        return Some(joins[end]).filter(|(arm, _)| span(&runs[*arm]) > 0.0);
     }
     if runs[run].ends[end] != RunEnd::Junction {
         return None;
@@ -378,7 +413,9 @@ pub fn onward(runs: &[Run], run: usize, end: usize, draw: &mut u64) -> Option<(u
         .enumerate()
         .filter_map(|(i, l)| {
             let j = l.joins?;
-            (0..2).find(|&k| j[k] == (run, end)).map(|k| (i, k))
+            (0..2)
+                .find(|&k| j[k] == (run, end) && span(&runs[j[1 - k].0]) > 0.0)
+                .map(|k| (i, k))
         })
         .collect();
     if links.is_empty() {
@@ -391,15 +428,24 @@ pub fn onward(runs: &[Run], run: usize, end: usize, draw: &mut u64) -> Option<(u
 }
 
 /// How far in from `end` of `run` a rower turns back or goes on: 0 on a link, [`JUNCTION_D`] at a
-/// junction (where the links start), [`ROW_END_MARGIN`] elsewhere.
+/// junction (where the links start), [`FALL_CLEAR`] below a waterfall (above one, at the lip,
+/// the line-end margin), [`ROW_END_MARGIN`] elsewhere.
 fn inset(run: &Run, end: usize) -> f32 {
     if run.joins.is_some() {
         0.0
     } else if run.ends[end] == RunEnd::Junction {
         JUNCTION_D
+    } else if run.pool[end] {
+        FALL_CLEAR
     } else {
         ROW_END_MARGIN
     }
+}
+
+/// The length of `run` a rower rows between its two turn-back (or go-on) points: 0 or less on a
+/// run too short for them, which no rower enters.
+pub fn span(run: &Run) -> f32 {
+    run.line.length() - inset(run, 0) - inset(run, 1)
 }
 
 /// The river systems: each run's lowest-indexed run among those joined to it through links.
@@ -735,13 +781,19 @@ impl BoatPlan {
             for _ in 0..n {
                 let moor = rowing == 1;
                 let free = region_runs.iter().copied().find(|r| {
-                    !taken.contains(&system[*r]) && plan.runs[*r].line.length() >= MIN_RUN
+                    let run = &plan.runs[*r];
+                    !taken.contains(&system[*r])
+                        && run.line.length() >= MIN_RUN
+                        && run.line.length()
+                            > ROW_END_MARGIN.max(inset(run, 0)) + ROW_END_MARGIN.max(inset(run, 1))
                 });
                 let motion = match (moor, free) {
                     (false, Some(r)) => {
                         taken.insert(system[r]);
-                        let len = plan.runs[r].line.length();
-                        let u = ROW_END_MARGIN + rng.unit() * (len - 2.0 * ROW_END_MARGIN);
+                        let run = &plan.runs[r];
+                        let lo = ROW_END_MARGIN.max(inset(run, 0));
+                        let hi = run.line.length() - ROW_END_MARGIN.max(inset(run, 1));
+                        let u = lo + rng.unit() * (hi - lo);
                         let dir = if rng.unit() < 0.5 { 1.0 } else { -1.0 };
                         Some(Motion::Rowing(Rower {
                             run: r,
@@ -844,7 +896,11 @@ impl BoatPlan {
                     .get(c)
                     .and_then(|w| catalog.get(&w.tile.tile))
                     .is_some_and(|d| d.id == "river_straight" || d.id == "river_bend");
-                if plain && self.stages.iter().all(|s| s.cell != *c) {
+                // A fall's lower tile holds its plunge pool.
+                let pool = cells
+                    .get(c)
+                    .is_some_and(|w| w.falls.iter().any(|f| !f.upper));
+                if plain && !pool && self.stages.iter().all(|s| s.cell != *c) {
                     let start = run.cell_start[i];
                     let end = run
                         .cell_start

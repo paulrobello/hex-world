@@ -32,6 +32,8 @@ const ghost = (q: number, r: number, id: string, rotation: number, legal: number
   edges: ["Neutral", "Neutral", "Neutral", "Neutral", "Neutral", "Neutral"],
   outer_edges: null,
   footprint: null,
+  flow: [],
+  waterfalls: [],
   ...extra,
 });
 const state = (o: object): PlayState =>
@@ -103,7 +105,7 @@ test("placed: a just-placed tile shows its note until it expires, and only witho
   assert.deepEqual(m.parts[0], { kind: "icon", name: "check", cls: "ic ok-ic" });
   assert.equal(tag(state({}), world, { placed, now: 1001 }), null, "past its time the note is gone");
   const elsewhere = state({ ghost: ghost(2, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]) });
-  assert.equal(tag(elsewhere, world, { placed, now: 500 })!.sig, "ok|2,0|meadow|Fits|0|false|false");
+  assert.equal(tag(elsewhere, world, { placed, now: 500 })!.sig, "ok|2,0|meadow|Fits|0|false|false|false|false");
 });
 
 test("refused swap: names the selected tile and why it cannot replace the placed one", () => {
@@ -142,11 +144,11 @@ test("cover: the pointer on a tunnel's cover says so, unless the ghost is pinned
     ]),
     ghost: ghost(1, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]),
   });
-  assert.equal(tag(pinned, world, { cover: new Set(["0,0"]) })!.sig, "ok|1,0|meadow|Fits|0|true|true");
+  assert.equal(tag(pinned, world, { cover: new Set(["0,0"]) })!.sig, "ok|1,0|meadow|Fits|0|false|false|true|true");
   assert.equal(tag(over, world, { cover: NONE }), null, "off a cover there is nothing to say");
 });
 
-test("ghost fits: one orientation reads Fits, several read Rotation i of n with the R hint", () => {
+test("ghost fits: one orientation reads Fits, several read Rotation i of n with the R hint, other levels the E/Q hint", () => {
   const meadowSteps: [string, number, number][] = [
     ["meadow", 0, 0],
     ["meadow", 0, 1],
@@ -156,8 +158,9 @@ test("ghost fits: one orientation reads Fits, several read Rotation i of n with 
   const meadow = tag(
     state({ fits: stepsAt(at(1, 0), "meadow", meadowSteps), ghost: ghost(1, 0, "meadow", 0, [0, 1, 2, 3, 4, 5]) }),
   )!;
-  assert.equal(meadow.sig, "ok|1,0|meadow|Fits|0|true|false");
-  assert.deepEqual(read(meadow.parts), ["Meadow", "Fits", "kbd:R"]);
+  // One orientation per level: R has nowhere to go on the ground, E has three levels up.
+  assert.equal(meadow.sig, "ok|1,0|meadow|Fits|0|false|false|true|false");
+  assert.deepEqual(read(meadow.parts), ["Meadow", "Fits", "kbd:E/Q"]);
   const roadSteps: [string, number, number][] = [
     ["road_straight", 1, 0],
     ["road_straight", 2, 0],
@@ -168,7 +171,7 @@ test("ghost fits: one orientation reads Fits, several read Rotation i of n with 
       ghost: ghost(1, 0, "road_straight", 1, [1, 2, 4, 5]),
     }),
   )!;
-  assert.equal(first.sig, "ok|1,0|road_straight|Rotation 1 of 2|0|true|false");
+  assert.equal(first.sig, "ok|1,0|road_straight|Rotation 1 of 2|0|true|false|false|false");
   assert.deepEqual(read(first.parts), ["Road straight", "Rotation 1 of 2", "kbd:R"], "rotation count 2");
   const second = tag(
     state({
@@ -177,13 +180,37 @@ test("ghost fits: one orientation reads Fits, several read Rotation i of n with 
       ghost: ghost(1, 0, "road_straight", 2, [1, 2, 4, 5]),
     }),
   )!;
-  assert.equal(second.sig, "ok|1,0|road_straight|Rotation 2 of 2|0|true|true");
+  assert.equal(second.sig, "ok|1,0|road_straight|Rotation 2 of 2|0|true|false|false|true");
   assert.deepEqual(read(second.parts), ["Road straight", "Rotation 2 of 2", "kbd:R", "Pinned · click to place"]);
+});
+
+test("ghost fits: a group counts only the ghost's member on its level, with the T hint while another fits", () => {
+  // East of the start meadow: the headland fits one way, the bay three (hex-core order).
+  const steps: [string, number, number][] = [
+    ["beach_outer", 0, 0],
+    ["beach_inner", 0, 0],
+    ["beach_inner", 1, 0],
+    ["beach_inner", 5, 0],
+  ];
+  const headland = tag(
+    state({ fits: stepsAt(at(1, 0), "beach_curve", steps), ghost: ghost(1, 0, "beach_outer", 0, [0]) }),
+  )!;
+  assert.equal(headland.sig, "ok|1,0|beach_outer|Fits|0|false|true|false|false");
+  assert.deepEqual(read(headland.parts), ["Beach Curve", "Fits", "kbd:T"], "R has nowhere to go, T has the bay");
+  const bay = tag(
+    state({ fits: stepsAt(at(1, 0), "beach_curve", steps), ghost: ghost(1, 0, "beach_inner", 1, [0, 1, 5]) }),
+  )!;
+  assert.equal(bay.sig, "ok|1,0|beach_inner|Rotation 2 of 3|0|true|true|false|false");
+  assert.deepEqual(read(bay.parts), ["Beach Curve", "Rotation 2 of 3", "kbd:R", "kbd:T"]);
+  const alone = tag(
+    state({ fits: stepsAt(at(1, 0), "beach_curve", steps.slice(1)), ghost: ghost(1, 0, "beach_inner", 0, [0, 1, 5]) }),
+  )!;
+  assert.deepEqual(read(alone.parts), ["Beach Curve", "Rotation 1 of 3", "kbd:R"], "no T where only the bay fits");
 });
 
 test("ghost fits: a raised ghost adds its level and anchors there", () => {
   const m = tag(state({ ghost: ghost(1, 0, "river_bend", 2, [0, 2, 4, 5], { level: 1 }) }))!;
-  assert.equal(m.sig, "ok|1,0|river_bend|Rotation 2 of 4|1|true|false");
+  assert.equal(m.sig, "ok|1,0|river_bend|Rotation 2 of 4|1|true|false|false|false");
   assert.deepEqual(read(m.parts), ["River bend", "Rotation 2 of 4", "Level 1", "kbd:R"]);
   assert.equal(m.level, 1);
 });

@@ -1,7 +1,7 @@
 """Kit triangle budgets, so generators can size their LODs instead of trial-building against kit_gate.
 
 Mirrors crates/hex-assets/src/kit_manifest.rs (PieceKind::lod0_budget, LOD1/LOD2_MAX_RATIO) and
-crates/hex-play/tests/kit_gate.rs (lane-cut, coast-arc and river-dressing exceptions);
+crates/hex-play/tests/kit_gate.rs (lane-cut, coast-arc, river-dressing, open-portal and fall-face exceptions);
 kit_gate::budgets_match_blender_lib pins every number below to those constants. No bpy import.
 """
 
@@ -16,6 +16,8 @@ RIVER_DRESSING_LOD0_MAX = 2500
 RIVER_DRESSING_PROPS = ("river_spring_center", "reed_bed")
 OPEN_PORTAL_LOD0_MAX = 1800
 OPEN_PORTAL_PROPS = ("rail_tunnel_portal",)
+WATERFALL_LOD0_MAX = 4000
+WATERFALL_PROPS = ("waterfall_l1", "waterfall_l2", "waterfall_l3")
 
 
 def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
@@ -25,6 +27,8 @@ def lod_budget(kind, piece_id="", lane_cut=False, coast_arc=False):
     lod0 = RIVER_DRESSING_LOD0_MAX if kind == "prop" and piece_id in RIVER_DRESSING_PROPS else LOD0_MAX[kind]
     if kind == "prop" and piece_id in OPEN_PORTAL_PROPS:
         lod0 = OPEN_PORTAL_LOD0_MAX
+    if kind == "prop" and piece_id in WATERFALL_PROPS:
+        lod0 = WATERFALL_LOD0_MAX
     lod2 = LOD2_MAX_RATIO
     if kind == "base" and lane_cut:
         lod2 = LANE_CUT_LOD2_MAX_RATIO
